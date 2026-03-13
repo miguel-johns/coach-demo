@@ -122,7 +122,12 @@ export default async function handler(req, res) {
 
     res.status(200).json({ text })
   } catch (error) {
-    console.error('[v0] Chat API error:', error.message, error.stack)
-    res.status(500).json({ error: 'Failed to generate response', details: error.message })
+    console.error('[v0] Chat API error:', error)
+    res.status(500).json({ 
+      error: 'Failed to generate response', 
+      details: error.message,
+      name: error.name,
+      cause: error.cause ? String(error.cause) : undefined
+    })
   }
 }

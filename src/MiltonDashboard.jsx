@@ -3128,13 +3128,36 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Use smart local AI response (no API needed)
-    setTimeout(() => {
-      const resp = generateAIResponse(text);
-      setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
-      setChatTyping(false);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }, 600 + Math.random() * 400); // Slight delay for realism
+    // Call real LLM API
+    (async () => {
+      try {
+        const allMessages = [...chatMessages, newUserMessage];
+        
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: allMessages }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          console.error("[v0] API error details:", data);
+          throw new Error(data.details || data.error || "API request failed");
+        }
+
+        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: data.text }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      } catch (error) {
+        console.error("[v0] Chat error:", error);
+        // Fallback to local AI
+        const resp = generateAIResponse(text);
+        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(Offline mode - API error: " + error.message + ")" }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+    })();
   };
 
 
