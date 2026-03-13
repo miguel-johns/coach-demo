@@ -224,7 +224,7 @@ function generateAIResponse(msg, clientNames, clientsData) {
     return { title: "Client Wins This Week", text: "Some great wins to celebrate:\n\n⭐ Mike Torres — 30-day exercise streak\n⭐ Sarah Chen — best protein week (avg 128g)\n⭐ Lisa Park — logged every meal for 2 weeks straight\n⭐ Aaron Brooks — down 4 lbs this month\n\nWant me to send personalized congratulation messages?" };
   }
   if (lower.includes("help") || lower.includes("what can you")) {
-    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n��� Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages — \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
+    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n����� Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages — \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
   }
 
   return { title: "Milton AI", text: `I can help with that! Try asking about a specific client by name, or ask me things like "Who needs attention today?", "Show me Sarah's nutrition", or "Change Aaron's program to Muscle Gain."\n\nI can update client data in real-time — just tell me what to change.` };
@@ -464,10 +464,21 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
 /* ─── Mobile Glass Chat Bar + Expandable Sheet ─── */
 function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing }) {
   const [sheetHeight, setSheetHeight] = useState(65);
+  const [hasPeeked, setHasPeeked] = useState(false);
   const startY = useRef(0);
   const startH = useRef(65);
   const inputRef = useRef(null);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
+  
+  // Peek animation on mount - show notification hint
+  useEffect(() => {
+    if (!chatOpen && !hasPeeked) {
+      const timer = setTimeout(() => setHasPeeked(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [chatOpen, hasPeeked]);
+  
+  const latestAIMessage = messages.filter(m => m.type === "ai").slice(-1)[0];
 
   const onDragStart = useCallback((e) => {
     e.preventDefault();
@@ -504,44 +515,94 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
   return (
     <>
-      {/* ── Collapsed: floating glass chat bar ── */}
+      {/* ── Collapsed: floating glass chat bar with peek notification ── */}
       {!chatOpen && (
         <div
           onClick={() => { setChatOpen(true); setTimeout(() => inputRef.current?.focus(), 350); }}
           style={{
             position: "fixed", bottom: 16, left: 16, right: 16, zIndex: 80,
-            display: "flex", alignItems: "center", gap: 10,
+            display: "flex", flexDirection: "column", gap: 0,
             background: "rgba(255,255,255,0.72)",
             backdropFilter: "blur(24px) saturate(180%)",
             WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            borderRadius: 26, padding: "12px 16px",
+            borderRadius: 26, 
             border: "1px solid rgba(224,235,232,0.6)",
             boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)",
-            cursor: "text"
+            cursor: "pointer",
+            animation: hasPeeked ? "none" : "peekUp 2.5s ease-out 0.8s forwards",
+            transform: "translateY(0)",
+            overflow: "hidden"
           }}
         >
+          {/* Message preview peek */}
+          {latestAIMessage && (
+            <div style={{
+              padding: "12px 16px 8px",
+              borderBottom: "1px solid rgba(224,235,232,0.4)",
+              animation: hasPeeked ? "none" : "peekFadeIn 0.5s ease-out 1.3s both",
+              opacity: hasPeeked ? 1 : 0
+            }}>
+              <div style={{ 
+                display: "flex", alignItems: "center", gap: 8, marginBottom: 6 
+              }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/>
+                  </svg>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>
+                  {latestAIMessage.title || "Milton"}
+                </span>
+                <span style={{ 
+                  fontSize: 10, color: TEXT_SEC, marginLeft: "auto",
+                  background: `${MINT}22`, padding: "2px 8px", borderRadius: 10
+                }}>
+                  New
+                </span>
+              </div>
+              <p style={{ 
+                fontSize: 13, color: TEXT_PRI, margin: 0,
+                lineHeight: 1.4,
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                overflow: "hidden", textOverflow: "ellipsis"
+              }}>
+                {latestAIMessage.text}
+              </p>
+            </div>
+          )}
+          
+          {/* Input hint bar */}
           <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            boxShadow: "0 2px 8px rgba(43,122,120,0.25)"
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "12px 16px",
           }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/>
-            </svg>
-          </div>
-          <span style={{ flex: 1, fontSize: 14, color: TEXT_SEC, fontWeight: 500 }}>
-            Ask Milton anything...
-          </span>
-          <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
-              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/>
-            </svg>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(43,122,120,0.25)"
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/>
+              </svg>
+            </div>
+            <span style={{ flex: 1, fontSize: 14, color: TEXT_SEC, fontWeight: 500 }}>
+              Tap to chat with Milton...
+            </span>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+                <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/>
+              </svg>
+            </div>
           </div>
         </div>
       )}
@@ -3675,6 +3736,17 @@ export default function MiltonDashboard() {
         @keyframes typingDot {
           0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
           30% { opacity: 1; transform: translateY(-3px); }
+        }
+        @keyframes peekUp {
+          0% { transform: translateY(60px); }
+          15% { transform: translateY(60px); }
+          35% { transform: translateY(-8px); }
+          50% { transform: translateY(0); }
+          100% { transform: translateY(0); }
+        }
+        @keyframes peekFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 6px; }
