@@ -101,33 +101,166 @@ const suggestedPrompts = [
   "What should I do next?",
 ];
 
-function generateAIResponse(msg, clientNames, clientsData) {
+// Demo client data for Milton AI responses
+const demoClients = {
+  sarah: {
+    name: "Sarah Chen",
+    goal: "Lose 15 lbs for wedding in 3 months",
+    status: "at-risk",
+    week: 6,
+    issue: "Missed logging for 4 days straight — her longest gap yet",
+    protein: "95g avg (target: 120g)",
+    weight: "Up 1.2 lbs this week",
+    loggingStreak: 0,
+    action: "Send a supportive check-in message",
+    insight: "Weekend logging drops 60% compared to weekdays. Monday weigh-ins suggest weekend calories are higher than logged."
+  },
+  marcus: {
+    name: "Marcus Johnson", 
+    goal: "Build muscle, gain 10 lbs lean mass",
+    status: "highly-engaged",
+    week: 8,
+    win: "Hit protein goal 7 days straight",
+    protein: "185g avg (target: 180g)",
+    weight: "Up 0.8 lbs (on track)",
+    loggingStreak: 14,
+    action: "Celebrate streak and suggest increasing calorie target by 100",
+    insight: "Ready for a progressive overload conversation. Strength is up 12% this month."
+  },
+  emily: {
+    name: "Emily Rodriguez",
+    goal: "Improve energy and relationship with food", 
+    status: "moderate-concern",
+    week: 4,
+    issue: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends",
+    protein: "68g avg (target: 100g)",
+    weight: "Fluctuating +/- 2 lbs weekly",
+    loggingStreak: 5,
+    action: "Schedule a call about sustainable eating patterns",
+    insight: "Classic restrict-binge pattern. Needs permission to eat more consistently."
+  },
+  david: {
+    name: "David Park",
+    goal: "Drop from 22% to 15% body fat",
+    status: "highly-engaged", 
+    week: 10,
+    win: "Perfect logging for 21 days straight",
+    issue: "Weight plateau for 2 weeks despite good adherence",
+    protein: "165g avg (target: 160g)",
+    weight: "Flat for 14 days at 178 lbs",
+    loggingStreak: 21,
+    action: "Consider a 2-week diet break or macro adjustment",
+    insight: "Metabolic adaptation likely. Good candidate for reverse diet discussion."
+  },
+  rachel: {
+    name: "Rachel Kim",
+    goal: "Post-pregnancy fitness and strength",
+    status: "new-client",
+    week: 2,
+    win: "Completed first full week of workouts postpartum",
+    issue: "Struggling to find time to log with newborn",
+    protein: "85g avg (target: 110g)", 
+    weight: "Down 0.5 lbs (healthy pace)",
+    loggingStreak: 2,
+    action: "Send encouragement and offer quick-log meal templates",
+    insight: "Sleep-deprived but motivated. Keep expectations realistic and celebrate small wins."
+  }
+};
+
+function generateAIResponse(msg) {
   const lower = msg.toLowerCase();
-  const matchedClient = clientNames.find(n => lower.includes(n.toLowerCase().split(" ")[0].toLowerCase()));
-  const matchedIdx = matchedClient ? clientsData.findIndex(c => c.name === matchedClient) : -1;
-  const cl = matchedIdx >= 0 ? clientsData[matchedIdx] : null;
+  
+  // Find mentioned client
+  const clientKeys = Object.keys(demoClients);
+  const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
+  const client = matchedKey ? demoClients[matchedKey] : null;
 
-  // Extract numbers from message
-  const nums = msg.match(/\d+\.?\d*/g);
-  const extractNum = () => nums ? parseFloat(nums[nums.length - 1]) : null;
+  // WHO NEEDS ATTENTION
+  if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
+    return { 
+      title: "Priority Queue", 
+      text: `Here's who needs your attention today:\n\n1. Sarah Chen (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n2. Emily Rodriguez (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n3. David Park (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+    };
+  }
 
-  // Extract program names
-  const programs = ["Fat Loss Phase", "Muscle Gain", "Maintenance", "Metabolic Health", "Performance"];
-  const matchedProgram = programs.find(p => lower.includes(p.toLowerCase()));
+  // WHO IS DOING WELL
+  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
+    return {
+      title: "Client Wins",
+      text: `Great news to share:\n\n1. Marcus Johnson — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n2. David Park — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n3. Rachel Kim — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+    };
+  }
 
-  if (matchedClient && cl) {
-    const first = matchedClient.split(" ")[0];
+  // WHAT SHOULD I DO NEXT
+  if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
+    return {
+      title: "Recommended Next Action",
+      text: `Your highest-impact action right now: reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+    };
+  }
 
-    // === MODIFICATION COMMANDS ===
-
-    // Change program
-    if (matchedProgram && (lower.includes("change") || lower.includes("switch") || lower.includes("move") || lower.includes("set") || lower.includes("update"))) {
+  // WRITE A MESSAGE TO [CLIENT]
+  if ((lower.includes("write") || lower.includes("draft") || lower.includes("send") || lower.includes("message")) && client) {
+    const first = client.name.split(" ")[0];
+    if (client.status === "at-risk") {
       return {
-        title: `${first}'s Program Updated`, 
-        text: `Done! I've switched ${first} from ${cl.program} to ${matchedProgram}. Their goal trajectory and report will update to reflect the new program focus.`,
-        clientUpdate: { idx: matchedIdx, changes: { program: matchedProgram } }
+        title: `Message for ${first}`,
+        text: `Here's a draft check-in for ${first}:\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
+      };
+    } else if (client.status === "highly-engaged") {
+      return {
+        title: `Message for ${first}`,
+        text: `Here's a celebration message for ${first}:\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
+      };
+    } else {
+      return {
+        title: `Message for ${first}`,
+        text: `Here's a supportive message for ${first}:\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
       };
     }
+  }
+
+  // CLIENT-SPECIFIC QUERIES
+  if (client) {
+    const first = client.name.split(" ")[0];
+    
+    // Nutrition/protein questions
+    if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
+      return {
+        title: `${first}'s Nutrition`,
+        text: `${first}'s current nutrition (Week ${client.week}):\n\nProtein: ${client.protein}\nWeight trend: ${client.weight}\nLogging streak: ${client.loggingStreak} days\n\n${client.insight}\n\nRecommended action: ${client.action}`
+      };
+    }
+
+    // Progress/status questions  
+    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
+      return {
+        title: `${first}'s Status`,
+        text: `${first} — Week ${client.week}, ${client.status.replace("-", " ")}\n\nGoal: ${client.goal}\n${client.win ? `Recent win: ${client.win}` : `Current issue: ${client.issue}`}\n\nWeight: ${client.weight}\nProtein: ${client.protein}\nLogging: ${client.loggingStreak} day streak\n\nMy take: ${client.insight}\n\nRecommended: ${client.action}`
+      };
+    }
+
+    // Default client info
+    return {
+      title: `About ${first}`,
+      text: `${client.name} — Week ${client.week}\n\nGoal: ${client.goal}\nStatus: ${client.status.replace("-", " ")}\n${client.win ? `Win: ${client.win}` : `Issue: ${client.issue}`}\n\nProtein: ${client.protein}\nWeight: ${client.weight}\n\nRecommended action: ${client.action}`
+    };
+  }
+
+  // HELP / CAPABILITIES
+  if (lower.includes("help") || lower.includes("what can")) {
+    return {
+      title: "How I Can Help",
+      text: `I'm Milton, your coaching copilot. Try asking me:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is Marcus doing?"\n• "Who is doing well?"\n• "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+    };
+  }
+
+  // DEFAULT
+  return { 
+    title: "Milton", 
+    text: `I'm here to help! Try asking:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is David doing?"\n• "Who is doing well?"`
+  };
+}
 
     // Change protein target
     if ((lower.includes("protein") && (lower.includes("target") || lower.includes("goal") || lower.includes("change") || lower.includes("set") || lower.includes("update"))) && extractNum()) {
@@ -3097,34 +3230,13 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Call real LLM API
-    try {
-      const allMessages = [...chatMessages, newUserMessage];
-      
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: allMessages }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("[v0] API error:", errorData);
-        throw new Error(errorData.details || "Failed to get AI response");
-      }
-
-      const data = await response.json();
-      
-      setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: data.text }]);
+    // Use smart local AI response (no API needed)
+    setTimeout(() => {
+      const resp = generateAIResponse(text);
+      setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
       setChatTyping(false);
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    } catch (error) {
-      console.error("[v0] Chat error:", error);
-      // Show the actual error in the chat for debugging
-      setChatMessages(prev => [...prev, { type: "ai", title: "Debug Error", text: `API Error: ${error.message}. Check that ANTHROPIC_API_KEY is set in environment variables.` }]);
-      setChatTyping(false);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }
+    }, 600 + Math.random() * 400); // Slight delay for realism
   };
 
 
