@@ -1,5 +1,4 @@
 import { generateText } from "ai"
-import { createAnthropic } from "@ai-sdk/anthropic"
 
 // Demo client dataset - hardcoded for reliability
 const demoClients = [
@@ -109,20 +108,11 @@ export default async function handler(req, res) {
 
   try {
     const { messages } = req.body
-    
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('[v0] ANTHROPIC_API_KEY not set')
-      return res.status(500).json({ error: 'API key not configured' })
-    }
-
-    const anthropic = createAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
 
     const systemPrompt = buildSystemPrompt()
 
     const { text } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: "anthropic/claude-sonnet-4-20250514",
       system: systemPrompt,
       messages: messages.map((m) => ({
         role: m.type === "user" ? "user" : "assistant",
