@@ -3097,10 +3097,9 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Call real LLM API with streaming
+    // Call real LLM API
     try {
       const allMessages = [...chatMessages, newUserMessage];
-      console.log("[v0] Sending to API:", allMessages);
       
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -3108,41 +3107,19 @@ export default function MiltonDashboard() {
         body: JSON.stringify({ messages: allMessages }),
       });
 
-      console.log("[v0] API response status:", response.status);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[v0] API error response:", errorText);
-        throw new Error("Failed to get AI response");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[v0] API error:", errorData);
+        throw new Error(errorData.details || "Failed to get AI response");
       }
 
-      // Stream the response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
+      const data = await response.json();
       
-      // Add placeholder AI message for streaming
-      setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: "" }]);
+      setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: data.text }]);
       setChatTyping(false);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-        
-        // Update the last message with streamed content
-        setChatMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { type: "ai", title: "Milton", text: fullText };
-          return updated;
-        });
-        
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("[v0] Chat error:", error);
       // Fallback to local response on error
       const resp = generateAIResponse(text, clientNames, clients);
       if (resp.clientUpdate) {

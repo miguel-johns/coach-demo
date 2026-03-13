@@ -1,5 +1,5 @@
-import { streamText } from "ai"
-import { anthropic } from "@ai-sdk/anthropic"
+import { generateText } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 
 // Demo client dataset - hardcoded for reliability
 const demoClients = [
@@ -109,10 +109,19 @@ export default async function handler(req, res) {
 
   try {
     const { messages } = req.body
+    
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('[v0] ANTHROPIC_API_KEY not set')
+      return res.status(500).json({ error: 'API key not configured' })
+    }
+
+    const anthropic = createAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
 
     const systemPrompt = buildSystemPrompt()
 
-    const result = streamText({
+    const { text } = await generateText({
       model: anthropic("claude-sonnet-4-20250514"),
       system: systemPrompt,
       messages: messages.map((m) => ({
@@ -121,19 +130,9 @@ export default async function handler(req, res) {
       })),
     })
 
-    // Set headers for streaming
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-    res.setHeader('Transfer-Encoding', 'chunked')
-    res.setHeader('Cache-Control', 'no-cache')
-
-    // Stream the response
-    const stream = result.textStream
-    for await (const chunk of stream) {
-      res.write(chunk)
-    }
-    res.end()
+    res.status(200).json({ text })
   } catch (error) {
-    console.error('[v0] Chat API error:', error)
-    res.status(500).json({ error: 'Failed to generate response' })
+    console.error('[v0] Chat API error:', error.message, error.stack)
+    res.status(500).json({ error: 'Failed to generate response', details: error.message })
   }
 }
