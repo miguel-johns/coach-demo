@@ -1,8 +1,4 @@
-"use client"
-
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -22,10 +18,9 @@ const LOGO_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAIAAAAB
 
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BP);
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth <= MOBILE_BP);
-    h(); // Check on mount
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, []);
@@ -2963,35 +2958,12 @@ function AddClientModal({ onClose, isMobile }) {
 /* ═══════════════════════════════════════════
    MAIN DASHBOARD
    ═══════════════════════════════════════════ */
-// Helper to extract text from AI SDK message parts
-function getMessageText(msg) {
-  if (!msg.parts || !Array.isArray(msg.parts)) return '';
-  return msg.parts
-    .filter((p) => p.type === 'text')
-    .map((p) => p.text)
-    .join('');
-}
-
-// Track data changes for highlight animations
-const useDataHighlight = () => {
-  const [highlightedClients, setHighlightedClients] = useState(new Set());
-  const highlightClient = useCallback((idx) => {
-    setHighlightedClients(prev => new Set([...prev, idx]));
-    setTimeout(() => {
-      setHighlightedClients(prev => {
-        const next = new Set(prev);
-        next.delete(idx);
-        return next;
-      });
-    }, 2000);
-  }, []);
-  return { highlightedClients, highlightClient };
-};
-
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
+  const [chatTyping, setChatTyping] = useState(false);
   const [hoveredClient, setHoveredClient] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -3001,63 +2973,99 @@ export default function MiltonDashboard() {
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
-  const { highlightedClients, highlightClient } = useDataHighlight();
 
-  // Real AI chat using useChat hook with conversation memory
-  const { messages: aiMessages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      prepareSendMessagesRequest: ({ id, messages }) => ({
-        body: {
-          messages,
-          clients, // Send current client data for context
-        },
-      }),
-    }),
-    onToolCall({ toolCall }) {
-      // Handle tool results to update client data in real-time
-      if (toolCall.state === 'output-available' && toolCall.output?.success) {
-        const { clientIdx, change } = toolCall.output;
-        if (clientIdx !== undefined && change) {
-          setClients(prev => {
-            const updated = [...prev];
-            updated[clientIdx] = { ...updated[clientIdx], ...change };
-            return updated;
-          });
-          highlightClient(clientIdx);
-        }
-      }
-    },
-  });
-
-  // Convert AI SDK messages to our format for display
-  const chatMessages = [
-    // Seed messages for initial demo state
-    ...chatSeedMessages,
-    // Real AI messages
-    ...aiMessages.map(msg => {
-      const text = getMessageText(msg);
-      if (msg.role === 'user') {
-        return { type: 'user', text };
-      } else {
-        // Extract title from first line if it looks like a title
-        const lines = text.split('\n');
-        const firstLine = lines[0] || '';
-        const hasTitle = firstLine.length < 50 && !firstLine.includes('.');
-        return {
-          type: 'ai',
-          title: hasTitle ? firstLine : undefined,
-          text: hasTitle ? lines.slice(1).join('\n').trim() : text,
-        };
-      }
-    }),
-  ];
-
-  const chatTyping = status === 'streaming' || status === 'submitted';
+  const clientNames = clients.map(c => c.name);
 
   const handleChatSend = (text) => {
-    sendMessage({ text });
+    setChatMessages(prev => [...prev, { type: "user", text }]);
+    setChatTyping(true);
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    const delay = 800 + Math.random() * 1200;
+
+    // Report customization commands
+    const low = text.toLowerCase();
+    const reportCmd = (() => {
+      const blocks = mainReportBlocks || ["top3", "rule30", "dataCards", "calendar", "insight"];
+      const blockMap = {
+        "nutrition": { id: "nutrition", label: "Nutrition Breakdown" },
+        "focus": { id: "focus", label: "Focus Areas" },
+        "coach notes": { id: "coachNotes", label: "Coach Notes" },
+        "coach note": { id: "coachNotes", label: "Coach Notes" },
+        "notes": { id: "coachNotes", label: "Coach Notes" },
+        "rule of 30": { id: "rule30", label: "Rule of 30" },
+        "rule30": { id: "rule30", label: "Rule of 30" },
+        "calendar": { id: "calendar", label: "Daily Activity" },
+        "daily activity": { id: "calendar", label: "Daily Activity" },
+        "activity": { id: "calendar", label: "Daily Activity" },
+        "data cards": { id: "dataCards", label: "Data Cards" },
+        "score": { id: "top3", label: "Score & Charts" },
+        "charts": { id: "top3", label: "Score & Charts" },
+        "transformation": { id: "top3", label: "Score & Charts" },
+        "insight": { id: "insight", label: "Milton Insight" },
+      };
+      if (low.includes("add") || low.includes("include") || low.includes("show")) {
+        for (const [key, val] of Object.entries(blockMap)) {
+          if (low.includes(key) && !blocks.includes(val.id)) {
+            return { action: "add", block: val, newBlocks: [...blocks, val.id] };
+          }
+        }
+      }
+      if (low.includes("remove") || low.includes("hide") || low.includes("delete") || low.includes("take out")) {
+        for (const [key, val] of Object.entries(blockMap)) {
+          if (low.includes(key) && blocks.includes(val.id)) {
+            return { action: "remove", block: val, newBlocks: blocks.filter(b => b !== val.id) };
+          }
+        }
+      }
+      if (low.includes("move") && low.includes("top")) {
+        for (const [key, val] of Object.entries(blockMap)) {
+          if (low.includes(key) && blocks.includes(val.id)) {
+            const rest = blocks.filter(b => b !== val.id);
+            return { action: "move", block: val, newBlocks: [val.id, ...rest] };
+          }
+        }
+      }
+      if (low.includes("move") && low.includes("bottom")) {
+        for (const [key, val] of Object.entries(blockMap)) {
+          if (low.includes(key) && blocks.includes(val.id)) {
+            const rest = blocks.filter(b => b !== val.id);
+            return { action: "move", block: val, newBlocks: [...rest, val.id] };
+          }
+        }
+      }
+      return null;
+    })();
+
+    if (reportCmd) {
+      setTimeout(() => {
+        setMainReportBlocks(reportCmd.newBlocks);
+        const msgs = {
+          add: { title: `Added: ${reportCmd.block.label}`, text: `I've added the ${reportCmd.block.label} section to the report. You can see it in the overview now. Want me to adjust anything about it?` },
+          remove: { title: `Removed: ${reportCmd.block.label}`, text: `Done — I've removed the ${reportCmd.block.label} section. You can always add it back by telling me or clicking the + button in customize mode.` },
+          move: { title: `Moved: ${reportCmd.block.label}`, text: `I've moved ${reportCmd.block.label} to the ${low.includes("top") ? "top" : "bottom"} of the report. Let me know if you want to rearrange anything else.` },
+        };
+        setChatMessages(prev => [...prev, { type: "ai", ...(msgs[reportCmd.action] || msgs.add) }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
+    setTimeout(() => {
+      const resp = generateAIResponse(text, clientNames, clients);
+      // Apply real-time client data updates
+      if (resp.clientUpdate) {
+        const { idx, changes } = resp.clientUpdate;
+        setClients(prev => {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], ...changes };
+          return updated;
+        });
+      }
+      setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
+      setChatTyping(false);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }, delay);
   };
 
 
@@ -3071,7 +3079,7 @@ export default function MiltonDashboard() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [aiMessages]);
+  }, [chatMessages]);
 
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
@@ -3506,15 +3514,11 @@ export default function MiltonDashboard() {
         {isMobile ? (
           /* ─── Mobile: Individual client cards ─── */
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); const isHighlighted = highlightedClients.has(i); return (
+            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i} onClick={() => setSelectedClient(i)} style={{
-                background: isHighlighted ? "rgba(92, 219, 149, 0.15)" : WHITE, 
-                borderRadius: 16, border: `1px solid ${isHighlighted ? MINT : BORDER}`,
-                boxShadow: isHighlighted ? "0 4px 12px rgba(92, 219, 149, 0.25)" : "0 2px 6px rgba(0,0,0,0.04)", 
-                padding: "16px",
-                display: "flex", flexDirection: "column", gap: 12, cursor: "pointer",
-                transition: "all 0.4s ease",
-                animation: isHighlighted ? "highlightFlash 2s ease-out" : "none"
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                boxShadow: "0 2px 6px rgba(0,0,0,0.04)", padding: "16px",
+                display: "flex", flexDirection: "column", gap: 12, cursor: "pointer"
               }}>
                 {/* Row 1: Avatar + Name + Badge */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -3572,7 +3576,7 @@ export default function MiltonDashboard() {
             }}>
               <span>Client Name</span><span>Alerts</span><span>Data Connections</span><span>Report Progress</span><span />
             </div>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); const isHighlighted = highlightedClients.has(i); return (
+            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
@@ -3580,9 +3584,8 @@ export default function MiltonDashboard() {
                   display: "grid", gridTemplateColumns: "2fr 1.1fr 1fr 1fr 36px",
                   padding: "14px 24px", alignItems: "center",
                   borderBottom: i < clients.length - 1 ? `1px solid ${BORDER}` : "none",
-                  background: isHighlighted ? "rgba(92, 219, 149, 0.15)" : hoveredClient === i ? "#f7faf9" : "transparent",
-                  transition: "background 0.4s ease", cursor: "pointer",
-                  animation: isHighlighted ? "highlightFlash 2s ease-out" : "none"
+                  background: hoveredClient === i ? "#f7faf9" : "transparent",
+                  transition: "background 0.15s ease", cursor: "pointer"
                 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={34} />
