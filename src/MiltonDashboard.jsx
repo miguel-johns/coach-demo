@@ -3108,10 +3108,10 @@ export default function MiltonDashboard() {
 
       const allMessages = [...chatMessages, newUserMessage];
       
-      const response = await fetch("/api/chat/route", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: allMessages, clientContext }),
+        body: JSON.stringify({ messages: allMessages }),
       });
 
       if (!response.ok) {
