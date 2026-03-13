@@ -3120,17 +3120,8 @@ export default function MiltonDashboard() {
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (error) {
       console.error("[v0] Chat error:", error);
-      // Fallback to local response on error
-      const resp = generateAIResponse(text, clientNames, clients);
-      if (resp.clientUpdate) {
-        const { idx, changes } = resp.clientUpdate;
-        setClients(prev => {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...changes };
-          return updated;
-        });
-      }
-      setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
+      // Show the actual error in the chat for debugging
+      setChatMessages(prev => [...prev, { type: "ai", title: "Debug Error", text: `API Error: ${error.message}. Check that ANTHROPIC_API_KEY is set in environment variables.` }]);
       setChatTyping(false);
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
@@ -3325,7 +3316,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
 
-          {/* ── Card 2: Engagement Rate - Dot Grid ── */}
+          {/* ���─ Card 2: Engagement Rate - Dot Grid ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
