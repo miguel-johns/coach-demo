@@ -3099,14 +3099,8 @@ export default function MiltonDashboard() {
 
     // Call real LLM API with streaming
     try {
-      // Get current selected client context if any
-      const selectedClientData = selectedClient !== null ? clients[selectedClient] : null;
-      const clientContext = {
-        allClients: clients.map(c => ({ name: c.name, program: c.program, proteinTarget: c.proteinTarget })),
-        selectedClient: selectedClientData,
-      };
-
       const allMessages = [...chatMessages, newUserMessage];
+      console.log("[v0] Sending to API:", allMessages);
       
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -3114,7 +3108,11 @@ export default function MiltonDashboard() {
         body: JSON.stringify({ messages: allMessages }),
       });
 
+      console.log("[v0] API response status:", response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[v0] API error response:", errorText);
         throw new Error("Failed to get AI response");
       }
 

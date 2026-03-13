@@ -1,8 +1,6 @@
 import { streamText } from "ai"
 import { anthropic } from "@ai-sdk/anthropic"
 
-export const maxDuration = 60
-
 // Demo client dataset - hardcoded for reliability
 const demoClients = [
   {
@@ -103,22 +101,39 @@ ${clientData}
 Remember: Be specific, be brief, be helpful.`
 }
 
-export async function POST(req) {
-  const { messages } = await req.json()
-  
-  console.log("[v0] Received messages:", JSON.stringify(messages, null, 2))
+// Vercel Serverless Function handler
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
-  const systemPrompt = buildSystemPrompt()
+  try {
+    const { messages } = req.body
 
-  const result = streamText({
-    model: anthropic("claude-sonnet-4-20250514"),
-    system: systemPrompt,
-    messages: messages.map((m) => ({
-      role: m.type === "user" ? "user" : "assistant",
-      content: m.text || "",
-    })),
-    abortSignal: req.signal,
-  })
+    const systemPrompt = buildSystemPrompt()
 
-  return result.toTextStreamResponse()
+    const result = streamText({
+      model: anthropic("claude-sonnet-4-20250514"),
+      system: systemPrompt,
+      messages: messages.map((m) => ({
+        role: m.type === "user" ? "user" : "assistant",
+        content: m.text || "",
+      })),
+    })
+
+    // Set headers for streaming
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.setHeader('Transfer-Encoding', 'chunked')
+    res.setHeader('Cache-Control', 'no-cache')
+
+    // Stream the response
+    const stream = result.textStream
+    for await (const chunk of stream) {
+      res.write(chunk)
+    }
+    res.end()
+  } catch (error) {
+    console.error('[v0] Chat API error:', error)
+    res.status(500).json({ error: 'Failed to generate response' })
+  }
 }
