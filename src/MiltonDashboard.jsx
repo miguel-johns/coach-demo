@@ -90,7 +90,15 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "Here's your brief for today: 3 clients need attention — Aaron's protein is trending low, Daniald's logging streak broke over the weekend, and Cahrta just hit a 26-day logging milestone. Ready when you are." },
+  { type: "ai", title: "Good morning, Coach!", text: "Here's your daily brief:\n\n🔴 Sarah Chen — hasn't logged in 4 days, her longest gap yet. Recommend a supportive check-in.\n\n🟡 Emily Rodriguez — weekday calories are too low. Worth scheduling a call.\n\n🟢 Marcus Johnson — 7-day protein streak! Ready to level up.\n\n🟢 David Park — 21-day perfect logging, but weight plateaued. May need a macro adjustment.\n\n🆕 Rachel Kim — just completed her first full week of workouts postpartum!\n\nWhat would you like to tackle first?" },
+];
+
+const suggestedPrompts = [
+  "Who needs attention today?",
+  "Write a message to Sarah",
+  "Summarize my coaching queue",
+  "Who is doing well?",
+  "What should I do next?",
 ];
 
 function generateAIResponse(msg, clientNames, clientsData) {
@@ -217,7 +225,7 @@ function generateAIResponse(msg, clientNames, clientsData) {
     return { title: "Client Wins This Week", text: "Some great wins to celebrate:\n\n⭐ Mike Torres — 30-day exercise streak\n⭐ Sarah Chen — best protein week (avg 128g)\n⭐ Lisa Park — logged every meal for 2 weeks straight\n⭐ Aaron Brooks — down 4 lbs this month\n\nWant me to send personalized congratulation messages?" };
   }
   if (lower.includes("help") || lower.includes("what can you")) {
-    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n• Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages — \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
+    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n• Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages �� \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
   }
 
   return { title: "Milton AI", text: `I can help with that! Try asking about a specific client by name, or ask me things like "Who needs attention today?", "Show me Sarah's nutrition", or "Change Aaron's program to Muscle Gain."\n\nI can update client data in real-time — just tell me what to change.` };
@@ -343,13 +351,14 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
 
 function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
+  const showSuggestions = messages.length <= 1 && !typing;
   return (
     <>
-      <div style={{
-        flex: 1, overflowY: "auto", padding: isMobile ? "12px 14px 8px" : "16px 16px 8px",
-        display: "flex", flexDirection: "column", gap: 12,
-        background: isMobile ? "transparent" : "#f7faf9"
-      }}>
+    <div style={{
+    flex: 1, overflowY: "auto", padding: isMobile ? "12px 14px 8px" : "16px 16px 8px",
+    display: "flex", flexDirection: "column", gap: 12,
+    background: isMobile ? "transparent" : "#f7faf9"
+    }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
             display: "flex", flexDirection: "column",
@@ -381,23 +390,61 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
             )}
           </div>
         ))}
-        {typing && (
-          <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-              <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-            </div>
-            <div style={{
-              background: WHITE, padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
-              border: `1px solid ${BORDER}`, display: "flex", gap: 5, alignItems: "center"
-            }}>
-              {[0,1,2].map(j => (
-                <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
-              ))}
-            </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
+{typing && (
+    <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+    <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+    <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
+    </div>
+    <div style={{
+    background: WHITE, padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
+    border: `1px solid ${BORDER}`, display: "flex", gap: 5, alignItems: "center"
+    }}>
+    {[0,1,2].map(j => (
+    <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
+    ))}
+    </div>
+    </div>
+    )}
+    {showSuggestions && (
+    <div style={{ 
+      display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
+      opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
+    }}>
+      {suggestedPrompts.map((prompt, i) => (
+        <button
+          key={i}
+          onClick={() => onSend(prompt)}
+          style={{
+            background: WHITE,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 20,
+            padding: "8px 14px",
+            fontSize: 13,
+            fontFamily: font,
+            color: TEAL,
+            fontWeight: 500,
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = TEAL;
+            e.currentTarget.style.color = WHITE;
+            e.currentTarget.style.borderColor = TEAL;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = WHITE;
+            e.currentTarget.style.color = TEAL;
+            e.currentTarget.style.borderColor = BORDER;
+          }}
+        >
+          {prompt}
+        </button>
+      ))}
+    </div>
+    )}
+    <div ref={chatEndRef} />
+    </div>
       <div style={{ padding: isMobile ? "8px 12px 12px" : "12px 16px 16px" }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 8, background: WHITE,
