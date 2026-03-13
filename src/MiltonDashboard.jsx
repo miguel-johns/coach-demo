@@ -90,9 +90,7 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "You have 3 clients needing attention today. Sarah missed 2 days of logging, Aaron's protein is trending low, and Mike just hit a new milestone. What would you like to tackle first?" },
-  { type: "user", text: "Tell me more about Sarah's logging gaps" },
-  { type: "ai", title: "Sarah Chen — Logging Gaps", text: "Sarah logged 5/7 days last week, missing Saturday and Sunday. This is a recurring pattern — her weekend logging drops 60% compared to weekdays. Her weekday calories avg 1,540 but weekends are likely higher based on Monday weigh-ins. I'd recommend setting up weekend meal templates to make it easier for her." },
+  { type: "ai", title: "Good morning, Coach!", text: "Here's your brief for today: 3 clients need attention — Aaron's protein is trending low, Daniald's logging streak broke over the weekend, and Cahrta just hit a 26-day logging milestone. Ready when you are." },
 ];
 
 function generateAIResponse(msg, clientNames, clientsData) {
