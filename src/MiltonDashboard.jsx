@@ -90,9 +90,7 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "You have 3 clients needing attention today. Sarah missed 2 days of logging, Aaron's protein is trending low, and Mike just hit a new milestone. What would you like to tackle first?" },
-  { type: "user", text: "Tell me more about Sarah's logging gaps" },
-  { type: "ai", title: "Sarah Chen — Logging Gaps", text: "Sarah logged 5/7 days last week, missing Saturday and Sunday. This is a recurring pattern — her weekend logging drops 60% compared to weekdays. Her weekday calories avg 1,540 but weekends are likely higher based on Monday weigh-ins. I'd recommend setting up weekend meal templates to make it easier for her." },
+  { type: "ai", title: "Good morning, Coach!", text: "Here's your brief for today: 3 clients need attention — Aaron's protein is trending low, Daniald's logging streak broke over the weekend, and Cahrta just hit a 26-day logging milestone. Ready when you are." },
 ];
 
 function generateAIResponse(msg, clientNames, clientsData) {
@@ -2976,13 +2974,14 @@ export default function MiltonDashboard() {
 
   const clientNames = clients.map(c => c.name);
 
-  const handleChatSend = (text) => {
-    setChatMessages(prev => [...prev, { type: "user", text }]);
+  const handleChatSend = async (text) => {
+    const newUserMessage = { type: "user", text };
+    setChatMessages(prev => [...prev, newUserMessage]);
     setChatTyping(true);
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    const delay = 800 + Math.random() * 1200;
+    const delay = 300;
 
-    // Report customization commands
+    // Report customization commands (keep local for instant response)
     const low = text.toLowerCase();
     const reportCmd = (() => {
       const blocks = mainReportBlocks || ["top3", "rule30", "dataCards", "calendar", "insight"];
@@ -3051,9 +3050,56 @@ export default function MiltonDashboard() {
       return;
     }
 
-    setTimeout(() => {
+    // Call real LLM API with streaming
+    try {
+      // Get current selected client context if any
+      const selectedClientData = selectedClient !== null ? clients[selectedClient] : null;
+      const clientContext = {
+        allClients: clients.map(c => ({ name: c.name, program: c.program, proteinTarget: c.proteinTarget })),
+        selectedClient: selectedClientData,
+      };
+
+      const allMessages = [...chatMessages, newUserMessage];
+      
+      const response = await fetch("/api/chat/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: allMessages, clientContext }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
+      }
+
+      // Stream the response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      
+      // Add placeholder AI message for streaming
+      setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: "" }]);
+      setChatTyping(false);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        
+        // Update the last message with streamed content
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { type: "ai", title: "Milton", text: fullText };
+          return updated;
+        });
+        
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      // Fallback to local response on error
       const resp = generateAIResponse(text, clientNames, clients);
-      // Apply real-time client data updates
       if (resp.clientUpdate) {
         const { idx, changes } = resp.clientUpdate;
         setClients(prev => {
@@ -3065,7 +3111,7 @@ export default function MiltonDashboard() {
       setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
       setChatTyping(false);
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }, delay);
+    }
   };
 
 
