@@ -2,18 +2,17 @@
   "name": "milton-dashboard",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^15.3.0",
+    "ai": "^6.0.0",
+    "@ai-sdk/react": "^3.0.0",
+    "zod": "^3.23.8"
   }
 }
