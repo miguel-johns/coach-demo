@@ -224,7 +224,7 @@ function generateAIResponse(msg, clientNames, clientsData) {
     return { title: "Client Wins This Week", text: "Some great wins to celebrate:\n\n⭐ Mike Torres — 30-day exercise streak\n⭐ Sarah Chen — best protein week (avg 128g)\n⭐ Lisa Park — logged every meal for 2 weeks straight\n⭐ Aaron Brooks — down 4 lbs this month\n\nWant me to send personalized congratulation messages?" };
   }
   if (lower.includes("help") || lower.includes("what can you")) {
-    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n������� Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages — \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
+    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n��������� Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages — \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
   }
 
   return { title: "Milton AI", text: `I can help with that! Try asking about a specific client by name, or ask me things like "Who needs attention today?", "Show me Sarah's nutrition", or "Change Aaron's program to Muscle Gain."\n\nI can update client data in real-time — just tell me what to change.` };
@@ -351,6 +351,35 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
 function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
   const showPrompts = messages.length === 1 && messages[0].type === "ai";
+  
+  const renderMessage = (msg, i) => {
+    if (msg.type === "user") {
+      return (
+        <div style={{
+          background: USER_BUBBLE, color: "#fff", padding: "10px 16px",
+          borderRadius: "18px 18px 4px 18px", fontSize: 14, fontWeight: 500,
+          maxWidth: "85%", lineHeight: 1.5,
+          boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
+        }}>{msg.text}</div>
+      );
+    }
+    return (
+      <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
+          <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
+        </div>
+        <div style={{
+          background: WHITE, padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
+          border: `1px solid ${BORDER}`, fontSize: 13.5, lineHeight: 1.55,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+        }}>
+          {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
+          <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <div style={{
@@ -365,28 +394,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
             opacity: 0, animation: "fadeSlideIn 0.4s ease forwards",
             animationDelay: `${Math.min(i * 0.05, 0.3)}s`
           }}>
-            {msg.type === "user" ? (
-              <div style={{
-                background: USER_BUBBLE, color: "#fff", padding: "10px 16px",
-                borderRadius: "18px 18px 4px 18px", fontSize: 14, fontWeight: 500,
-                maxWidth: "85%", lineHeight: 1.5,
-                boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
-              }}>{msg.text}</div>
-            ) : (
-              <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
-                  <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-                </div>
-                <div style={{
-                  background: WHITE, padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
-                  border: `1px solid ${BORDER}`, fontSize: 13.5, lineHeight: 1.55,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
-                }}>
-                  {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
-                  <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>
-                </div>
-              </div>
-            )}
+            {renderMessage(msg, i)}
           </div>
         ))}
         {showPrompts && !typing && (
