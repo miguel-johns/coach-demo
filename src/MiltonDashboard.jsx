@@ -3698,14 +3698,27 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function MealPlanCanvas({ data, onClose }) {
+function MealPlanCanvas({ data, onClose, onDataChange }) {
   const [isLoading, setIsLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState(null);
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   
-  // Fetch AI-generated recipes on mount
+  // Sync mealPlan with parent data when it has weeks (meaning it was edited via chat)
   useEffect(() => {
+    if (data?.weeks && Array.isArray(data.weeks)) {
+      setMealPlan({ weeks: data.weeks });
+      setIsLoading(false);
+    }
+  }, [data?.weeks]);
+  
+  // Fetch AI-generated recipes on mount (only if parent doesn't have weeks data)
+  useEffect(() => {
+    // Skip fetching if parent already provided weeks data
+    if (data?.weeks && Array.isArray(data.weeks)) {
+      return;
+    }
+    
     let cancelled = false;
     
     async function generateRecipes() {
@@ -3744,6 +3757,10 @@ function MealPlanCanvas({ data, onClose }) {
           setTimeout(() => {
             setMealPlan(result.mealPlan);
             setIsLoading(false);
+            // Sync weeks data back to parent so chat can edit it
+            if (onDataChange && result.mealPlan?.weeks) {
+              onDataChange({ ...data, weeks: result.mealPlan.weeks });
+            }
           }, 300);
         }
       } catch (err) {
@@ -3751,8 +3768,13 @@ function MealPlanCanvas({ data, onClose }) {
         if (!cancelled) {
           setError(err.message);
           // Fall back to sample data
-          setMealPlan(getFallbackMealPlan());
+          const fallback = getFallbackMealPlan();
+          setMealPlan(fallback);
           setIsLoading(false);
+          // Sync fallback data to parent so chat can edit it
+          if (onDataChange && fallback.weeks) {
+            onDataChange({ ...data, weeks: fallback.weeks });
+          }
         }
       }
     }
@@ -5449,12 +5471,13 @@ Remember: Be specific, be brief, be helpful.`;
           overflow: "hidden",
           animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
         }}>
-          {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
-              data={canvasData} 
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
+{canvasType === "mealPlan" && (
+<MealPlanCanvas
+  data={canvasData}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onDataChange={(newData) => setCanvasData(newData)}
+  />
+  )}
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
@@ -5483,13 +5506,14 @@ Remember: Be specific, be brief, be helpful.`;
           background: WHITE, zIndex: 40, overflow: "hidden",
           display: "flex", flexDirection: "column"
         }}>
-          {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-          {canvasType === "workout" && (
+{canvasType === "mealPlan" && (
+<MealPlanCanvas
+  data={canvasData}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onDataChange={(newData) => setCanvasData(newData)}
+  />
+  )}
+  {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
