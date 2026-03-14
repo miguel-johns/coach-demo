@@ -3383,7 +3383,7 @@ Remember: Be specific, be brief, be helpful.`;
         </main>
       ) : (
       <main style={{
-        flex: 1, overflowY: "auto",
+        flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
         display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
       }}>
