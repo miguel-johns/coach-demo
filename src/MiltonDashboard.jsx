@@ -1766,7 +1766,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 
 /* �����══════════════════════════════════════════
    CLIENT PROFILE SCREEN
-   ═══════════════════════════════════════════ */
+   ════════════════════════���══════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -3203,6 +3203,1504 @@ function AddClientModal({ onClose, isMobile }) {
 }
 
 /* ═══════════════════════════════════════════
+   CANVAS DATA GENERATORS
+   ═══════════════════════════════════════════ */
+
+function generateMealPlan(clientName) {
+  const meals = {
+    breakfast: [
+      { name: "Greek Yogurt Bowl", calories: 350, protein: 25, carbs: 35, fat: 12 },
+      { name: "Eggs & Avocado Toast", calories: 420, protein: 22, carbs: 30, fat: 24 },
+      { name: "Protein Oatmeal", calories: 380, protein: 28, carbs: 45, fat: 10 },
+      { name: "Smoothie Bowl", calories: 340, protein: 24, carbs: 42, fat: 8 },
+      { name: "Veggie Omelet", calories: 360, protein: 26, carbs: 12, fat: 22 },
+      { name: "Cottage Cheese Parfait", calories: 320, protein: 30, carbs: 28, fat: 8 },
+      { name: "Protein Pancakes", calories: 400, protein: 28, carbs: 40, fat: 14 },
+    ],
+    lunch: [
+      { name: "Grilled Chicken Salad", calories: 450, protein: 42, carbs: 20, fat: 22 },
+      { name: "Turkey Wrap", calories: 480, protein: 35, carbs: 42, fat: 18 },
+      { name: "Salmon Quinoa Bowl", calories: 520, protein: 38, carbs: 45, fat: 20 },
+      { name: "Tuna Poke Bowl", calories: 440, protein: 36, carbs: 38, fat: 16 },
+      { name: "Chicken Stir-Fry", calories: 460, protein: 40, carbs: 35, fat: 18 },
+      { name: "Mediterranean Bowl", calories: 490, protein: 32, carbs: 48, fat: 22 },
+      { name: "Shrimp Tacos", calories: 420, protein: 34, carbs: 36, fat: 16 },
+    ],
+    dinner: [
+      { name: "Baked Salmon & Veggies", calories: 520, protein: 44, carbs: 25, fat: 26 },
+      { name: "Lean Beef Stir-Fry", calories: 480, protein: 38, carbs: 32, fat: 22 },
+      { name: "Grilled Chicken Breast", calories: 440, protein: 46, carbs: 18, fat: 18 },
+      { name: "Turkey Meatballs", calories: 500, protein: 40, carbs: 35, fat: 20 },
+      { name: "Herb Roasted Cod", calories: 380, protein: 42, carbs: 15, fat: 16 },
+      { name: "Chicken Curry", calories: 520, protein: 36, carbs: 45, fat: 24 },
+      { name: "Pork Tenderloin", calories: 460, protein: 44, carbs: 22, fat: 20 },
+    ],
+    snack: [
+      { name: "Protein Shake", calories: 180, protein: 25, carbs: 8, fat: 4 },
+      { name: "Greek Yogurt", calories: 150, protein: 15, carbs: 12, fat: 4 },
+      { name: "Almonds & Apple", calories: 220, protein: 6, carbs: 22, fat: 14 },
+      { name: "Protein Bar", calories: 200, protein: 20, carbs: 18, fat: 8 },
+      { name: "Cottage Cheese", calories: 160, protein: 18, carbs: 6, fat: 5 },
+      { name: "Hummus & Veggies", calories: 180, protein: 8, carbs: 20, fat: 10 },
+      { name: "Hard Boiled Eggs", calories: 140, protein: 12, carbs: 2, fat: 10 },
+    ]
+  };
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  return {
+    type: "mealPlan",
+    client: clientName,
+    weekStart: "Mar 10",
+    days: days.map((day, i) => ({
+      day,
+      meals: [
+        { type: "breakfast", ...meals.breakfast[i % meals.breakfast.length] },
+        { type: "lunch", ...meals.lunch[i % meals.lunch.length] },
+        { type: "dinner", ...meals.dinner[i % meals.dinner.length] },
+        { type: "snack", ...meals.snack[i % meals.snack.length] },
+      ]
+    })),
+    weeklyTargets: { calories: 1800, protein: 120, carbs: 180, fat: 50 }
+  };
+}
+
+function generateWorkoutProgram(clientName) {
+  const exercises = {
+    push: [
+      { name: "Bench Press", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", weight: "45 lbs", rest: "60s" },
+      { name: "Cable Flyes", sets: 3, reps: "12-15", weight: "30 lbs", rest: "45s" },
+      { name: "Overhead Press", sets: 3, reps: "8-10", weight: "85 lbs", rest: "90s" },
+      { name: "Tricep Pushdowns", sets: 3, reps: "12-15", weight: "40 lbs", rest: "45s" },
+    ],
+    pull: [
+      { name: "Deadlift", sets: 4, reps: "5-6", weight: "225 lbs", rest: "120s" },
+      { name: "Barbell Rows", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
+      { name: "Lat Pulldowns", sets: 3, reps: "10-12", weight: "120 lbs", rest: "60s" },
+      { name: "Face Pulls", sets: 3, reps: "15-20", weight: "35 lbs", rest: "45s" },
+      { name: "Bicep Curls", sets: 3, reps: "12-15", weight: "25 lbs", rest: "45s" },
+    ],
+    legs: [
+      { name: "Squats", sets: 4, reps: "6-8", weight: "185 lbs", rest: "120s" },
+      { name: "Romanian Deadlift", sets: 3, reps: "10-12", weight: "135 lbs", rest: "90s" },
+      { name: "Leg Press", sets: 3, reps: "12-15", weight: "270 lbs", rest: "60s" },
+      { name: "Walking Lunges", sets: 3, reps: "12 each", weight: "30 lbs", rest: "60s" },
+      { name: "Calf Raises", sets: 4, reps: "15-20", weight: "180 lbs", rest: "45s" },
+    ],
+    cardio: [
+      { name: "Treadmill Walk", sets: 1, reps: "30 min", weight: "3.5 mph", rest: "-" },
+      { name: "Stretching", sets: 1, reps: "15 min", weight: "-", rest: "-" },
+    ]
+  };
+  return {
+    type: "workout",
+    client: clientName,
+    programName: "Strength Building - Week 1",
+    days: [
+      { day: "Monday", focus: "Upper Body Push", exercises: exercises.push },
+      { day: "Tuesday", focus: "Lower Body", exercises: exercises.legs },
+      { day: "Wednesday", focus: "Active Recovery", exercises: exercises.cardio },
+      { day: "Thursday", focus: "Upper Body Pull", exercises: exercises.pull },
+      { day: "Friday", focus: "Lower Body", exercises: exercises.legs },
+      { day: "Saturday", focus: "Upper Body Push", exercises: exercises.push },
+      { day: "Sunday", focus: "Rest Day", exercises: [] },
+    ]
+  };
+}
+
+function generateMessageSequence(clientName) {
+  const firstName = clientName.split(" ")[0];
+  return {
+    type: "messageSequence",
+    client: clientName,
+    campaignName: "Check-In Series",
+    messages: [
+      { day: 0, type: "sms", subject: null, body: `Hey ${firstName}! Just checking in - how are you feeling about your progress this week? Let me know if there's anything on your mind.`, status: "draft" },
+      { day: 2, type: "email", subject: `Your Weekly Check-In, ${firstName}`, body: `Hi ${firstName},\n\nI wanted to reach out and see how things are going with your nutrition plan. Remember, consistency is more important than perfection!\n\nA few quick questions:\n- How are you feeling energy-wise?\n- Any challenges with meal prep?\n- Are you staying hydrated?\n\nLooking forward to hearing from you!\n\nBest,\nYour Coach`, status: "draft" },
+      { day: 5, type: "sms", body: `Quick reminder ${firstName} - don't forget to log your meals today! You're doing great. 💪`, status: "draft" },
+      { day: 7, type: "email", subject: "End of Week Reflection", body: `Hey ${firstName},\n\nAs we wrap up this week, I'd love to hear your thoughts:\n\n1. What went well?\n2. What was challenging?\n3. What's one thing you want to focus on next week?\n\nRemember, every week is a new opportunity to grow!\n\nKeep it up,\nYour Coach`, status: "draft" },
+    ]
+  };
+}
+
+function generateProgressReport(clientName, clientData) {
+  const firstName = clientName.split(" ")[0];
+  return {
+    type: "report",
+    client: clientName,
+    title: `Weekly Progress Report - ${firstName}`,
+    sections: [
+      { id: "summary", title: "Week Summary", content: `${firstName} had a ${clientData?.engagementScore > 80 ? "strong" : "moderate"} week with ${clientData?.mealsLogged || 0} meals logged. ${clientData?.narrative || "Overall progress is on track."}` },
+      { id: "metrics", title: "Key Metrics", data: { mealsLogged: clientData?.mealsLogged || 0, proteinAvg: clientData?.proteinAvg || 0, proteinTarget: clientData?.proteinTarget || 100, weightTrend: clientData?.weightTrend || 0, steps: clientData?.steps || 0 } },
+      { id: "goals", title: "Goal Progress", content: `Current weight trend: ${clientData?.weightTrend > 0 ? "+" : ""}${clientData?.weightTrend || 0} lbs. Protein intake averaging ${clientData?.proteinAvg || 0}g daily against a target of ${clientData?.proteinTarget || 100}g.` },
+      { id: "recommendations", title: "Recommendations", items: clientData?.coachAngle ? [clientData.coachAngle] : ["Continue current approach", "Focus on consistency"] }
+    ]
+  };
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS COMPONENTS - Calendar View
+   ════════════════════════════════�������������═���������════════ */
+
+function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
+  if (!data) return null;
+  
+  // Generate 31 days for the month view
+  const today = new Date();
+  const currentMonth = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  // Map data days to calendar - spread across month
+  const getDayData = (dayNum) => {
+    if (!data.days) return null;
+    const dayIndex = (dayNum - 1) % data.days.length;
+    return data.days[dayIndex];
+  };
+  
+  const getDayLabel = (dayNum) => {
+    const dayData = getDayData(dayNum);
+    if (!dayData) return null;
+    if (type === "mealPlan") {
+      const totalCals = dayData.meals?.reduce((sum, m) => sum + (m.calories || 0), 0) || 0;
+      return `${totalCals} cal`;
+    }
+    if (type === "workout") {
+      return dayData.focus || "Rest";
+    }
+    return null;
+  };
+  
+  const getDayColor = (dayNum) => {
+    const dayData = getDayData(dayNum);
+    if (!dayData) return null;
+    if (type === "workout" && dayData.focus === "Rest Day") return "#f3f4f6";
+    if (type === "workout" && dayData.exercises?.length > 0) return TEAL_LIGHT;
+    if (type === "mealPlan") return TEAL_LIGHT;
+    return null;
+  };
+
+  // Detail view when a day is selected
+  if (selectedDay !== null) {
+    const dayData = getDayData(selectedDay);
+    const dayOfWeek = dayNames[new Date(today.getFullYear(), today.getMonth(), selectedDay).getDay()];
+    
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+        {/* Subtle close button - returns to calendar view */}
+        <div 
+          onClick={() => onSelectDay(null)}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+            background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
+            border: `1px solid ${BORDER}`,
+            transition: "all 0.2s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.8)"; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        
+        {/* Day header with animation */}
+        <div style={{ 
+          padding: "24px 28px 20px",
+          background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+          borderBottom: `1px solid ${BORDER}`,
+          animation: "fadeUp 0.4s ease-out forwards"
+        }}>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "4px 12px 4px 8px", borderRadius: 20,
+            background: TEAL_LIGHT, marginBottom: 12,
+            fontSize: 11, fontWeight: 600, color: TEAL,
+            textTransform: "uppercase", letterSpacing: "0.05em"
+          }}>
+            <div style={{ 
+              width: 6, height: 6, borderRadius: "50%", background: TEAL,
+              animation: "pulseGlow 2s ease-in-out infinite"
+            }} />
+            {type === "mealPlan" ? "Daily Nutrition" : "Daily Training"}
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+            {dayOfWeek}, {currentMonth.split(' ')[0]} {selectedDay}
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+            {type === "mealPlan" ? "Tap any meal to edit via chat" : "Tap any exercise to modify"}
+          </div>
+        </div>
+        
+        {/* Day detail content with staggered animations */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+          {type === "mealPlan" && dayData?.meals && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {dayData.meals.map((meal, idx) => (
+                <div key={idx} style={{
+                  background: WHITE, borderRadius: 16, padding: 18,
+                  border: `1px solid ${BORDER}`,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  opacity: 0, transform: "translateY(12px)",
+                  animation: `fadeUp 0.4s ease-out ${0.15 + idx * 0.08}s forwards`,
+                  cursor: "pointer", transition: "all 0.2s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                    {meal.type}
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 10 }}>{meal.name}</div>
+                  <div style={{ display: "flex", gap: 16, fontSize: 12, color: TEXT_SEC }}>
+                    <span style={{ fontWeight: 600, color: TEXT }}>{meal.calories} cal</span>
+                    <span>{meal.protein}g protein</span>
+                    <span>{meal.carbs}g carbs</span>
+                    <span>{meal.fat}g fat</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {type === "workout" && dayData && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ 
+                padding: "14px 18px", background: `linear-gradient(135deg, ${TEAL_LIGHT} 0%, #e8f5f4 100%)`,
+                borderRadius: 14, fontSize: 15, fontWeight: 600, color: TEXT,
+                opacity: 0, animation: "fadeUp 0.4s ease-out 0.1s forwards",
+                display: "flex", alignItems: "center", gap: 10
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
+                {dayData.focus}
+              </div>
+              {dayData.exercises?.map((ex, idx) => (
+                <div key={idx} style={{
+                  background: WHITE, borderRadius: 16, padding: 18,
+                  border: `1px solid ${BORDER}`,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  opacity: 0, transform: "translateY(12px)",
+                  animation: `fadeUp 0.4s ease-out ${0.2 + idx * 0.08}s forwards`,
+                  cursor: "pointer", transition: "all 0.2s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 6 }}>
+                      {ex.sets} sets × {ex.reps} @ {ex.weight}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, background: "#f5f7f6", padding: "6px 12px", borderRadius: 8, fontWeight: 500 }}>
+                    {ex.rest}
+                  </div>
+                </div>
+              ))}
+              {(!dayData.exercises || dayData.exercises.length === 0) && (
+                <div style={{ 
+                  padding: 40, textAlign: "center", color: TEXT_SEC, fontSize: 14,
+                  background: WHITE, borderRadius: 16, border: `1px dashed ${BORDER}`,
+                  opacity: 0, animation: "fadeUp 0.4s ease-out 0.2s forwards"
+                }}>
+                  Rest day - recovery is part of the process
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Hint bar with AI indicator */}
+        <div style={{
+          padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+          background: WHITE, fontSize: 13, color: TEXT_SEC,
+          display: "flex", alignItems: "center", gap: 10,
+          animation: "fadeUp 0.5s ease-out 0.6s both"
+        }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span>Ask Milton to customize: "Swap lunch for grilled salmon"</span>
+        </div>
+      </div>
+    );
+  }
+  
+  // Calendar grid view
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+          background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER}`,
+          transition: "all 0.2s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.8)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* AI-style header with shimmer accent */}
+      <div style={{ 
+        padding: "24px 28px 20px", 
+        background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+        borderBottom: `1px solid ${BORDER}`,
+        animation: "fadeUp 0.5s ease-out forwards"
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "4px 12px 4px 8px", borderRadius: 20,
+          background: TEAL_LIGHT, marginBottom: 12,
+          fontSize: 11, fontWeight: 600, color: TEAL,
+          textTransform: "uppercase", letterSpacing: "0.05em"
+        }}>
+          <div style={{ 
+            width: 6, height: 6, borderRadius: "50%", background: TEAL,
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }} />
+          {type === "mealPlan" ? "Nutrition Plan" : "Training Program"}
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+          {currentMonth}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+          {type === "mealPlan" ? `Personalized meal plan for ${data.client}` : `${data.programName} for ${data.client}`}
+        </div>
+      </div>
+      
+      {/* Day name headers */}
+      <div style={{ 
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4,
+        padding: "12px 20px", background: WHITE,
+        animation: "fadeUp 0.5s ease-out 0.1s both"
+      }}>
+        {dayNames.map((d, i) => (
+          <div key={d} style={{ 
+            textAlign: "center", fontSize: 11, fontWeight: 600, 
+            color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em",
+            padding: "6px 0",
+            animation: `fadeUp 0.4s ease-out ${0.15 + i * 0.03}s both`
+          }}>
+            {d}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar grid with staggered animations */}
+      <div style={{ 
+        flex: 1, overflowY: "auto", padding: "8px 16px 16px",
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8,
+        alignContent: "start"
+      }}>
+        {/* Empty cells for days before month starts */}
+        {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+          <div key={`empty-${idx}`} style={{ aspectRatio: "1", borderRadius: 12 }} />
+        ))}
+        
+        {/* Day cells with staggered reveal animation */}
+        {Array.from({ length: daysInMonth }).map((_, idx) => {
+          const dayNum = idx + 1;
+          const isToday = dayNum === today.getDate();
+          const dayColor = getDayColor(dayNum);
+          const label = getDayLabel(dayNum);
+          const animDelay = 0.2 + (Math.floor(idx / 7) * 0.08) + ((idx % 7) * 0.02);
+          
+          return (
+            <div
+              key={dayNum}
+              onClick={() => onSelectDay(dayNum)}
+              style={{
+                aspectRatio: "1", borderRadius: 14,
+                background: isToday ? `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)` : dayColor || WHITE,
+                border: isToday ? "none" : `1px solid ${BORDER}`,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                cursor: "pointer", 
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                padding: 6,
+                boxShadow: isToday ? "0 4px 16px rgba(43,122,120,0.35)" : "0 1px 3px rgba(0,0,0,0.04)",
+                opacity: 0,
+                transform: "scale(0.85)",
+                animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "scale(1.08)";
+                e.currentTarget.style.boxShadow = isToday 
+                  ? "0 8px 24px rgba(43,122,120,0.4)" 
+                  : "0 8px 20px rgba(0,0,0,0.12)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = isToday 
+                  ? "0 4px 16px rgba(43,122,120,0.35)" 
+                  : "0 1px 3px rgba(0,0,0,0.04)";
+              }}
+            >
+              <div style={{ 
+                fontSize: 16, fontWeight: 700, 
+                color: isToday ? WHITE : TEXT 
+              }}>
+                {dayNum}
+              </div>
+              {label && (
+                <div style={{ 
+                  fontSize: 9, fontWeight: 500, 
+                  color: isToday ? "rgba(255,255,255,0.85)" : TEXT_SEC,
+                  textAlign: "center", marginTop: 3,
+                  lineHeight: 1.2, maxWidth: "100%",
+                  overflow: "hidden", textOverflow: "ellipsis",
+                  whiteSpace: "nowrap", padding: "0 2px"
+                }}>
+                  {label}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Hint bar with AI indicator */}
+      <div style={{
+        padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 13, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10,
+        animation: "fadeUp 0.5s ease-out 1s both"
+      }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click any day to view and edit with Milton</span>
+      </div>
+    </div>
+  );
+}
+
+function MealPlanCanvas({ data, onClose }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [mealPlan, setMealPlan] = useState(null);
+  const [error, setError] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  // Fetch AI-generated recipes on mount
+  useEffect(() => {
+    let cancelled = false;
+    
+    async function generateRecipes() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Simulate progress for UX
+        const progressInterval = setInterval(() => {
+          setLoadingProgress(prev => Math.min(prev + Math.random() * 15, 90));
+        }, 500);
+        
+        const response = await fetch('/api/generate-recipes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: data?.client || 'Client',
+            goals: data?.goals || 'General health and fitness',
+            restrictions: data?.restrictions || null,
+            dailyCalories: data?.weeklyTargets?.calories || 2000,
+            dailyProtein: data?.weeklyTargets?.protein || 150,
+            weeksToGenerate: 4
+          })
+        });
+        
+        clearInterval(progressInterval);
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate recipes');
+        }
+        
+        const result = await response.json();
+        
+        if (!cancelled) {
+          setLoadingProgress(100);
+          setTimeout(() => {
+            setMealPlan(result.mealPlan);
+            setIsLoading(false);
+          }, 300);
+        }
+      } catch (err) {
+        console.error('[v0] Recipe generation error:', err);
+        if (!cancelled) {
+          setError(err.message);
+          // Fall back to sample data
+          setMealPlan(getFallbackMealPlan());
+          setIsLoading(false);
+        }
+      }
+    }
+    
+    generateRecipes();
+    
+    return () => { cancelled = true; };
+  }, [data]);
+  
+  // Fallback sample data if API fails
+  function getFallbackMealPlan() {
+    return {
+      weeks: [1, 2, 3, 4].map(weekNum => ({
+        weekNumber: weekNum,
+        breakfast: [
+          { name: "Greek Yogurt Parfait", calories: 320, protein: 22, carbs: 35, fat: 8, prepTime: "5 min", ingredients: ["Greek yogurt", "Granola", "Mixed berries", "Honey"] },
+          { name: "Avocado Toast & Eggs", calories: 450, protein: 18, carbs: 32, fat: 28, prepTime: "10 min", ingredients: ["Whole grain bread", "Avocado", "Eggs", "Everything seasoning"] },
+          { name: "Protein Smoothie Bowl", calories: 380, protein: 28, carbs: 45, fat: 12, prepTime: "8 min", ingredients: ["Protein powder", "Frozen banana", "Almond milk", "Chia seeds"] }
+        ],
+        snack: [
+          { name: "Mixed Nuts & Berries", calories: 180, protein: 6, carbs: 15, fat: 12, prepTime: "2 min", ingredients: ["Almonds", "Walnuts", "Blueberries", "Raspberries"] },
+          { name: "Cottage Cheese Cup", calories: 150, protein: 14, carbs: 8, fat: 5, prepTime: "2 min", ingredients: ["Low-fat cottage cheese", "Pineapple chunks", "Cinnamon"] },
+          { name: "Protein Energy Bites", calories: 200, protein: 12, carbs: 22, fat: 8, prepTime: "1 min", ingredients: ["Oats", "Protein powder", "Peanut butter", "Dark chocolate chips"] }
+        ],
+        lunch: [
+          { name: "Grilled Chicken Salad", calories: 420, protein: 38, carbs: 18, fat: 22, prepTime: "15 min", ingredients: ["Chicken breast", "Mixed greens", "Cherry tomatoes", "Feta cheese", "Olive oil dressing"] },
+          { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, carbs: 58, fat: 18, prepTime: "20 min", ingredients: ["Quinoa", "Chickpeas", "Roasted vegetables", "Tahini dressing"] },
+          { name: "Turkey Avocado Wrap", calories: 380, protein: 28, carbs: 32, fat: 16, prepTime: "10 min", ingredients: ["Whole wheat wrap", "Turkey slices", "Avocado", "Spinach", "Mustard"] }
+        ],
+        dinner: [
+          { name: "Salmon with Vegetables", calories: 520, protein: 42, carbs: 25, fat: 28, prepTime: "25 min", ingredients: ["Salmon fillet", "Asparagus", "Sweet potato", "Lemon", "Olive oil"] },
+          { name: "Lean Beef Stir Fry", calories: 480, protein: 38, carbs: 35, fat: 20, prepTime: "20 min", ingredients: ["Sirloin strips", "Broccoli", "Bell peppers", "Brown rice", "Soy sauce"] },
+          { name: "Herb Grilled Chicken", calories: 440, protein: 45, carbs: 22, fat: 18, prepTime: "22 min", ingredients: ["Chicken breast", "Italian herbs", "Roasted zucchini", "Quinoa"] }
+        ]
+      }))
+    };
+  }
+  
+  if (!data) return null;
+  
+  const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
+  
+  // Recipe images from Unsplash (food photography)
+  const recipeImages = {
+    Breakfast: [
+      "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=200&fit=crop"
+    ],
+    Snack: [
+      "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=300&h=200&fit=crop"
+    ],
+    Lunch: [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop"
+    ],
+    Dinner: [
+      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"
+    ]
+  };
+  
+  // Use AI-generated recipes or fallback
+  const weeks = mealPlan?.weeks || [];
+  
+  // Loading state - AI generating recipes
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+        {/* Close button */}
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        
+        {/* Loading content */}
+        <div style={{ 
+          flex: 1, display: "flex", flexDirection: "column", 
+          alignItems: "center", justifyContent: "center", padding: 40
+        }}>
+          {/* AI animation */}
+          <div style={{ 
+            width: 80, height: 80, borderRadius: 20, 
+            background: `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 24, boxShadow: "0 8px 32px rgba(43,122,120,0.3)",
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
+            Generating Personalized Recipes
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 24, textAlign: "center", maxWidth: 280 }}>
+            Milton is creating {data?.client ? `a custom meal plan for ${data.client}` : "your personalized meal plan"} based on nutritional goals
+          </div>
+          
+          {/* Progress bar */}
+          <div style={{ 
+            width: 240, height: 6, borderRadius: 3, background: BORDER, overflow: "hidden"
+          }}>
+            <div style={{ 
+              width: `${loadingProgress}%`, height: "100%", 
+              background: `linear-gradient(90deg, ${TEAL} 0%, #1f8785 100%)`,
+              borderRadius: 3, transition: "width 0.3s ease"
+            }} />
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 8 }}>
+            {loadingProgress < 30 ? "Analyzing nutritional requirements..." : 
+             loadingProgress < 60 ? "Selecting optimal recipes..." :
+             loadingProgress < 90 ? "Calculating macros..." : "Finalizing meal plan..."}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+          background: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER}`,
+          transition: "all 0.2s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Header */}
+      <div style={{ 
+        padding: "24px 28px 20px", 
+        background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+        borderBottom: `1px solid ${BORDER}`,
+        animation: "fadeUp 0.5s ease-out forwards"
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "4px 12px 4px 8px", borderRadius: 20,
+          background: TEAL_LIGHT, marginBottom: 12,
+          fontSize: 11, fontWeight: 600, color: TEAL,
+          textTransform: "uppercase", letterSpacing: "0.05em"
+        }}>
+          <div style={{ 
+            width: 6, height: 6, borderRadius: "50%", background: TEAL,
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }} />
+          {error ? "Sample Plan" : "AI-Generated"}
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+          Personalized Meal Plan
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+          {data.client ? `Custom recipes for ${data.client}` : "AI-generated recipes based on your goals"}
+        </div>
+      </div>
+      
+      {/* Scrollable weeks content - each week is one horizontal row */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 0" }}>
+        {weeks.map((week, weekIdx) => {
+          const weekNum = week.weekNumber || weekIdx + 1;
+          
+          // Map category names to the API data keys
+          const categoryDataMap = {
+            "Breakfast": week.breakfast || [],
+            "Snack": week.snack || [],
+            "Lunch": week.lunch || [],
+            "Dinner": week.dinner || []
+          };
+          
+          return (
+          <div 
+            key={weekNum}
+            style={{
+              marginBottom: 24,
+              opacity: 0,
+              animation: `fadeUp 0.5s ease-out ${0.2 + weekIdx * 0.12}s forwards`
+            }}
+          >
+            {/* Week label - sticky on left */}
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: 10, 
+              padding: "0 24px", marginBottom: 12
+            }}>
+              <div style={{ 
+                width: 32, height: 32, borderRadius: 8, 
+                background: `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: WHITE, fontSize: 13, fontWeight: 700,
+                boxShadow: "0 3px 10px rgba(43,122,120,0.25)"
+              }}>
+                {weekNum}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Week {weekNum}</div>
+              <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                {data.weeklyTargets?.calories || 2000} cal/day
+              </div>
+            </div>
+            
+            {/* Horizontal scrolling row with ALL meals for this week */}
+            <div style={{ 
+              display: "flex", gap: 16, overflowX: "auto", 
+              paddingBottom: 8, paddingLeft: 24, paddingRight: 24,
+              scrollbarWidth: "none", msOverflowStyle: "none"
+            }} className="hide-scrollbar">
+              {/* Iterate through each meal category inline */}
+              {mealCategories.map((category, catIdx) => {
+                const categoryColor = category === "Breakfast" ? "#f59e0b" : 
+                                     category === "Snack" ? "#8b5cf6" : 
+                                     category === "Lunch" ? "#10b981" : "#3b82f6";
+                const recipes = categoryDataMap[category] || [];
+                
+                return (
+                  <div key={category} style={{ display: "contents" }}>
+                    {/* Category divider with label */}
+                    <div style={{ 
+                      display: "flex", flexDirection: "column", alignItems: "center", 
+                      justifyContent: "center", minWidth: 70, padding: "8px 0",
+                      opacity: 0,
+                      animation: `fadeUp 0.4s ease-out ${0.25 + weekIdx * 0.12 + catIdx * 0.05}s forwards`
+                    }}>
+                      <div style={{ 
+                        width: 8, height: 8, borderRadius: "50%", 
+                        background: categoryColor, marginBottom: 6,
+                        boxShadow: `0 2px 8px ${categoryColor}40`
+                      }} />
+                      <div style={{ 
+                        fontSize: 10, fontWeight: 600, color: TEXT_SEC, 
+                        textTransform: "uppercase", letterSpacing: "0.04em",
+                        writingMode: "vertical-rl", textOrientation: "mixed",
+                        transform: "rotate(180deg)"
+                      }}>
+                        {category}
+                      </div>
+                    </div>
+                    
+                    {/* Recipe cards for this category */}
+                    {recipes.map((recipe, recipeIdx) => (
+                      <div
+                        key={`${category}-${recipeIdx}`}
+                        style={{
+                          minWidth: 160, maxWidth: 160,
+                          background: WHITE, borderRadius: 14,
+                          border: `1px solid ${BORDER}`,
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                          opacity: 0, transform: "scale(0.92) translateX(16px)",
+                          animation: `canvasCellReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) ${0.3 + weekIdx * 0.12 + catIdx * 0.08 + recipeIdx * 0.04}s forwards`
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = "scale(1.04) translateY(-4px)";
+                          e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,0,0,0.12)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = "scale(1) translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+                        }}
+                      >
+                        {/* Recipe image */}
+                        <div style={{ 
+                          height: 90, 
+                          background: `linear-gradient(135deg, ${categoryColor}15 0%, ${categoryColor}08 100%)`,
+                          position: "relative", overflow: "hidden"
+                        }}>
+                          <img 
+                            src={recipeImages[category][recipeIdx]}
+                            alt={recipe.name}
+                            crossOrigin="anonymous"
+                            style={{ 
+                              width: "100%", height: "100%", objectFit: "cover",
+                              transition: "transform 0.3s ease"
+                            }}
+                            onError={e => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                          {/* Category color accent bar */}
+                          <div style={{
+                            position: "absolute", top: 0, left: 0, right: 0, height: 3,
+                            background: categoryColor
+                          }} />
+                          {/* Prep time badge */}
+                          <div style={{
+                            position: "absolute", bottom: 6, right: 6,
+                            background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
+                            padding: "2px 6px", borderRadius: 6,
+                            fontSize: 9, fontWeight: 600, color: WHITE
+                          }}>
+                            {recipe.prepTime || recipe.time}
+                          </div>
+                        </div>
+                        
+                        {/* Recipe details */}
+                        <div style={{ padding: 10 }}>
+                          <div style={{ 
+                            fontSize: 12, fontWeight: 600, color: TEXT, 
+                            marginBottom: 5, lineHeight: 1.3,
+                            overflow: "hidden", textOverflow: "ellipsis",
+                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical"
+                          }}>
+                            {recipe.name}
+                          </div>
+                          <div style={{ 
+                            display: "flex", gap: 6, fontSize: 10, color: TEXT_SEC 
+                          }}>
+                            <span style={{ fontWeight: 600, color: TEXT }}>{recipe.calories}</span>
+                            <span>cal</span>
+                            <span style={{ opacity: 0.3 }}>|</span>
+                            <span style={{ fontWeight: 600, color: categoryColor }}>{recipe.protein}g</span>
+                            <span>pro</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+              
+              {/* Add more card at the end of the row */}
+              <div
+                style={{
+                  minWidth: 100, maxWidth: 100,
+                  background: "transparent", borderRadius: 14,
+                  border: `2px dashed ${BORDER}`,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", padding: 12,
+                  transition: "all 0.2s ease",
+                  opacity: 0,
+                  animation: `fadeUp 0.4s ease-out ${0.7 + weekIdx * 0.12}s forwards`
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = TEAL;
+                  e.currentTarget.style.background = TEAL_LIGHT;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = BORDER;
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <div style={{ 
+                  width: 28, height: 28, borderRadius: 8, 
+                  background: "#f0f4f3", 
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 6
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </div>
+                <span style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 500, textAlign: "center" }}>
+                  More
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+        })}
+        
+        {/* Load more indicator */}
+        <div style={{ 
+          padding: "16px 24px 32px", textAlign: "center",
+          opacity: 0, animation: "fadeUp 0.4s ease-out 1s forwards"
+        }}>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "10px 18px", borderRadius: 10,
+            background: WHITE, border: `1px solid ${BORDER}`,
+            fontSize: 12, color: TEXT_SEC, cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+            Generate more weeks
+          </div>
+        </div>
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 13, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10
+      }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click a recipe to customize or ask Milton for alternatives</span>
+      </div>
+    </div>
+  );
+}
+
+function WorkoutCanvas({ data, onClose }) {
+  const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
+  
+  if (!data) return null;
+  
+  const dayLabels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  
+  // Sample workout data for each day type
+  const workoutTemplates = {
+    push: {
+      title: "PUSH: CHEST & SHOULDERS",
+      exercises: [
+        { name: "Barbell Bench Press", sets: 4, reps: "8, 8, 6, 6", weight: "155 lb" },
+        { name: "Incline Dumbbell Press", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
+        { name: "Barbell Shoulder Press", sets: 3, reps: "8, 8, 8", weight: "95 lb" },
+      ]
+    },
+    pull: {
+      title: "PULL: BACK & BICEPS",
+      exercises: [
+        { name: "Barbell Deadlift", sets: 4, reps: "6, 6, 5, 5", weight: "225 lb" },
+        { name: "Seated Cable Row", sets: 3, reps: "10, 10, 8", weight: "120 lb" },
+        { name: "Barbell Curl", sets: 3, reps: "12, 10, 8", weight: "65 lb" },
+      ]
+    },
+    legs: {
+      title: "LEGS: SQUAT & DEADLIFT",
+      exercises: [
+        { name: "Barbell Full Squat", sets: 4, reps: "8, 8, 6, 6", weight: "185 lb" },
+        { name: "Romanian Deadlift", sets: 3, reps: "10, 10, 8", weight: "135 lb" },
+        { name: "Leg Press", sets: 3, reps: "12, 12, 10", weight: "270 lb" },
+      ]
+    },
+    upper: {
+      title: "FULL BODY: STRENGTH +",
+      exercises: [
+        { name: "Barbell Deadlift", sets: 3, reps: "10-12 reps", weight: "185 lb" },
+        { name: "Bird Dog", sets: 3, reps: "8-10 reps", weight: "BW" },
+        { name: "Dumbbell Front Raise", sets: 3, reps: "10-12 reps", weight: "15 lb" },
+      ]
+    },
+    rest: null
+  };
+  
+  // Define weekly schedule - which workout type for each day
+  const weekSchedules = [
+    ["upper", "rest", "pull", "rest", "legs", "rest", "rest"],
+    ["push", "rest", "pull", "rest", "legs", "rest", "rest"],
+    ["upper", "rest", "push", "rest", "pull", "rest", "rest"],
+    ["legs", "rest", "upper", "rest", "push", "rest", "rest"],
+  ];
+  
+  const weeks = Array.from({ length: weekView }, (_, i) => i + 1);
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{ 
+        padding: "20px 24px", 
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        animation: "fadeUp 0.4s ease-out forwards"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ 
+            width: 36, height: 36, borderRadius: 10, 
+            background: TEAL_LIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.client ? `Program for ${data.client}` : data.programName || "Training Program"}</div>
+          </div>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Week toggle buttons */}
+          <div style={{ 
+            display: "flex", background: "#f0f4f3", borderRadius: 8, padding: 3
+          }}>
+            {[1, 2, 4].map(num => (
+              <button
+                key={num}
+                onClick={() => setWeekView(num)}
+                style={{
+                  padding: "6px 12px", borderRadius: 6, border: "none",
+                  background: weekView === num ? TEAL : "transparent",
+                  color: weekView === num ? WHITE : TEXT_SEC,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {num} Week
+              </button>
+            ))}
+          </div>
+          
+          {/* Close button */}
+          <div 
+            onClick={onClose}
+            style={{ 
+              width: 32, height: 32, borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC, 
+              border: `1px solid ${BORDER}`, background: WHITE,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      {/* Calendar grid - weeks as rows, days as columns */}
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
+        {weeks.map((weekNum, weekIdx) => {
+          const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
+          
+          return (
+            <div 
+              key={weekNum}
+              style={{
+                display: "flex", gap: 0, marginBottom: 20, paddingLeft: 16,
+                opacity: 0,
+                animation: `fadeUp 0.5s ease-out ${0.15 + weekIdx * 0.1}s forwards`
+              }}
+            >
+              {/* Week label - vertical */}
+              <div style={{ 
+                width: 32, minWidth: 32, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "flex-start", paddingTop: 40
+              }}>
+                <div style={{ 
+                  writingMode: "vertical-rl", textOrientation: "mixed",
+                  transform: "rotate(180deg)",
+                  fontSize: 11, fontWeight: 600, color: TEXT_SEC,
+                  textTransform: "uppercase", letterSpacing: "0.05em"
+                }}>
+                  Week {weekNum}
+                </div>
+              </div>
+              
+              {/* Days columns */}
+              <div style={{ 
+                display: "flex", gap: 8, overflowX: "auto", paddingRight: 16,
+                paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none"
+              }} className="hide-scrollbar">
+                {dayLabels.map((day, dayIdx) => {
+                  const workoutType = schedule[dayIdx];
+                  const workout = workoutTemplates[workoutType];
+                  const isRest = !workout;
+                  const animDelay = 0.2 + weekIdx * 0.1 + dayIdx * 0.03;
+                  
+                  return (
+                    <div
+                      key={`${weekNum}-${day}`}
+                      style={{
+                        minWidth: 160, width: 160,
+                        background: WHITE, borderRadius: 12,
+                        border: `1px solid ${BORDER}`,
+                        overflow: "hidden",
+                        opacity: 0, transform: "scale(0.95)",
+                        animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
+                        display: "flex", flexDirection: "column"
+                      }}
+                    >
+                      {/* Day header */}
+                      <div style={{ 
+                        padding: "8px 12px", 
+                        borderBottom: isRest ? "none" : `1px solid ${BORDER}`,
+                        background: isRest ? "#fafcfb" : WHITE
+                      }}>
+                        <div style={{ 
+                          fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                          textTransform: "uppercase", letterSpacing: "0.04em"
+                        }}>
+                          {day}
+                        </div>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
+                          Day {dayIdx + 1}
+                        </div>
+                      </div>
+                      
+                      {/* Workout content or rest */}
+                      {isRest ? (
+                        <div style={{ 
+                          flex: 1, minHeight: 120, 
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: TEXT_SEC, fontSize: 11, fontStyle: "italic"
+                        }}>
+                          Rest
+                        </div>
+                      ) : (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                          {/* Workout title */}
+                          <div style={{ 
+                            padding: "8px 10px", 
+                            background: TEAL_LIGHT,
+                            borderBottom: `1px solid ${BORDER}`
+                          }}>
+                            <div style={{ 
+                              fontSize: 10, fontWeight: 700, color: TEXT,
+                              textTransform: "uppercase", letterSpacing: "0.02em",
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                            }}>
+                              {workout.title}
+                            </div>
+                          </div>
+                          
+                          {/* Exercises list */}
+                          <div style={{ flex: 1, padding: "6px 0" }}>
+                            {workout.exercises.map((ex, exIdx) => (
+                              <div
+                                key={exIdx}
+                                style={{
+                                  padding: "6px 10px",
+                                  display: "flex", alignItems: "flex-start", gap: 8,
+                                  borderBottom: exIdx < workout.exercises.length - 1 ? `1px solid #f0f4f3` : "none",
+                                  cursor: "pointer",
+                                  transition: "background 0.15s ease"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "#fafcfb"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                              >
+                                <div style={{ 
+                                  fontSize: 10, fontWeight: 600, color: TEAL,
+                                  minWidth: 20
+                                }}>
+                                  {ex.sets}x
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ 
+                                    fontSize: 12, fontWeight: 600, color: TEXT,
+                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                  }}>
+                                    {ex.name}
+                                  </div>
+                                  <div style={{ 
+                                    fontSize: 10, color: TEXT_SEC, marginTop: 2,
+                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                  }}>
+                                    {ex.reps}, {ex.weight}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Add exercise button */}
+                          <div style={{ 
+                            padding: "8px", borderTop: `1px solid ${BORDER}`,
+                            display: "flex", justifyContent: "center"
+                          }}>
+                            <div 
+                              style={{ 
+                                width: 24, height: 24, borderRadius: 6,
+                                background: "#f0f4f3", 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer", transition: "all 0.15s ease"
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 12, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10
+      }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click any exercise to edit or ask Milton to modify the program</span>
+      </div>
+    </div>
+  );
+}
+
+function MessageSequenceCanvas({ data, onClose }) {
+  if (!data) return null;
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 12, right: 12, zIndex: 10,
+          width: 28, height: 28, borderRadius: 8,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+          transition: "opacity 0.15s ease"
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.campaignName}</div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Message sequence for {data.client}</div>
+      </div>
+      
+      {/* Timeline content */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
+          {/* Timeline line */}
+          <div style={{
+            position: "absolute", left: 15, top: 20, bottom: 20,
+            width: 2, background: BORDER
+          }} />
+          
+          {data.messages?.map((msg, mIdx) => (
+            <div key={mIdx} style={{
+              display: "flex", gap: 14, paddingLeft: 0, marginBottom: 16
+            }}>
+              {/* Timeline dot */}
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: msg.type === "email" ? "#3b82f6" : "#10b981",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, zIndex: 1
+              }}>
+                {msg.type === "email" ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                )}
+              </div>
+              
+              <div style={{
+                flex: 1, background: WHITE, borderRadius: 10,
+                border: `1px solid ${BORDER}`, overflow: "hidden"
+              }}>
+                <div style={{
+                  padding: "10px 14px", background: "#f8faf9",
+                  borderBottom: `1px solid ${BORDER}`,
+                  display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ 
+                      fontSize: 10, fontWeight: 600, color: "#fff",
+                      background: msg.type === "email" ? "#3b82f6" : "#10b981",
+                      padding: "2px 6px", borderRadius: 8, textTransform: "uppercase"
+                    }}>
+                      {msg.type}
+                    </span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>Day {msg.day}</span>
+                  </div>
+                  <span style={{ 
+                    fontSize: 10, fontWeight: 500, color: "#f59e0b",
+                    background: "#fef3c7", padding: "2px 6px", borderRadius: 8
+                  }}>
+                    {msg.status}
+                  </span>
+                </div>
+                <div style={{ padding: 12 }}>
+                  {msg.subject && (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
+                      {msg.subject}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                    {msg.body.length > 150 ? msg.body.substring(0, 150) + "..." : msg.body}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
+      }}>
+        Chat with Milton: "Make message 1 more casual" or "Add email on day 4"
+      </div>
+    </div>
+  );
+}
+
+function ReportCanvas({ data, onClose }) {
+  if (!data) return null;
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 12, right: 12, zIndex: 10,
+          width: 28, height: 28, borderRadius: 8,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+          transition: "opacity 0.15s ease"
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.title}</div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Progress report for {data.client}</div>
+      </div>
+      
+      {/* Report sections */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {data.sections?.map((section, sIdx) => (
+            <div key={sIdx} style={{
+              background: WHITE, borderRadius: 10, padding: 14,
+              border: `1px solid ${BORDER}`
+            }}>
+              <div style={{ 
+                fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 10,
+                textTransform: "uppercase", letterSpacing: "0.03em"
+              }}>
+                {section.title}
+              </div>
+              
+              {section.content && (
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
+                  {section.content}
+                </div>
+              )}
+              
+              {section.data && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Meals</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Protein</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
+                      {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend}
+                    </div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Weight</div>
+                  </div>
+                </div>
+              )}
+              
+              {section.items && (
+                <ul style={{ margin: 0, paddingLeft: 18, marginTop: 4 }}>
+                  {section.items.map((item, iIdx) => (
+                    <li key={iIdx} style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, marginBottom: 2 }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
+      }}>
+        Chat with Milton: "Add nutrition section" or "Make summary more encouraging"
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    MAIN DASHBOARD
    ═══════════════════════════════════════════ */
 export default function MiltonDashboard() {
@@ -3220,6 +4718,15 @@ export default function MiltonDashboard() {
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
+
+  // Canvas state
+  const [canvasMode, setCanvasMode] = useState(false);
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report'
+  const [canvasData, setCanvasData] = useState(null);
+  const [canvasClient, setCanvasClient] = useState(null);
+  const [canvasHistory, setCanvasHistory] = useState([]);
+  const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
+  const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
 
   const clientNames = clients.map(c => c.name);
 
@@ -3297,6 +4804,190 @@ export default function MiltonDashboard() {
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, delay);
       return;
+    }
+
+    // Canvas intent detection - create meal plans, workouts, message sequences, reports
+    const canvasIntent = (() => {
+      // Find which client is mentioned
+      let clientMatch = null;
+      for (const c of clients) {
+        const firstName = c.name.split(" ")[0].toLowerCase();
+        if (low.includes(firstName)) {
+          clientMatch = c;
+          break;
+        }
+      }
+      // Fall back to selected client if no name mentioned
+      if (!clientMatch && selectedClient !== null) {
+        clientMatch = clients[selectedClient];
+      }
+      
+      if (!clientMatch) return null;
+      
+      // Meal plan intent
+      if (/(create|make|build|generate|design)\s+(a\s+)?(meal\s*plan|nutrition\s*plan|eating\s*plan|diet\s*plan|weekly\s*meals?)/i.test(low)) {
+        return { type: "mealPlan", client: clientMatch };
+      }
+      
+      // Workout intent
+      if (/(create|make|build|generate|design)\s+(a\s+)?(workout|exercise|training|fitness)\s*(program|plan|routine)?/i.test(low)) {
+        return { type: "workout", client: clientMatch };
+      }
+      
+      // Message sequence intent
+      if (/(create|make|build|generate|design|draft)\s+(a\s+)?(message|check-?in|follow-?up|outreach|campaign)\s*(sequence|series|plan)?/i.test(low) ||
+          /(create|make|build)\s+(a\s+)?(sequence|series)\s*(of\s+)?(messages?|check-?ins?)/i.test(low)) {
+        return { type: "messageSequence", client: clientMatch };
+      }
+      
+      // Report intent
+      if (/(create|make|build|generate)\s+(a\s+)?(progress\s*)?report/i.test(low) ||
+          /(generate|create|build)\s+(a\s+)?summary/i.test(low)) {
+        return { type: "report", client: clientMatch };
+      }
+      
+      return null;
+    })();
+
+    if (canvasIntent) {
+      setTimeout(() => {
+        const firstName = canvasIntent.client.name.split(" ")[0];
+        let data, responseText;
+        
+        if (canvasIntent.type === "mealPlan") {
+          data = generateMealPlan(canvasIntent.client.name);
+          responseText = `**I'm creating a meal plan for ${firstName}!**\n\nI've generated a 7-day meal plan targeting ${data.weeklyTargets.calories} calories and ${data.weeklyTargets.protein}g protein per day.\n\nYou can see the full plan in the canvas on the right. To make changes, just tell me:\n- "Swap Monday's lunch with grilled salmon"\n- "Increase protein on all days"\n- "Add a morning snack"`;
+        } else if (canvasIntent.type === "workout") {
+          data = generateWorkoutProgram(canvasIntent.client.name);
+          responseText = `**I'm creating a workout program for ${firstName}!**\n\nI've designed a strength building program with push/pull/legs split.\n\nYou can see the full program in the canvas. To make changes:\n- "Add more chest exercises on Monday"\n- "Replace deadlifts with trap bar deadlifts"\n- "Make Wednesday a rest day"`;
+        } else if (canvasIntent.type === "messageSequence") {
+          data = generateMessageSequence(canvasIntent.client.name);
+          responseText = `**I'm creating a message sequence for ${firstName}!**\n\nI've drafted a 4-message check-in series over 7 days, mixing SMS and email.\n\nYou can see the full sequence in the canvas. To make changes:\n- "Make the first message more casual"\n- "Add an email on day 4"\n- "Change the subject line to something catchier"`;
+        } else if (canvasIntent.type === "report") {
+          data = generateProgressReport(canvasIntent.client.name, canvasIntent.client);
+          responseText = `**I'm creating a progress report for ${firstName}!**\n\nI've generated a comprehensive weekly report with key metrics and recommendations.\n\nYou can see the full report in the canvas. To make changes:\n- "Add a nutrition breakdown section"\n- "Move recommendations to the top"\n- "Make the summary more encouraging"`;
+        }
+        
+        setCanvasType(canvasIntent.type);
+        setCanvasData(data);
+        setCanvasClient(canvasIntent.client.name);
+        setCanvasHistory([data]);
+        setCanvasHistoryIndex(0);
+        setCanvasMode(true);
+        
+        setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 500);
+      return;
+    }
+
+    // Canvas edit commands (when canvas is open)
+    if (canvasMode && canvasData) {
+      const canvasEditCmd = (() => {
+        if (canvasType === "mealPlan") {
+          // Swap meal: "swap Monday's lunch with grilled salmon"
+          const swapMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
+          if (swapMatch) {
+            const [, day, mealType, newMealName] = swapMatch;
+            return { action: "swapMeal", day, mealType, newMealName };
+          }
+          // Increase protein
+          if (/increase\s+protein/i.test(low)) {
+            return { action: "increaseProtein" };
+          }
+          // Add snack
+          if (/add\s+(a\s+)?(morning\s+)?snack/i.test(low)) {
+            return { action: "addSnack" };
+          }
+        }
+        if (canvasType === "workout") {
+          // Add exercises
+          if (/add\s+more\s+(\w+)\s+exercises?\s+on\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(low)) {
+            const match = low.match(/add\s+more\s+(\w+)\s+exercises?\s+on\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
+            return { action: "addExercises", muscle: match[1], day: match[2] };
+          }
+        }
+        if (canvasType === "messageSequence") {
+          // Make more casual
+          if (/more\s+casual/i.test(low)) {
+            return { action: "makeCasual" };
+          }
+          // Add message
+          if (/add\s+(an?\s+)?(email|sms|message)/i.test(low)) {
+            const match = low.match(/add\s+(an?\s+)?(email|sms|message)/i);
+            return { action: "addMessage", type: match[2] === "sms" ? "sms" : "email" };
+          }
+        }
+        return null;
+      })();
+
+      if (canvasEditCmd) {
+        setTimeout(() => {
+          let newData = JSON.parse(JSON.stringify(canvasData));
+          let responseText = "";
+
+          if (canvasEditCmd.action === "swapMeal") {
+            const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
+            if (dayIndex !== -1 && newData.days?.[dayIndex]) {
+              const mealIndex = newData.days[dayIndex].meals.findIndex(m => m.type === canvasEditCmd.mealType.toLowerCase());
+              if (mealIndex !== -1) {
+                newData.days[dayIndex].meals[mealIndex].name = canvasEditCmd.newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                responseText = `Done! I've swapped ${canvasEditCmd.day}'s ${canvasEditCmd.mealType} with ${canvasEditCmd.newMealName}.`;
+              }
+            }
+          } else if (canvasEditCmd.action === "increaseProtein") {
+            newData.days?.forEach(day => {
+              day.meals?.forEach(meal => {
+                meal.protein = Math.round(meal.protein * 1.2);
+                meal.calories = Math.round(meal.calories * 1.05);
+              });
+            });
+            newData.weeklyTargets.protein = Math.round(newData.weeklyTargets.protein * 1.2);
+            responseText = "Done! I've increased protein across all meals by about 20%.";
+          } else if (canvasEditCmd.action === "addSnack") {
+            newData.days?.forEach(day => {
+              day.meals.push({ type: "morning snack", name: "Greek Yogurt & Berries", calories: 180, protein: 15, carbs: 20, fat: 5 });
+            });
+            responseText = "Done! I've added a morning snack (Greek Yogurt & Berries) to each day.";
+          } else if (canvasEditCmd.action === "addExercises") {
+            const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
+            if (dayIndex !== -1 && newData.days?.[dayIndex]) {
+              newData.days[dayIndex].exercises.push({ name: `${canvasEditCmd.muscle.charAt(0).toUpperCase() + canvasEditCmd.muscle.slice(1)} Cable Flyes`, sets: 3, reps: "12-15", weight: "25 lbs", rest: "45s" });
+              responseText = `Done! I've added ${canvasEditCmd.muscle} exercises to ${canvasEditCmd.day}.`;
+            }
+          } else if (canvasEditCmd.action === "makeCasual") {
+            newData.messages?.forEach(msg => {
+              msg.body = msg.body.replace(/Hi /g, "Hey ").replace(/Hello /g, "Hey ").replace(/Best,/g, "Cheers,").replace(/Looking forward/g, "Can't wait");
+            });
+            responseText = "Done! I've made the messages more casual and friendly.";
+          } else if (canvasEditCmd.action === "addMessage") {
+            const lastDay = Math.max(...newData.messages.map(m => m.day));
+            newData.messages.push({
+              day: lastDay + 2,
+              type: canvasEditCmd.type,
+              subject: canvasEditCmd.type === "email" ? "Quick Check-In" : null,
+              body: canvasEditCmd.type === "email" ? `Hey ${canvasClient?.split(" ")[0]},\n\nJust wanted to drop a quick note to see how things are going. Any wins to celebrate this week?\n\nYour Coach` : `Hey ${canvasClient?.split(" ")[0]}! How's this week going? Any wins to celebrate?`,
+              status: "draft"
+            });
+            responseText = `Done! I've added a new ${canvasEditCmd.type} on day ${lastDay + 2}.`;
+          }
+
+          if (responseText) {
+            // Add to history for undo/redo
+            const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
+            newHistory.push(newData);
+            setCanvasHistory(newHistory);
+            setCanvasHistoryIndex(newHistory.length - 1);
+            setCanvasData(newData);
+          }
+
+          setChatMessages(prev => [...prev, { type: "ai", text: responseText || "I couldn't apply that change. Try being more specific!" }]);
+          setChatTyping(false);
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        }, delay);
+        return;
+      }
     }
 
     // Client data modification commands (goal changes, weight updates, etc.)
@@ -3572,7 +5263,11 @@ Remember: Be specific, be brief, be helpful.`;
           padding: "0 16px", height: 56, background: WHITE,
           borderBottom: `1px solid ${BORDER}`, boxShadow: "0 1px 6px rgba(0,0,0,0.04)"
         }}>
-          {selectedClient !== null ? (
+          {canvasMode ? (
+            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+            </div>
+          ) : selectedClient !== null ? (
             <div onClick={() => setSelectedClient(null)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
@@ -3588,10 +5283,29 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
+            {canvasMode ? (
+              <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
+                {canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+              </span>
+            ) : (
+              <>
+                <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
+              </>
+            )}
           </div>
-          <div onClick={() => setShowAddClient(true)} style={{
+          {canvasMode ? (
+            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{
+              width: 34, height: 34, borderRadius: 10, background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer"
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          ) : (
+            <div onClick={() => setShowAddClient(true)} style={{
               width: 34, height: 34, borderRadius: 10, background: TEAL,
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
@@ -3600,13 +5314,14 @@ Remember: Be specific, be brief, be helpful.`;
                 <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
               </svg>
             </div>
+          )}
         </div>
       )}
 
       {/* ═══ DESKTOP CHAT PANEL ═══ */}
       {!isMobile && (
         <div style={{
-          width: 352, flexShrink: 0, padding: "14px 6px 14px 10px",
+          width: 360, flexShrink: 0, padding: "14px 6px 14px 10px",
           display: "flex", flexDirection: "column"
         }}>
           <section style={{
@@ -3632,8 +5347,78 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
+      {/* ═══ CANVAS MODE - Full Dashboard ═══ */}
+      {canvasMode && !isMobile && (
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column",
+          background: WHITE, borderRadius: 20, margin: "14px 14px 14px 0",
+          border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          overflow: "hidden",
+          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+        }}>
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData} 
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ═══ MOBILE CANVAS VIEW ═══ */}
+      {canvasMode && isMobile && (
+        <div style={{
+          position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
+          background: WHITE, zIndex: 40, overflow: "hidden",
+          display: "flex", flexDirection: "column"
+        }}>
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+        </div>
+      )}
+
       {/* ═══ MAIN CONTENT ═══ */}
-      {selectedClient !== null ? (
+      {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
             client={clients[selectedClient]}
@@ -3650,7 +5435,7 @@ Remember: Be specific, be brief, be helpful.`;
             }}
           />
         </main>
-      ) : (
+      ) : !canvasMode ? (
       <main style={{
         flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
@@ -4095,7 +5880,7 @@ Remember: Be specific, be brief, be helpful.`;
           </div>
         )}
       </main>
-      )}
+      ) : null}
 
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
@@ -4123,10 +5908,31 @@ Remember: Be specific, be brief, be helpful.`;
           0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
           30% { opacity: 1; transform: translateY(-3px); }
         }
+        @keyframes canvasSlideIn {
+          from { opacity: 0; transform: scale(0.96) translateX(20px); }
+          to { opacity: 1; transform: scale(1) translateX(0); }
+        }
+        @keyframes canvasCellReveal {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(43, 122, 120, 0.3); }
+          50% { box-shadow: 0 0 20px 4px rgba(43, 122, 120, 0.15); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${BORDER}; border-radius: 3px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         input::placeholder { color: ${TEXT_SEC}; opacity: 0.7; }
       `}</style>
     </div>
