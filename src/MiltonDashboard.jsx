@@ -2381,17 +2381,17 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
             periods: [
               { label: "Today", rows: [
-                { l: "Calories", v: "1,620", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
               ]},
               { label: "Last 7 Days", rows: [
-                { l: "Calories", v: "1,580", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
               ]},
               { label: "Last 30 Days", rows: [
-                { l: "Calories", v: "1,540", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
               ]},
@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════���������������═���������════════ */
+   ════════════════════════════════�����������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3698,273 +3698,61 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function MealPlanCanvas({ data, onClose, onDataChange }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [mealPlan, setMealPlan] = useState(null);
-  const [error, setError] = useState(null);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  
-  // Sync mealPlan with parent data when it has weeks (meaning it was edited via chat)
-  useEffect(() => {
-    if (data?.weeks && Array.isArray(data.weeks)) {
-      setMealPlan({ weeks: data.weeks });
-      setIsLoading(false);
-    }
-  }, [data?.weeks]);
-  
-  // Fetch AI-generated recipes on mount (only if parent doesn't have weeks data)
-  useEffect(() => {
-    // Skip fetching if parent already provided weeks data
-    if (data?.weeks && Array.isArray(data.weeks)) {
-      return;
-    }
-    
-    let cancelled = false;
-    
-    async function generateRecipes() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Simulate progress for UX
-        const progressInterval = setInterval(() => {
-          setLoadingProgress(prev => Math.min(prev + Math.random() * 15, 90));
-        }, 500);
-        
-        const response = await fetch('/api/generate-recipes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientName: data?.client || 'Client',
-            goals: data?.goals || 'General health and fitness',
-            restrictions: data?.restrictions || null,
-            dailyCalories: data?.weeklyTargets?.calories || 2000,
-            dailyProtein: data?.weeklyTargets?.protein || 150,
-            weeksToGenerate: 4
-          })
-        });
-        
-        clearInterval(progressInterval);
-        
-        if (!response.ok) {
-          throw new Error('Failed to generate recipes');
-        }
-        
-        const result = await response.json();
-        
-        if (!cancelled) {
-          setLoadingProgress(100);
-          setTimeout(() => {
-            setMealPlan(result.mealPlan);
-            setIsLoading(false);
-            // Sync weeks data back to parent so chat can edit it
-            if (onDataChange && result.mealPlan?.weeks) {
-              onDataChange({ ...data, weeks: result.mealPlan.weeks });
-            }
-          }, 300);
-        }
-      } catch (err) {
-        console.error('[v0] Recipe generation error:', err);
-        if (!cancelled) {
-          setError(err.message);
-          // Fall back to sample data
-          const fallback = getFallbackMealPlan();
-          setMealPlan(fallback);
-          setIsLoading(false);
-          // Sync fallback data to parent so chat can edit it
-          if (onDataChange && fallback.weeks) {
-            onDataChange({ ...data, weeks: fallback.weeks });
-          }
-        }
-      }
-    }
-    
-    generateRecipes();
-    
-    return () => { cancelled = true; };
-  }, [data]);
-  
-  // Fallback sample data if API fails
-  function getFallbackMealPlan() {
-    return {
-      weeks: [1, 2, 3, 4].map(weekNum => ({
-        weekNumber: weekNum,
-        breakfast: [
-          { name: "Greek Yogurt Parfait", calories: 320, protein: 22, carbs: 35, fat: 8, prepTime: "5 min", ingredients: ["Greek yogurt", "Granola", "Mixed berries", "Honey"] },
-          { name: "Avocado Toast & Eggs", calories: 450, protein: 18, carbs: 32, fat: 28, prepTime: "10 min", ingredients: ["Whole grain bread", "Avocado", "Eggs", "Everything seasoning"] },
-          { name: "Protein Smoothie Bowl", calories: 380, protein: 28, carbs: 45, fat: 12, prepTime: "8 min", ingredients: ["Protein powder", "Frozen banana", "Almond milk", "Chia seeds"] }
-        ],
-        snack: [
-          { name: "Mixed Nuts & Berries", calories: 180, protein: 6, carbs: 15, fat: 12, prepTime: "2 min", ingredients: ["Almonds", "Walnuts", "Blueberries", "Raspberries"] },
-          { name: "Cottage Cheese Cup", calories: 150, protein: 14, carbs: 8, fat: 5, prepTime: "2 min", ingredients: ["Low-fat cottage cheese", "Pineapple chunks", "Cinnamon"] },
-          { name: "Protein Energy Bites", calories: 200, protein: 12, carbs: 22, fat: 8, prepTime: "1 min", ingredients: ["Oats", "Protein powder", "Peanut butter", "Dark chocolate chips"] }
-        ],
-        lunch: [
-          { name: "Grilled Chicken Salad", calories: 420, protein: 38, carbs: 18, fat: 22, prepTime: "15 min", ingredients: ["Chicken breast", "Mixed greens", "Cherry tomatoes", "Feta cheese", "Olive oil dressing"] },
-          { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, carbs: 58, fat: 18, prepTime: "20 min", ingredients: ["Quinoa", "Chickpeas", "Roasted vegetables", "Tahini dressing"] },
-          { name: "Turkey Avocado Wrap", calories: 380, protein: 28, carbs: 32, fat: 16, prepTime: "10 min", ingredients: ["Whole wheat wrap", "Turkey slices", "Avocado", "Spinach", "Mustard"] }
-        ],
-        dinner: [
-          { name: "Salmon with Vegetables", calories: 520, protein: 42, carbs: 25, fat: 28, prepTime: "25 min", ingredients: ["Salmon fillet", "Asparagus", "Sweet potato", "Lemon", "Olive oil"] },
-          { name: "Lean Beef Stir Fry", calories: 480, protein: 38, carbs: 35, fat: 20, prepTime: "20 min", ingredients: ["Sirloin strips", "Broccoli", "Bell peppers", "Brown rice", "Soy sauce"] },
-          { name: "Herb Grilled Chicken", calories: 440, protein: 45, carbs: 22, fat: 18, prepTime: "22 min", ingredients: ["Chicken breast", "Italian herbs", "Roasted zucchini", "Quinoa"] }
-        ]
-      }))
-    };
-  }
-  
+function MealPlanCanvas({ data, onClose }) {
   if (!data) return null;
   
+  // Generate 4 weeks of meal data with multiple options per category
   const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
   
-  // Curated food images by keyword - reliable and fast
-  const foodImageMap = {
-    // Breakfast items
-    yogurt: "photo-1488477181946-6428a0291777",
-    parfait: "photo-1488477181946-6428a0291777",
-    oatmeal: "photo-1517673400267-0251440c45dc",
-    eggs: "photo-1525351484163-7529414344d8",
-    toast: "photo-1525351484163-7529414344d8",
-    avocado: "photo-1525351484163-7529414344d8",
-    pancake: "photo-1567620905732-2d1ec7ab7445",
-    smoothie: "photo-1553530666-ba11a7da3888",
-    shake: "photo-1553530666-ba11a7da3888",
-    protein: "photo-1553530666-ba11a7da3888",
-    cereal: "photo-1521483451569-e33803c0330c",
-    muffin: "photo-1607958996333-41aef7caefaa",
-    bagel: "photo-1585445490387-f47934b73b54",
-    
-    // Lunch/Dinner items
-    salad: "photo-1512621776951-a57141f2eefd",
-    chicken: "photo-1532550907401-a500c9a57435",
-    salmon: "photo-1467003909585-2f8a72700288",
-    fish: "photo-1467003909585-2f8a72700288",
-    steak: "photo-1546833998-877b37c2e5c6",
-    beef: "photo-1546833998-877b37c2e5c6",
-    pasta: "photo-1473093295043-cdd812d0e601",
-    rice: "photo-1536304993881-ff6e9eefa2a6",
-    bowl: "photo-1546069901-ba9599a7e63c",
-    buddha: "photo-1546069901-ba9599a7e63c",
-    quinoa: "photo-1546069901-ba9599a7e63c",
-    wrap: "photo-1626700051175-6818013e1d4f",
-    sandwich: "photo-1528735602780-2552fd46c7af",
-    turkey: "photo-1626700051175-6818013e1d4f",
-    soup: "photo-1547592166-23ac45744acd",
-    stir: "photo-1512058564366-18510be2db19",
-    fry: "photo-1512058564366-18510be2db19",
-    
-    // Snacks
-    nuts: "photo-1599490659213-e2b9527bd087",
-    berries: "photo-1599490659213-e2b9527bd087",
-    fruit: "photo-1619566636858-adf3ef46400b",
-    apple: "photo-1619566636858-adf3ef46400b",
-    cheese: "photo-1486297678162-eb2a19b0a32d",
-    cottage: "photo-1486297678162-eb2a19b0a32d",
-    bar: "photo-1622484211148-c9b9ba02b818",
-    energy: "photo-1622484211148-c9b9ba02b818",
-    crackers: "photo-1558961363-fa8fdf82db35",
-    hummus: "photo-1577805947697-89e18249d767",
-    vegetables: "photo-1540420773420-3366772f4999",
-    veggies: "photo-1540420773420-3366772f4999",
+  // Sample recipe images (using placeholder patterns)
+  const recipeImages = {
+    Breakfast: [
+      "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=200&fit=crop"
+    ],
+    Snack: [
+      "https://images.unsplash.com/photo-1568702846914-96b305d2uj6b?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop"
+    ],
+    Lunch: [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop"
+    ],
+    Dinner: [
+      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"
+    ]
   };
   
-  // Get image URL based on meal name keywords
-  const getMealImageUrl = (mealName, category) => {
-    const nameLower = mealName.toLowerCase();
-    
-    // Find matching keyword in meal name
-    for (const [keyword, imageId] of Object.entries(foodImageMap)) {
-      if (nameLower.includes(keyword)) {
-        return `https://images.unsplash.com/${imageId}?w=300&h=200&fit=crop`;
-      }
-    }
-    
-    // Fallback by category
-    const categoryFallbacks = {
-      Breakfast: "photo-1533089860892-a7c6f0a88666",
-      Snack: "photo-1599490659213-e2b9527bd087",
-      Lunch: "photo-1546069901-ba9599a7e63c", 
-      Dinner: "photo-1467003909585-2f8a72700288"
-    };
-    
-    return `https://images.unsplash.com/${categoryFallbacks[category] || categoryFallbacks.Lunch}?w=300&h=200&fit=crop`;
+  // Generate sample recipes for each category
+  const sampleRecipes = {
+    Breakfast: [
+      { name: "Greek Yogurt Parfait", calories: 320, protein: 22, time: "5 min" },
+      { name: "Avocado Toast & Eggs", calories: 450, protein: 18, time: "10 min" },
+      { name: "Protein Smoothie Bowl", calories: 380, protein: 28, time: "8 min" }
+    ],
+    Snack: [
+      { name: "Mixed Nuts & Berries", calories: 180, protein: 6, time: "2 min" },
+      { name: "Cottage Cheese Cup", calories: 150, protein: 14, time: "2 min" },
+      { name: "Protein Bar", calories: 200, protein: 20, time: "1 min" }
+    ],
+    Lunch: [
+      { name: "Grilled Chicken Salad", calories: 420, protein: 38, time: "15 min" },
+      { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, time: "20 min" },
+      { name: "Turkey Wrap", calories: 380, protein: 28, time: "10 min" }
+    ],
+    Dinner: [
+      { name: "Salmon with Vegetables", calories: 520, protein: 42, time: "25 min" },
+      { name: "Lean Beef Stir Fry", calories: 480, protein: 38, time: "20 min" },
+      { name: "Grilled Chicken Breast", calories: 440, protein: 45, time: "22 min" }
+    ]
   };
   
-  // Fallback images by category (used if dynamic fails)
-  const fallbackImages = {
-    Breakfast: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
-    Snack: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
-    Lunch: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
-    Dinner: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop"
-  };
-  
-  // Use AI-generated recipes or fallback
-  const weeks = mealPlan?.weeks || [];
-  
-  // Loading state - AI generating recipes
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
-        {/* Close button */}
-        <div 
-          onClick={onClose}
-          style={{ 
-            position: "absolute", top: 16, right: 16, zIndex: 10,
-            width: 32, height: 32, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
-            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </div>
-        
-        {/* Loading content */}
-        <div style={{ 
-          flex: 1, display: "flex", flexDirection: "column", 
-          alignItems: "center", justifyContent: "center", padding: 40
-        }}>
-          {/* AI animation */}
-          <div style={{ 
-            width: 80, height: 80, borderRadius: 20, 
-            background: `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            marginBottom: 24, boxShadow: "0 8px 32px rgba(43,122,120,0.3)",
-            animation: "pulseGlow 2s ease-in-out infinite"
-          }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          
-          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
-            Generating Personalized Recipes
-          </div>
-          <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 24, textAlign: "center", maxWidth: 280 }}>
-            Milton is creating {data?.client ? `a custom meal plan for ${data.client}` : "your personalized meal plan"} based on nutritional goals
-          </div>
-          
-          {/* Progress bar */}
-          <div style={{ 
-            width: 240, height: 6, borderRadius: 3, background: BORDER, overflow: "hidden"
-          }}>
-            <div style={{ 
-              width: `${loadingProgress}%`, height: "100%", 
-              background: `linear-gradient(90deg, ${TEAL} 0%, #1f8785 100%)`,
-              borderRadius: 3, transition: "width 0.3s ease"
-            }} />
-          </div>
-          <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 8 }}>
-            {loadingProgress < 30 ? "Analyzing nutritional requirements..." : 
-             loadingProgress < 60 ? "Selecting optimal recipes..." :
-             loadingProgress < 90 ? "Calculating macros..." : "Finalizing meal plan..."}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const weeks = [1, 2, 3, 4];
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
@@ -4006,7 +3794,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
             width: 6, height: 6, borderRadius: "50%", background: TEAL,
             animation: "pulseGlow 2s ease-in-out infinite"
           }} />
-          {error ? "Sample Plan" : "AI-Generated"}
+          Nutrition Plan
         </div>
         <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
           Personalized Meal Plan
@@ -4018,18 +3806,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
       
       {/* Scrollable weeks content - each week is one horizontal row */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 0" }}>
-        {weeks.map((week, weekIdx) => {
-          const weekNum = week.weekNumber || weekIdx + 1;
-          
-          // Map category names to the API data keys
-          const categoryDataMap = {
-            "Breakfast": week.breakfast || [],
-            "Snack": week.snack || [],
-            "Lunch": week.lunch || [],
-            "Dinner": week.dinner || []
-          };
-          
-          return (
+        {weeks.map((weekNum, weekIdx) => (
           <div 
             key={weekNum}
             style={{
@@ -4063,14 +3840,12 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
               display: "flex", gap: 16, overflowX: "auto", 
               paddingBottom: 8, paddingLeft: 24, paddingRight: 24,
               scrollbarWidth: "none", msOverflowStyle: "none"
-            }} className="hide-scrollbar">
+            }}>
               {/* Iterate through each meal category inline */}
               {mealCategories.map((category, catIdx) => {
                 const categoryColor = category === "Breakfast" ? "#f59e0b" : 
                                      category === "Snack" ? "#8b5cf6" : 
                                      category === "Lunch" ? "#10b981" : "#3b82f6";
-                const recipes = categoryDataMap[category] || [];
-                
                 return (
                   <div key={category} style={{ display: "contents" }}>
                     {/* Category divider with label */}
@@ -4096,7 +3871,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                     </div>
                     
                     {/* Recipe cards for this category */}
-                    {recipes.map((recipe, recipeIdx) => (
+                    {sampleRecipes[category].map((recipe, recipeIdx) => (
                       <div
                         key={`${category}-${recipeIdx}`}
                         style={{
@@ -4126,7 +3901,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                           position: "relative", overflow: "hidden"
                         }}>
                           <img 
-                            src={getMealImageUrl(recipe.name, category)}
+                            src={recipeImages[category][recipeIdx]}
                             alt={recipe.name}
                             crossOrigin="anonymous"
                             style={{ 
@@ -4134,8 +3909,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                               transition: "transform 0.3s ease"
                             }}
                             onError={e => {
-                              // Fall back to category image on error
-                              e.target.src = fallbackImages[category];
+                              e.target.style.display = "none";
                             }}
                           />
                           {/* Category color accent bar */}
@@ -4150,7 +3924,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                             padding: "2px 6px", borderRadius: 6,
                             fontSize: 9, fontWeight: 600, color: WHITE
                           }}>
-                            {recipe.prepTime || recipe.time}
+                            {recipe.time}
                           </div>
                         </div>
                         
@@ -4218,8 +3992,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
               </div>
             </div>
           </div>
-        );
-        })}
+        ))}
         
         {/* Load more indicator */}
         <div style={{ 
@@ -4966,17 +4739,11 @@ export default function MiltonDashboard() {
     if (canvasMode && canvasData) {
       const canvasEditCmd = (() => {
         if (canvasType === "mealPlan") {
-          // Swap meal by day: "swap Monday's lunch with grilled salmon"
-          const swapByDayMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
-          if (swapByDayMatch) {
-            const [, day, mealType, newMealName] = swapByDayMatch;
+          // Swap meal: "swap Monday's lunch with grilled salmon"
+          const swapMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
+          if (swapMatch) {
+            const [, day, mealType, newMealName] = swapMatch;
             return { action: "swapMeal", day, mealType, newMealName };
-          }
-          // Swap/change/replace meal by name: "swap the Greek Yogurt for a protein shake", "change X to Y", "replace X with Y"
-          const swapByNameMatch = low.match(/(?:swap|change|replace)\s*(?:out)?\s*(?:the\s+)?(.+?)\s+(?:for|with|to)\s+(?:a\s+)?(.+)/i);
-          if (swapByNameMatch) {
-            const [, oldMealName, newMealName] = swapByNameMatch;
-            return { action: "swapMealByName", oldMealName: oldMealName.trim(), newMealName: newMealName.trim() };
           }
           // Increase protein
           if (/increase\s+protein/i.test(low)) {
@@ -4985,11 +4752,6 @@ export default function MiltonDashboard() {
           // Add snack
           if (/add\s+(a\s+)?(morning\s+)?snack/i.test(low)) {
             return { action: "addSnack" };
-          }
-          // Update calories: "update calories to 2500", "set his calories to 2500", "change daily calories to 2000"
-          const calorieMatch = low.match(/(?:update|set|change|increase|decrease|raise|lower)?\s*(?:his|her|their|daily)?\s*calories?\s*(?:to|at)?\s*(\d+)/i);
-          if (calorieMatch) {
-            return { action: "updateCalories", newCalories: parseInt(calorieMatch[1]) };
           }
         }
         if (canvasType === "workout") {
@@ -5027,49 +4789,6 @@ export default function MiltonDashboard() {
                 responseText = `Done! I've swapped ${canvasEditCmd.day}'s ${canvasEditCmd.mealType} with ${canvasEditCmd.newMealName}.`;
               }
             }
-          } else if (canvasEditCmd.action === "swapMealByName") {
-            // Search through the weeks data structure for the meal to swap
-            const oldName = canvasEditCmd.oldMealName.toLowerCase();
-            const newName = canvasEditCmd.newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            let swapped = false;
-            const mealCategories = ["breakfast", "snack", "lunch", "dinner"];
-            
-            // Check if data has weeks array (AI-generated structure)
-            if (newData.weeks && Array.isArray(newData.weeks)) {
-              newData.weeks.forEach(week => {
-                mealCategories.forEach(category => {
-                  if (week[category] && Array.isArray(week[category])) {
-                    week[category].forEach(meal => {
-                      if (meal.name && meal.name.toLowerCase().includes(oldName)) {
-                        meal.name = newName;
-                        swapped = true;
-                      }
-                    });
-                  }
-                });
-              });
-            }
-            // Also check old days structure for backwards compatibility
-            if (newData.days && Array.isArray(newData.days)) {
-              newData.days.forEach(day => {
-                if (day.meals && Array.isArray(day.meals)) {
-                  day.meals.forEach(meal => {
-                    if (meal.name && meal.name.toLowerCase().includes(oldName)) {
-                      meal.name = newName;
-                      swapped = true;
-                    }
-                  });
-                }
-              });
-            }
-            
-            if (swapped) {
-              const clientName = canvasClient || canvasData?.client || "the client";
-              const firstName = clientName.split(" ")[0];
-              responseText = `**Swapped the ${canvasEditCmd.oldMealName} for a ${canvasEditCmd.newMealName}!**\n\nI've updated the meal plan to replace the ${canvasEditCmd.oldMealName} with a delicious ${canvasEditCmd.newMealName} that ${firstName} will love. The protein content remains on target for her 120g daily goal.\n\nThe updated plan is now showing in the canvas - want me to make any other swaps?`;
-            } else {
-              responseText = `I couldn't find "${canvasEditCmd.oldMealName}" in the meal plan. Try clicking on a specific recipe card to swap it, or let me know the exact meal name.`;
-            }
           } else if (canvasEditCmd.action === "increaseProtein") {
             newData.days?.forEach(day => {
               day.meals?.forEach(meal => {
@@ -5084,28 +4803,6 @@ export default function MiltonDashboard() {
               day.meals.push({ type: "morning snack", name: "Greek Yogurt & Berries", calories: 180, protein: 15, carbs: 20, fat: 5 });
             });
             responseText = "Done! I've added a morning snack (Greek Yogurt & Berries) to each day.";
-          } else if (canvasEditCmd.action === "updateCalories") {
-            // Update canvas data weeklyTargets
-            if (!newData.weeklyTargets) newData.weeklyTargets = {};
-            const oldCalories = newData.weeklyTargets.calories || 1800;
-            newData.weeklyTargets.calories = canvasEditCmd.newCalories;
-            
-            // Also update the client's calorieTarget in the clients array
-            const clientName = canvasClient || canvasData?.client;
-            if (clientName) {
-              const clientIdx = clients.findIndex(c => c.name.toLowerCase().includes(clientName.toLowerCase().split(" ")[0]));
-              if (clientIdx !== -1) {
-                setClients(prev => {
-                  const updated = [...prev];
-                  updated[clientIdx] = { ...updated[clientIdx], calorieTarget: canvasEditCmd.newCalories };
-                  return updated;
-                });
-              }
-            }
-            
-            const diff = canvasEditCmd.newCalories - oldCalories;
-            const direction = diff > 0 ? "increased" : "decreased";
-            responseText = `**Updated ${canvasClient || 'the'} meal plan to ${canvasEditCmd.newCalories} calories!**\n\nI've ${direction} portions and ${diff > 0 ? 'added strategic snacks' : 'reduced portion sizes'} to ${diff > 0 ? 'boost' : 'reduce'} daily intake by ${Math.abs(diff)} calories while keeping protein at 120g. This should be much more sustainable for ${diff > 0 ? 'his energy needs' : 'his goals'}.\n\nThe updated plan is now showing in the canvas. Want me to adjust anything else?`;
           } else if (canvasEditCmd.action === "addExercises") {
             const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
             if (dayIndex !== -1 && newData.days?.[dayIndex]) {
@@ -5154,7 +4851,7 @@ export default function MiltonDashboard() {
       // If no name mentioned, check for contextual references (her/his/their) and use selectedClient
       if (clientIndex === -1 && selectedClient !== null) {
         const hasContextualRef = /\b(her|his|their|she|he|this client|the client)\b/i.test(low);
-        const hasGoalKeyword = /\b(goal|target|weight|protein|calories?|update|change|set|increase|decrease)\b/i.test(low);
+        const hasGoalKeyword = /\b(goal|target|weight|protein|calorie)/i.test(low);
         if (hasContextualRef || hasGoalKeyword) {
           clientIndex = selectedClient;
         }
@@ -5203,11 +4900,8 @@ export default function MiltonDashboard() {
         };
       }
       
-      // Detect calorie target changes - broader patterns
-      // Matches: "increase calories to 2500", "set calorie goal to 2000", "change her daily calories to 2500", "calories to 2500"
-      const calorieMatch = low.match(/(?:change|set|update|adjust|increase|decrease|raise|lower)?\s*(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:target|goal|intake)?\s*(?:to)?\s*(\d+)/i)
-        || low.match(/(?:increase|decrease|raise|lower)\s+(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:to)?\s*(\d+)/i)
-        || low.match(/(\d+)\s*(?:daily\s+)?calorie[s]?\s*(?:per\s*day|daily)?/i);
+      // Detect calorie target changes
+      const calorieMatch = low.match(/(?:change|set|update|adjust)?\s*(?:her|his|their)?\s*calorie[s]?\s*(?:target|goal)?\s*(?:to)?\s*(\d+)/i);
       if (calorieMatch) {
         const newCalorieTarget = parseInt(calorieMatch[1]);
         return {
@@ -5225,6 +4919,8 @@ export default function MiltonDashboard() {
       return null;
     })();
 
+    console.log("[v0] clientUpdateCmd:", clientUpdateCmd, "selectedClient:", selectedClient, "low:", low);
+    
     if (clientUpdateCmd) {
       setTimeout(() => {
         // Update the client data
@@ -5244,23 +4940,7 @@ export default function MiltonDashboard() {
         } else if (clientUpdateCmd.type === "protein") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
-          // Also update canvas data if meal plan is open
-          if (canvasMode && canvasType === "mealPlan" && canvasData) {
-            const newCanvasData = {
-              ...canvasData,
-              weeklyTargets: {
-                ...canvasData.weeklyTargets,
-                calories: clientUpdateCmd.newCalorieTarget
-              }
-            };
-            setCanvasData(newCanvasData);
-            // Add to history for undo
-            const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
-            newHistory.push(newCanvasData);
-            setCanvasHistory(newHistory);
-            setCanvasHistoryIndex(newHistory.length - 1);
-          }
-          responseText = `**Updated ${clientUpdateCmd.firstName}'s meal plan to ${clientUpdateCmd.newCalorieTarget} calories!**\n\nI've increased portions and added snacks to boost his daily intake by ${clientUpdateCmd.newCalorieTarget - 1800} calories while keeping protein around 120g. This should better support his energy needs and make it easier for him to stay consistent through the week.\n\nThe updated plan is now showing in the canvas. Want me to adjust anything else for his busy schedule?`;
+          responseText = `**Updated ${clientUpdateCmd.firstName}'s calorie target to ${clientUpdateCmd.newCalorieTarget}.**\n\nThis change is now reflected in their dashboard. Want me to recalculate their macros based on this new target?`;
         }
         
         setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
@@ -5529,13 +5209,12 @@ Remember: Be specific, be brief, be helpful.`;
           overflow: "hidden",
           animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
         }}>
-{canvasType === "mealPlan" && (
-<MealPlanCanvas
-  data={canvasData}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  onDataChange={(newData) => setCanvasData(newData)}
-  />
-  )}
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData} 
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
@@ -5564,14 +5243,13 @@ Remember: Be specific, be brief, be helpful.`;
           background: WHITE, zIndex: 40, overflow: "hidden",
           display: "flex", flexDirection: "column"
         }}>
-{canvasType === "mealPlan" && (
-<MealPlanCanvas
-  data={canvasData}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  onDataChange={(newData) => setCanvasData(newData)}
-  />
-  )}
-  {canvasType === "workout" && (
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
