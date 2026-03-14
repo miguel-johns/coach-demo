@@ -2381,17 +2381,17 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
             periods: [
               { label: "Today", rows: [
-                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,620", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
               ]},
               { label: "Last 7 Days", rows: [
-                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,580", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
               ]},
               { label: "Last 30 Days", rows: [
-                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
+                { l: "Calories", v: "1,540", g: (client.calorieTarget || 1800).toLocaleString() }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
                 { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
                 { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
               ]},
@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════�������������═���������════════ */
+   ════════════════════════════════���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -5047,8 +5047,11 @@ export default function MiltonDashboard() {
         };
       }
       
-      // Detect calorie target changes
-      const calorieMatch = low.match(/(?:change|set|update|adjust)?\s*(?:her|his|their)?\s*calorie[s]?\s*(?:target|goal)?\s*(?:to)?\s*(\d+)/i);
+      // Detect calorie target changes - broader patterns
+      // Matches: "increase calories to 2500", "set calorie goal to 2000", "change her daily calories to 2500", "calories to 2500"
+      const calorieMatch = low.match(/(?:change|set|update|adjust|increase|decrease|raise|lower)?\s*(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:target|goal|intake)?\s*(?:to)?\s*(\d+)/i)
+        || low.match(/(?:increase|decrease|raise|lower)\s+(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:to)?\s*(\d+)/i)
+        || low.match(/(\d+)\s*(?:daily\s+)?calorie[s]?\s*(?:per\s*day|daily)?/i);
       if (calorieMatch) {
         const newCalorieTarget = parseInt(calorieMatch[1]);
         return {
@@ -5066,8 +5069,6 @@ export default function MiltonDashboard() {
       return null;
     })();
 
-    console.log("[v0] clientUpdateCmd:", clientUpdateCmd, "selectedClient:", selectedClient, "low:", low);
-    
     if (clientUpdateCmd) {
       setTimeout(() => {
         // Update the client data
@@ -5087,7 +5088,23 @@ export default function MiltonDashboard() {
         } else if (clientUpdateCmd.type === "protein") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
-          responseText = `**Updated ${clientUpdateCmd.firstName}'s calorie target to ${clientUpdateCmd.newCalorieTarget}.**\n\nThis change is now reflected in their dashboard. Want me to recalculate their macros based on this new target?`;
+          // Also update canvas data if meal plan is open
+          if (canvasMode && canvasType === "mealPlan" && canvasData) {
+            const newCanvasData = {
+              ...canvasData,
+              weeklyTargets: {
+                ...canvasData.weeklyTargets,
+                calories: clientUpdateCmd.newCalorieTarget
+              }
+            };
+            setCanvasData(newCanvasData);
+            // Add to history for undo
+            const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
+            newHistory.push(newCanvasData);
+            setCanvasHistory(newHistory);
+            setCanvasHistoryIndex(newHistory.length - 1);
+          }
+          responseText = `**Updated ${clientUpdateCmd.firstName}'s meal plan to ${clientUpdateCmd.newCalorieTarget} calories!**\n\nI've increased portions and added snacks to boost his daily intake by ${clientUpdateCmd.newCalorieTarget - 1800} calories while keeping protein around 120g. This should better support his energy needs and make it easier for him to stay consistent through the week.\n\nThe updated plan is now showing in the canvas. Want me to adjust anything else for his busy schedule?`;
         }
         
         setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
