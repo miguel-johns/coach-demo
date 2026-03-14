@@ -3782,7 +3782,7 @@ Remember: Be specific, be brief, be helpful.`;
                     {/* Dots on data points */}
                     {points.map((p, i) => (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="3" fill={WHITE} stroke={TEAL} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                        <circle cx={p.x} cy={p.y} r="2" fill={WHITE} stroke={TEAL} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                         {i === points.length - 1 && (
                           <text x={p.x} y={p.y - 8} textAnchor="middle" style={{ fontSize: 8, fontWeight: 700, fill: TEAL }}>{p.value}%</text>
                         )}
