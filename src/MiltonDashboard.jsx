@@ -773,8 +773,8 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
             </div>
             {/* Messages */}
             <div style={{
-              flex: 1, overflowY: "auto", padding: "12px 14px 8px",
-              display: "flex", flexDirection: "column", gap: 12
+              flex: 1, overflowY: "auto", padding: "16px 14px 8px",
+              display: "flex", flexDirection: "column", gap: 18
             }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{
@@ -791,34 +791,33 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                       boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
                     }}>{msg.text}</div>
                   ) : (
-                    <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
-                      <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
-                        <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30 }} />
-                      </div>
-                      <div style={{
-                        background: "rgba(255,255,255,0.7)",
-                        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                        padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
-                        border: "1px solid rgba(224,235,232,0.5)", fontSize: 13.5, lineHeight: 1.55,
+                    <div style={{ display: "flex", gap: 12, maxWidth: "95%", width: "100%" }}>
+                      <div style={{ 
+                        width: 26, height: 26, borderRadius: "50%", overflow: "hidden", 
+                        flexShrink: 0, marginTop: 2,
+                        background: TEAL,
+                        display: "flex", alignItems: "center", justifyContent: "center"
                       }}>
-                        {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
-                        {msg.text && <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>}
+                        <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
+                      </div>
+                      <div style={{ flex: 1, paddingTop: 2 }}>
+                        <FormattedText text={msg.text} color={TEXT_SEC} />
                       </div>
                     </div>
                   )}
                 </div>
               ))}
               {typing && (
-                <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-                    <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30 }} />
-                  </div>
-                  <div style={{
-                    background: "rgba(255,255,255,0.7)", padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
-                    border: "1px solid rgba(224,235,232,0.5)", display: "flex", gap: 5, alignItems: "center"
+                <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+                  <div style={{ 
+                    width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+                    background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
+                    <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 6 }}>
                     {[0,1,2].map(j => (
-                      <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j*0.2}s infinite` }} />
+                      <div key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, opacity: 0.5, animation: `typingDot 1.2s ease ${j*0.2}s infinite` }} />
                     ))}
                   </div>
                 </div>
