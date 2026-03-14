@@ -3770,16 +3770,19 @@ Remember: Be specific, be brief, be helpful.`;
           /* ─── Desktop: Table ─── */
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1
+            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1,
+            display: "flex", flexDirection: "column", minHeight: 0
           }}>
             <div style={{
               display: "grid", gridTemplateColumns: "2fr 1.1fr 1fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
-              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em"
+              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
+              flexShrink: 0
             }}>
               <span>Client Name</span><span>Alerts</span><span>Data Connections</span><span>Report Progress</span><span />
             </div>
+            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
@@ -3814,6 +3817,7 @@ Remember: Be specific, be brief, be helpful.`;
                 </div>
               </div>
             ); })}
+            </div>
           </div>
         )}
       </main>
