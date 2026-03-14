@@ -3128,32 +3128,116 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Call real LLM API
+    // Call Anthropic API directly
     (async () => {
       try {
         const allMessages = [...chatMessages, newUserMessage];
         
-        const response = await fetch("/api/chat", {
+        const systemPrompt = `You are Milton, an AI coaching copilot for nutrition and fitness coaches. You have real-time access to all client data shown below.
+
+## Your Personality
+- Warm but efficient — like a trusted colleague
+- Action-oriented — always suggest a clear next step
+- Concise — keep responses to 2-4 sentences unless asked for more detail
+
+## Response Rules
+- ONLY reference the 5 clients listed below — never invent clients or data
+- Use specific names and numbers from the data
+- When asked "who needs attention": prioritize Sarah (at-risk) and Emily (moderate concern)
+- When asked to write a message: write it ready to copy/paste, casual and encouraging tone
+- When summarizing: use bullet points
+- When asked "who is doing well": highlight Marcus and David
+
+## Current Client Roster (5 clients):
+
+**Sarah Chen** (Week 6, at-risk)
+- Goal: Lose 15 lbs for wedding in 3 months
+- Issue: Missed logging for 4 days straight
+- Logging streak: 0 days
+- Protein: 95g (target: 120g)
+- Weight: up 1.2 lbs this week
+- Recommended: Send a supportive check-in message
+
+**Marcus Johnson** (Week 8, highly-engaged)
+- Goal: Build muscle, gain 10 lbs lean mass
+- Win: Hit protein goal 7 days straight
+- Logging streak: 14 days
+- Protein: 185g (target: 180g)
+- Weight: up 0.8 lbs (on track)
+- Recommended: Celebrate streak and suggest higher calorie target
+
+**Emily Rodriguez** (Week 4, moderate)
+- Goal: Improve energy and relationship with food
+- Issue: Calories under 1200 on weekdays, spikes on weekends
+- Logging streak: 5 days
+- Protein: 68g (target: 100g)
+- Weight: fluctuating +/- 2 lbs
+- Recommended: Schedule call about sustainable eating
+
+**David Park** (Week 10, highly-engaged)
+- Goal: Drop from 22% to 15% body fat
+- Win: Perfect logging for 21 days
+- Issue: Weight plateau for 2 weeks despite good adherence
+- Logging streak: 21 days
+- Protein: 165g (target: 160g)
+- Weight: flat for 14 days
+- Recommended: Consider macro adjustment or diet break
+
+**Rachel Kim** (Week 2, new-client)
+- Goal: Post-pregnancy fitness and strength
+- Win: Completed first full week of workouts postpartum
+- Issue: Struggling to find time to log with newborn
+- Logging streak: 2 days
+- Protein: 85g (target: 110g)
+- Weight: down 0.5 lbs (healthy pace)
+- Recommended: Send encouragement and offer quick-log templates
+
+## Today's Context
+- Clients needing attention: Sarah Chen (at-risk), Emily Rodriguez (moderate)
+- Clients doing well: Marcus Johnson, David Park
+- New client: Rachel Kim (week 2)
+
+Remember: Be specific, be brief, be helpful.`;
+
+        const apiMessages = allMessages
+          .filter(m => m.type === "user" || (m.type === "ai" && m.text))
+          .map(m => ({
+            role: m.type === "user" ? "user" : "assistant",
+            content: m.text || ""
+          }));
+
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: allMessages }),
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: apiMessages
+          }),
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-          console.error("[v0] API error details:", data);
-          throw new Error(data.details || data.error || "API request failed");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `API error: ${response.status}`);
         }
 
-        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: data.text }]);
+        const data = await response.json();
+        const aiText = data.content?.[0]?.text || "I couldn't generate a response.";
+        
+        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: aiText }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       } catch (error) {
         console.error("[v0] Chat error:", error);
         // Fallback to local AI
         const resp = generateAIResponse(text);
-        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(Offline mode - API error: " + error.message + ")" }]);
+        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(API unavailable: " + error.message + ")" }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
