@@ -27,6 +27,148 @@ function useIsMobile() {
   return isMobile;
 }
 
+// Simple markdown-like formatter for AI responses
+function FormattedText({ text, color = TEXT_SEC }) {
+  if (!text) return null;
+  
+  // Split into paragraphs first
+  const paragraphs = text.split(/\n\n+/);
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {paragraphs.map((paragraph, pIdx) => {
+        // Check if this paragraph is a list (lines starting with - or *)
+        const lines = paragraph.split('\n');
+        const isList = lines.every(line => line.trim() === '' || /^[\-\*•]\s/.test(line.trim()));
+        
+        if (isList) {
+          const listItems = lines.filter(line => /^[\-\*•]\s/.test(line.trim()));
+          return (
+            <ul key={pIdx} style={{ 
+              margin: 0, 
+              paddingLeft: 20, 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 8 
+            }}>
+              {listItems.map((item, idx) => {
+                const content = item.replace(/^[\-\*•]\s*/, '').trim();
+                return (
+                  <li key={idx} style={{ 
+                    color, 
+                    fontSize: 14, 
+                    lineHeight: 1.6,
+                    paddingLeft: 4
+                  }}>
+                    <FormatInline text={content} color={color} />
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        }
+        
+        // Check if it's a numbered list
+        const isNumberedList = lines.every(line => line.trim() === '' || /^\d+[\.\)]\s/.test(line.trim()));
+        if (isNumberedList) {
+          const listItems = lines.filter(line => /^\d+[\.\)]\s/.test(line.trim()));
+          return (
+            <ol key={pIdx} style={{ 
+              margin: 0, 
+              paddingLeft: 20, 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 8 
+            }}>
+              {listItems.map((item, idx) => {
+                const content = item.replace(/^\d+[\.\)]\s*/, '').trim();
+                return (
+                  <li key={idx} style={{ 
+                    color, 
+                    fontSize: 14, 
+                    lineHeight: 1.6,
+                    paddingLeft: 4
+                  }}>
+                    <FormatInline text={content} color={color} />
+                  </li>
+                );
+              })}
+            </ol>
+          );
+        }
+        
+        // Regular paragraph - handle line breaks within
+        return (
+          <p key={pIdx} style={{ margin: 0, color, fontSize: 14, lineHeight: 1.6 }}>
+            {lines.map((line, lIdx) => (
+              <span key={lIdx}>
+                {lIdx > 0 && <br />}
+                <FormatInline text={line} color={color} />
+              </span>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// Format inline elements like **bold** and *italic*
+function FormatInline({ text, color }) {
+  if (!text) return null;
+  
+  // Process bold (**text**) and italic (*text*)
+  const parts = [];
+  let remaining = text;
+  let key = 0;
+  
+  while (remaining.length > 0) {
+    // Check for bold first
+    const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+    if (boldMatch && boldMatch.index === 0) {
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: TEXT }}>
+          {boldMatch[1]}
+        </strong>
+      );
+      remaining = remaining.slice(boldMatch[0].length);
+      continue;
+    }
+    
+    // Find next special pattern
+    const nextBold = remaining.indexOf('**');
+    
+    if (nextBold === -1) {
+      // No more patterns, add rest as text
+      parts.push(<span key={key++}>{remaining}</span>);
+      break;
+    }
+    
+    // Add text before the pattern
+    if (nextBold > 0) {
+      parts.push(<span key={key++}>{remaining.slice(0, nextBold)}</span>);
+      remaining = remaining.slice(nextBold);
+    }
+    
+    // Process the bold pattern
+    const endBold = remaining.indexOf('**', 2);
+    if (endBold > 2) {
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: TEXT }}>
+          {remaining.slice(2, endBold)}
+        </strong>
+      );
+      remaining = remaining.slice(endBold + 2);
+    } else {
+      // Unclosed bold, treat as text
+      parts.push(<span key={key++}>{remaining.slice(0, 2)}</span>);
+      remaining = remaining.slice(2);
+    }
+  }
+  
+  return <>{parts}</>;
+}
+
 function NavIcon({ icon, size = 20 }) {
   const s = { width: size, height: size, strokeWidth: 1.6, stroke: "currentColor", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" };
   const icons = {
@@ -95,15 +237,15 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "You have 12 active clients. Top priority: Sarah Chen hasn't logged in 4 days. I'd recommend reaching out before it becomes a pattern." },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 12 active clients today. Here's what needs your attention:\n\n- **Sarah Chen** hasn't logged in 4 days — her longest gap yet\n- **Emily Rodriguez** showing a restrict-binge pattern\n- **Aaron Smith** dropped off mid-week again\n\nI'd recommend reaching out to Sarah first before it becomes a pattern." },
 ];
 
 const suggestedPrompts = [
-  "Who needs attention today?",
-  "Write a message to Sarah",
-  "Summarize my coaching queue",
+  "Start with Sarah",
+  "Start with Emily",
+  "Start with Aaron",
   "Who is doing well?",
-  "What should I do next?",
+  "Summarize my coaching queue",
 ];
 
 // Demo client data for Milton AI responses
@@ -180,11 +322,20 @@ function generateAIResponse(msg) {
   const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
   const client = matchedKey ? demoClients[matchedKey] : null;
 
+  // START WITH [CLIENT] - prioritized handler for quick action prompts
+  if (lower.includes("start with") && client) {
+    const first = client.name.split(" ")[0];
+    return {
+      title: `Starting with ${first}`,
+      text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n${client.issue || client.win}\n\n**Quick stats:**\n- Protein: ${client.protein}\n- Weight: ${client.weight}\n- Logging streak: ${client.loggingStreak} days\n\n**My recommendation:** ${client.action}\n\nWant me to draft a message for ${first}?`
+    };
+  }
+
   // WHO NEEDS ATTENTION
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
     return { 
       title: "Priority Queue", 
-      text: `Here's who needs your attention today:\n\n1. Sarah Chen (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n2. Emily Rodriguez (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n3. David Park (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+      text: `**Here's who needs your attention today:**\n\n- **Sarah Chen** (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n- **Emily Rodriguez** (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n- **David Park** (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
     };
   }
 
@@ -192,7 +343,7 @@ function generateAIResponse(msg) {
   if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
     return {
       title: "Client Wins",
-      text: `Great news to share:\n\n1. Marcus Johnson — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n2. David Park — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n3. Rachel Kim — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+      text: `**Great news to share:**\n\n- **Marcus Johnson** — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n- **David Park** — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n- **Rachel Kim** — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
     };
   }
 
@@ -200,7 +351,7 @@ function generateAIResponse(msg) {
   if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
     return {
       title: "Recommended Next Action",
-      text: `Your highest-impact action right now: reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+      text: `**Your highest-impact action right now:** reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
     };
   }
 
@@ -210,17 +361,17 @@ function generateAIResponse(msg) {
     if (client.status === "at-risk") {
       return {
         title: `Message for ${first}`,
-        text: `Here's a draft check-in for ${first}:\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
+        text: `**Here's a draft check-in for ${first}:**\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
       };
     } else if (client.status === "highly-engaged") {
       return {
         title: `Message for ${first}`,
-        text: `Here's a celebration message for ${first}:\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
+        text: `**Here's a celebration message for ${first}:**\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
       };
     } else {
       return {
         title: `Message for ${first}`,
-        text: `Here's a supportive message for ${first}:\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
+        text: `**Here's a supportive message for ${first}:**\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
       };
     }
   }
@@ -233,7 +384,7 @@ function generateAIResponse(msg) {
     if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
       return {
         title: `${first}'s Nutrition`,
-        text: `${first}'s current nutrition (Week ${client.week}):\n\nProtein: ${client.protein}\nWeight trend: ${client.weight}\nLogging streak: ${client.loggingStreak} days\n\n${client.insight}\n\nRecommended action: ${client.action}`
+        text: `**${first}'s current nutrition** (Week ${client.week}):\n\n- **Protein:** ${client.protein}\n- **Weight trend:** ${client.weight}\n- **Logging streak:** ${client.loggingStreak} days\n\n${client.insight}\n\n**Recommended action:** ${client.action}`
       };
     }
 
@@ -241,14 +392,14 @@ function generateAIResponse(msg) {
     if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
       return {
         title: `${first}'s Status`,
-        text: `${first} — Week ${client.week}, ${client.status.replace("-", " ")}\n\nGoal: ${client.goal}\n${client.win ? `Recent win: ${client.win}` : `Current issue: ${client.issue}`}\n\nWeight: ${client.weight}\nProtein: ${client.protein}\nLogging: ${client.loggingStreak} day streak\n\nMy take: ${client.insight}\n\nRecommended: ${client.action}`
+        text: `**${first}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n- **Weight:** ${client.weight}\n- **Protein:** ${client.protein}\n- **Logging:** ${client.loggingStreak} day streak\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
       };
     }
 
     // Default client info
     return {
       title: `About ${first}`,
-      text: `${client.name} — Week ${client.week}\n\nGoal: ${client.goal}\nStatus: ${client.status.replace("-", " ")}\n${client.win ? `Win: ${client.win}` : `Issue: ${client.issue}`}\n\nProtein: ${client.protein}\nWeight: ${client.weight}\n\nRecommended action: ${client.action}`
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n- **Protein:** ${client.protein}\n- **Weight:** ${client.weight}\n\n**Recommended action:** ${client.action}`
     };
   }
 
@@ -256,14 +407,14 @@ function generateAIResponse(msg) {
   if (lower.includes("help") || lower.includes("what can")) {
     return {
       title: "How I Can Help",
-      text: `I'm Milton, your coaching copilot. Try asking me:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is Marcus doing?"\n• "Who is doing well?"\n• "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+      text: `**I'm Milton, your coaching copilot.** Try asking me:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is Marcus doing?"\n- "Who is doing well?"\n- "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
     };
   }
 
   // DEFAULT
   return { 
     title: "Milton", 
-    text: `I'm here to help! Try asking:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is David doing?"\n• "Who is doing well?"`
+    text: `**I'm here to help!** Try asking:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is David doing?"\n- "Who is doing well?"`
   };
 }
 
@@ -391,9 +542,9 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   return (
     <>
     <div style={{
-    flex: 1, overflowY: "auto", padding: isMobile ? "12px 14px 8px" : "16px 16px 8px",
-    display: "flex", flexDirection: "column", gap: 12,
-    background: isMobile ? "transparent" : "#f7faf9"
+    flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 8px" : "20px 20px 8px",
+    display: "flex", flexDirection: "column", gap: 20,
+    background: isMobile ? "transparent" : "#fafcfb"
     }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
@@ -410,33 +561,33 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
                 boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
               }}>{msg.text}</div>
             ) : (
-              <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
-                  <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-                </div>
-                <div style={{
-                  background: WHITE, padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
-                  border: `1px solid ${BORDER}`, fontSize: 13.5, lineHeight: 1.55,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+              <div style={{ display: "flex", gap: 12, maxWidth: "95%", width: "100%" }}>
+                <div style={{ 
+                  width: 28, height: 28, borderRadius: "50%", overflow: "hidden", 
+                  flexShrink: 0, marginTop: 2,
+                  background: TEAL,
+                  display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
-                  <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>
+                  <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28 }} />
+                </div>
+                <div style={{ flex: 1, paddingTop: 4 }}>
+                  <FormattedText text={msg.text} color={TEXT_SEC} />
                 </div>
               </div>
             )}
           </div>
         ))}
 {typing && (
-    <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-    <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-    <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-    </div>
-    <div style={{
-    background: WHITE, padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
-    border: `1px solid ${BORDER}`, display: "flex", gap: 5, alignItems: "center"
+    <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+    <div style={{ 
+      width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+      background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
     }}>
+    <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28 }} />
+    </div>
+    <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 8 }}>
     {[0,1,2].map(j => (
-    <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
+    <div key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, opacity: 0.5, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
     ))}
     </div>
     </div>
@@ -610,29 +761,13 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
           }}>
             {/* Drag handle */}
             <div onMouseDown={onDragStart} onTouchStart={onDragStart}
-              style={{ cursor: "grab", padding: "10px 0 0", touchAction: "none", flexShrink: 0 }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(43,122,120,0.2)", margin: "0 auto 8px" }} />
-            </div>
-            {/* Header */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "0 16px 12px", borderBottom: "1px solid rgba(224,235,232,0.5)", flexShrink: 0
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28, borderRadius: 8 }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Milton AI</span>
-              </div>
-              <div onClick={() => setChatOpen(false)} style={{
-                cursor: "pointer", color: TEXT_SEC, padding: 6, borderRadius: 8,
-                display: "flex", background: "rgba(224,235,232,0.3)"
-              }}>
-                <NavIcon icon="x" size={16} />
-              </div>
+              style={{ cursor: "grab", padding: "12px 0 6px", touchAction: "none", flexShrink: 0 }}>
+              <div style={{ width: 40, height: 5, borderRadius: 3, background: "rgba(43,122,120,0.25)", margin: "0 auto" }} />
             </div>
             {/* Messages */}
             <div style={{
-              flex: 1, overflowY: "auto", padding: "12px 14px 8px",
-              display: "flex", flexDirection: "column", gap: 12
+              flex: 1, overflowY: "auto", padding: "16px 14px 8px",
+              display: "flex", flexDirection: "column", gap: 18
             }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{
@@ -649,36 +784,61 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                       boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
                     }}>{msg.text}</div>
                   ) : (
-                    <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
-                      <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
-                        <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30 }} />
-                      </div>
-                      <div style={{
-                        background: "rgba(255,255,255,0.7)",
-                        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                        padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
-                        border: "1px solid rgba(224,235,232,0.5)", fontSize: 13.5, lineHeight: 1.55,
+                    <div style={{ display: "flex", gap: 12, maxWidth: "95%", width: "100%" }}>
+                      <div style={{ 
+                        width: 26, height: 26, borderRadius: "50%", overflow: "hidden", 
+                        flexShrink: 0, marginTop: 2,
+                        background: TEAL,
+                        display: "flex", alignItems: "center", justifyContent: "center"
                       }}>
-                        {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
-                        {msg.text && <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>}
+                        <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
+                      </div>
+                      <div style={{ flex: 1, paddingTop: 2 }}>
+                        <FormattedText text={msg.text} color={TEXT_SEC} />
                       </div>
                     </div>
                   )}
                 </div>
               ))}
               {typing && (
-                <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-                    <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30 }} />
-                  </div>
-                  <div style={{
-                    background: "rgba(255,255,255,0.7)", padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
-                    border: "1px solid rgba(224,235,232,0.5)", display: "flex", gap: 5, alignItems: "center"
+                <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+                  <div style={{ 
+                    width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+                    background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
+                    <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 6 }}>
                     {[0,1,2].map(j => (
-                      <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j*0.2}s infinite` }} />
+                      <div key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, opacity: 0.5, animation: `typingDot 1.2s ease ${j*0.2}s infinite` }} />
                     ))}
                   </div>
+                </div>
+              )}
+              {messages.length <= 1 && !typing && (
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
+                  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
+                }}>
+                  {suggestedPrompts.map((prompt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { onSend(prompt); }}
+                      style={{
+                        background: "rgba(255,255,255,0.85)",
+                        border: "1px solid rgba(224,235,232,0.7)",
+                        borderRadius: 18,
+                        padding: "8px 14px",
+                        fontSize: 13,
+                        fontFamily: font,
+                        color: TEXT_SEC,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -1850,7 +2010,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         gap: isMobile ? 16 : 16, alignItems: "stretch"
       }}>
 
-      {/* ─── Consistency Score (compact) ─── */}
+      {/* ��── Consistency Score (compact) ─── */}
       <div style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "20px" : "22px 22px",
@@ -2679,7 +2839,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </>)}
 
-      {/* ═══ TAB: JOURNEY ═══ */}
+      {/* ═��═ TAB: JOURNEY ═══ */}
       {activeTab === "journey" && (
         <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
           <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Journey Timeline</div>
@@ -3258,14 +3418,14 @@ Remember: Be specific, be brief, be helpful.`;
         const data = await response.json();
         const aiText = data.content?.[0]?.text || "I couldn't generate a response.";
         
-        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: aiText }]);
+        setChatMessages(prev => [...prev, { type: "ai", text: aiText }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       } catch (error) {
         console.error("[v0] Chat error:", error);
         // Fallback to local AI
         const resp = generateAIResponse(text);
-        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(API unavailable: " + error.message + ")" }]);
+        setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
@@ -3344,15 +3504,11 @@ Remember: Be specific, be brief, be helpful.`;
           }}>
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "16px 18px", borderBottom: `1px solid ${BORDER}`
+              padding: "8px 14px", borderBottom: `1px solid ${BORDER}`,
+              background: "rgba(247,250,249,0.5)"
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28, borderRadius: 8 }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Milton AI</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, color: TEXT_SEC }}>
-                <NavIcon icon="message" size={18} /><NavIcon icon="settings" size={18} />
-              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
+              <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
             <ChatContent
               chatInput={chatInput} setChatInput={setChatInput}
