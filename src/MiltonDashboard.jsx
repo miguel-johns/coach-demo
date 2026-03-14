@@ -3301,14 +3301,26 @@ export default function MiltonDashboard() {
 
     // Client data modification commands (goal changes, weight updates, etc.)
     const clientUpdateCmd = (() => {
-      // Find which client is mentioned
-      const clientIndex = clients.findIndex(c => low.includes(c.name.toLowerCase().split(" ")[0].toLowerCase()));
+      // Find which client is mentioned - check explicit names first
+      let clientIndex = clients.findIndex(c => low.includes(c.name.toLowerCase().split(" ")[0].toLowerCase()));
+      
+      // If no name mentioned, check for contextual references (her/his/their) and use selectedClient
+      if (clientIndex === -1 && selectedClient !== null) {
+        const hasContextualRef = /\b(her|his|their|she|he|this client|the client)\b/i.test(low);
+        const hasGoalKeyword = /\b(goal|target|weight|protein|calorie)/i.test(low);
+        if (hasContextualRef || hasGoalKeyword) {
+          clientIndex = selectedClient;
+        }
+      }
+      
       if (clientIndex === -1) return null;
       const client = clients[clientIndex];
       const firstName = client.name.split(" ")[0];
       
-      // Detect goal weight changes: "change goal to 150", "set goal to 150 lbs", "goal to 150"
-      const goalMatch = low.match(/(?:change|set|update|adjust|make)?\s*(?:her|his|their)?\s*goal\s*(?:to|at|weight)?\s*(\d+)\s*(?:lbs?|pounds?)?/i);
+      // Detect goal weight changes - broader patterns
+      // Matches: "set her goal to 155", "change goal to 150", "goal to 150 lbs", "let's set the goal to 155"
+      const goalMatch = low.match(/(?:let'?s?\s+)?(?:change|set|update|adjust|make)?\s*(?:her|his|their|the)?\s*(?:weight\s+)?goal\s*(?:to|at|weight)?\s*(\d+)\s*(?:lbs?|pounds?)?/i) 
+        || low.match(/goal\s*(?:to|at|of|:)?\s*(\d+)\s*(?:lbs?|pounds?)?/i);
       if (goalMatch) {
         const newGoalWeight = parseInt(goalMatch[1]);
         const currentWeight = client.weightData?.[client.weightData.length - 1] || 159;
@@ -3363,6 +3375,8 @@ export default function MiltonDashboard() {
       return null;
     })();
 
+    console.log("[v0] clientUpdateCmd:", clientUpdateCmd, "selectedClient:", selectedClient, "low:", low);
+    
     if (clientUpdateCmd) {
       setTimeout(() => {
         // Update the client data
