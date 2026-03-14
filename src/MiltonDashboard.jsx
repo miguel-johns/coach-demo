@@ -3288,7 +3288,7 @@ Remember: Be specific, be brief, be helpful.`;
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, position: "relative" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* ═══ MOBILE HEADER BAR ═══ */}
@@ -3383,7 +3383,7 @@ Remember: Be specific, be brief, be helpful.`;
         </main>
       ) : (
       <main style={{
-        flex: 1,
+        flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
         display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
       }}>
@@ -3770,16 +3770,19 @@ Remember: Be specific, be brief, be helpful.`;
           /* ─── Desktop: Table ─── */
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
+            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1,
+            display: "flex", flexDirection: "column", minHeight: 0
           }}>
             <div style={{
               display: "grid", gridTemplateColumns: "2fr 1.1fr 1fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
-              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em"
+              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
+              flexShrink: 0
             }}>
               <span>Client Name</span><span>Alerts</span><span>Data Connections</span><span>Report Progress</span><span />
             </div>
+            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
@@ -3814,6 +3817,7 @@ Remember: Be specific, be brief, be helpful.`;
                 </div>
               </div>
             ); })}
+            </div>
           </div>
         )}
       </main>
