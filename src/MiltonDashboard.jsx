@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ══════════════════════════════════���════════ */
+   ══════════════════════════════════�����════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3386,48 +3386,77 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
     const dayOfWeek = dayNames[new Date(today.getFullYear(), today.getMonth(), selectedDay).getDay()];
     
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
         {/* Subtle close button - returns to calendar view */}
         <div 
           onClick={() => onSelectDay(null)}
           style={{ 
-            position: "absolute", top: 12, right: 12, zIndex: 10,
-            width: 28, height: 28, borderRadius: 8,
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
             display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
-            transition: "opacity 0.15s ease"
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+            background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
+            border: `1px solid ${BORDER}`,
+            transition: "all 0.2s ease"
           }}
-          onMouseEnter={e => e.currentTarget.style.opacity = 1}
-          onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.8)"; }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </div>
         
-        {/* Day header */}
+        {/* Day header with animation */}
         <div style={{ 
-          padding: "16px 20px", borderBottom: `1px solid ${BORDER}`
+          padding: "24px 28px 20px",
+          background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+          borderBottom: `1px solid ${BORDER}`,
+          animation: "fadeUp 0.4s ease-out forwards"
         }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{dayOfWeek}, {currentMonth.split(' ')[0]} {selectedDay}</div>
-          <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{type === "mealPlan" ? "Meal Plan" : "Workout"}</div>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "4px 12px 4px 8px", borderRadius: 20,
+            background: TEAL_LIGHT, marginBottom: 12,
+            fontSize: 11, fontWeight: 600, color: TEAL,
+            textTransform: "uppercase", letterSpacing: "0.05em"
+          }}>
+            <div style={{ 
+              width: 6, height: 6, borderRadius: "50%", background: TEAL,
+              animation: "pulseGlow 2s ease-in-out infinite"
+            }} />
+            {type === "mealPlan" ? "Daily Nutrition" : "Daily Training"}
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+            {dayOfWeek}, {currentMonth.split(' ')[0]} {selectedDay}
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+            {type === "mealPlan" ? "Tap any meal to edit via chat" : "Tap any exercise to modify"}
+          </div>
         </div>
         
-        {/* Day detail content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        {/* Day detail content with staggered animations */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
           {type === "mealPlan" && dayData?.meals && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {dayData.meals.map((meal, idx) => (
                 <div key={idx} style={{
-                  background: WHITE, borderRadius: 12, padding: 14,
-                  border: `1px solid ${BORDER}`
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                  background: WHITE, borderRadius: 16, padding: 18,
+                  border: `1px solid ${BORDER}`,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  opacity: 0, transform: "translateY(12px)",
+                  animation: `fadeUp 0.4s ease-out ${0.15 + idx * 0.08}s forwards`,
+                  cursor: "pointer", transition: "all 0.2s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
                     {meal.type}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{meal.name}</div>
-                  <div style={{ display: "flex", gap: 12, fontSize: 11, color: TEXT_SEC }}>
-                    <span>{meal.calories} cal</span>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 10 }}>{meal.name}</div>
+                  <div style={{ display: "flex", gap: 16, fontSize: 12, color: TEXT_SEC }}>
+                    <span style={{ fontWeight: 600, color: TEXT }}>{meal.calories} cal</span>
                     <span>{meal.protein}g protein</span>
                     <span>{meal.carbs}g carbs</span>
                     <span>{meal.fat}g fat</span>
@@ -3440,43 +3469,67 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
           {type === "workout" && dayData && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ 
-                padding: "12px 14px", background: TEAL_LIGHT, borderRadius: 10,
-                fontSize: 13, fontWeight: 600, color: TEXT
+                padding: "14px 18px", background: `linear-gradient(135deg, ${TEAL_LIGHT} 0%, #e8f5f4 100%)`,
+                borderRadius: 14, fontSize: 15, fontWeight: 600, color: TEXT,
+                opacity: 0, animation: "fadeUp 0.4s ease-out 0.1s forwards",
+                display: "flex", alignItems: "center", gap: 10
               }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
                 {dayData.focus}
               </div>
               {dayData.exercises?.map((ex, idx) => (
                 <div key={idx} style={{
-                  background: WHITE, borderRadius: 12, padding: 14,
+                  background: WHITE, borderRadius: 16, padding: 18,
                   border: `1px solid ${BORDER}`,
-                  display: "flex", justifyContent: "space-between", alignItems: "center"
-                }}>
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  opacity: 0, transform: "translateY(12px)",
+                  animation: `fadeUp 0.4s ease-out ${0.2 + idx * 0.08}s forwards`,
+                  cursor: "pointer", transition: "all 0.2s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.name}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 6 }}>
                       {ex.sets} sets × {ex.reps} @ {ex.weight}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, background: "#f5f7f6", padding: "4px 8px", borderRadius: 6 }}>
-                    {ex.rest} rest
+                  <div style={{ fontSize: 12, color: TEXT_SEC, background: "#f5f7f6", padding: "6px 12px", borderRadius: 8, fontWeight: 500 }}>
+                    {ex.rest}
                   </div>
                 </div>
               ))}
               {(!dayData.exercises || dayData.exercises.length === 0) && (
-                <div style={{ padding: 20, textAlign: "center", color: TEXT_SEC, fontSize: 13 }}>
-                  Rest day - no exercises scheduled
+                <div style={{ 
+                  padding: 40, textAlign: "center", color: TEXT_SEC, fontSize: 14,
+                  background: WHITE, borderRadius: 16, border: `1px dashed ${BORDER}`,
+                  opacity: 0, animation: "fadeUp 0.4s ease-out 0.2s forwards"
+                }}>
+                  Rest day - recovery is part of the process
                 </div>
               )}
             </div>
           )}
         </div>
         
-        {/* Hint bar */}
+        {/* Hint bar with AI indicator */}
         <div style={{
-          padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
-          background: "#fafcfb", fontSize: 12, color: TEXT_SEC
+          padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+          background: WHITE, fontSize: 13, color: TEXT_SEC,
+          display: "flex", alignItems: "center", gap: 10,
+          animation: "fadeUp 0.5s ease-out 0.6s both"
         }}>
-          Chat with Milton to edit: "Change lunch to grilled salmon" or "Add 10 min cardio"
+          <div style={{
+            width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span>Ask Milton to customize: "Swap lunch for grilled salmon"</span>
         </div>
       </div>
     );
@@ -3484,105 +3537,137 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   
   // Calendar grid view
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
       {/* Subtle close button */}
       <div 
         onClick={onClose}
         style={{ 
-          position: "absolute", top: 12, right: 12, zIndex: 10,
-          width: 28, height: 28, borderRadius: 8,
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
           display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
-          transition: "opacity 0.15s ease"
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+          background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER}`,
+          transition: "all 0.2s ease"
         }}
-        onMouseEnter={e => e.currentTarget.style.opacity = 1}
-        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.8)"; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </div>
       
-      {/* Month header */}
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{currentMonth}</div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-          {type === "mealPlan" ? `Meal plan for ${data.client}` : `${data.programName} for ${data.client}`}
+      {/* AI-style header with shimmer accent */}
+      <div style={{ 
+        padding: "24px 28px 20px", 
+        background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+        borderBottom: `1px solid ${BORDER}`,
+        animation: "fadeUp 0.5s ease-out forwards"
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "4px 12px 4px 8px", borderRadius: 20,
+          background: TEAL_LIGHT, marginBottom: 12,
+          fontSize: 11, fontWeight: 600, color: TEAL,
+          textTransform: "uppercase", letterSpacing: "0.05em"
+        }}>
+          <div style={{ 
+            width: 6, height: 6, borderRadius: "50%", background: TEAL,
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }} />
+          {type === "mealPlan" ? "Nutrition Plan" : "Training Program"}
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+          {currentMonth}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+          {type === "mealPlan" ? `Personalized meal plan for ${data.client}` : `${data.programName} for ${data.client}`}
         </div>
       </div>
       
       {/* Day name headers */}
       <div style={{ 
-        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1,
-        padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, background: "#fafcfb"
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4,
+        padding: "12px 20px", background: WHITE,
+        animation: "fadeUp 0.5s ease-out 0.1s both"
       }}>
-        {dayNames.map(d => (
+        {dayNames.map((d, i) => (
           <div key={d} style={{ 
-            textAlign: "center", fontSize: 10, fontWeight: 600, 
-            color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em",
-            padding: "4px 0"
+            textAlign: "center", fontSize: 11, fontWeight: 600, 
+            color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em",
+            padding: "6px 0",
+            animation: `fadeUp 0.4s ease-out ${0.15 + i * 0.03}s both`
           }}>
             {d}
           </div>
         ))}
       </div>
       
-      {/* Calendar grid */}
+      {/* Calendar grid with staggered animations */}
       <div style={{ 
-        flex: 1, overflowY: "auto", padding: 12,
-        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6,
+        flex: 1, overflowY: "auto", padding: "8px 16px 16px",
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8,
         alignContent: "start"
       }}>
         {/* Empty cells for days before month starts */}
         {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-          <div key={`empty-${idx}`} style={{ aspectRatio: "1", borderRadius: 8 }} />
+          <div key={`empty-${idx}`} style={{ aspectRatio: "1", borderRadius: 12 }} />
         ))}
         
-        {/* Day cells */}
+        {/* Day cells with staggered reveal animation */}
         {Array.from({ length: daysInMonth }).map((_, idx) => {
           const dayNum = idx + 1;
           const isToday = dayNum === today.getDate();
           const dayColor = getDayColor(dayNum);
           const label = getDayLabel(dayNum);
+          const animDelay = 0.2 + (Math.floor(idx / 7) * 0.08) + ((idx % 7) * 0.02);
           
           return (
             <div
               key={dayNum}
               onClick={() => onSelectDay(dayNum)}
               style={{
-                aspectRatio: "1", borderRadius: 10,
-                background: isToday ? TEAL : dayColor || "#f8faf9",
+                aspectRatio: "1", borderRadius: 14,
+                background: isToday ? `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)` : dayColor || WHITE,
                 border: isToday ? "none" : `1px solid ${BORDER}`,
                 display: "flex", flexDirection: "column",
                 alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "all 0.15s ease",
-                padding: 4
+                cursor: "pointer", 
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                padding: 6,
+                boxShadow: isToday ? "0 4px 16px rgba(43,122,120,0.35)" : "0 1px 3px rgba(0,0,0,0.04)",
+                opacity: 0,
+                transform: "scale(0.85)",
+                animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`
               }}
               onMouseEnter={e => {
-                if (!isToday) {
-                  e.currentTarget.style.transform = "scale(1.05)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                }
+                e.currentTarget.style.transform = "scale(1.08)";
+                e.currentTarget.style.boxShadow = isToday 
+                  ? "0 8px 24px rgba(43,122,120,0.4)" 
+                  : "0 8px 20px rgba(0,0,0,0.12)";
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.boxShadow = isToday 
+                  ? "0 4px 16px rgba(43,122,120,0.35)" 
+                  : "0 1px 3px rgba(0,0,0,0.04)";
               }}
             >
               <div style={{ 
-                fontSize: 14, fontWeight: 600, 
+                fontSize: 16, fontWeight: 700, 
                 color: isToday ? WHITE : TEXT 
               }}>
                 {dayNum}
               </div>
               {label && (
                 <div style={{ 
-                  fontSize: 8, fontWeight: 500, 
-                  color: isToday ? "rgba(255,255,255,0.8)" : TEXT_SEC,
-                  textAlign: "center", marginTop: 2,
+                  fontSize: 9, fontWeight: 500, 
+                  color: isToday ? "rgba(255,255,255,0.85)" : TEXT_SEC,
+                  textAlign: "center", marginTop: 3,
                   lineHeight: 1.2, maxWidth: "100%",
                   overflow: "hidden", textOverflow: "ellipsis",
-                  whiteSpace: "nowrap"
+                  whiteSpace: "nowrap", padding: "0 2px"
                 }}>
                   {label}
                 </div>
@@ -3592,16 +3677,22 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
         })}
       </div>
       
-      {/* Hint bar */}
+      {/* Hint bar with AI indicator */}
       <div style={{
-        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
-        background: "#fafcfb", fontSize: 12, color: TEXT_SEC,
-        display: "flex", alignItems: "center", gap: 6
+        padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 13, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10,
+        animation: "fadeUp 0.5s ease-out 1s both"
       }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-        </svg>
-        Click a day to view details and edit via chat
+        <div style={{
+          width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click any day to view and edit with Milton</span>
       </div>
     </div>
   );
@@ -4470,13 +4561,14 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
-      {/* ═══ CANVAS MODE - Card Style ═══ */}
+      {/* ═══ CANVAS MODE - Full Dashboard ═══ */}
       {canvasMode && !isMobile && (
         <div style={{
-          width: 480, flexShrink: 0, display: "flex", flexDirection: "column",
-          background: WHITE, borderRadius: 20, margin: "14px 0",
-          border: `1px solid ${BORDER}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-          overflow: "hidden"
+          flex: 1, display: "flex", flexDirection: "column",
+          background: WHITE, borderRadius: 20, margin: "14px 14px 14px 0",
+          border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          overflow: "hidden",
+          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
         }}>
           {canvasType === "mealPlan" && (
             <MealPlanCanvas 
@@ -4548,7 +4640,7 @@ Remember: Be specific, be brief, be helpful.`;
       )}
 
       {/* ═══ MAIN CONTENT ═══ */}
-      {selectedClient !== null ? (
+      {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
             client={clients[selectedClient]}
@@ -4565,7 +4657,7 @@ Remember: Be specific, be brief, be helpful.`;
             }}
           />
         </main>
-      ) : (
+      ) : !canvasMode ? (
       <main style={{
         flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
@@ -5006,7 +5098,7 @@ Remember: Be specific, be brief, be helpful.`;
           </div>
         )}
       </main>
-      )}
+      ) : null}
 
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
@@ -5033,6 +5125,26 @@ Remember: Be specific, be brief, be helpful.`;
         @keyframes typingDot {
           0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
           30% { opacity: 1; transform: translateY(-3px); }
+        }
+        @keyframes canvasSlideIn {
+          from { opacity: 0; transform: scale(0.96) translateX(20px); }
+          to { opacity: 1; transform: scale(1) translateX(0); }
+        }
+        @keyframes canvasCellReveal {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(43, 122, 120, 0.3); }
+          50% { box-shadow: 0 0 20px 4px rgba(43, 122, 120, 0.15); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 6px; }
