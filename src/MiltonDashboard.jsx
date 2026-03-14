@@ -5052,8 +5052,10 @@ export default function MiltonDashboard() {
       const calorieMatch = low.match(/(?:change|set|update|adjust|increase|decrease|raise|lower)?\s*(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:target|goal|intake)?\s*(?:to)?\s*(\d+)/i)
         || low.match(/(?:increase|decrease|raise|lower)\s+(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:to)?\s*(\d+)/i)
         || low.match(/(\d+)\s*(?:daily\s+)?calorie[s]?\s*(?:per\s*day|daily)?/i);
+      console.log("[v0] Calorie regex test - low:", low, "calorieMatch:", calorieMatch);
       if (calorieMatch) {
         const newCalorieTarget = parseInt(calorieMatch[1]);
+        console.log("[v0] Calorie match found! newCalorieTarget:", newCalorieTarget, "clientIndex:", clientIndex);
         return {
           type: "calories",
           clientIndex,
@@ -5069,7 +5071,9 @@ export default function MiltonDashboard() {
       return null;
     })();
 
+    console.log("[v0] clientUpdateCmd check:", clientUpdateCmd);
     if (clientUpdateCmd) {
+      console.log("[v0] Processing clientUpdateCmd type:", clientUpdateCmd.type, "updates:", clientUpdateCmd.updates);
       setTimeout(() => {
         // Update the client data
         setClients(prev => {
@@ -5078,6 +5082,7 @@ export default function MiltonDashboard() {
             ...updated[clientUpdateCmd.clientIndex],
             ...clientUpdateCmd.updates
           };
+          console.log("[v0] Updated client:", updated[clientUpdateCmd.clientIndex]);
           return updated;
         });
         
@@ -5088,6 +5093,7 @@ export default function MiltonDashboard() {
         } else if (clientUpdateCmd.type === "protein") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
+          console.log("[v0] Calories update - canvasMode:", canvasMode, "canvasType:", canvasType, "canvasData:", canvasData);
           // Also update canvas data if meal plan is open
           if (canvasMode && canvasType === "mealPlan" && canvasData) {
             const newCanvasData = {
@@ -5097,6 +5103,7 @@ export default function MiltonDashboard() {
                 calories: clientUpdateCmd.newCalorieTarget
               }
             };
+            console.log("[v0] Setting new canvas data with calories:", newCanvasData.weeklyTargets);
             setCanvasData(newCanvasData);
             // Add to history for undo
             const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
