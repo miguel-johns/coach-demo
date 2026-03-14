@@ -1761,7 +1761,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ���══════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═══════════════════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
@@ -3748,13 +3748,13 @@ Remember: Be specific, be brief, be helpful.`;
                 { label: "Jan", value: 70 },
                 { label: "Feb", value: 73 },
               ];
-              const minVal = 45;
-              const maxVal = 80;
+              const minVal = months[0].value;
+              const maxVal = months[months.length - 1].value;
               const barH = isMobile ? 50 : 60;
               return (
                 <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto" }}>
                   {months.map((m, j) => {
-                    const h = Math.max(8, ((m.value - minVal) / (maxVal - minVal)) * barH);
+                    const h = Math.max(10, ((m.value - minVal) / (maxVal - minVal)) * barH) || barH;
                     const isLast = j === months.length - 1;
                     const intensity = 0.12 + (j / (months.length - 1)) * 0.88;
                     return (
