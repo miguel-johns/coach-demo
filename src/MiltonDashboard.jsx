@@ -241,11 +241,11 @@ const chatSeedMessages = [
 ];
 
 const suggestedPrompts = [
-  "Who needs attention today?",
-  "Write a message to Sarah",
-  "Summarize my coaching queue",
+  "Start with Sarah",
+  "Start with Emily",
+  "Start with Aaron",
   "Who is doing well?",
-  "What should I do next?",
+  "Summarize my coaching queue",
 ];
 
 // Demo client data for Milton AI responses
@@ -321,6 +321,15 @@ function generateAIResponse(msg) {
   const clientKeys = Object.keys(demoClients);
   const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
   const client = matchedKey ? demoClients[matchedKey] : null;
+
+  // START WITH [CLIENT] - prioritized handler for quick action prompts
+  if (lower.includes("start with") && client) {
+    const first = client.name.split(" ")[0];
+    return {
+      title: `Starting with ${first}`,
+      text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n${client.issue || client.win}\n\n**Quick stats:**\n- Protein: ${client.protein}\n- Weight: ${client.weight}\n- Logging streak: ${client.loggingStreak} days\n\n**My recommendation:** ${client.action}\n\nWant me to draft a message for ${first}?`
+    };
+  }
 
   // WHO NEEDS ATTENTION
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
@@ -1991,7 +2000,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         gap: isMobile ? 16 : 16, alignItems: "stretch"
       }}>
 
-      {/* ─── Consistency Score (compact) ─── */}
+      {/* ��── Consistency Score (compact) ─── */}
       <div style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "20px" : "22px 22px",
@@ -2820,7 +2829,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </>)}
 
-      {/* ═══ TAB: JOURNEY ═══ */}
+      {/* ═��═ TAB: JOURNEY ═══ */}
       {activeTab === "journey" && (
         <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
           <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Journey Timeline</div>
