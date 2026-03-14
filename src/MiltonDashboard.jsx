@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════�����═���������════════ */
+   ════════════════════════════════�������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3847,7 +3847,7 @@ function MealPlanCanvas({ data, onClose }) {
                                      category === "Snack" ? "#8b5cf6" : 
                                      category === "Lunch" ? "#10b981" : "#3b82f6";
                 return (
-                  <React.Fragment key={category}>
+                  <div key={category} style={{ display: "contents" }}>
                     {/* Category divider with label */}
                     <div style={{ 
                       display: "flex", flexDirection: "column", alignItems: "center", 
@@ -3950,7 +3950,7 @@ function MealPlanCanvas({ data, onClose }) {
                         </div>
                       </div>
                     ))}
-                  </React.Fragment>
+                  </div>
                 );
               })}
               
