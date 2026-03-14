@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════�����������═���������════════ */
+   ════════════════════════════════�������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3699,12 +3699,103 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
 }
 
 function MealPlanCanvas({ data, onClose }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [mealPlan, setMealPlan] = useState(null);
+  const [error, setError] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  // Fetch AI-generated recipes on mount
+  useEffect(() => {
+    let cancelled = false;
+    
+    async function generateRecipes() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Simulate progress for UX
+        const progressInterval = setInterval(() => {
+          setLoadingProgress(prev => Math.min(prev + Math.random() * 15, 90));
+        }, 500);
+        
+        const response = await fetch('/api/generate-recipes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: data?.client || 'Client',
+            goals: data?.goals || 'General health and fitness',
+            restrictions: data?.restrictions || null,
+            dailyCalories: data?.weeklyTargets?.calories || 2000,
+            dailyProtein: data?.weeklyTargets?.protein || 150,
+            weeksToGenerate: 4
+          })
+        });
+        
+        clearInterval(progressInterval);
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate recipes');
+        }
+        
+        const result = await response.json();
+        
+        if (!cancelled) {
+          setLoadingProgress(100);
+          setTimeout(() => {
+            setMealPlan(result.mealPlan);
+            setIsLoading(false);
+          }, 300);
+        }
+      } catch (err) {
+        console.error('[v0] Recipe generation error:', err);
+        if (!cancelled) {
+          setError(err.message);
+          // Fall back to sample data
+          setMealPlan(getFallbackMealPlan());
+          setIsLoading(false);
+        }
+      }
+    }
+    
+    generateRecipes();
+    
+    return () => { cancelled = true; };
+  }, [data]);
+  
+  // Fallback sample data if API fails
+  function getFallbackMealPlan() {
+    return {
+      weeks: [1, 2, 3, 4].map(weekNum => ({
+        weekNumber: weekNum,
+        breakfast: [
+          { name: "Greek Yogurt Parfait", calories: 320, protein: 22, carbs: 35, fat: 8, prepTime: "5 min", ingredients: ["Greek yogurt", "Granola", "Mixed berries", "Honey"] },
+          { name: "Avocado Toast & Eggs", calories: 450, protein: 18, carbs: 32, fat: 28, prepTime: "10 min", ingredients: ["Whole grain bread", "Avocado", "Eggs", "Everything seasoning"] },
+          { name: "Protein Smoothie Bowl", calories: 380, protein: 28, carbs: 45, fat: 12, prepTime: "8 min", ingredients: ["Protein powder", "Frozen banana", "Almond milk", "Chia seeds"] }
+        ],
+        snack: [
+          { name: "Mixed Nuts & Berries", calories: 180, protein: 6, carbs: 15, fat: 12, prepTime: "2 min", ingredients: ["Almonds", "Walnuts", "Blueberries", "Raspberries"] },
+          { name: "Cottage Cheese Cup", calories: 150, protein: 14, carbs: 8, fat: 5, prepTime: "2 min", ingredients: ["Low-fat cottage cheese", "Pineapple chunks", "Cinnamon"] },
+          { name: "Protein Energy Bites", calories: 200, protein: 12, carbs: 22, fat: 8, prepTime: "1 min", ingredients: ["Oats", "Protein powder", "Peanut butter", "Dark chocolate chips"] }
+        ],
+        lunch: [
+          { name: "Grilled Chicken Salad", calories: 420, protein: 38, carbs: 18, fat: 22, prepTime: "15 min", ingredients: ["Chicken breast", "Mixed greens", "Cherry tomatoes", "Feta cheese", "Olive oil dressing"] },
+          { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, carbs: 58, fat: 18, prepTime: "20 min", ingredients: ["Quinoa", "Chickpeas", "Roasted vegetables", "Tahini dressing"] },
+          { name: "Turkey Avocado Wrap", calories: 380, protein: 28, carbs: 32, fat: 16, prepTime: "10 min", ingredients: ["Whole wheat wrap", "Turkey slices", "Avocado", "Spinach", "Mustard"] }
+        ],
+        dinner: [
+          { name: "Salmon with Vegetables", calories: 520, protein: 42, carbs: 25, fat: 28, prepTime: "25 min", ingredients: ["Salmon fillet", "Asparagus", "Sweet potato", "Lemon", "Olive oil"] },
+          { name: "Lean Beef Stir Fry", calories: 480, protein: 38, carbs: 35, fat: 20, prepTime: "20 min", ingredients: ["Sirloin strips", "Broccoli", "Bell peppers", "Brown rice", "Soy sauce"] },
+          { name: "Herb Grilled Chicken", calories: 440, protein: 45, carbs: 22, fat: 18, prepTime: "22 min", ingredients: ["Chicken breast", "Italian herbs", "Roasted zucchini", "Quinoa"] }
+        ]
+      }))
+    };
+  }
+  
   if (!data) return null;
   
-  // Generate 4 weeks of meal data with multiple options per category
   const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
   
-  // Sample recipe images (using placeholder patterns)
+  // Recipe images from Unsplash (food photography)
   const recipeImages = {
     Breakfast: [
       "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
@@ -3712,9 +3803,9 @@ function MealPlanCanvas({ data, onClose }) {
       "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=200&fit=crop"
     ],
     Snack: [
-      "https://images.unsplash.com/photo-1568702846914-96b305d2uj6b?w=300&h=200&fit=crop",
       "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop"
+      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=300&h=200&fit=crop"
     ],
     Lunch: [
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
@@ -3728,31 +3819,73 @@ function MealPlanCanvas({ data, onClose }) {
     ]
   };
   
-  // Generate sample recipes for each category
-  const sampleRecipes = {
-    Breakfast: [
-      { name: "Greek Yogurt Parfait", calories: 320, protein: 22, time: "5 min" },
-      { name: "Avocado Toast & Eggs", calories: 450, protein: 18, time: "10 min" },
-      { name: "Protein Smoothie Bowl", calories: 380, protein: 28, time: "8 min" }
-    ],
-    Snack: [
-      { name: "Mixed Nuts & Berries", calories: 180, protein: 6, time: "2 min" },
-      { name: "Cottage Cheese Cup", calories: 150, protein: 14, time: "2 min" },
-      { name: "Protein Bar", calories: 200, protein: 20, time: "1 min" }
-    ],
-    Lunch: [
-      { name: "Grilled Chicken Salad", calories: 420, protein: 38, time: "15 min" },
-      { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, time: "20 min" },
-      { name: "Turkey Wrap", calories: 380, protein: 28, time: "10 min" }
-    ],
-    Dinner: [
-      { name: "Salmon with Vegetables", calories: 520, protein: 42, time: "25 min" },
-      { name: "Lean Beef Stir Fry", calories: 480, protein: 38, time: "20 min" },
-      { name: "Grilled Chicken Breast", calories: 440, protein: 45, time: "22 min" }
-    ]
-  };
+  // Use AI-generated recipes or fallback
+  const weeks = mealPlan?.weeks || [];
   
-  const weeks = [1, 2, 3, 4];
+  // Loading state - AI generating recipes
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+        {/* Close button */}
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        
+        {/* Loading content */}
+        <div style={{ 
+          flex: 1, display: "flex", flexDirection: "column", 
+          alignItems: "center", justifyContent: "center", padding: 40
+        }}>
+          {/* AI animation */}
+          <div style={{ 
+            width: 80, height: 80, borderRadius: 20, 
+            background: `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 24, boxShadow: "0 8px 32px rgba(43,122,120,0.3)",
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
+            Generating Personalized Recipes
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 24, textAlign: "center", maxWidth: 280 }}>
+            Milton is creating {data?.client ? `a custom meal plan for ${data.client}` : "your personalized meal plan"} based on nutritional goals
+          </div>
+          
+          {/* Progress bar */}
+          <div style={{ 
+            width: 240, height: 6, borderRadius: 3, background: BORDER, overflow: "hidden"
+          }}>
+            <div style={{ 
+              width: `${loadingProgress}%`, height: "100%", 
+              background: `linear-gradient(90deg, ${TEAL} 0%, #1f8785 100%)`,
+              borderRadius: 3, transition: "width 0.3s ease"
+            }} />
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 8 }}>
+            {loadingProgress < 30 ? "Analyzing nutritional requirements..." : 
+             loadingProgress < 60 ? "Selecting optimal recipes..." :
+             loadingProgress < 90 ? "Calculating macros..." : "Finalizing meal plan..."}
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
@@ -3794,7 +3927,7 @@ function MealPlanCanvas({ data, onClose }) {
             width: 6, height: 6, borderRadius: "50%", background: TEAL,
             animation: "pulseGlow 2s ease-in-out infinite"
           }} />
-          Nutrition Plan
+          {error ? "Sample Plan" : "AI-Generated"}
         </div>
         <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
           Personalized Meal Plan
@@ -3806,7 +3939,18 @@ function MealPlanCanvas({ data, onClose }) {
       
       {/* Scrollable weeks content - each week is one horizontal row */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 0" }}>
-        {weeks.map((weekNum, weekIdx) => (
+        {weeks.map((week, weekIdx) => {
+          const weekNum = week.weekNumber || weekIdx + 1;
+          
+          // Map category names to the API data keys
+          const categoryDataMap = {
+            "Breakfast": week.breakfast || [],
+            "Snack": week.snack || [],
+            "Lunch": week.lunch || [],
+            "Dinner": week.dinner || []
+          };
+          
+          return (
           <div 
             key={weekNum}
             style={{
@@ -3840,12 +3984,14 @@ function MealPlanCanvas({ data, onClose }) {
               display: "flex", gap: 16, overflowX: "auto", 
               paddingBottom: 8, paddingLeft: 24, paddingRight: 24,
               scrollbarWidth: "none", msOverflowStyle: "none"
-            }}>
+            }} className="hide-scrollbar">
               {/* Iterate through each meal category inline */}
               {mealCategories.map((category, catIdx) => {
                 const categoryColor = category === "Breakfast" ? "#f59e0b" : 
                                      category === "Snack" ? "#8b5cf6" : 
                                      category === "Lunch" ? "#10b981" : "#3b82f6";
+                const recipes = categoryDataMap[category] || [];
+                
                 return (
                   <div key={category} style={{ display: "contents" }}>
                     {/* Category divider with label */}
@@ -3871,7 +4017,7 @@ function MealPlanCanvas({ data, onClose }) {
                     </div>
                     
                     {/* Recipe cards for this category */}
-                    {sampleRecipes[category].map((recipe, recipeIdx) => (
+                    {recipes.map((recipe, recipeIdx) => (
                       <div
                         key={`${category}-${recipeIdx}`}
                         style={{
@@ -3924,7 +4070,7 @@ function MealPlanCanvas({ data, onClose }) {
                             padding: "2px 6px", borderRadius: 6,
                             fontSize: 9, fontWeight: 600, color: WHITE
                           }}>
-                            {recipe.time}
+                            {recipe.prepTime || recipe.time}
                           </div>
                         </div>
                         
@@ -3992,7 +4138,8 @@ function MealPlanCanvas({ data, onClose }) {
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
         
         {/* Load more indicator */}
         <div style={{ 
