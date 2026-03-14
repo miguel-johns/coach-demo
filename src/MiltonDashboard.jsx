@@ -1761,7 +1761,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
   );
 }
 
-/* ���══════════════════════════════════════════
+/* ═══════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═══════════════════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
@@ -3722,79 +3722,57 @@ Remember: Be specific, be brief, be helpful.`;
             })()}
           </div>
 
-          {/* ── Card 4: Success Rate - Line Graph ── */}
+          {/* ── Card 4: Data Points Collected - Progressive Bar Chart ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
             opacity: animatedKPIs[3] ? 1 : 0, transform: animatedKPIs[3] ? "translateY(0)" : "translateY(12px)",
             transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Success Rate</div>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Data Points</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>73%</span>
+              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>1,847</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +8%
+                +22%
               </span>
             </div>
             {(() => {
               const months = [
-                { label: "Jul", value: 52 },
-                { label: "Aug", value: 55 },
-                { label: "Sep", value: 58 },
-                { label: "Oct", value: 61 },
-                { label: "Nov", value: 65 },
-                { label: "Dec", value: 68 },
-                { label: "Jan", value: 70 },
-                { label: "Feb", value: 73 },
+                { label: "Jul", value: 42 },
+                { label: "Aug", value: 98 },
+                { label: "Sep", value: 187 },
+                { label: "Oct", value: 295 },
+                { label: "Nov", value: 410 },
+                { label: "Dec", value: 520 },
+                { label: "Jan", value: 680 },
+                { label: "Feb", value: 847 },
               ];
-              const minVal = 45;
-              const maxVal = 80;
-              const chartH = isMobile ? 50 : 60;
-              const chartW = "100%";
-              
-              // Calculate points for the line
-              const getY = (val) => chartH - ((val - minVal) / (maxVal - minVal)) * chartH;
-              const points = months.map((m, i) => ({
-                x: (i / (months.length - 1)) * 100,
-                y: getY(m.value),
-                value: m.value,
-                label: m.label
-              }));
-              
-              // Create SVG path
-              const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-              const areaPath = `${linePath} L 100 ${chartH} L 0 ${chartH} Z`;
-              
+              const maxVal = months[months.length - 1].value;
+              const barH = isMobile ? 50 : 60;
               return (
-                <div style={{ flex: 1, marginTop: "auto", position: "relative" }}>
-                  <svg width={chartW} height={chartH + 20} viewBox={`0 0 100 ${chartH + 20}`} preserveAspectRatio="none" style={{ overflow: "visible" }}>
-                    {/* Gradient fill under line */}
-                    <defs>
-                      <linearGradient id="successGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor={TEAL} stopOpacity="0.2" />
-                        <stop offset="100%" stopColor={TEAL} stopOpacity="0.02" />
-                      </linearGradient>
-                    </defs>
-                    <path d={areaPath} fill="url(#successGradient)" />
-                    {/* Line */}
-                    <path d={linePath} fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-                    {/* Dots on data points */}
-                    {points.map((p, i) => (
-                      <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="2" fill={WHITE} stroke={TEAL} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-                        {i === points.length - 1 && (
-                          <text x={p.x} y={p.y - 8} textAnchor="middle" style={{ fontSize: 8, fontWeight: 700, fill: TEAL }}>{p.value}%</text>
-                        )}
-                      </g>
-                    ))}
-                  </svg>
-                  {/* Month labels */}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                    {months.map((m, i) => (
-                      <span key={i} style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 500 }}>{m.label}</span>
-                    ))}
-                  </div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto" }}>
+                  {months.map((m, j) => {
+                    const h = Math.max(3, (m.value / maxVal) * barH);
+                    const isLast = j === months.length - 1;
+                    const intensity = 0.12 + (j / (months.length - 1)) * 0.88;
+                    return (
+                      <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC }}>
+                          {m.value}
+                        </span>
+                        <div style={{
+                          width: "100%", height: h, borderRadius: 4,
+                          background: isLast
+                            ? `linear-gradient(180deg, ${MINT}, ${SAGE})`
+                            : `rgba(92,219,149,${intensity})`,
+                          transition: "height 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                          transitionDelay: `${j * 0.07}s`
+                        }} />
+                        <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 500 }}>{m.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
