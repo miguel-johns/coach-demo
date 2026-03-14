@@ -3869,14 +3869,14 @@ Remember: Be specific, be brief, be helpful.`;
               const maxVal = months[months.length - 1].value;
               const barH = isMobile ? 50 : 60;
               return (
-                <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto", minWidth: 0 }}>
                   {months.map((m, j) => {
                     const h = Math.max(10, ((m.value - minVal) / (maxVal - minVal)) * barH) || barH;
                     const isLast = j === months.length - 1;
                     const intensity = 0.12 + (j / (months.length - 1)) * 0.88;
                     return (
-                      <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC }}>
+                      <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4, minWidth: 0 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC, whiteSpace: "nowrap" }}>
                           {m.value}%
                         </span>
                         <div style={{
