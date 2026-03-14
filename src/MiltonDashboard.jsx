@@ -815,6 +815,32 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                   </div>
                 </div>
               )}
+              {messages.length <= 1 && !typing && (
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
+                  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
+                }}>
+                  {suggestedPrompts.map((prompt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { onSend(prompt); }}
+                      style={{
+                        background: "rgba(255,255,255,0.85)",
+                        border: "1px solid rgba(224,235,232,0.7)",
+                        borderRadius: 18,
+                        padding: "8px 14px",
+                        fontSize: 13,
+                        fontFamily: font,
+                        color: TEXT_SEC,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div ref={chatEndRef} />
             </div>
             {/* Input */}
