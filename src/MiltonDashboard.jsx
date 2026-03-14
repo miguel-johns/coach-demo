@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ══════════════════════════════════�����════════ */
+   ══════════════════════════════════�������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3698,8 +3698,331 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function MealPlanCanvas({ data, selectedDay, onSelectDay, onClose }) {
-  return <CalendarCanvas data={data} type="mealPlan" selectedDay={selectedDay} onSelectDay={onSelectDay} onClose={onClose} />;
+function MealPlanCanvas({ data, onClose }) {
+  if (!data) return null;
+  
+  // Generate 4 weeks of meal data with multiple options per category
+  const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
+  
+  // Sample recipe images (using placeholder patterns)
+  const recipeImages = {
+    Breakfast: [
+      "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=200&fit=crop"
+    ],
+    Snack: [
+      "https://images.unsplash.com/photo-1568702846914-96b305d2uj6b?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop"
+    ],
+    Lunch: [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop"
+    ],
+    Dinner: [
+      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=300&h=200&fit=crop",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"
+    ]
+  };
+  
+  // Generate sample recipes for each category
+  const sampleRecipes = {
+    Breakfast: [
+      { name: "Greek Yogurt Parfait", calories: 320, protein: 22, time: "5 min" },
+      { name: "Avocado Toast & Eggs", calories: 450, protein: 18, time: "10 min" },
+      { name: "Protein Smoothie Bowl", calories: 380, protein: 28, time: "8 min" }
+    ],
+    Snack: [
+      { name: "Mixed Nuts & Berries", calories: 180, protein: 6, time: "2 min" },
+      { name: "Cottage Cheese Cup", calories: 150, protein: 14, time: "2 min" },
+      { name: "Protein Bar", calories: 200, protein: 20, time: "1 min" }
+    ],
+    Lunch: [
+      { name: "Grilled Chicken Salad", calories: 420, protein: 38, time: "15 min" },
+      { name: "Quinoa Buddha Bowl", calories: 480, protein: 22, time: "20 min" },
+      { name: "Turkey Wrap", calories: 380, protein: 28, time: "10 min" }
+    ],
+    Dinner: [
+      { name: "Salmon with Vegetables", calories: 520, protein: 42, time: "25 min" },
+      { name: "Lean Beef Stir Fry", calories: 480, protein: 38, time: "20 min" },
+      { name: "Grilled Chicken Breast", calories: 440, protein: 45, time: "22 min" }
+    ]
+  };
+  
+  const weeks = [1, 2, 3, 4];
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.4,
+          background: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER}`,
+          transition: "all 0.2s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = WHITE; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.4; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Header */}
+      <div style={{ 
+        padding: "24px 28px 20px", 
+        background: `linear-gradient(135deg, ${WHITE} 0%, #f7fafa 100%)`,
+        borderBottom: `1px solid ${BORDER}`,
+        animation: "fadeUp 0.5s ease-out forwards"
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "4px 12px 4px 8px", borderRadius: 20,
+          background: TEAL_LIGHT, marginBottom: 12,
+          fontSize: 11, fontWeight: 600, color: TEAL,
+          textTransform: "uppercase", letterSpacing: "0.05em"
+        }}>
+          <div style={{ 
+            width: 6, height: 6, borderRadius: "50%", background: TEAL,
+            animation: "pulseGlow 2s ease-in-out infinite"
+          }} />
+          Nutrition Plan
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+          Personalized Meal Plan
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+          {data.client ? `Custom recipes for ${data.client}` : "AI-generated recipes based on your goals"}
+        </div>
+      </div>
+      
+      {/* Scrollable weeks content */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 0 20px" }}>
+        {weeks.map((weekNum, weekIdx) => (
+          <div 
+            key={weekNum}
+            style={{
+              padding: "24px 24px 8px",
+              opacity: 0,
+              animation: `fadeUp 0.5s ease-out ${0.2 + weekIdx * 0.15}s forwards`
+            }}
+          >
+            {/* Week header */}
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: 12, marginBottom: 16,
+              paddingBottom: 12, borderBottom: `1px solid ${BORDER}`
+            }}>
+              <div style={{ 
+                width: 36, height: 36, borderRadius: 10, 
+                background: `linear-gradient(135deg, ${TEAL} 0%, #1f8785 100%)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: WHITE, fontSize: 14, fontWeight: 700,
+                boxShadow: "0 4px 12px rgba(43,122,120,0.3)"
+              }}>
+                {weekNum}
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Week {weekNum}</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  {data.weeklyTargets?.calories || 2000} cal daily • {data.weeklyTargets?.protein || 150}g protein
+                </div>
+              </div>
+            </div>
+            
+            {/* Meal categories */}
+            {mealCategories.map((category, catIdx) => (
+              <div 
+                key={category}
+                style={{ 
+                  marginBottom: 20,
+                  opacity: 0,
+                  animation: `fadeUp 0.4s ease-out ${0.3 + weekIdx * 0.15 + catIdx * 0.08}s forwards`
+                }}
+              >
+                {/* Category label */}
+                <div style={{ 
+                  fontSize: 11, fontWeight: 600, color: TEXT_SEC, 
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                  marginBottom: 10, display: "flex", alignItems: "center", gap: 8
+                }}>
+                  <div style={{ 
+                    width: 4, height: 4, borderRadius: "50%", 
+                    background: category === "Breakfast" ? "#f59e0b" : 
+                               category === "Snack" ? "#8b5cf6" : 
+                               category === "Lunch" ? "#10b981" : "#3b82f6"
+                  }} />
+                  {category}
+                </div>
+                
+                {/* Horizontal scrolling recipe cards */}
+                <div style={{ 
+                  display: "flex", gap: 12, overflowX: "auto", 
+                  paddingBottom: 8, marginLeft: -24, paddingLeft: 24,
+                  marginRight: -24, paddingRight: 24
+                }}>
+                  {sampleRecipes[category].map((recipe, recipeIdx) => (
+                    <div
+                      key={recipeIdx}
+                      style={{
+                        minWidth: 180, maxWidth: 180,
+                        background: WHITE, borderRadius: 16,
+                        border: `1px solid ${BORDER}`,
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                        opacity: 0, transform: "scale(0.9) translateX(20px)",
+                        animation: `canvasCellReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${0.4 + weekIdx * 0.15 + catIdx * 0.08 + recipeIdx * 0.06}s forwards`
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = "scale(1.03) translateY(-4px)";
+                        e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.12)";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = "scale(1) translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+                      }}
+                    >
+                      {/* Recipe image */}
+                      <div style={{ 
+                        height: 100, 
+                        background: `linear-gradient(135deg, ${TEAL_LIGHT} 0%, #e0eeee 100%)`,
+                        position: "relative", overflow: "hidden"
+                      }}>
+                        <img 
+                          src={recipeImages[category][recipeIdx]}
+                          alt={recipe.name}
+                          style={{ 
+                            width: "100%", height: "100%", objectFit: "cover",
+                            transition: "transform 0.3s ease"
+                          }}
+                          onError={e => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                        {/* Prep time badge */}
+                        <div style={{
+                          position: "absolute", bottom: 8, right: 8,
+                          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+                          padding: "3px 8px", borderRadius: 8,
+                          fontSize: 10, fontWeight: 600, color: WHITE
+                        }}>
+                          {recipe.time}
+                        </div>
+                      </div>
+                      
+                      {/* Recipe details */}
+                      <div style={{ padding: 12 }}>
+                        <div style={{ 
+                          fontSize: 13, fontWeight: 600, color: TEXT, 
+                          marginBottom: 6, lineHeight: 1.3
+                        }}>
+                          {recipe.name}
+                        </div>
+                        <div style={{ 
+                          display: "flex", gap: 8, fontSize: 11, color: TEXT_SEC 
+                        }}>
+                          <span style={{ fontWeight: 600, color: TEXT }}>{recipe.calories}</span>
+                          <span>cal</span>
+                          <span style={{ opacity: 0.4 }}>•</span>
+                          <span style={{ fontWeight: 600, color: TEAL }}>{recipe.protein}g</span>
+                          <span>protein</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Add more card */}
+                  <div
+                    style={{
+                      minWidth: 120, maxWidth: 120,
+                      background: "transparent", borderRadius: 16,
+                      border: `2px dashed ${BORDER}`,
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", padding: 16,
+                      transition: "all 0.2s ease",
+                      opacity: 0,
+                      animation: `fadeUp 0.4s ease-out ${0.6 + weekIdx * 0.15 + catIdx * 0.08}s forwards`
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = TEAL;
+                      e.currentTarget.style.background = TEAL_LIGHT;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = BORDER;
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <div style={{ 
+                      width: 32, height: 32, borderRadius: 10, 
+                      background: "#f0f4f3", 
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 8
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500, textAlign: "center" }}>
+                      Ask Milton for more
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+        
+        {/* Load more indicator */}
+        <div style={{ 
+          padding: "20px 24px 40px", textAlign: "center",
+          opacity: 0, animation: "fadeUp 0.4s ease-out 1.2s forwards"
+        }}>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "10px 20px", borderRadius: 12,
+            background: WHITE, border: `1px solid ${BORDER}`,
+            fontSize: 13, color: TEXT_SEC, cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+            Generate more weeks
+          </div>
+        </div>
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "14px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 13, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10
+      }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click a recipe to customize or ask Milton for alternatives</span>
+      </div>
+    </div>
+  );
 }
 
 function WorkoutCanvas({ data, selectedDay, onSelectDay, onClose }) {
@@ -4573,9 +4896,7 @@ Remember: Be specific, be brief, be helpful.`;
           {canvasType === "mealPlan" && (
             <MealPlanCanvas 
               data={canvasData} 
-              selectedDay={canvasSelectedDay}
-              onSelectDay={setCanvasSelectedDay}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
           {canvasType === "workout" && (
@@ -4611,9 +4932,7 @@ Remember: Be specific, be brief, be helpful.`;
           {canvasType === "mealPlan" && (
             <MealPlanCanvas 
               data={canvasData}
-              selectedDay={canvasSelectedDay}
-              onSelectDay={setCanvasSelectedDay}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
           {canvasType === "workout" && (
