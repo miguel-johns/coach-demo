@@ -3288,7 +3288,7 @@ Remember: Be specific, be brief, be helpful.`;
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
   return (
-    <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
+    <div style={{ display: "flex", minHeight: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* ═══ MOBILE HEADER BAR ═══ */}
@@ -3383,7 +3383,7 @@ Remember: Be specific, be brief, be helpful.`;
         </main>
       ) : (
       <main style={{
-        flex: 1, overflowY: "auto", minHeight: 0,
+        flex: 1,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
         display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
       }}>
