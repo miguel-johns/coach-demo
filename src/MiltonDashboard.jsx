@@ -95,7 +95,7 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "Here's your daily brief for your 12 clients:\n\nNeeds Attention:\n- Sarah Chen — hasn't logged in 4 days, her longest gap yet\n- Emily Rodriguez — weekday calories too low, weekend spikes\n- Aaron Smith — mid-week logging drop-off pattern returning\n\nDoing Great:\n- Marcus Johnson — 7-day protein streak, ready to level up\n- David Park — 21-day perfect logging (but weight plateaued)\n- Lisa Martinez — 26-day logging streak, best month yet\n- Jason Williams — 30-day steps streak, maintenance working\n\nNew Clients:\n- Rachel Kim — first full week of postpartum workouts!\n- Jennifer Lee — 21-day exercise streak but needs to log meals\n\nWhat would you like to tackle first?" },
+  { type: "ai", title: "Good morning, Coach!", text: "You have 12 active clients. Top priority: Sarah Chen hasn't logged in 4 days. I'd recommend reaching out before it becomes a pattern." },
 ];
 
 const suggestedPrompts = [
