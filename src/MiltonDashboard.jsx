@@ -1309,7 +1309,10 @@ function ReportView({ client, onBack, isMobile }) {
           const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
           const startVal = isFatLoss ? (client.weightData?.[0] || 185) : client.proteinAvg;
           const currentVal = isFatLoss ? (client.weightData?.[client.weightData.length-1] || 183) : client.proteinAvg;
-          const goalVal = isFatLoss ? startVal - 10 : client.proteinTarget + 20;
+          // Use client.goalWeight if set (via chat command), otherwise default calculation
+          const goalVal = isFatLoss 
+            ? (client.goalWeight || startVal - 10) 
+            : (client.proteinTarget + 20);
           const unit = isFatLoss ? "lbs" : "g protein/day";
           const goalLabel = isFatLoss ? "Weight Goal" : "Protein Goal";
           const weeksTotal = 12;
@@ -1761,7 +1764,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
   );
 }
 
-/* ���══════════════════════════════════════════
+/* �����══════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═══════════════════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
@@ -2229,7 +2232,10 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
         const startVal = isFatLoss ? (client.weightData?.[0] || 185) : client.proteinAvg;
         const currentVal = isFatLoss ? (client.weightData?.[client.weightData.length-1] || 183) : client.proteinAvg;
-        const goalVal = isFatLoss ? startVal - 10 : client.proteinTarget + 20;
+        // Use client.goalWeight if set (via chat command), otherwise default calculation
+        const goalVal = isFatLoss 
+          ? (client.goalWeight || startVal - 10) 
+          : (client.proteinTarget + 20);
         const unit = isFatLoss ? "lbs" : "g protein/day";
         const goalLabel = isFatLoss ? "Weight Goal" : "Protein Goal";
         const weeksTotal = 12, weeksCurrent = 4;
@@ -3290,6 +3296,99 @@ export default function MiltonDashboard() {
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, delay);
+      return;
+    }
+
+    // Client data modification commands (goal changes, weight updates, etc.)
+    const clientUpdateCmd = (() => {
+      // Find which client is mentioned
+      const clientIndex = clients.findIndex(c => low.includes(c.name.toLowerCase().split(" ")[0].toLowerCase()));
+      if (clientIndex === -1) return null;
+      const client = clients[clientIndex];
+      const firstName = client.name.split(" ")[0];
+      
+      // Detect goal weight changes: "change goal to 150", "set goal to 150 lbs", "goal to 150"
+      const goalMatch = low.match(/(?:change|set|update|adjust|make)?\s*(?:her|his|their)?\s*goal\s*(?:to|at|weight)?\s*(\d+)\s*(?:lbs?|pounds?)?/i);
+      if (goalMatch) {
+        const newGoalWeight = parseInt(goalMatch[1]);
+        const currentWeight = client.weightData?.[client.weightData.length - 1] || 159;
+        const lbsToGo = Math.abs(currentWeight - newGoalWeight);
+        return {
+          type: "goal",
+          clientIndex,
+          client,
+          firstName,
+          newGoalWeight,
+          currentWeight,
+          lbsToGo,
+          updates: {
+            goalWeight: newGoalWeight,
+            goal: `Lose ${lbsToGo} lbs (${currentWeight} → ${newGoalWeight})`
+          }
+        };
+      }
+      
+      // Detect protein target changes: "change protein target to 100g", "set protein to 130"
+      const proteinMatch = low.match(/(?:change|set|update|adjust)?\s*(?:her|his|their)?\s*protein\s*(?:target|goal)?\s*(?:to)?\s*(\d+)\s*g?/i);
+      if (proteinMatch) {
+        const newProteinTarget = parseInt(proteinMatch[1]);
+        return {
+          type: "protein",
+          clientIndex,
+          client,
+          firstName,
+          newProteinTarget,
+          updates: {
+            proteinTarget: newProteinTarget
+          }
+        };
+      }
+      
+      // Detect calorie target changes
+      const calorieMatch = low.match(/(?:change|set|update|adjust)?\s*(?:her|his|their)?\s*calorie[s]?\s*(?:target|goal)?\s*(?:to)?\s*(\d+)/i);
+      if (calorieMatch) {
+        const newCalorieTarget = parseInt(calorieMatch[1]);
+        return {
+          type: "calories",
+          clientIndex,
+          client,
+          firstName,
+          newCalorieTarget,
+          updates: {
+            calorieTarget: newCalorieTarget
+          }
+        };
+      }
+      
+      return null;
+    })();
+
+    if (clientUpdateCmd) {
+      setTimeout(() => {
+        // Update the client data
+        setClients(prev => {
+          const updated = [...prev];
+          updated[clientUpdateCmd.clientIndex] = {
+            ...updated[clientUpdateCmd.clientIndex],
+            ...clientUpdateCmd.updates
+          };
+          return updated;
+        });
+        
+        // Generate appropriate response
+        let responseText = "";
+        if (clientUpdateCmd.type === "goal") {
+          responseText = `**Done! I've updated ${clientUpdateCmd.firstName}'s goal.**\n\n- **New goal weight:** ${clientUpdateCmd.newGoalWeight} lbs\n- **Current weight:** ${clientUpdateCmd.currentWeight} lbs\n- **To go:** ${clientUpdateCmd.lbsToGo} lbs\n\nThis feels much more achievable. The charts and predictions will now reflect this new target. Want me to draft a message to ${clientUpdateCmd.firstName} about the updated goal?`;
+        } else if (clientUpdateCmd.type === "protein") {
+          responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
+        } else if (clientUpdateCmd.type === "calories") {
+          responseText = `**Updated ${clientUpdateCmd.firstName}'s calorie target to ${clientUpdateCmd.newCalorieTarget}.**\n\nThis change is now reflected in their dashboard. Want me to recalculate their macros based on this new target?`;
+        }
+        
+        setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 500); // Slightly longer delay for data updates
       return;
     }
 
