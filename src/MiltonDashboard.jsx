@@ -85,10 +85,17 @@ const initialClients = [
   { name: "Emily Rodriguez", alert: "Needs Attention", alertType: "red", connectors: ["watch", "foodlog", "sleep"], progress: 35, program: "Metabolic Health", startDate: "Feb 15", mealsLogged: 16, weightTrend: 0.5, proteinAvg: 68, proteinTarget: 100, engagementScore: 58, weekLog: [2,1,2,1,0,3,3], weightData: [145,144.8,145.2,144.5,145.8,147.2,145.5,145.0], steps: 5400, workoutDays: 2, insight: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends. Classic restrict-binge pattern.", coachAngle: "Schedule a call about sustainable eating. She needs permission to eat more consistently.", streaks: { logging: 5, exercise: 4, steps: 6, best: { type: "logging", days: 8 } }, narrative: "Weekday calories too low (<1200), then weekend spikes. Needs a sustainable approach." },
   { name: "David Park", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm", "milton"], progress: 100, progressLabel: "Report Ready", program: "Fat Loss Phase", startDate: "Jan 5", mealsLogged: 30, weightTrend: 0, proteinAvg: 165, proteinTarget: 160, engagementScore: 98, weekLog: [3,3,3,3,3,3,3], weightData: [185,184.2,183.5,182.8,182.0,181.5,178.5,178.5], steps: 10500, workoutDays: 5, insight: "Perfect logging for 21 days but weight has plateaued for 2 weeks despite good adherence.", coachAngle: "Consider a 2-week diet break or macro adjustment. Metabolic adaptation may be occurring.", streaks: { logging: 21, exercise: 19, steps: 30, best: { type: "steps", days: 30 } }, narrative: "21-day perfect logging but weight plateaued for 2 weeks. May need macro adjustment." },
   { name: "Rachel Kim", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog"], progress: 25, program: "Post-Pregnancy", startDate: "Mar 1", mealsLogged: 8, weightTrend: -0.5, proteinAvg: 85, proteinTarget: 110, engagementScore: 65, weekLog: [2,1,2,1,2,0,1], weightData: [165,164.8,164.5,164.2,164.0,163.8,163.5,163.5], steps: 4200, workoutDays: 3, insight: "Completed first full week of workouts postpartum! Struggling to find time to log with newborn.", coachAngle: "Send encouragement and offer quick-log meal templates. Keep expectations realistic.", streaks: { logging: 2, exercise: 7, steps: 5, best: { type: "exercise", days: 7 } }, narrative: "First full week of postpartum workouts complete! Huge milestone for a new mom." },
+  { name: "Aaron Smith", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 65, program: "Fat Loss Phase", startDate: "Feb 12", mealsLogged: 21, weightTrend: -2.1, proteinAvg: 78, proteinTarget: 100, engagementScore: 84, weekLog: [3,2,0,0,3,2,1], weightData: [185,184.5,184.2,183.8,183.5,183.2,183.0,182.9], steps: 8420, workoutDays: 4, insight: "Aaron logs meals consistently early in the week but drops off after Wednesday. Protein intake averages 22g below target.", coachAngle: "Focus on simple protein options for busy days. Consider meal prep suggestions for Wed-Fri.", streaks: { logging: 3, exercise: 8, steps: 14, best: { type: "steps", days: 14 } }, narrative: "Down 2.1 lbs but stopped logging Thursday — his usual mid-week drop-off is back." },
+  { name: "Lisa Martinez", alert: "Report Ready", alertType: "blue", connectors: ["watch", "milton", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 8", mealsLogged: 28, weightTrend: 1.3, proteinAvg: 132, proteinTarget: 130, engagementScore: 96, weekLog: [3,3,3,3,3,2,3], weightData: [142,142.3,142.8,143.0,143.2,143.5,143.8,143.3], steps: 10200, workoutDays: 5, insight: "Lisa is highly consistent — logging nearly every meal. Weight gain is on track at 1.3 lbs over 14 days.", coachAngle: "Celebrate consistency. Suggest progressive overload update for next phase.", streaks: { logging: 26, exercise: 18, steps: 22, best: { type: "logging", days: 26 } }, narrative: "On a 26-day logging streak and hitting protein targets — her best month yet." },
+  { name: "Jason Williams", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "milton", "foodlog"], progress: 100, progressLabel: "Report Ready", program: "Maintenance", startDate: "Dec 1", mealsLogged: 24, weightTrend: -0.3, proteinAvg: 105, proteinTarget: 110, engagementScore: 91, weekLog: [3,3,2,3,3,3,3], weightData: [175,175.1,174.8,175.0,174.9,174.7,174.6,174.7], steps: 9100, workoutDays: 4, insight: "Jason is maintaining weight effectively. Slight protein deficit but within acceptable range.", coachAngle: "Reinforce current habits. Discuss goals for next quarter.", streaks: { logging: 19, exercise: 12, steps: 30, best: { type: "steps", days: 30 } }, narrative: "Just hit a 30-day steps streak. Weight holding steady at 174.7 — maintenance is working." },
+  { name: "Daniel Torres", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog", "sleep"], progress: 48, program: "Fat Loss Phase", startDate: "Feb 20", mealsLogged: 14, weightTrend: -1.0, proteinAvg: 65, proteinTarget: 90, engagementScore: 62, weekLog: [2,1,2,0,1,0,0], weightData: [210,209.5,209.8,209.2,209.0,208.8,209.1,209.0], steps: 5800, workoutDays: 2, insight: "Daniel has inconsistent logging and drops off on weekends. Sleep data shows late nights correlating with missed logs.", coachAngle: "Address weekend routine. Pair evening meals with a simple logging reminder.", streaks: { logging: 0, exercise: 2, steps: 4, best: { type: "steps", days: 7 } }, narrative: "Logging streak broke over the weekend — sleep data shows 2 AM bedtimes Fri and Sat." },
+  { name: "Amanda Foster", alert: "Report Ready", alertType: "blue", connectors: ["milton", "cgm", "bloodwork"], progress: 82, program: "Metabolic Health", startDate: "Jan 15", mealsLogged: 19, weightTrend: -0.8, proteinAvg: 88, proteinTarget: 95, engagementScore: 78, weekLog: [3,2,3,2,2,1,2], weightData: [155,154.8,154.5,154.2,154.0,154.3,154.1,154.2], steps: 7200, workoutDays: 3, insight: "Amanda's CGM data shows glucose spikes after lunch consistently. Bloodwork improving on lipid panel.", coachAngle: "Focus on lunch composition — more protein/fiber before carbs. Share CGM insight visually.", streaks: { logging: 11, exercise: 9, steps: 16, best: { type: "steps", days: 16 } }, narrative: "Glucose spikes are down 15% since changing lunch order. Bloodwork trending in the right direction." },
+  { name: "Michael Brown", alert: "Made Progress", alertType: "green", connectors: ["foodlog", "scale", "sleep"], progress: 72, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 18, weightTrend: -1.5, proteinAvg: 72, proteinTarget: 85, engagementScore: 70, weekLog: [3,2,2,1,3,1,0], weightData: [195,194.5,194.0,193.8,193.5,193.2,193.5,193.5], steps: 6500, workoutDays: 3, insight: "Michael shows good weekday adherence but Sunday logging drops completely. Steady weight loss trend.", coachAngle: "Praise the downward trend. Create a simple Sunday meal template.", streaks: { logging: 5, exercise: 6, steps: 10, best: { type: "steps", days: 10 } }, narrative: "Lost 1.5 lbs this week and logging is improving — but Sundays are still a blind spot." },
+  { name: "Jennifer Lee", alert: "Made Progress", alertType: "green", connectors: ["cgm", "watch", "milton"], progress: 55, program: "Performance", startDate: "Mar 1", mealsLogged: 12, weightTrend: 0.2, proteinAvg: 110, proteinTarget: 120, engagementScore: 58, weekLog: [2,1,0,2,1,0,0], weightData: [138,138.2,138.1,138.3,138.2,138.4,138.3,138.2], steps: 11000, workoutDays: 5, insight: "Jennifer trains consistently but logging is sporadic. High activity level but nutrition data gaps make coaching difficult.", coachAngle: "Emphasize that training + logging = results. Suggest photo-logging as a low-friction option.", streaks: { logging: 1, exercise: 21, steps: 28, best: { type: "steps", days: 28 } }, narrative: "Training 5x/week with a 21-day exercise streak, but only logged 1 meal this week." },
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "Here's your daily brief:\n\n🔴 Sarah Chen — hasn't logged in 4 days, her longest gap yet. Recommend a supportive check-in.\n\n🟡 Emily Rodriguez — weekday calories are too low. Worth scheduling a call.\n\n🟢 Marcus Johnson — 7-day protein streak! Ready to level up.\n\n🟢 David Park — 21-day perfect logging, but weight plateaued. May need a macro adjustment.\n\n🆕 Rachel Kim — just completed her first full week of workouts postpartum!\n\nWhat would you like to tackle first?" },
+  { type: "ai", title: "Good morning, Coach!", text: "Here's your daily brief for your 12 clients:\n\nNeeds Attention:\n- Sarah Chen — hasn't logged in 4 days, her longest gap yet\n- Emily Rodriguez — weekday calories too low, weekend spikes\n- Aaron Smith — mid-week logging drop-off pattern returning\n\nDoing Great:\n- Marcus Johnson — 7-day protein streak, ready to level up\n- David Park — 21-day perfect logging (but weight plateaued)\n- Lisa Martinez — 26-day logging streak, best month yet\n- Jason Williams — 30-day steps streak, maintenance working\n\nNew Clients:\n- Rachel Kim — first full week of postpartum workouts!\n- Jennifer Lee — 21-day exercise streak but needs to log meals\n\nWhat would you like to tackle first?" },
 ];
 
 const suggestedPrompts = [
@@ -3139,61 +3146,84 @@ export default function MiltonDashboard() {
 - Concise — keep responses to 2-4 sentences unless asked for more detail
 
 ## Response Rules
-- ONLY reference the 5 clients listed below — never invent clients or data
+- ONLY reference the 12 clients listed below — never invent clients or data
 - Use specific names and numbers from the data
-- When asked "who needs attention": prioritize Sarah (at-risk) and Emily (moderate concern)
+- When asked "who needs attention": prioritize clients with red alerts (Sarah, Emily, Aaron)
 - When asked to write a message: write it ready to copy/paste, casual and encouraging tone
 - When summarizing: use bullet points
-- When asked "who is doing well": highlight Marcus and David
+- When asked "who is doing well": highlight highly-engaged clients (Marcus, David, Lisa, Jason, Amanda)
 
-## Current Client Roster (5 clients):
+## Current Client Roster (12 clients):
 
-**Sarah Chen** (Week 6, at-risk)
-- Goal: Lose 15 lbs for wedding in 3 months
-- Issue: Missed logging for 4 days straight
-- Logging streak: 0 days
-- Protein: 95g (target: 120g)
-- Weight: up 1.2 lbs this week
+**Sarah Chen** (Week 6, at-risk, Fat Loss Phase)
+- Issue: Missed logging for 4 days — her longest gap yet
+- Protein: 95g (target: 120g), Weight: up 1.2 lbs
 - Recommended: Send a supportive check-in message
 
-**Marcus Johnson** (Week 8, highly-engaged)
-- Goal: Build muscle, gain 10 lbs lean mass
-- Win: Hit protein goal 7 days straight
-- Logging streak: 14 days
-- Protein: 185g (target: 180g)
-- Weight: up 0.8 lbs (on track)
+**Marcus Johnson** (Week 8, highly-engaged, Muscle Gain)
+- Win: Hit protein goal 7 days straight, 14-day logging streak
+- Protein: 185g (target: 180g), Weight: up 0.8 lbs (on track)
 - Recommended: Celebrate streak and suggest higher calorie target
 
-**Emily Rodriguez** (Week 4, moderate)
-- Goal: Improve energy and relationship with food
-- Issue: Calories under 1200 on weekdays, spikes on weekends
-- Logging streak: 5 days
-- Protein: 68g (target: 100g)
-- Weight: fluctuating +/- 2 lbs
+**Emily Rodriguez** (Week 4, moderate concern, Metabolic Health)
+- Issue: Calories under 1200 on weekdays, spikes to 2400+ on weekends
+- Protein: 68g (target: 100g), Weight: fluctuating +/- 2 lbs
 - Recommended: Schedule call about sustainable eating
 
-**David Park** (Week 10, highly-engaged)
-- Goal: Drop from 22% to 15% body fat
+**David Park** (Week 10, highly-engaged, Fat Loss Phase)
 - Win: Perfect logging for 21 days
 - Issue: Weight plateau for 2 weeks despite good adherence
-- Logging streak: 21 days
-- Protein: 165g (target: 160g)
-- Weight: flat for 14 days
+- Protein: 165g (target: 160g), Weight: flat for 14 days
 - Recommended: Consider macro adjustment or diet break
 
-**Rachel Kim** (Week 2, new-client)
-- Goal: Post-pregnancy fitness and strength
+**Rachel Kim** (Week 2, new-client, Post-Pregnancy)
 - Win: Completed first full week of workouts postpartum
 - Issue: Struggling to find time to log with newborn
-- Logging streak: 2 days
-- Protein: 85g (target: 110g)
-- Weight: down 0.5 lbs (healthy pace)
+- Protein: 85g (target: 110g), Weight: down 0.5 lbs
 - Recommended: Send encouragement and offer quick-log templates
 
+**Aaron Smith** (Week 5, needs attention, Fat Loss Phase)
+- Issue: Logs early in week but drops off after Wednesday
+- Protein: 78g (target: 100g), Weight: down 2.1 lbs
+- Recommended: Focus on simple protein options for busy days
+
+**Lisa Martinez** (Week 10, highly-engaged, Muscle Gain)
+- Win: 26-day logging streak, hitting protein targets
+- Protein: 132g (target: 130g), Weight: up 1.3 lbs (on track)
+- Recommended: Celebrate consistency, suggest progressive overload
+
+**Jason Williams** (Week 14, highly-engaged, Maintenance)
+- Win: 30-day steps streak, maintaining weight effectively
+- Protein: 105g (target: 110g), Weight: stable at 174.7 lbs
+- Recommended: Reinforce current habits, discuss next quarter goals
+
+**Daniel Torres** (Week 3, moderate, Fat Loss Phase)
+- Issue: Inconsistent logging, drops off on weekends, late nights
+- Protein: 65g (target: 90g), Weight: down 1.0 lb
+- Recommended: Address weekend routine, add logging reminders
+
+**Amanda Foster** (Week 8, engaged, Metabolic Health)
+- Win: Glucose spikes down 15%, bloodwork improving
+- Issue: Still has post-lunch glucose spikes
+- Protein: 88g (target: 95g), Weight: down 0.8 lbs
+- Recommended: Focus on lunch composition — more protein/fiber first
+
+**Michael Brown** (Week 6, moderate, Fat Loss Phase)
+- Win: Lost 1.5 lbs this week, good weekday adherence
+- Issue: Sunday logging drops completely
+- Protein: 72g (target: 85g), Weight: down 1.5 lbs
+- Recommended: Create a simple Sunday meal template
+
+**Jennifer Lee** (Week 2, moderate, Performance)
+- Win: 21-day exercise streak, training 5x/week
+- Issue: Only logged 1 meal this week despite high activity
+- Protein: 110g (target: 120g), Weight: stable
+- Recommended: Emphasize training + logging = results
+
 ## Today's Context
-- Clients needing attention: Sarah Chen (at-risk), Emily Rodriguez (moderate)
-- Clients doing well: Marcus Johnson, David Park
-- New client: Rachel Kim (week 2)
+- Clients needing attention: Sarah Chen, Emily Rodriguez, Aaron Smith
+- Clients doing well: Marcus Johnson, David Park, Lisa Martinez, Jason Williams
+- New clients: Rachel Kim, Jennifer Lee
 
 Remember: Be specific, be brief, be helpful.`;
 
