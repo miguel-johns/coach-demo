@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ═══════════════════════════════════════════ */
+   ══════════════════════════════════���════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -5006,7 +5006,7 @@ Remember: Be specific, be brief, be helpful.`;
           </div>
         )}
       </main>
-      ) : null}
+      )}
 
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
