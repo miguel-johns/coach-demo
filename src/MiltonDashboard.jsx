@@ -3817,18 +3817,77 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
   
   const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
   
-  // Generate dynamic image URL based on meal name
-  const getMealImageUrl = (mealName, category) => {
-    // Clean up the meal name for search query
-    const searchQuery = mealName
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '') // Remove special chars
-      .split(' ')
-      .slice(0, 3) // Take first 3 words
-      .join(',');
+  // Curated food images by keyword - reliable and fast
+  const foodImageMap = {
+    // Breakfast items
+    yogurt: "photo-1488477181946-6428a0291777",
+    parfait: "photo-1488477181946-6428a0291777",
+    oatmeal: "photo-1517673400267-0251440c45dc",
+    eggs: "photo-1525351484163-7529414344d8",
+    toast: "photo-1525351484163-7529414344d8",
+    avocado: "photo-1525351484163-7529414344d8",
+    pancake: "photo-1567620905732-2d1ec7ab7445",
+    smoothie: "photo-1553530666-ba11a7da3888",
+    shake: "photo-1553530666-ba11a7da3888",
+    protein: "photo-1553530666-ba11a7da3888",
+    cereal: "photo-1521483451569-e33803c0330c",
+    muffin: "photo-1607958996333-41aef7caefaa",
+    bagel: "photo-1585445490387-f47934b73b54",
     
-    // Use Unsplash source with search - add category for better results
-    return `https://source.unsplash.com/300x200/?${encodeURIComponent(searchQuery)},food`;
+    // Lunch/Dinner items
+    salad: "photo-1512621776951-a57141f2eefd",
+    chicken: "photo-1532550907401-a500c9a57435",
+    salmon: "photo-1467003909585-2f8a72700288",
+    fish: "photo-1467003909585-2f8a72700288",
+    steak: "photo-1546833998-877b37c2e5c6",
+    beef: "photo-1546833998-877b37c2e5c6",
+    pasta: "photo-1473093295043-cdd812d0e601",
+    rice: "photo-1536304993881-ff6e9eefa2a6",
+    bowl: "photo-1546069901-ba9599a7e63c",
+    buddha: "photo-1546069901-ba9599a7e63c",
+    quinoa: "photo-1546069901-ba9599a7e63c",
+    wrap: "photo-1626700051175-6818013e1d4f",
+    sandwich: "photo-1528735602780-2552fd46c7af",
+    turkey: "photo-1626700051175-6818013e1d4f",
+    soup: "photo-1547592166-23ac45744acd",
+    stir: "photo-1512058564366-18510be2db19",
+    fry: "photo-1512058564366-18510be2db19",
+    
+    // Snacks
+    nuts: "photo-1599490659213-e2b9527bd087",
+    berries: "photo-1599490659213-e2b9527bd087",
+    fruit: "photo-1619566636858-adf3ef46400b",
+    apple: "photo-1619566636858-adf3ef46400b",
+    cheese: "photo-1486297678162-eb2a19b0a32d",
+    cottage: "photo-1486297678162-eb2a19b0a32d",
+    bar: "photo-1622484211148-c9b9ba02b818",
+    energy: "photo-1622484211148-c9b9ba02b818",
+    crackers: "photo-1558961363-fa8fdf82db35",
+    hummus: "photo-1577805947697-89e18249d767",
+    vegetables: "photo-1540420773420-3366772f4999",
+    veggies: "photo-1540420773420-3366772f4999",
+  };
+  
+  // Get image URL based on meal name keywords
+  const getMealImageUrl = (mealName, category) => {
+    const nameLower = mealName.toLowerCase();
+    
+    // Find matching keyword in meal name
+    for (const [keyword, imageId] of Object.entries(foodImageMap)) {
+      if (nameLower.includes(keyword)) {
+        return `https://images.unsplash.com/${imageId}?w=300&h=200&fit=crop`;
+      }
+    }
+    
+    // Fallback by category
+    const categoryFallbacks = {
+      Breakfast: "photo-1533089860892-a7c6f0a88666",
+      Snack: "photo-1599490659213-e2b9527bd087",
+      Lunch: "photo-1546069901-ba9599a7e63c", 
+      Dinner: "photo-1467003909585-2f8a72700288"
+    };
+    
+    return `https://images.unsplash.com/${categoryFallbacks[category] || categoryFallbacks.Lunch}?w=300&h=200&fit=crop`;
   };
   
   // Fallback images by category (used if dynamic fails)
@@ -4913,8 +4972,8 @@ export default function MiltonDashboard() {
             const [, day, mealType, newMealName] = swapByDayMatch;
             return { action: "swapMeal", day, mealType, newMealName };
           }
-          // Swap meal by name: "swap the Greek Yogurt Parfait for a protein shake", "swap out X for Y"
-          const swapByNameMatch = low.match(/swap\s*(?:out)?\s*(?:the\s+)?(.+?)\s+(?:for|with|to)\s+(?:a\s+)?(.+)/i);
+          // Swap/change/replace meal by name: "swap the Greek Yogurt for a protein shake", "change X to Y", "replace X with Y"
+          const swapByNameMatch = low.match(/(?:swap|change|replace)\s*(?:out)?\s*(?:the\s+)?(.+?)\s+(?:for|with|to)\s+(?:a\s+)?(.+)/i);
           if (swapByNameMatch) {
             const [, oldMealName, newMealName] = swapByNameMatch;
             return { action: "swapMealByName", oldMealName: oldMealName.trim(), newMealName: newMealName.trim() };
