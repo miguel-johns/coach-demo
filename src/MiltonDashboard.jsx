@@ -1761,7 +1761,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ���══════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═══════════════════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
@@ -3722,44 +3722,45 @@ Remember: Be specific, be brief, be helpful.`;
             })()}
           </div>
 
-          {/* ── Card 4: Data Points Collected - Progressive Bar Chart ── */}
+          {/* ── Card 4: Success Rate - Progressive Bar Chart ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
             opacity: animatedKPIs[3] ? 1 : 0, transform: animatedKPIs[3] ? "translateY(0)" : "translateY(12px)",
             transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Data Points</div>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Success Rate</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>1,847</span>
+              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>73%</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +22%
+                +8%
               </span>
             </div>
             {(() => {
               const months = [
-                { label: "Jul", value: 42 },
-                { label: "Aug", value: 98 },
-                { label: "Sep", value: 187 },
-                { label: "Oct", value: 295 },
-                { label: "Nov", value: 410 },
-                { label: "Dec", value: 520 },
-                { label: "Jan", value: 680 },
-                { label: "Feb", value: 847 },
+                { label: "Jul", value: 52 },
+                { label: "Aug", value: 55 },
+                { label: "Sep", value: 58 },
+                { label: "Oct", value: 61 },
+                { label: "Nov", value: 65 },
+                { label: "Dec", value: 68 },
+                { label: "Jan", value: 70 },
+                { label: "Feb", value: 73 },
               ];
+              const minVal = months[0].value;
               const maxVal = months[months.length - 1].value;
               const barH = isMobile ? 50 : 60;
               return (
                 <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto" }}>
                   {months.map((m, j) => {
-                    const h = Math.max(3, (m.value / maxVal) * barH);
+                    const h = Math.max(10, ((m.value - minVal) / (maxVal - minVal)) * barH) || barH;
                     const isLast = j === months.length - 1;
                     const intensity = 0.12 + (j / (months.length - 1)) * 0.88;
                     return (
                       <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4 }}>
                         <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC }}>
-                          {m.value}
+                          {m.value}%
                         </span>
                         <div style={{
                           width: "100%", height: h, borderRadius: 4,
