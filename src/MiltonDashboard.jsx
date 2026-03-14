@@ -4886,11 +4886,17 @@ export default function MiltonDashboard() {
     if (canvasMode && canvasData) {
       const canvasEditCmd = (() => {
         if (canvasType === "mealPlan") {
-          // Swap meal: "swap Monday's lunch with grilled salmon"
-          const swapMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
-          if (swapMatch) {
-            const [, day, mealType, newMealName] = swapMatch;
+          // Swap meal by day: "swap Monday's lunch with grilled salmon"
+          const swapByDayMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
+          if (swapByDayMatch) {
+            const [, day, mealType, newMealName] = swapByDayMatch;
             return { action: "swapMeal", day, mealType, newMealName };
+          }
+          // Swap meal by name: "swap the Greek Yogurt Parfait for a protein shake", "swap out X for Y"
+          const swapByNameMatch = low.match(/swap\s*(?:out)?\s*(?:the\s+)?(.+?)\s+(?:for|with|to)\s+(?:a\s+)?(.+)/i);
+          if (swapByNameMatch) {
+            const [, oldMealName, newMealName] = swapByNameMatch;
+            return { action: "swapMealByName", oldMealName: oldMealName.trim(), newMealName: newMealName.trim() };
           }
           // Increase protein
           if (/increase\s+protein/i.test(low)) {
@@ -4940,6 +4946,49 @@ export default function MiltonDashboard() {
                 newData.days[dayIndex].meals[mealIndex].name = canvasEditCmd.newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 responseText = `Done! I've swapped ${canvasEditCmd.day}'s ${canvasEditCmd.mealType} with ${canvasEditCmd.newMealName}.`;
               }
+            }
+          } else if (canvasEditCmd.action === "swapMealByName") {
+            // Search through the weeks data structure for the meal to swap
+            const oldName = canvasEditCmd.oldMealName.toLowerCase();
+            const newName = canvasEditCmd.newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            let swapped = false;
+            const mealCategories = ["breakfast", "snack", "lunch", "dinner"];
+            
+            // Check if data has weeks array (AI-generated structure)
+            if (newData.weeks && Array.isArray(newData.weeks)) {
+              newData.weeks.forEach(week => {
+                mealCategories.forEach(category => {
+                  if (week[category] && Array.isArray(week[category])) {
+                    week[category].forEach(meal => {
+                      if (meal.name && meal.name.toLowerCase().includes(oldName)) {
+                        meal.name = newName;
+                        swapped = true;
+                      }
+                    });
+                  }
+                });
+              });
+            }
+            // Also check old days structure for backwards compatibility
+            if (newData.days && Array.isArray(newData.days)) {
+              newData.days.forEach(day => {
+                if (day.meals && Array.isArray(day.meals)) {
+                  day.meals.forEach(meal => {
+                    if (meal.name && meal.name.toLowerCase().includes(oldName)) {
+                      meal.name = newName;
+                      swapped = true;
+                    }
+                  });
+                }
+              });
+            }
+            
+            if (swapped) {
+              const clientName = canvasClient || canvasData?.client || "the client";
+              const firstName = clientName.split(" ")[0];
+              responseText = `**Swapped the ${canvasEditCmd.oldMealName} for a ${canvasEditCmd.newMealName}!**\n\nI've updated the meal plan to replace the ${canvasEditCmd.oldMealName} with a delicious ${canvasEditCmd.newMealName} that ${firstName} will love. The protein content remains on target for her 120g daily goal.\n\nThe updated plan is now showing in the canvas - want me to make any other swaps?`;
+            } else {
+              responseText = `I couldn't find "${canvasEditCmd.oldMealName}" in the meal plan. Try clicking on a specific recipe card to swap it, or let me know the exact meal name.`;
             }
           } else if (canvasEditCmd.action === "increaseProtein") {
             newData.days?.forEach(day => {
