@@ -326,7 +326,7 @@ function generateAIResponse(msg) {
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
     return { 
       title: "Priority Queue", 
-      text: `Here's who needs your attention today:\n\n1. Sarah Chen (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n2. Emily Rodriguez (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n3. David Park (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+      text: `**Here's who needs your attention today:**\n\n- **Sarah Chen** (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n- **Emily Rodriguez** (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n- **David Park** (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
     };
   }
 
@@ -334,7 +334,7 @@ function generateAIResponse(msg) {
   if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
     return {
       title: "Client Wins",
-      text: `Great news to share:\n\n1. Marcus Johnson — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n2. David Park — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n3. Rachel Kim — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+      text: `**Great news to share:**\n\n- **Marcus Johnson** — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n- **David Park** — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n- **Rachel Kim** — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
     };
   }
 
@@ -342,7 +342,7 @@ function generateAIResponse(msg) {
   if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
     return {
       title: "Recommended Next Action",
-      text: `Your highest-impact action right now: reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+      text: `**Your highest-impact action right now:** reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
     };
   }
 
@@ -352,17 +352,17 @@ function generateAIResponse(msg) {
     if (client.status === "at-risk") {
       return {
         title: `Message for ${first}`,
-        text: `Here's a draft check-in for ${first}:\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
+        text: `**Here's a draft check-in for ${first}:**\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
       };
     } else if (client.status === "highly-engaged") {
       return {
         title: `Message for ${first}`,
-        text: `Here's a celebration message for ${first}:\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
+        text: `**Here's a celebration message for ${first}:**\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
       };
     } else {
       return {
         title: `Message for ${first}`,
-        text: `Here's a supportive message for ${first}:\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
+        text: `**Here's a supportive message for ${first}:**\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
       };
     }
   }
@@ -375,7 +375,7 @@ function generateAIResponse(msg) {
     if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
       return {
         title: `${first}'s Nutrition`,
-        text: `${first}'s current nutrition (Week ${client.week}):\n\nProtein: ${client.protein}\nWeight trend: ${client.weight}\nLogging streak: ${client.loggingStreak} days\n\n${client.insight}\n\nRecommended action: ${client.action}`
+        text: `**${first}'s current nutrition** (Week ${client.week}):\n\n- **Protein:** ${client.protein}\n- **Weight trend:** ${client.weight}\n- **Logging streak:** ${client.loggingStreak} days\n\n${client.insight}\n\n**Recommended action:** ${client.action}`
       };
     }
 
@@ -383,14 +383,14 @@ function generateAIResponse(msg) {
     if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
       return {
         title: `${first}'s Status`,
-        text: `${first} — Week ${client.week}, ${client.status.replace("-", " ")}\n\nGoal: ${client.goal}\n${client.win ? `Recent win: ${client.win}` : `Current issue: ${client.issue}`}\n\nWeight: ${client.weight}\nProtein: ${client.protein}\nLogging: ${client.loggingStreak} day streak\n\nMy take: ${client.insight}\n\nRecommended: ${client.action}`
+        text: `**${first}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n- **Weight:** ${client.weight}\n- **Protein:** ${client.protein}\n- **Logging:** ${client.loggingStreak} day streak\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
       };
     }
 
     // Default client info
     return {
       title: `About ${first}`,
-      text: `${client.name} — Week ${client.week}\n\nGoal: ${client.goal}\nStatus: ${client.status.replace("-", " ")}\n${client.win ? `Win: ${client.win}` : `Issue: ${client.issue}`}\n\nProtein: ${client.protein}\nWeight: ${client.weight}\n\nRecommended action: ${client.action}`
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n- **Protein:** ${client.protein}\n- **Weight:** ${client.weight}\n\n**Recommended action:** ${client.action}`
     };
   }
 
@@ -398,14 +398,14 @@ function generateAIResponse(msg) {
   if (lower.includes("help") || lower.includes("what can")) {
     return {
       title: "How I Can Help",
-      text: `I'm Milton, your coaching copilot. Try asking me:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is Marcus doing?"\n• "Who is doing well?"\n• "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+      text: `**I'm Milton, your coaching copilot.** Try asking me:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is Marcus doing?"\n- "Who is doing well?"\n- "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
     };
   }
 
   // DEFAULT
   return { 
     title: "Milton", 
-    text: `I'm here to help! Try asking:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is David doing?"\n• "Who is doing well?"`
+    text: `**I'm here to help!** Try asking:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is David doing?"\n- "Who is doing well?"`
   };
 }
 
@@ -3400,14 +3400,14 @@ Remember: Be specific, be brief, be helpful.`;
         const data = await response.json();
         const aiText = data.content?.[0]?.text || "I couldn't generate a response.";
         
-        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: aiText }]);
+        setChatMessages(prev => [...prev, { type: "ai", text: aiText }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       } catch (error) {
         console.error("[v0] Chat error:", error);
         // Fallback to local AI
         const resp = generateAIResponse(text);
-        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(API unavailable: " + error.message + ")" }]);
+        setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
