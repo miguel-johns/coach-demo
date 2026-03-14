@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════�������═���������════════ */
+   ════════════════════════════════���������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4037,8 +4037,312 @@ function MealPlanCanvas({ data, onClose }) {
   );
 }
 
-function WorkoutCanvas({ data, selectedDay, onSelectDay, onClose }) {
-  return <CalendarCanvas data={data} type="workout" selectedDay={selectedDay} onSelectDay={onSelectDay} onClose={onClose} />;
+function WorkoutCanvas({ data, onClose }) {
+  const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
+  
+  if (!data) return null;
+  
+  const dayLabels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  
+  // Sample workout data for each day type
+  const workoutTemplates = {
+    push: {
+      title: "PUSH: CHEST & SHOULDERS",
+      exercises: [
+        { name: "Barbell Bench Press", sets: 4, reps: "8, 8, 6, 6", weight: "155 lb" },
+        { name: "Incline Dumbbell Press", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
+        { name: "Barbell Shoulder Press", sets: 3, reps: "8, 8, 8", weight: "95 lb" },
+      ]
+    },
+    pull: {
+      title: "PULL: BACK & BICEPS",
+      exercises: [
+        { name: "Barbell Deadlift", sets: 4, reps: "6, 6, 5, 5", weight: "225 lb" },
+        { name: "Seated Cable Row", sets: 3, reps: "10, 10, 8", weight: "120 lb" },
+        { name: "Barbell Curl", sets: 3, reps: "12, 10, 8", weight: "65 lb" },
+      ]
+    },
+    legs: {
+      title: "LEGS: SQUAT & DEADLIFT",
+      exercises: [
+        { name: "Barbell Full Squat", sets: 4, reps: "8, 8, 6, 6", weight: "185 lb" },
+        { name: "Romanian Deadlift", sets: 3, reps: "10, 10, 8", weight: "135 lb" },
+        { name: "Leg Press", sets: 3, reps: "12, 12, 10", weight: "270 lb" },
+      ]
+    },
+    upper: {
+      title: "FULL BODY: STRENGTH +",
+      exercises: [
+        { name: "Barbell Deadlift", sets: 3, reps: "10-12 reps", weight: "185 lb" },
+        { name: "Bird Dog", sets: 3, reps: "8-10 reps", weight: "BW" },
+        { name: "Dumbbell Front Raise", sets: 3, reps: "10-12 reps", weight: "15 lb" },
+      ]
+    },
+    rest: null
+  };
+  
+  // Define weekly schedule - which workout type for each day
+  const weekSchedules = [
+    ["upper", "rest", "pull", "rest", "legs", "rest", "rest"],
+    ["push", "rest", "pull", "rest", "legs", "rest", "rest"],
+    ["upper", "rest", "push", "rest", "pull", "rest", "rest"],
+    ["legs", "rest", "upper", "rest", "push", "rest", "rest"],
+  ];
+  
+  const weeks = Array.from({ length: weekView }, (_, i) => i + 1);
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{ 
+        padding: "20px 24px", 
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        animation: "fadeUp 0.4s ease-out forwards"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ 
+            width: 36, height: 36, borderRadius: 10, 
+            background: TEAL_LIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.client ? `Program for ${data.client}` : data.programName || "Training Program"}</div>
+          </div>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Week toggle buttons */}
+          <div style={{ 
+            display: "flex", background: "#f0f4f3", borderRadius: 8, padding: 3
+          }}>
+            {[1, 2, 4].map(num => (
+              <button
+                key={num}
+                onClick={() => setWeekView(num)}
+                style={{
+                  padding: "6px 12px", borderRadius: 6, border: "none",
+                  background: weekView === num ? TEAL : "transparent",
+                  color: weekView === num ? WHITE : TEXT_SEC,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {num} Week
+              </button>
+            ))}
+          </div>
+          
+          {/* Close button */}
+          <div 
+            onClick={onClose}
+            style={{ 
+              width: 32, height: 32, borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC, 
+              border: `1px solid ${BORDER}`, background: WHITE,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      {/* Calendar grid - weeks as rows, days as columns */}
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0" }}>
+        {weeks.map((weekNum, weekIdx) => {
+          const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
+          
+          return (
+            <div 
+              key={weekNum}
+              style={{
+                display: "flex", gap: 0, marginBottom: 20, paddingLeft: 16,
+                opacity: 0,
+                animation: `fadeUp 0.5s ease-out ${0.15 + weekIdx * 0.1}s forwards`
+              }}
+            >
+              {/* Week label - vertical */}
+              <div style={{ 
+                width: 32, minWidth: 32, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "flex-start", paddingTop: 40
+              }}>
+                <div style={{ 
+                  writingMode: "vertical-rl", textOrientation: "mixed",
+                  transform: "rotate(180deg)",
+                  fontSize: 11, fontWeight: 600, color: TEXT_SEC,
+                  textTransform: "uppercase", letterSpacing: "0.05em"
+                }}>
+                  Week {weekNum}
+                </div>
+              </div>
+              
+              {/* Days columns */}
+              <div style={{ 
+                display: "flex", gap: 8, overflowX: "auto", paddingRight: 16,
+                paddingBottom: 8
+              }}>
+                {dayLabels.map((day, dayIdx) => {
+                  const workoutType = schedule[dayIdx];
+                  const workout = workoutTemplates[workoutType];
+                  const isRest = !workout;
+                  const animDelay = 0.2 + weekIdx * 0.1 + dayIdx * 0.03;
+                  
+                  return (
+                    <div
+                      key={`${weekNum}-${day}`}
+                      style={{
+                        minWidth: 160, width: 160,
+                        background: WHITE, borderRadius: 12,
+                        border: `1px solid ${BORDER}`,
+                        overflow: "hidden",
+                        opacity: 0, transform: "scale(0.95)",
+                        animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
+                        display: "flex", flexDirection: "column"
+                      }}
+                    >
+                      {/* Day header */}
+                      <div style={{ 
+                        padding: "8px 12px", 
+                        borderBottom: isRest ? "none" : `1px solid ${BORDER}`,
+                        background: isRest ? "#fafcfb" : WHITE
+                      }}>
+                        <div style={{ 
+                          fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                          textTransform: "uppercase", letterSpacing: "0.04em"
+                        }}>
+                          {day}
+                        </div>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
+                          Day {dayIdx + 1}
+                        </div>
+                      </div>
+                      
+                      {/* Workout content or rest */}
+                      {isRest ? (
+                        <div style={{ 
+                          flex: 1, minHeight: 120, 
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: TEXT_SEC, fontSize: 11, fontStyle: "italic"
+                        }}>
+                          Rest
+                        </div>
+                      ) : (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                          {/* Workout title */}
+                          <div style={{ 
+                            padding: "8px 10px", 
+                            background: TEAL_LIGHT,
+                            borderBottom: `1px solid ${BORDER}`
+                          }}>
+                            <div style={{ 
+                              fontSize: 10, fontWeight: 700, color: TEXT,
+                              textTransform: "uppercase", letterSpacing: "0.02em",
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                            }}>
+                              {workout.title}
+                            </div>
+                          </div>
+                          
+                          {/* Exercises list */}
+                          <div style={{ flex: 1, padding: "6px 0" }}>
+                            {workout.exercises.map((ex, exIdx) => (
+                              <div
+                                key={exIdx}
+                                style={{
+                                  padding: "6px 10px",
+                                  display: "flex", alignItems: "flex-start", gap: 8,
+                                  borderBottom: exIdx < workout.exercises.length - 1 ? `1px solid #f0f4f3` : "none",
+                                  cursor: "pointer",
+                                  transition: "background 0.15s ease"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "#fafcfb"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                              >
+                                <div style={{ 
+                                  fontSize: 10, fontWeight: 600, color: TEAL,
+                                  minWidth: 20
+                                }}>
+                                  {ex.sets}x
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ 
+                                    fontSize: 12, fontWeight: 600, color: TEXT,
+                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                  }}>
+                                    {ex.name}
+                                  </div>
+                                  <div style={{ 
+                                    fontSize: 10, color: TEXT_SEC, marginTop: 2,
+                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                  }}>
+                                    {ex.reps}, {ex.weight}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Add exercise button */}
+                          <div style={{ 
+                            padding: "8px", borderTop: `1px solid ${BORDER}`,
+                            display: "flex", justifyContent: "center"
+                          }}>
+                            <div 
+                              style={{ 
+                                width: 24, height: 24, borderRadius: 6,
+                                background: "#f0f4f3", 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer", transition: "all 0.15s ease"
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Hint bar */}
+      <div style={{
+        padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
+        background: WHITE, fontSize: 12, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 10
+      }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Click any exercise to edit or ask Milton to modify the program</span>
+      </div>
+    </div>
+  );
 }
 
 function MessageSequenceCanvas({ data, onClose }) {
@@ -4914,9 +5218,7 @@ Remember: Be specific, be brief, be helpful.`;
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
-              selectedDay={canvasSelectedDay}
-              onSelectDay={setCanvasSelectedDay}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
           {canvasType === "messageSequence" && (
@@ -4950,9 +5252,7 @@ Remember: Be specific, be brief, be helpful.`;
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
-              selectedDay={canvasSelectedDay}
-              onSelectDay={setCanvasSelectedDay}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
           {canvasType === "messageSequence" && (
