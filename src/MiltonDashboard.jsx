@@ -3502,6 +3502,14 @@ Remember: Be specific, be brief, be helpful.`;
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             overflow: "hidden"
           }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 14px", borderBottom: `1px solid ${BORDER}`,
+              background: "rgba(247,250,249,0.5)"
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
+              <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
+            </div>
             <ChatContent
               chatInput={chatInput} setChatInput={setChatInput}
               messages={chatMessages} onSend={handleChatSend}
