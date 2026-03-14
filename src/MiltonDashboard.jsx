@@ -3502,18 +3502,6 @@ Remember: Be specific, be brief, be helpful.`;
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             overflow: "hidden"
           }}>
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "16px 18px", borderBottom: `1px solid ${BORDER}`
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28, borderRadius: 8 }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Milton AI</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, color: TEXT_SEC }}>
-                <NavIcon icon="message" size={18} /><NavIcon icon="settings" size={18} />
-              </div>
-            </div>
             <ChatContent
               chatInput={chatInput} setChatInput={setChatInput}
               messages={chatMessages} onSend={handleChatSend}
