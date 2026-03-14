@@ -4900,6 +4900,11 @@ export default function MiltonDashboard() {
           if (/add\s+(a\s+)?(morning\s+)?snack/i.test(low)) {
             return { action: "addSnack" };
           }
+          // Update calories: "update calories to 2500", "set his calories to 2500", "change daily calories to 2000"
+          const calorieMatch = low.match(/(?:update|set|change|increase|decrease|raise|lower)?\s*(?:his|her|their|daily)?\s*calories?\s*(?:to|at)?\s*(\d+)/i);
+          if (calorieMatch) {
+            return { action: "updateCalories", newCalories: parseInt(calorieMatch[1]) };
+          }
         }
         if (canvasType === "workout") {
           // Add exercises
@@ -4950,6 +4955,28 @@ export default function MiltonDashboard() {
               day.meals.push({ type: "morning snack", name: "Greek Yogurt & Berries", calories: 180, protein: 15, carbs: 20, fat: 5 });
             });
             responseText = "Done! I've added a morning snack (Greek Yogurt & Berries) to each day.";
+          } else if (canvasEditCmd.action === "updateCalories") {
+            // Update canvas data weeklyTargets
+            if (!newData.weeklyTargets) newData.weeklyTargets = {};
+            const oldCalories = newData.weeklyTargets.calories || 1800;
+            newData.weeklyTargets.calories = canvasEditCmd.newCalories;
+            
+            // Also update the client's calorieTarget in the clients array
+            const clientName = canvasClient || canvasData?.client;
+            if (clientName) {
+              const clientIdx = clients.findIndex(c => c.name.toLowerCase().includes(clientName.toLowerCase().split(" ")[0]));
+              if (clientIdx !== -1) {
+                setClients(prev => {
+                  const updated = [...prev];
+                  updated[clientIdx] = { ...updated[clientIdx], calorieTarget: canvasEditCmd.newCalories };
+                  return updated;
+                });
+              }
+            }
+            
+            const diff = canvasEditCmd.newCalories - oldCalories;
+            const direction = diff > 0 ? "increased" : "decreased";
+            responseText = `**Updated ${canvasClient || 'the'} meal plan to ${canvasEditCmd.newCalories} calories!**\n\nI've ${direction} portions and ${diff > 0 ? 'added strategic snacks' : 'reduced portion sizes'} to ${diff > 0 ? 'boost' : 'reduce'} daily intake by ${Math.abs(diff)} calories while keeping protein at 120g. This should be much more sustainable for ${diff > 0 ? 'his energy needs' : 'his goals'}.\n\nThe updated plan is now showing in the canvas. Want me to adjust anything else?`;
           } else if (canvasEditCmd.action === "addExercises") {
             const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
             if (dayIndex !== -1 && newData.days?.[dayIndex]) {
@@ -4998,7 +5025,7 @@ export default function MiltonDashboard() {
       // If no name mentioned, check for contextual references (her/his/their) and use selectedClient
       if (clientIndex === -1 && selectedClient !== null) {
         const hasContextualRef = /\b(her|his|their|she|he|this client|the client)\b/i.test(low);
-        const hasGoalKeyword = /\b(goal|target|weight|protein|calorie)/i.test(low);
+        const hasGoalKeyword = /\b(goal|target|weight|protein|calories?|update|change|set|increase|decrease)\b/i.test(low);
         if (hasContextualRef || hasGoalKeyword) {
           clientIndex = selectedClient;
         }
@@ -5052,10 +5079,8 @@ export default function MiltonDashboard() {
       const calorieMatch = low.match(/(?:change|set|update|adjust|increase|decrease|raise|lower)?\s*(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:target|goal|intake)?\s*(?:to)?\s*(\d+)/i)
         || low.match(/(?:increase|decrease|raise|lower)\s+(?:her|his|their)?\s*(?:daily\s+)?calorie[s]?\s*(?:to)?\s*(\d+)/i)
         || low.match(/(\d+)\s*(?:daily\s+)?calorie[s]?\s*(?:per\s*day|daily)?/i);
-      console.log("[v0] Calorie regex test - low:", low, "calorieMatch:", calorieMatch);
       if (calorieMatch) {
         const newCalorieTarget = parseInt(calorieMatch[1]);
-        console.log("[v0] Calorie match found! newCalorieTarget:", newCalorieTarget, "clientIndex:", clientIndex);
         return {
           type: "calories",
           clientIndex,
@@ -5071,9 +5096,7 @@ export default function MiltonDashboard() {
       return null;
     })();
 
-    console.log("[v0] clientUpdateCmd check:", clientUpdateCmd);
     if (clientUpdateCmd) {
-      console.log("[v0] Processing clientUpdateCmd type:", clientUpdateCmd.type, "updates:", clientUpdateCmd.updates);
       setTimeout(() => {
         // Update the client data
         setClients(prev => {
@@ -5082,7 +5105,6 @@ export default function MiltonDashboard() {
             ...updated[clientUpdateCmd.clientIndex],
             ...clientUpdateCmd.updates
           };
-          console.log("[v0] Updated client:", updated[clientUpdateCmd.clientIndex]);
           return updated;
         });
         
@@ -5093,7 +5115,6 @@ export default function MiltonDashboard() {
         } else if (clientUpdateCmd.type === "protein") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
-          console.log("[v0] Calories update - canvasMode:", canvasMode, "canvasType:", canvasType, "canvasData:", canvasData);
           // Also update canvas data if meal plan is open
           if (canvasMode && canvasType === "mealPlan" && canvasData) {
             const newCanvasData = {
@@ -5103,7 +5124,6 @@ export default function MiltonDashboard() {
                 calories: clientUpdateCmd.newCalorieTarget
               }
             };
-            console.log("[v0] Setting new canvas data with calories:", newCanvasData.weeklyTargets);
             setCanvasData(newCanvasData);
             // Add to history for undo
             const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
