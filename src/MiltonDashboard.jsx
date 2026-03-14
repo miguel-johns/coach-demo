@@ -3817,28 +3817,26 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
   
   const mealCategories = ["Breakfast", "Snack", "Lunch", "Dinner"];
   
-  // Recipe images from Unsplash (food photography)
-  const recipeImages = {
-    Breakfast: [
-      "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=200&fit=crop"
-    ],
-    Snack: [
-      "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=300&h=200&fit=crop"
-    ],
-    Lunch: [
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop"
-    ],
-    Dinner: [
-      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"
-    ]
+  // Generate dynamic image URL based on meal name
+  const getMealImageUrl = (mealName, category) => {
+    // Clean up the meal name for search query
+    const searchQuery = mealName
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+      .split(' ')
+      .slice(0, 3) // Take first 3 words
+      .join(',');
+    
+    // Use Unsplash source with search - add category for better results
+    return `https://source.unsplash.com/300x200/?${encodeURIComponent(searchQuery)},food`;
+  };
+  
+  // Fallback images by category (used if dynamic fails)
+  const fallbackImages = {
+    Breakfast: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=300&h=200&fit=crop",
+    Snack: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&h=200&fit=crop",
+    Lunch: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
+    Dinner: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop"
   };
   
   // Use AI-generated recipes or fallback
@@ -4069,7 +4067,7 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                           position: "relative", overflow: "hidden"
                         }}>
                           <img 
-                            src={recipeImages[category][recipeIdx]}
+                            src={getMealImageUrl(recipe.name, category)}
                             alt={recipe.name}
                             crossOrigin="anonymous"
                             style={{ 
@@ -4077,7 +4075,8 @@ function MealPlanCanvas({ data, onClose, onDataChange }) {
                               transition: "transform 0.3s ease"
                             }}
                             onError={e => {
-                              e.target.style.display = "none";
+                              // Fall back to category image on error
+                              e.target.src = fallbackImages[category];
                             }}
                           />
                           {/* Category color accent bar */}
