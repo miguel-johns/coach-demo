@@ -3203,6 +3203,549 @@ function AddClientModal({ onClose, isMobile }) {
 }
 
 /* ═══════════════════════════════════════════
+   CANVAS DATA GENERATORS
+   ═══════════════════════════════════════════ */
+
+function generateMealPlan(clientName) {
+  const meals = {
+    breakfast: [
+      { name: "Greek Yogurt Bowl", calories: 350, protein: 25, carbs: 35, fat: 12 },
+      { name: "Eggs & Avocado Toast", calories: 420, protein: 22, carbs: 30, fat: 24 },
+      { name: "Protein Oatmeal", calories: 380, protein: 28, carbs: 45, fat: 10 },
+      { name: "Smoothie Bowl", calories: 340, protein: 24, carbs: 42, fat: 8 },
+      { name: "Veggie Omelet", calories: 360, protein: 26, carbs: 12, fat: 22 },
+      { name: "Cottage Cheese Parfait", calories: 320, protein: 30, carbs: 28, fat: 8 },
+      { name: "Protein Pancakes", calories: 400, protein: 28, carbs: 40, fat: 14 },
+    ],
+    lunch: [
+      { name: "Grilled Chicken Salad", calories: 450, protein: 42, carbs: 20, fat: 22 },
+      { name: "Turkey Wrap", calories: 480, protein: 35, carbs: 42, fat: 18 },
+      { name: "Salmon Quinoa Bowl", calories: 520, protein: 38, carbs: 45, fat: 20 },
+      { name: "Tuna Poke Bowl", calories: 440, protein: 36, carbs: 38, fat: 16 },
+      { name: "Chicken Stir-Fry", calories: 460, protein: 40, carbs: 35, fat: 18 },
+      { name: "Mediterranean Bowl", calories: 490, protein: 32, carbs: 48, fat: 22 },
+      { name: "Shrimp Tacos", calories: 420, protein: 34, carbs: 36, fat: 16 },
+    ],
+    dinner: [
+      { name: "Baked Salmon & Veggies", calories: 520, protein: 44, carbs: 25, fat: 26 },
+      { name: "Lean Beef Stir-Fry", calories: 480, protein: 38, carbs: 32, fat: 22 },
+      { name: "Grilled Chicken Breast", calories: 440, protein: 46, carbs: 18, fat: 18 },
+      { name: "Turkey Meatballs", calories: 500, protein: 40, carbs: 35, fat: 20 },
+      { name: "Herb Roasted Cod", calories: 380, protein: 42, carbs: 15, fat: 16 },
+      { name: "Chicken Curry", calories: 520, protein: 36, carbs: 45, fat: 24 },
+      { name: "Pork Tenderloin", calories: 460, protein: 44, carbs: 22, fat: 20 },
+    ],
+    snack: [
+      { name: "Protein Shake", calories: 180, protein: 25, carbs: 8, fat: 4 },
+      { name: "Greek Yogurt", calories: 150, protein: 15, carbs: 12, fat: 4 },
+      { name: "Almonds & Apple", calories: 220, protein: 6, carbs: 22, fat: 14 },
+      { name: "Protein Bar", calories: 200, protein: 20, carbs: 18, fat: 8 },
+      { name: "Cottage Cheese", calories: 160, protein: 18, carbs: 6, fat: 5 },
+      { name: "Hummus & Veggies", calories: 180, protein: 8, carbs: 20, fat: 10 },
+      { name: "Hard Boiled Eggs", calories: 140, protein: 12, carbs: 2, fat: 10 },
+    ]
+  };
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  return {
+    type: "mealPlan",
+    client: clientName,
+    weekStart: "Mar 10",
+    days: days.map((day, i) => ({
+      day,
+      meals: [
+        { type: "breakfast", ...meals.breakfast[i % meals.breakfast.length] },
+        { type: "lunch", ...meals.lunch[i % meals.lunch.length] },
+        { type: "dinner", ...meals.dinner[i % meals.dinner.length] },
+        { type: "snack", ...meals.snack[i % meals.snack.length] },
+      ]
+    })),
+    weeklyTargets: { calories: 1800, protein: 120, carbs: 180, fat: 50 }
+  };
+}
+
+function generateWorkoutProgram(clientName) {
+  const exercises = {
+    push: [
+      { name: "Bench Press", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", weight: "45 lbs", rest: "60s" },
+      { name: "Cable Flyes", sets: 3, reps: "12-15", weight: "30 lbs", rest: "45s" },
+      { name: "Overhead Press", sets: 3, reps: "8-10", weight: "85 lbs", rest: "90s" },
+      { name: "Tricep Pushdowns", sets: 3, reps: "12-15", weight: "40 lbs", rest: "45s" },
+    ],
+    pull: [
+      { name: "Deadlift", sets: 4, reps: "5-6", weight: "225 lbs", rest: "120s" },
+      { name: "Barbell Rows", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
+      { name: "Lat Pulldowns", sets: 3, reps: "10-12", weight: "120 lbs", rest: "60s" },
+      { name: "Face Pulls", sets: 3, reps: "15-20", weight: "35 lbs", rest: "45s" },
+      { name: "Bicep Curls", sets: 3, reps: "12-15", weight: "25 lbs", rest: "45s" },
+    ],
+    legs: [
+      { name: "Squats", sets: 4, reps: "6-8", weight: "185 lbs", rest: "120s" },
+      { name: "Romanian Deadlift", sets: 3, reps: "10-12", weight: "135 lbs", rest: "90s" },
+      { name: "Leg Press", sets: 3, reps: "12-15", weight: "270 lbs", rest: "60s" },
+      { name: "Walking Lunges", sets: 3, reps: "12 each", weight: "30 lbs", rest: "60s" },
+      { name: "Calf Raises", sets: 4, reps: "15-20", weight: "180 lbs", rest: "45s" },
+    ],
+    cardio: [
+      { name: "Treadmill Walk", sets: 1, reps: "30 min", weight: "3.5 mph", rest: "-" },
+      { name: "Stretching", sets: 1, reps: "15 min", weight: "-", rest: "-" },
+    ]
+  };
+  return {
+    type: "workout",
+    client: clientName,
+    programName: "Strength Building - Week 1",
+    days: [
+      { day: "Monday", focus: "Upper Body Push", exercises: exercises.push },
+      { day: "Tuesday", focus: "Lower Body", exercises: exercises.legs },
+      { day: "Wednesday", focus: "Active Recovery", exercises: exercises.cardio },
+      { day: "Thursday", focus: "Upper Body Pull", exercises: exercises.pull },
+      { day: "Friday", focus: "Lower Body", exercises: exercises.legs },
+      { day: "Saturday", focus: "Upper Body Push", exercises: exercises.push },
+      { day: "Sunday", focus: "Rest Day", exercises: [] },
+    ]
+  };
+}
+
+function generateMessageSequence(clientName) {
+  const firstName = clientName.split(" ")[0];
+  return {
+    type: "messageSequence",
+    client: clientName,
+    campaignName: "Check-In Series",
+    messages: [
+      { day: 0, type: "sms", subject: null, body: `Hey ${firstName}! Just checking in - how are you feeling about your progress this week? Let me know if there's anything on your mind.`, status: "draft" },
+      { day: 2, type: "email", subject: `Your Weekly Check-In, ${firstName}`, body: `Hi ${firstName},\n\nI wanted to reach out and see how things are going with your nutrition plan. Remember, consistency is more important than perfection!\n\nA few quick questions:\n- How are you feeling energy-wise?\n- Any challenges with meal prep?\n- Are you staying hydrated?\n\nLooking forward to hearing from you!\n\nBest,\nYour Coach`, status: "draft" },
+      { day: 5, type: "sms", body: `Quick reminder ${firstName} - don't forget to log your meals today! You're doing great. 💪`, status: "draft" },
+      { day: 7, type: "email", subject: "End of Week Reflection", body: `Hey ${firstName},\n\nAs we wrap up this week, I'd love to hear your thoughts:\n\n1. What went well?\n2. What was challenging?\n3. What's one thing you want to focus on next week?\n\nRemember, every week is a new opportunity to grow!\n\nKeep it up,\nYour Coach`, status: "draft" },
+    ]
+  };
+}
+
+function generateProgressReport(clientName, clientData) {
+  const firstName = clientName.split(" ")[0];
+  return {
+    type: "report",
+    client: clientName,
+    title: `Weekly Progress Report - ${firstName}`,
+    sections: [
+      { id: "summary", title: "Week Summary", content: `${firstName} had a ${clientData?.engagementScore > 80 ? "strong" : "moderate"} week with ${clientData?.mealsLogged || 0} meals logged. ${clientData?.narrative || "Overall progress is on track."}` },
+      { id: "metrics", title: "Key Metrics", data: { mealsLogged: clientData?.mealsLogged || 0, proteinAvg: clientData?.proteinAvg || 0, proteinTarget: clientData?.proteinTarget || 100, weightTrend: clientData?.weightTrend || 0, steps: clientData?.steps || 0 } },
+      { id: "goals", title: "Goal Progress", content: `Current weight trend: ${clientData?.weightTrend > 0 ? "+" : ""}${clientData?.weightTrend || 0} lbs. Protein intake averaging ${clientData?.proteinAvg || 0}g daily against a target of ${clientData?.proteinTarget || 100}g.` },
+      { id: "recommendations", title: "Recommendations", items: clientData?.coachAngle ? [clientData.coachAngle] : ["Continue current approach", "Focus on consistency"] }
+    ]
+  };
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS COMPONENTS
+   ═══════════════════════════════════════════ */
+
+function CanvasHeader({ title, onClose, canUndo, canRedo, onUndo, onRedo }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "12px 20px", borderBottom: `1px solid ${BORDER}`,
+      background: WHITE
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div 
+          onClick={onClose}
+          style={{ 
+            width: 32, height: 32, borderRadius: 8, 
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC,
+            transition: "all 0.15s ease"
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </div>
+        <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{title}</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div 
+          onClick={onUndo}
+          style={{ 
+            width: 32, height: 32, borderRadius: 8, 
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: canUndo ? "pointer" : "default", 
+            color: canUndo ? TEXT_SEC : "#ccc",
+            background: canUndo ? "#f5f7f6" : "transparent",
+            transition: "all 0.15s ease"
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+          </svg>
+        </div>
+        <div 
+          onClick={onRedo}
+          style={{ 
+            width: 32, height: 32, borderRadius: 8, 
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: canRedo ? "pointer" : "default", 
+            color: canRedo ? TEXT_SEC : "#ccc",
+            background: canRedo ? "#f5f7f6" : "transparent",
+            transition: "all 0.15s ease"
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
+          </svg>
+        </div>
+        <div 
+          onClick={onClose}
+          style={{ 
+            width: 32, height: 32, borderRadius: 8, marginLeft: 8,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC,
+            transition: "all 0.15s ease"
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MealPlanCanvas({ data }) {
+  if (!data) return null;
+  const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
+  
+  return (
+    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+          Week of {data.weekStart}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC }}>
+          Daily targets: <strong style={{ color: TEXT }}>{data.weeklyTargets?.calories} cal</strong> • <strong style={{ color: TEXT }}>{data.weeklyTargets?.protein}g protein</strong>
+        </div>
+      </div>
+      
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
+        {data.days?.map((day, dIdx) => {
+          const dayCalories = day.meals?.reduce((sum, m) => sum + (m.calories || 0), 0) || 0;
+          const dayProtein = day.meals?.reduce((sum, m) => sum + (m.protein || 0), 0) || 0;
+          return (
+            <div key={dIdx} style={{
+              minWidth: 200, background: WHITE, borderRadius: 16,
+              border: `1px solid ${BORDER}`, overflow: "hidden",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}>
+              <div style={{
+                padding: "12px 16px", background: TEAL_LIGHT,
+                borderBottom: `1px solid ${BORDER}`
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{day.day}</div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
+                  {dayCalories} cal • {dayProtein}g protein
+                </div>
+              </div>
+              <div style={{ padding: "8px 0" }}>
+                {day.meals?.map((meal, mIdx) => (
+                  <div key={mIdx} style={{
+                    padding: "10px 16px",
+                    borderBottom: mIdx < day.meals.length - 1 ? `1px solid ${BORDER}` : "none",
+                    transition: "background 0.15s ease"
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                      {meal.type}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                      {meal.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: TEXT_SEC }}>
+                      {meal.calories} cal • {meal.protein}g P • {meal.carbs}g C • {meal.fat}g F
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      <div style={{
+        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
+        border: `1px solid ${BORDER}`
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+          Edit this meal plan by chatting with Milton
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
+          Try: "Swap Monday's lunch with grilled salmon" or "Increase protein on all days" or "Add a morning snack"
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkoutCanvas({ data }) {
+  if (!data) return null;
+  
+  return (
+    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
+          {data.programName}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC }}>
+          7-day training program for {data.client}
+        </div>
+      </div>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {data.days?.map((day, dIdx) => (
+          <div key={dIdx} style={{
+            background: WHITE, borderRadius: 16,
+            border: `1px solid ${BORDER}`, overflow: "hidden",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{
+              padding: "14px 20px", background: day.exercises?.length ? TEAL_LIGHT : "#f8f9f8",
+              borderBottom: `1px solid ${BORDER}`,
+              display: "flex", justifyContent: "space-between", alignItems: "center"
+            }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.day}</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{day.focus}</div>
+              </div>
+              <div style={{ fontSize: 12, color: TEAL, fontWeight: 600 }}>
+                {day.exercises?.length || 0} exercises
+              </div>
+            </div>
+            {day.exercises?.length > 0 && (
+              <div style={{ padding: "8px 0" }}>
+                {day.exercises.map((ex, eIdx) => (
+                  <div key={eIdx} style={{
+                    padding: "12px 20px",
+                    borderBottom: eIdx < day.exercises.length - 1 ? `1px solid ${BORDER}` : "none",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+                        {ex.sets} sets × {ex.reps} @ {ex.weight}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 11, color: TEXT_SEC }}>
+                      Rest: {ex.rest}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      
+      <div style={{
+        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
+        border: `1px solid ${BORDER}`
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+          Edit this workout by chatting with Milton
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
+          Try: "Add more chest exercises on Monday" or "Replace deadlifts with trap bar deadlifts" or "Make Wednesday a leg day"
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MessageSequenceCanvas({ data }) {
+  if (!data) return null;
+  
+  return (
+    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
+          {data.campaignName}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC }}>
+          Message sequence for {data.client}
+        </div>
+      </div>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
+        {/* Timeline line */}
+        <div style={{
+          position: "absolute", left: 15, top: 24, bottom: 24,
+          width: 2, background: BORDER
+        }} />
+        
+        {data.messages?.map((msg, mIdx) => (
+          <div key={mIdx} style={{
+            display: "flex", gap: 16, paddingLeft: 0, marginBottom: 20
+          }}>
+            {/* Timeline dot */}
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: msg.type === "email" ? "#3b82f6" : "#10b981",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, zIndex: 1
+            }}>
+              {msg.type === "email" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+              )}
+            </div>
+            
+            <div style={{
+              flex: 1, background: WHITE, borderRadius: 12,
+              border: `1px solid ${BORDER}`, overflow: "hidden",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}>
+              <div style={{
+                padding: "12px 16px", background: "#f8faf9",
+                borderBottom: `1px solid ${BORDER}`,
+                display: "flex", justifyContent: "space-between", alignItems: "center"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ 
+                    fontSize: 11, fontWeight: 600, color: "#fff",
+                    background: msg.type === "email" ? "#3b82f6" : "#10b981",
+                    padding: "2px 8px", borderRadius: 10, textTransform: "uppercase"
+                  }}>
+                    {msg.type}
+                  </span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC }}>Day {msg.day}</span>
+                </div>
+                <span style={{ 
+                  fontSize: 11, fontWeight: 500, color: "#f59e0b",
+                  background: "#fef3c7", padding: "2px 8px", borderRadius: 10
+                }}>
+                  {msg.status}
+                </span>
+              </div>
+              <div style={{ padding: 16 }}>
+                {msg.subject && (
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                    {msg.subject}
+                  </div>
+                )}
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                  {msg.body}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div style={{
+        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
+        border: `1px solid ${BORDER}`
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+          Edit this sequence by chatting with Milton
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
+          Try: "Make the first message more casual" or "Add an email on day 4" or "Change the subject line to something catchier"
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportCanvas({ data }) {
+  if (!data) return null;
+  
+  return (
+    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
+          {data.title}
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC }}>
+          Generated for {data.client}
+        </div>
+      </div>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {data.sections?.map((section, sIdx) => (
+          <div key={sIdx} style={{
+            background: WHITE, borderRadius: 16, padding: 20,
+            border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ 
+              fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 12,
+              display: "flex", alignItems: "center", gap: 8
+            }}>
+              {section.title}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.5 }}>
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+            </div>
+            
+            {section.content && (
+              <div style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.7 }}>
+                {section.content}
+              </div>
+            )}
+            
+            {section.data && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 8 }}>
+                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Meals Logged</div>
+                </div>
+                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Avg Protein</div>
+                </div>
+                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
+                    {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend} lbs
+                  </div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Weight Trend</div>
+                </div>
+              </div>
+            )}
+            
+            {section.items && (
+              <ul style={{ margin: 0, paddingLeft: 20 }}>
+                {section.items.map((item, iIdx) => (
+                  <li key={iIdx} style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.7, marginBottom: 4 }}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+      
+      <div style={{
+        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
+        border: `1px solid ${BORDER}`
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+          Edit this report by chatting with Milton
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
+          Try: "Add a nutrition breakdown section" or "Move recommendations to the top" or "Make the summary more encouraging"
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    MAIN DASHBOARD
    ═══════════════════════════════════════════ */
 export default function MiltonDashboard() {
@@ -3220,6 +3763,14 @@ export default function MiltonDashboard() {
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
+
+  // Canvas state
+  const [canvasMode, setCanvasMode] = useState(false);
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report'
+  const [canvasData, setCanvasData] = useState(null);
+  const [canvasClient, setCanvasClient] = useState(null);
+  const [canvasHistory, setCanvasHistory] = useState([]);
+  const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
 
   const clientNames = clients.map(c => c.name);
 
@@ -3297,6 +3848,190 @@ export default function MiltonDashboard() {
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, delay);
       return;
+    }
+
+    // Canvas intent detection - create meal plans, workouts, message sequences, reports
+    const canvasIntent = (() => {
+      // Find which client is mentioned
+      let clientMatch = null;
+      for (const c of clients) {
+        const firstName = c.name.split(" ")[0].toLowerCase();
+        if (low.includes(firstName)) {
+          clientMatch = c;
+          break;
+        }
+      }
+      // Fall back to selected client if no name mentioned
+      if (!clientMatch && selectedClient !== null) {
+        clientMatch = clients[selectedClient];
+      }
+      
+      if (!clientMatch) return null;
+      
+      // Meal plan intent
+      if (/(create|make|build|generate|design)\s+(a\s+)?(meal\s*plan|nutrition\s*plan|eating\s*plan|diet\s*plan|weekly\s*meals?)/i.test(low)) {
+        return { type: "mealPlan", client: clientMatch };
+      }
+      
+      // Workout intent
+      if (/(create|make|build|generate|design)\s+(a\s+)?(workout|exercise|training|fitness)\s*(program|plan|routine)?/i.test(low)) {
+        return { type: "workout", client: clientMatch };
+      }
+      
+      // Message sequence intent
+      if (/(create|make|build|generate|design|draft)\s+(a\s+)?(message|check-?in|follow-?up|outreach|campaign)\s*(sequence|series|plan)?/i.test(low) ||
+          /(create|make|build)\s+(a\s+)?(sequence|series)\s*(of\s+)?(messages?|check-?ins?)/i.test(low)) {
+        return { type: "messageSequence", client: clientMatch };
+      }
+      
+      // Report intent
+      if (/(create|make|build|generate)\s+(a\s+)?(progress\s*)?report/i.test(low) ||
+          /(generate|create|build)\s+(a\s+)?summary/i.test(low)) {
+        return { type: "report", client: clientMatch };
+      }
+      
+      return null;
+    })();
+
+    if (canvasIntent) {
+      setTimeout(() => {
+        const firstName = canvasIntent.client.name.split(" ")[0];
+        let data, responseText;
+        
+        if (canvasIntent.type === "mealPlan") {
+          data = generateMealPlan(canvasIntent.client.name);
+          responseText = `**I'm creating a meal plan for ${firstName}!**\n\nI've generated a 7-day meal plan targeting ${data.weeklyTargets.calories} calories and ${data.weeklyTargets.protein}g protein per day.\n\nYou can see the full plan in the canvas on the right. To make changes, just tell me:\n- "Swap Monday's lunch with grilled salmon"\n- "Increase protein on all days"\n- "Add a morning snack"`;
+        } else if (canvasIntent.type === "workout") {
+          data = generateWorkoutProgram(canvasIntent.client.name);
+          responseText = `**I'm creating a workout program for ${firstName}!**\n\nI've designed a strength building program with push/pull/legs split.\n\nYou can see the full program in the canvas. To make changes:\n- "Add more chest exercises on Monday"\n- "Replace deadlifts with trap bar deadlifts"\n- "Make Wednesday a rest day"`;
+        } else if (canvasIntent.type === "messageSequence") {
+          data = generateMessageSequence(canvasIntent.client.name);
+          responseText = `**I'm creating a message sequence for ${firstName}!**\n\nI've drafted a 4-message check-in series over 7 days, mixing SMS and email.\n\nYou can see the full sequence in the canvas. To make changes:\n- "Make the first message more casual"\n- "Add an email on day 4"\n- "Change the subject line to something catchier"`;
+        } else if (canvasIntent.type === "report") {
+          data = generateProgressReport(canvasIntent.client.name, canvasIntent.client);
+          responseText = `**I'm creating a progress report for ${firstName}!**\n\nI've generated a comprehensive weekly report with key metrics and recommendations.\n\nYou can see the full report in the canvas. To make changes:\n- "Add a nutrition breakdown section"\n- "Move recommendations to the top"\n- "Make the summary more encouraging"`;
+        }
+        
+        setCanvasType(canvasIntent.type);
+        setCanvasData(data);
+        setCanvasClient(canvasIntent.client.name);
+        setCanvasHistory([data]);
+        setCanvasHistoryIndex(0);
+        setCanvasMode(true);
+        
+        setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 500);
+      return;
+    }
+
+    // Canvas edit commands (when canvas is open)
+    if (canvasMode && canvasData) {
+      const canvasEditCmd = (() => {
+        if (canvasType === "mealPlan") {
+          // Swap meal: "swap Monday's lunch with grilled salmon"
+          const swapMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'s)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
+          if (swapMatch) {
+            const [, day, mealType, newMealName] = swapMatch;
+            return { action: "swapMeal", day, mealType, newMealName };
+          }
+          // Increase protein
+          if (/increase\s+protein/i.test(low)) {
+            return { action: "increaseProtein" };
+          }
+          // Add snack
+          if (/add\s+(a\s+)?(morning\s+)?snack/i.test(low)) {
+            return { action: "addSnack" };
+          }
+        }
+        if (canvasType === "workout") {
+          // Add exercises
+          if (/add\s+more\s+(\w+)\s+exercises?\s+on\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(low)) {
+            const match = low.match(/add\s+more\s+(\w+)\s+exercises?\s+on\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
+            return { action: "addExercises", muscle: match[1], day: match[2] };
+          }
+        }
+        if (canvasType === "messageSequence") {
+          // Make more casual
+          if (/more\s+casual/i.test(low)) {
+            return { action: "makeCasual" };
+          }
+          // Add message
+          if (/add\s+(an?\s+)?(email|sms|message)/i.test(low)) {
+            const match = low.match(/add\s+(an?\s+)?(email|sms|message)/i);
+            return { action: "addMessage", type: match[2] === "sms" ? "sms" : "email" };
+          }
+        }
+        return null;
+      })();
+
+      if (canvasEditCmd) {
+        setTimeout(() => {
+          let newData = JSON.parse(JSON.stringify(canvasData));
+          let responseText = "";
+
+          if (canvasEditCmd.action === "swapMeal") {
+            const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
+            if (dayIndex !== -1 && newData.days?.[dayIndex]) {
+              const mealIndex = newData.days[dayIndex].meals.findIndex(m => m.type === canvasEditCmd.mealType.toLowerCase());
+              if (mealIndex !== -1) {
+                newData.days[dayIndex].meals[mealIndex].name = canvasEditCmd.newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                responseText = `Done! I've swapped ${canvasEditCmd.day}'s ${canvasEditCmd.mealType} with ${canvasEditCmd.newMealName}.`;
+              }
+            }
+          } else if (canvasEditCmd.action === "increaseProtein") {
+            newData.days?.forEach(day => {
+              day.meals?.forEach(meal => {
+                meal.protein = Math.round(meal.protein * 1.2);
+                meal.calories = Math.round(meal.calories * 1.05);
+              });
+            });
+            newData.weeklyTargets.protein = Math.round(newData.weeklyTargets.protein * 1.2);
+            responseText = "Done! I've increased protein across all meals by about 20%.";
+          } else if (canvasEditCmd.action === "addSnack") {
+            newData.days?.forEach(day => {
+              day.meals.push({ type: "morning snack", name: "Greek Yogurt & Berries", calories: 180, protein: 15, carbs: 20, fat: 5 });
+            });
+            responseText = "Done! I've added a morning snack (Greek Yogurt & Berries) to each day.";
+          } else if (canvasEditCmd.action === "addExercises") {
+            const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(canvasEditCmd.day.toLowerCase());
+            if (dayIndex !== -1 && newData.days?.[dayIndex]) {
+              newData.days[dayIndex].exercises.push({ name: `${canvasEditCmd.muscle.charAt(0).toUpperCase() + canvasEditCmd.muscle.slice(1)} Cable Flyes`, sets: 3, reps: "12-15", weight: "25 lbs", rest: "45s" });
+              responseText = `Done! I've added ${canvasEditCmd.muscle} exercises to ${canvasEditCmd.day}.`;
+            }
+          } else if (canvasEditCmd.action === "makeCasual") {
+            newData.messages?.forEach(msg => {
+              msg.body = msg.body.replace(/Hi /g, "Hey ").replace(/Hello /g, "Hey ").replace(/Best,/g, "Cheers,").replace(/Looking forward/g, "Can't wait");
+            });
+            responseText = "Done! I've made the messages more casual and friendly.";
+          } else if (canvasEditCmd.action === "addMessage") {
+            const lastDay = Math.max(...newData.messages.map(m => m.day));
+            newData.messages.push({
+              day: lastDay + 2,
+              type: canvasEditCmd.type,
+              subject: canvasEditCmd.type === "email" ? "Quick Check-In" : null,
+              body: canvasEditCmd.type === "email" ? `Hey ${canvasClient?.split(" ")[0]},\n\nJust wanted to drop a quick note to see how things are going. Any wins to celebrate this week?\n\nYour Coach` : `Hey ${canvasClient?.split(" ")[0]}! How's this week going? Any wins to celebrate?`,
+              status: "draft"
+            });
+            responseText = `Done! I've added a new ${canvasEditCmd.type} on day ${lastDay + 2}.`;
+          }
+
+          if (responseText) {
+            // Add to history for undo/redo
+            const newHistory = canvasHistory.slice(0, canvasHistoryIndex + 1);
+            newHistory.push(newData);
+            setCanvasHistory(newHistory);
+            setCanvasHistoryIndex(newHistory.length - 1);
+            setCanvasData(newData);
+          }
+
+          setChatMessages(prev => [...prev, { type: "ai", text: responseText || "I couldn't apply that change. Try being more specific!" }]);
+          setChatTyping(false);
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        }, delay);
+        return;
+      }
     }
 
     // Client data modification commands (goal changes, weight updates, etc.)
@@ -3572,7 +4307,11 @@ Remember: Be specific, be brief, be helpful.`;
           padding: "0 16px", height: 56, background: WHITE,
           borderBottom: `1px solid ${BORDER}`, boxShadow: "0 1px 6px rgba(0,0,0,0.04)"
         }}>
-          {selectedClient !== null ? (
+          {canvasMode ? (
+            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+            </div>
+          ) : selectedClient !== null ? (
             <div onClick={() => setSelectedClient(null)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
@@ -3588,10 +4327,29 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
+            {canvasMode ? (
+              <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
+                {canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+              </span>
+            ) : (
+              <>
+                <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
+              </>
+            )}
           </div>
-          <div onClick={() => setShowAddClient(true)} style={{
+          {canvasMode ? (
+            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{
+              width: 34, height: 34, borderRadius: 10, background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer"
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          ) : (
+            <div onClick={() => setShowAddClient(true)} style={{
               width: 34, height: 34, borderRadius: 10, background: TEAL,
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
@@ -3600,14 +4358,16 @@ Remember: Be specific, be brief, be helpful.`;
                 <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
               </svg>
             </div>
+          )}
         </div>
       )}
 
       {/* ═══ DESKTOP CHAT PANEL ═══ */}
       {!isMobile && (
         <div style={{
-          width: 352, flexShrink: 0, padding: "14px 6px 14px 10px",
-          display: "flex", flexDirection: "column"
+          width: canvasMode ? 400 : 352, flexShrink: 0, padding: "14px 6px 14px 10px",
+          display: "flex", flexDirection: "column",
+          transition: "width 0.3s ease"
         }}>
           <section style={{
             flex: 1, background: WHITE, display: "flex", flexDirection: "column",
@@ -3620,7 +4380,21 @@ Remember: Be specific, be brief, be helpful.`;
               padding: "8px 14px", borderBottom: `1px solid ${BORDER}`,
               background: "rgba(247,250,249,0.5)"
             }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {canvasMode && (
+                  <div 
+                    onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+                    style={{ cursor: "pointer", color: TEXT_SEC, padding: 4 }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                  </div>
+                )}
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
+                  {canvasMode ? (canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report") : "Milton"}
+                </span>
+              </div>
               <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
             <ChatContent
@@ -3632,8 +4406,58 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
+      {/* ═══ CANVAS MODE ═══ */}
+      {canvasMode && !isMobile && (
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column",
+          background: BG, overflow: "hidden"
+        }}>
+          <CanvasHeader 
+            title={canvasType === "mealPlan" ? `Meal Plan for ${canvasClient}` : 
+                   canvasType === "workout" ? `Workout Program for ${canvasClient}` :
+                   canvasType === "messageSequence" ? `Messages for ${canvasClient}` :
+                   `Report for ${canvasClient}`}
+            onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            canUndo={canvasHistoryIndex > 0}
+            canRedo={canvasHistoryIndex < canvasHistory.length - 1}
+            onUndo={() => {
+              if (canvasHistoryIndex > 0) {
+                setCanvasHistoryIndex(canvasHistoryIndex - 1);
+                setCanvasData(canvasHistory[canvasHistoryIndex - 1]);
+              }
+            }}
+            onRedo={() => {
+              if (canvasHistoryIndex < canvasHistory.length - 1) {
+                setCanvasHistoryIndex(canvasHistoryIndex + 1);
+                setCanvasData(canvasHistory[canvasHistoryIndex + 1]);
+              }
+            }}
+          />
+          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+            {canvasType === "mealPlan" && <MealPlanCanvas data={canvasData} />}
+            {canvasType === "workout" && <WorkoutCanvas data={canvasData} />}
+            {canvasType === "messageSequence" && <MessageSequenceCanvas data={canvasData} />}
+            {canvasType === "report" && <ReportCanvas data={canvasData} />}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MOBILE CANVAS VIEW ═══ */}
+      {canvasMode && isMobile && (
+        <div style={{
+          position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
+          background: BG, zIndex: 40, overflowY: "auto",
+          paddingBottom: 80
+        }}>
+          {canvasType === "mealPlan" && <MealPlanCanvas data={canvasData} />}
+          {canvasType === "workout" && <WorkoutCanvas data={canvasData} />}
+          {canvasType === "messageSequence" && <MessageSequenceCanvas data={canvasData} />}
+          {canvasType === "report" && <ReportCanvas data={canvasData} />}
+        </div>
+      )}
+
       {/* ═══ MAIN CONTENT ═══ */}
-      {selectedClient !== null ? (
+      {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
             client={clients[selectedClient]}
@@ -3650,7 +4474,7 @@ Remember: Be specific, be brief, be helpful.`;
             }}
           />
         </main>
-      ) : (
+      ) : !canvasMode ? (
       <main style={{
         flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
@@ -4091,7 +4915,7 @@ Remember: Be specific, be brief, be helpful.`;
           </div>
         )}
       </main>
-      )}
+      ) : null}
 
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
