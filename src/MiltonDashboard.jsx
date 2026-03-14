@@ -3338,408 +3338,486 @@ function generateProgressReport(clientName, clientData) {
 }
 
 /* ═══════════════════════════════════════════
-   CANVAS COMPONENTS
+   CANVAS COMPONENTS - Calendar View
    ═══════════════════════════════════════════ */
 
-function CanvasHeader({ title, onClose, canUndo, canRedo, onUndo, onRedo }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "12px 20px", borderBottom: `1px solid ${BORDER}`,
-      background: WHITE
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
+  if (!data) return null;
+  
+  // Generate 31 days for the month view
+  const today = new Date();
+  const currentMonth = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  // Map data days to calendar - spread across month
+  const getDayData = (dayNum) => {
+    if (!data.days) return null;
+    const dayIndex = (dayNum - 1) % data.days.length;
+    return data.days[dayIndex];
+  };
+  
+  const getDayLabel = (dayNum) => {
+    const dayData = getDayData(dayNum);
+    if (!dayData) return null;
+    if (type === "mealPlan") {
+      const totalCals = dayData.meals?.reduce((sum, m) => sum + (m.calories || 0), 0) || 0;
+      return `${totalCals} cal`;
+    }
+    if (type === "workout") {
+      return dayData.focus || "Rest";
+    }
+    return null;
+  };
+  
+  const getDayColor = (dayNum) => {
+    const dayData = getDayData(dayNum);
+    if (!dayData) return null;
+    if (type === "workout" && dayData.focus === "Rest Day") return "#f3f4f6";
+    if (type === "workout" && dayData.exercises?.length > 0) return TEAL_LIGHT;
+    if (type === "mealPlan") return TEAL_LIGHT;
+    return null;
+  };
+
+  // Detail view when a day is selected
+  if (selectedDay !== null) {
+    const dayData = getDayData(selectedDay);
+    const dayOfWeek = dayNames[new Date(today.getFullYear(), today.getMonth(), selectedDay).getDay()];
+    
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+        {/* Subtle close button - returns to calendar view */}
         <div 
-          onClick={onClose}
+          onClick={() => onSelectDay(null)}
           style={{ 
-            width: 32, height: 32, borderRadius: 8, 
+            position: "absolute", top: 12, right: 12, zIndex: 10,
+            width: 28, height: 28, borderRadius: 8,
             display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC,
-            transition: "all 0.15s ease"
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+            transition: "opacity 0.15s ease"
           }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <polyline points="15,18 9,12 15,6"/>
-          </svg>
-        </div>
-        <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{title}</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div 
-          onClick={onUndo}
-          style={{ 
-            width: 32, height: 32, borderRadius: 8, 
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: canUndo ? "pointer" : "default", 
-            color: canUndo ? TEXT_SEC : "#ccc",
-            background: canUndo ? "#f5f7f6" : "transparent",
-            transition: "all 0.15s ease"
-          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = 1}
+          onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
-          </svg>
-        </div>
-        <div 
-          onClick={onRedo}
-          style={{ 
-            width: 32, height: 32, borderRadius: 8, 
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: canRedo ? "pointer" : "default", 
-            color: canRedo ? TEXT_SEC : "#ccc",
-            background: canRedo ? "#f5f7f6" : "transparent",
-            transition: "all 0.15s ease"
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
-          </svg>
-        </div>
-        <div 
-          onClick={onClose}
-          style={{ 
-            width: 32, height: 32, borderRadius: 8, marginLeft: 8,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC,
-            transition: "all 0.15s ease"
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function MealPlanCanvas({ data }) {
-  if (!data) return null;
-  const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
-  
-  return (
-    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
-          Week of {data.weekStart}
+        
+        {/* Day header */}
+        <div style={{ 
+          padding: "16px 20px", borderBottom: `1px solid ${BORDER}`
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{dayOfWeek}, {currentMonth.split(' ')[0]} {selectedDay}</div>
+          <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{type === "mealPlan" ? "Meal Plan" : "Workout"}</div>
         </div>
-        <div style={{ fontSize: 13, color: TEXT_SEC }}>
-          Daily targets: <strong style={{ color: TEXT }}>{data.weeklyTargets?.calories} cal</strong> • <strong style={{ color: TEXT }}>{data.weeklyTargets?.protein}g protein</strong>
+        
+        {/* Day detail content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          {type === "mealPlan" && dayData?.meals && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {dayData.meals.map((meal, idx) => (
+                <div key={idx} style={{
+                  background: WHITE, borderRadius: 12, padding: 14,
+                  border: `1px solid ${BORDER}`
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                    {meal.type}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{meal.name}</div>
+                  <div style={{ display: "flex", gap: 12, fontSize: 11, color: TEXT_SEC }}>
+                    <span>{meal.calories} cal</span>
+                    <span>{meal.protein}g protein</span>
+                    <span>{meal.carbs}g carbs</span>
+                    <span>{meal.fat}g fat</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {type === "workout" && dayData && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ 
+                padding: "12px 14px", background: TEAL_LIGHT, borderRadius: 10,
+                fontSize: 13, fontWeight: 600, color: TEXT
+              }}>
+                {dayData.focus}
+              </div>
+              {dayData.exercises?.map((ex, idx) => (
+                <div key={idx} style={{
+                  background: WHITE, borderRadius: 12, padding: 14,
+                  border: `1px solid ${BORDER}`,
+                  display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                      {ex.sets} sets × {ex.reps} @ {ex.weight}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, background: "#f5f7f6", padding: "4px 8px", borderRadius: 6 }}>
+                    {ex.rest} rest
+                  </div>
+                </div>
+              ))}
+              {(!dayData.exercises || dayData.exercises.length === 0) && (
+                <div style={{ padding: 20, textAlign: "center", color: TEXT_SEC, fontSize: 13 }}>
+                  Rest day - no exercises scheduled
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Hint bar */}
+        <div style={{
+          padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+          background: "#fafcfb", fontSize: 12, color: TEXT_SEC
+        }}>
+          Chat with Milton to edit: "Change lunch to grilled salmon" or "Add 10 min cardio"
+        </div>
+      </div>
+    );
+  }
+  
+  // Calendar grid view
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 12, right: 12, zIndex: 10,
+          width: 28, height: 28, borderRadius: 8,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+          transition: "opacity 0.15s ease"
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Month header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{currentMonth}</div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+          {type === "mealPlan" ? `Meal plan for ${data.client}` : `${data.programName} for ${data.client}`}
         </div>
       </div>
       
-      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16 }}>
-        {data.days?.map((day, dIdx) => {
-          const dayCalories = day.meals?.reduce((sum, m) => sum + (m.calories || 0), 0) || 0;
-          const dayProtein = day.meals?.reduce((sum, m) => sum + (m.protein || 0), 0) || 0;
+      {/* Day name headers */}
+      <div style={{ 
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1,
+        padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, background: "#fafcfb"
+      }}>
+        {dayNames.map(d => (
+          <div key={d} style={{ 
+            textAlign: "center", fontSize: 10, fontWeight: 600, 
+            color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em",
+            padding: "4px 0"
+          }}>
+            {d}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar grid */}
+      <div style={{ 
+        flex: 1, overflowY: "auto", padding: 12,
+        display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6,
+        alignContent: "start"
+      }}>
+        {/* Empty cells for days before month starts */}
+        {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+          <div key={`empty-${idx}`} style={{ aspectRatio: "1", borderRadius: 8 }} />
+        ))}
+        
+        {/* Day cells */}
+        {Array.from({ length: daysInMonth }).map((_, idx) => {
+          const dayNum = idx + 1;
+          const isToday = dayNum === today.getDate();
+          const dayColor = getDayColor(dayNum);
+          const label = getDayLabel(dayNum);
+          
           return (
-            <div key={dIdx} style={{
-              minWidth: 200, background: WHITE, borderRadius: 16,
-              border: `1px solid ${BORDER}`, overflow: "hidden",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-            }}>
-              <div style={{
-                padding: "12px 16px", background: TEAL_LIGHT,
-                borderBottom: `1px solid ${BORDER}`
+            <div
+              key={dayNum}
+              onClick={() => onSelectDay(dayNum)}
+              style={{
+                aspectRatio: "1", borderRadius: 10,
+                background: isToday ? TEAL : dayColor || "#f8faf9",
+                border: isToday ? "none" : `1px solid ${BORDER}`,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                cursor: "pointer", transition: "all 0.15s ease",
+                padding: 4
+              }}
+              onMouseEnter={e => {
+                if (!isToday) {
+                  e.currentTarget.style.transform = "scale(1.05)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{ 
+                fontSize: 14, fontWeight: 600, 
+                color: isToday ? WHITE : TEXT 
               }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{day.day}</div>
-                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
-                  {dayCalories} cal • {dayProtein}g protein
+                {dayNum}
+              </div>
+              {label && (
+                <div style={{ 
+                  fontSize: 8, fontWeight: 500, 
+                  color: isToday ? "rgba(255,255,255,0.8)" : TEXT_SEC,
+                  textAlign: "center", marginTop: 2,
+                  lineHeight: 1.2, maxWidth: "100%",
+                  overflow: "hidden", textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}>
+                  {label}
                 </div>
-              </div>
-              <div style={{ padding: "8px 0" }}>
-                {day.meals?.map((meal, mIdx) => (
-                  <div key={mIdx} style={{
-                    padding: "10px 16px",
-                    borderBottom: mIdx < day.meals.length - 1 ? `1px solid ${BORDER}` : "none",
-                    transition: "background 0.15s ease"
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
-                      {meal.type}
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
-                      {meal.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: TEXT_SEC }}>
-                      {meal.calories} cal • {meal.protein}g P • {meal.carbs}g C • {meal.fat}g F
-                    </div>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           );
         })}
       </div>
       
+      {/* Hint bar */}
       <div style={{
-        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
-        border: `1px solid ${BORDER}`
+        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafcfb", fontSize: 12, color: TEXT_SEC,
+        display: "flex", alignItems: "center", gap: 6
       }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-          Edit this meal plan by chatting with Milton
-        </div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
-          Try: "Swap Monday's lunch with grilled salmon" or "Increase protein on all days" or "Add a morning snack"
-        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+        </svg>
+        Click a day to view details and edit via chat
       </div>
     </div>
   );
 }
 
-function WorkoutCanvas({ data }) {
+function MealPlanCanvas({ data, selectedDay, onSelectDay, onClose }) {
+  return <CalendarCanvas data={data} type="mealPlan" selectedDay={selectedDay} onSelectDay={onSelectDay} onClose={onClose} />;
+}
+
+function WorkoutCanvas({ data, selectedDay, onSelectDay, onClose }) {
+  return <CalendarCanvas data={data} type="workout" selectedDay={selectedDay} onSelectDay={onSelectDay} onClose={onClose} />;
+}
+
+function MessageSequenceCanvas({ data, onClose }) {
   if (!data) return null;
   
   return (
-    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
-          {data.programName}
-        </div>
-        <div style={{ fontSize: 13, color: TEXT_SEC }}>
-          7-day training program for {data.client}
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 12, right: 12, zIndex: 10,
+          width: 28, height: 28, borderRadius: 8,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+          transition: "opacity 0.15s ease"
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {data.days?.map((day, dIdx) => (
-          <div key={dIdx} style={{
-            background: WHITE, borderRadius: 16,
-            border: `1px solid ${BORDER}`, overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{
-              padding: "14px 20px", background: day.exercises?.length ? TEAL_LIGHT : "#f8f9f8",
-              borderBottom: `1px solid ${BORDER}`,
-              display: "flex", justifyContent: "space-between", alignItems: "center"
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.campaignName}</div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Message sequence for {data.client}</div>
+      </div>
+      
+      {/* Timeline content */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
+          {/* Timeline line */}
+          <div style={{
+            position: "absolute", left: 15, top: 20, bottom: 20,
+            width: 2, background: BORDER
+          }} />
+          
+          {data.messages?.map((msg, mIdx) => (
+            <div key={mIdx} style={{
+              display: "flex", gap: 14, paddingLeft: 0, marginBottom: 16
             }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.day}</div>
-                <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{day.focus}</div>
+              {/* Timeline dot */}
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: msg.type === "email" ? "#3b82f6" : "#10b981",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, zIndex: 1
+              }}>
+                {msg.type === "email" ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                )}
               </div>
-              <div style={{ fontSize: 12, color: TEAL, fontWeight: 600 }}>
-                {day.exercises?.length || 0} exercises
+              
+              <div style={{
+                flex: 1, background: WHITE, borderRadius: 10,
+                border: `1px solid ${BORDER}`, overflow: "hidden"
+              }}>
+                <div style={{
+                  padding: "10px 14px", background: "#f8faf9",
+                  borderBottom: `1px solid ${BORDER}`,
+                  display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ 
+                      fontSize: 10, fontWeight: 600, color: "#fff",
+                      background: msg.type === "email" ? "#3b82f6" : "#10b981",
+                      padding: "2px 6px", borderRadius: 8, textTransform: "uppercase"
+                    }}>
+                      {msg.type}
+                    </span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>Day {msg.day}</span>
+                  </div>
+                  <span style={{ 
+                    fontSize: 10, fontWeight: 500, color: "#f59e0b",
+                    background: "#fef3c7", padding: "2px 6px", borderRadius: 8
+                  }}>
+                    {msg.status}
+                  </span>
+                </div>
+                <div style={{ padding: 12 }}>
+                  {msg.subject && (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
+                      {msg.subject}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                    {msg.body.length > 150 ? msg.body.substring(0, 150) + "..." : msg.body}
+                  </div>
+                </div>
               </div>
             </div>
-            {day.exercises?.length > 0 && (
-              <div style={{ padding: "8px 0" }}>
-                {day.exercises.map((ex, eIdx) => (
-                  <div key={eIdx} style={{
-                    padding: "12px 20px",
-                    borderBottom: eIdx < day.exercises.length - 1 ? `1px solid ${BORDER}` : "none",
-                    display: "flex", justifyContent: "space-between", alignItems: "center"
-                  }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.name}</div>
-                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-                        {ex.sets} sets × {ex.reps} @ {ex.weight}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 11, color: TEXT_SEC }}>
-                      Rest: {ex.rest}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       
+      {/* Hint bar */}
       <div style={{
-        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
-        border: `1px solid ${BORDER}`
+        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
       }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-          Edit this workout by chatting with Milton
-        </div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
-          Try: "Add more chest exercises on Monday" or "Replace deadlifts with trap bar deadlifts" or "Make Wednesday a leg day"
-        </div>
+        Chat with Milton: "Make message 1 more casual" or "Add email on day 4"
       </div>
     </div>
   );
 }
 
-function MessageSequenceCanvas({ data }) {
+function ReportCanvas({ data, onClose }) {
   if (!data) return null;
   
   return (
-    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
-          {data.campaignName}
-        </div>
-        <div style={{ fontSize: 13, color: TEXT_SEC }}>
-          Message sequence for {data.client}
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      {/* Subtle close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 12, right: 12, zIndex: 10,
+          width: 28, height: 28, borderRadius: 8,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
+          transition: "opacity 0.15s ease"
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
-        {/* Timeline line */}
-        <div style={{
-          position: "absolute", left: 15, top: 24, bottom: 24,
-          width: 2, background: BORDER
-        }} />
-        
-        {data.messages?.map((msg, mIdx) => (
-          <div key={mIdx} style={{
-            display: "flex", gap: 16, paddingLeft: 0, marginBottom: 20
-          }}>
-            {/* Timeline dot */}
-            <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: msg.type === "email" ? "#3b82f6" : "#10b981",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, zIndex: 1
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.title}</div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Progress report for {data.client}</div>
+      </div>
+      
+      {/* Report sections */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {data.sections?.map((section, sIdx) => (
+            <div key={sIdx} style={{
+              background: WHITE, borderRadius: 10, padding: 14,
+              border: `1px solid ${BORDER}`
             }}>
-              {msg.type === "email" ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                </svg>
+              <div style={{ 
+                fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 10,
+                textTransform: "uppercase", letterSpacing: "0.03em"
+              }}>
+                {section.title}
+              </div>
+              
+              {section.content && (
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
+                  {section.content}
+                </div>
+              )}
+              
+              {section.data && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Meals</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Protein</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
+                      {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend}
+                    </div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Weight</div>
+                  </div>
+                </div>
+              )}
+              
+              {section.items && (
+                <ul style={{ margin: 0, paddingLeft: 18, marginTop: 4 }}>
+                  {section.items.map((item, iIdx) => (
+                    <li key={iIdx} style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, marginBottom: 2 }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-            
-            <div style={{
-              flex: 1, background: WHITE, borderRadius: 12,
-              border: `1px solid ${BORDER}`, overflow: "hidden",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-            }}>
-              <div style={{
-                padding: "12px 16px", background: "#f8faf9",
-                borderBottom: `1px solid ${BORDER}`,
-                display: "flex", justifyContent: "space-between", alignItems: "center"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ 
-                    fontSize: 11, fontWeight: 600, color: "#fff",
-                    background: msg.type === "email" ? "#3b82f6" : "#10b981",
-                    padding: "2px 8px", borderRadius: 10, textTransform: "uppercase"
-                  }}>
-                    {msg.type}
-                  </span>
-                  <span style={{ fontSize: 12, color: TEXT_SEC }}>Day {msg.day}</span>
-                </div>
-                <span style={{ 
-                  fontSize: 11, fontWeight: 500, color: "#f59e0b",
-                  background: "#fef3c7", padding: "2px 8px", borderRadius: 10
-                }}>
-                  {msg.status}
-                </span>
-              </div>
-              <div style={{ padding: 16 }}>
-                {msg.subject && (
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-                    {msg.subject}
-                  </div>
-                )}
-                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                  {msg.body}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       
+      {/* Hint bar */}
       <div style={{
-        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
-        border: `1px solid ${BORDER}`
+        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
       }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-          Edit this sequence by chatting with Milton
-        </div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
-          Try: "Make the first message more casual" or "Add an email on day 4" or "Change the subject line to something catchier"
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReportCanvas({ data }) {
-  if (!data) return null;
-  
-  return (
-    <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
-          {data.title}
-        </div>
-        <div style={{ fontSize: 13, color: TEXT_SEC }}>
-          Generated for {data.client}
-        </div>
-      </div>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {data.sections?.map((section, sIdx) => (
-          <div key={sIdx} style={{
-            background: WHITE, borderRadius: 16, padding: 20,
-            border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ 
-              fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 12,
-              display: "flex", alignItems: "center", gap: 8
-            }}>
-              {section.title}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.5 }}>
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
-            </div>
-            
-            {section.content && (
-              <div style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.7 }}>
-                {section.content}
-              </div>
-            )}
-            
-            {section.data && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 8 }}>
-                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Meals Logged</div>
-                </div>
-                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Avg Protein</div>
-                </div>
-                <div style={{ textAlign: "center", padding: 12, background: TEAL_LIGHT, borderRadius: 10 }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
-                    {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend} lbs
-                  </div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Weight Trend</div>
-                </div>
-              </div>
-            )}
-            
-            {section.items && (
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {section.items.map((item, iIdx) => (
-                  <li key={iIdx} style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.7, marginBottom: 4 }}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
-      
-      <div style={{
-        marginTop: 20, padding: 16, background: TEAL_LIGHT, borderRadius: 12,
-        border: `1px solid ${BORDER}`
-      }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-          Edit this report by chatting with Milton
-        </div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
-          Try: "Add a nutrition breakdown section" or "Move recommendations to the top" or "Make the summary more encouraging"
-        </div>
+        Chat with Milton: "Add nutrition section" or "Make summary more encouraging"
       </div>
     </div>
   );
@@ -3771,6 +3849,7 @@ export default function MiltonDashboard() {
   const [canvasClient, setCanvasClient] = useState(null);
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
+  const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
 
   const clientNames = clients.map(c => c.name);
 
@@ -4308,7 +4387,7 @@ Remember: Be specific, be brief, be helpful.`;
           borderBottom: `1px solid ${BORDER}`, boxShadow: "0 1px 6px rgba(0,0,0,0.04)"
         }}>
           {canvasMode ? (
-            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
+            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
           ) : selectedClient !== null ? (
@@ -4365,9 +4444,8 @@ Remember: Be specific, be brief, be helpful.`;
       {/* ═══ DESKTOP CHAT PANEL ═══ */}
       {!isMobile && (
         <div style={{
-          width: canvasMode ? 400 : 352, flexShrink: 0, padding: "14px 6px 14px 10px",
-          display: "flex", flexDirection: "column",
-          transition: "width 0.3s ease"
+          width: 360, flexShrink: 0, padding: "14px 6px 14px 10px",
+          display: "flex", flexDirection: "column"
         }}>
           <section style={{
             flex: 1, background: WHITE, display: "flex", flexDirection: "column",
@@ -4380,21 +4458,7 @@ Remember: Be specific, be brief, be helpful.`;
               padding: "8px 14px", borderBottom: `1px solid ${BORDER}`,
               background: "rgba(247,250,249,0.5)"
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {canvasMode && (
-                  <div 
-                    onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-                    style={{ cursor: "pointer", color: TEXT_SEC, padding: 4 }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <polyline points="15,18 9,12 15,6"/>
-                    </svg>
-                  </div>
-                )}
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
-                  {canvasMode ? (canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report") : "Milton"}
-                </span>
-              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
               <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
             <ChatContent
@@ -4406,39 +4470,42 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
-      {/* ═══ CANVAS MODE ═══ */}
+      {/* ═══ CANVAS MODE - Card Style ═══ */}
       {canvasMode && !isMobile && (
         <div style={{
-          flex: 1, display: "flex", flexDirection: "column",
-          background: BG, overflow: "hidden"
+          width: 480, flexShrink: 0, display: "flex", flexDirection: "column",
+          background: WHITE, borderRadius: 20, margin: "14px 0",
+          border: `1px solid ${BORDER}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+          overflow: "hidden"
         }}>
-          <CanvasHeader 
-            title={canvasType === "mealPlan" ? `Meal Plan for ${canvasClient}` : 
-                   canvasType === "workout" ? `Workout Program for ${canvasClient}` :
-                   canvasType === "messageSequence" ? `Messages for ${canvasClient}` :
-                   `Report for ${canvasClient}`}
-            onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            canUndo={canvasHistoryIndex > 0}
-            canRedo={canvasHistoryIndex < canvasHistory.length - 1}
-            onUndo={() => {
-              if (canvasHistoryIndex > 0) {
-                setCanvasHistoryIndex(canvasHistoryIndex - 1);
-                setCanvasData(canvasHistory[canvasHistoryIndex - 1]);
-              }
-            }}
-            onRedo={() => {
-              if (canvasHistoryIndex < canvasHistory.length - 1) {
-                setCanvasHistoryIndex(canvasHistoryIndex + 1);
-                setCanvasData(canvasHistory[canvasHistoryIndex + 1]);
-              }
-            }}
-          />
-          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-            {canvasType === "mealPlan" && <MealPlanCanvas data={canvasData} />}
-            {canvasType === "workout" && <WorkoutCanvas data={canvasData} />}
-            {canvasType === "messageSequence" && <MessageSequenceCanvas data={canvasData} />}
-            {canvasType === "report" && <ReportCanvas data={canvasData} />}
-          </div>
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData} 
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
         </div>
       )}
 
@@ -4446,18 +4513,42 @@ Remember: Be specific, be brief, be helpful.`;
       {canvasMode && isMobile && (
         <div style={{
           position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
-          background: BG, zIndex: 40, overflowY: "auto",
-          paddingBottom: 80
+          background: WHITE, zIndex: 40, overflow: "hidden",
+          display: "flex", flexDirection: "column"
         }}>
-          {canvasType === "mealPlan" && <MealPlanCanvas data={canvasData} />}
-          {canvasType === "workout" && <WorkoutCanvas data={canvasData} />}
-          {canvasType === "messageSequence" && <MessageSequenceCanvas data={canvasData} />}
-          {canvasType === "report" && <ReportCanvas data={canvasData} />}
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas 
+              data={canvasData}
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportCanvas 
+              data={canvasData}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
         </div>
       )}
 
       {/* ═══ MAIN CONTENT ═══ */}
-      {!canvasMode && selectedClient !== null ? (
+      {selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
             client={clients[selectedClient]}
@@ -4474,7 +4565,7 @@ Remember: Be specific, be brief, be helpful.`;
             }}
           />
         </main>
-      ) : !canvasMode ? (
+      ) : (
       <main style={{
         flex: 1, overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
