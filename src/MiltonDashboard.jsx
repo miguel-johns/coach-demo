@@ -3872,12 +3872,11 @@ Remember: Be specific, be brief, be helpful.`;
                 <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto", minWidth: 0 }}>
                   {months.map((m, j) => {
                     const h = Math.max(10, ((m.value - minVal) / (maxVal - minVal)) * barH) || barH;
-                    const isFirst = j === 0;
                     const isLast = j === months.length - 1;
                     const intensity = 0.12 + (j / (months.length - 1)) * 0.88;
                     return (
                       <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4, minWidth: 0 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC, whiteSpace: "nowrap", visibility: (isFirst || isLast) ? "visible" : "hidden" }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? SAGE : TEXT_SEC, whiteSpace: "nowrap" }}>
                           {m.value}%
                         </span>
                         <div style={{
