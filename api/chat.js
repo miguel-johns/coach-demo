@@ -1,7 +1,5 @@
-import { streamText } from "ai"
-import { anthropic } from "@ai-sdk/anthropic"
-
-export const maxDuration = 60
+import { generateText } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 
 // Demo client dataset - hardcoded for reliability
 const demoClients = [
@@ -103,22 +101,40 @@ ${clientData}
 Remember: Be specific, be brief, be helpful.`
 }
 
-export async function POST(req) {
-  const { messages } = await req.json()
-  
-  console.log("[v0] Received messages:", JSON.stringify(messages, null, 2))
+// Vercel Serverless Function handler
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
-  const systemPrompt = buildSystemPrompt()
+  try {
+    const { messages } = req.body
+    
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' })
+    }
 
-  const result = streamText({
-    model: anthropic("claude-sonnet-4-20250514"),
-    system: systemPrompt,
-    messages: messages.map((m) => ({
-      role: m.type === "user" ? "user" : "assistant",
-      content: m.text || "",
-    })),
-    abortSignal: req.signal,
-  })
+    const anthropic = createAnthropic({ apiKey })
+    const systemPrompt = buildSystemPrompt()
 
-  return result.toTextStreamResponse()
+    const { text } = await generateText({
+      model: anthropic("claude-sonnet-4-20250514"),
+      system: systemPrompt,
+      messages: messages.map((m) => ({
+        role: m.type === "user" ? "user" : "assistant",
+        content: m.text || "",
+      })),
+    })
+
+    res.status(200).json({ text })
+  } catch (error) {
+    console.error('[v0] Chat API error:', error)
+    res.status(500).json({ 
+      error: 'Failed to generate response', 
+      details: error.message,
+      name: error.name,
+      cause: error.cause ? String(error.cause) : undefined
+    })
+  }
 }

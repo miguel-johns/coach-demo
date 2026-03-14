@@ -80,17 +80,22 @@ const dataConnectors = {
 };
 
 const initialClients = [
-  { name: "Aaron Smith", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 65, program: "Fat Loss Phase", startDate: "Feb 12", mealsLogged: 21, weightTrend: -2.1, proteinAvg: 78, proteinTarget: 100, engagementScore: 84, weekLog: [3,2,0,0,3,2,1], weightData: [185,184.5,184.2,183.8,183.5,183.2,183.0,182.9], steps: 8420, workoutDays: 4, insight: "Aaron logs meals consistently early in the week but drops off after Wednesday. Protein intake averages 22g below target.", coachAngle: "Focus on simple protein options for busy days. Consider meal prep suggestions for Wed–Fri.", streaks: { logging: 3, exercise: 8, steps: 14, best: { type: "steps", days: 14 } }, narrative: "Down 2.1 lbs but stopped logging Thursday — his usual mid-week drop-off is back." },
-  { name: "Cahrta Marile", alert: "Report Ready", alertType: "blue", connectors: ["watch", "milton", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 8", mealsLogged: 28, weightTrend: 1.3, proteinAvg: 132, proteinTarget: 130, engagementScore: 96, weekLog: [3,3,3,3,3,2,3], weightData: [142,142.3,142.8,143.0,143.2,143.5,143.8,143.3], steps: 10200, workoutDays: 5, insight: "Cahrta is highly consistent — logging nearly every meal. Weight gain is on track at 1.3 lbs over 14 days.", coachAngle: "Celebrate consistency. Suggest progressive overload update for next phase.", streaks: { logging: 26, exercise: 18, steps: 22, best: { type: "logging", days: 26 } }, narrative: "On a 26-day logging streak and hitting protein targets — her best month yet." },
-  { name: "Jason Smith", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "milton", "foodlog"], progress: 100, progressLabel: "Report Ready", program: "Maintenance", startDate: "Dec 1", mealsLogged: 24, weightTrend: -0.3, proteinAvg: 105, proteinTarget: 110, engagementScore: 91, weekLog: [3,3,2,3,3,3,3], weightData: [175,175.1,174.8,175.0,174.9,174.7,174.6,174.7], steps: 9100, workoutDays: 4, insight: "Jason is maintaining weight effectively. Slight protein deficit but within acceptable range.", coachAngle: "Reinforce current habits. Discuss goals for next quarter.", streaks: { logging: 19, exercise: 12, steps: 30, best: { type: "steps", days: 30 } }, narrative: "Just hit a 30-day steps streak. Weight holding steady at 174.7 — maintenance is working." },
-  { name: "Daniald Lurenn", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog", "sleep"], progress: 48, program: "Fat Loss Phase", startDate: "Feb 20", mealsLogged: 14, weightTrend: -1.0, proteinAvg: 65, proteinTarget: 90, engagementScore: 62, weekLog: [2,1,2,0,1,0,0], weightData: [210,209.5,209.8,209.2,209.0,208.8,209.1,209.0], steps: 5800, workoutDays: 2, insight: "Daniald has inconsistent logging and drops off on weekends. Sleep data shows late nights correlating with missed logs.", coachAngle: "Address weekend routine. Pair evening meals with a simple logging reminder.", streaks: { logging: 0, exercise: 2, steps: 4, best: { type: "steps", days: 7 } }, narrative: "Logging streak broke over the weekend — sleep data shows 2 AM bedtimes Fri and Sat." },
-  { name: "Assara Honer", alert: "Report Ready", alertType: "blue", connectors: ["milton", "cgm", "bloodwork"], progress: 82, program: "Metabolic Health", startDate: "Jan 15", mealsLogged: 19, weightTrend: -0.8, proteinAvg: 88, proteinTarget: 95, engagementScore: 78, weekLog: [3,2,3,2,2,1,2], weightData: [155,154.8,154.5,154.2,154.0,154.3,154.1,154.2], steps: 7200, workoutDays: 3, insight: "Assara's CGM data shows glucose spikes after lunch consistently. Bloodwork improving on lipid panel.", coachAngle: "Focus on lunch composition — more protein/fiber before carbs. Share CGM insight visually.", streaks: { logging: 11, exercise: 9, steps: 16, best: { type: "steps", days: 16 } }, narrative: "Glucose spikes are down 15% since changing lunch order. Bloodwork trending in the right direction." },
-  { name: "Mathel Bronma", alert: "Made Progress", alertType: "green", connectors: ["foodlog", "scale", "sleep"], progress: 72, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 18, weightTrend: -1.5, proteinAvg: 72, proteinTarget: 85, engagementScore: 70, weekLog: [3,2,2,1,3,1,0], weightData: [195,194.5,194.0,193.8,193.5,193.2,193.5,193.5], steps: 6500, workoutDays: 3, insight: "Mathel shows good weekday adherence but Sunday logging drops completely. Steady weight loss trend.", coachAngle: "Praise the downward trend. Create a simple Sunday meal template.", streaks: { logging: 5, exercise: 6, steps: 10, best: { type: "steps", days: 10 } }, narrative: "Lost 1.5 lbs this week and logging is improving — but Sundays are still a blind spot." },
-  { name: "John Smith", alert: "Made Progress", alertType: "green", connectors: ["cgm", "watch", "milton"], progress: 55, program: "Performance", startDate: "Mar 1", mealsLogged: 12, weightTrend: 0.2, proteinAvg: 110, proteinTarget: 120, engagementScore: 58, weekLog: [2,1,0,2,1,0,0], weekData: [178,178.2,178.1,178.3,178.2,178.4,178.3,178.2], steps: 11000, workoutDays: 5, insight: "John trains consistently but logging is sporadic. High activity level but nutrition data gaps make coaching difficult.", coachAngle: "Emphasize that training + logging = results. Suggest photo-logging as a low-friction option.", streaks: { logging: 1, exercise: 21, steps: 28, best: { type: "steps", days: 28 } }, narrative: "Training 5x/week with a 21-day exercise streak, but only logged 1 meal this week." },
+  { name: "Sarah Chen", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog"], progress: 45, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 12, weightTrend: 1.2, proteinAvg: 95, proteinTarget: 120, engagementScore: 52, weekLog: [3,2,0,0,0,0,0], weightData: [158,157.5,157.8,158.2,158.5,159.0,159.2,159.7], steps: 6200, workoutDays: 2, insight: "Sarah hasn't logged in 4 days — her longest gap yet. Weekend logging drops 60% compared to weekdays.", coachAngle: "Send a supportive check-in message. She may be stressed with wedding planning.", streaks: { logging: 0, exercise: 2, steps: 8, best: { type: "steps", days: 12 } }, narrative: "Hasn't logged in 4 days — her longest gap yet. Wedding stress may be a factor." },
+  { name: "Marcus Johnson", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 15", mealsLogged: 28, weightTrend: 0.8, proteinAvg: 185, proteinTarget: 180, engagementScore: 96, weekLog: [3,3,3,3,3,3,3], weightData: [175,175.3,175.8,176.0,176.2,176.5,176.8,175.8], steps: 9800, workoutDays: 5, insight: "Hit protein goal 7 days straight. 14-day logging streak and ready for a calorie increase.", coachAngle: "Celebrate the streak! Suggest increasing calorie target by 100 to support muscle growth.", streaks: { logging: 14, exercise: 18, steps: 22, best: { type: "logging", days: 14 } }, narrative: "7-day protein streak and 14-day logging streak — ready to level up." },
+  { name: "Emily Rodriguez", alert: "Needs Attention", alertType: "red", connectors: ["watch", "foodlog", "sleep"], progress: 35, program: "Metabolic Health", startDate: "Feb 15", mealsLogged: 16, weightTrend: 0.5, proteinAvg: 68, proteinTarget: 100, engagementScore: 58, weekLog: [2,1,2,1,0,3,3], weightData: [145,144.8,145.2,144.5,145.8,147.2,145.5,145.0], steps: 5400, workoutDays: 2, insight: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends. Classic restrict-binge pattern.", coachAngle: "Schedule a call about sustainable eating. She needs permission to eat more consistently.", streaks: { logging: 5, exercise: 4, steps: 6, best: { type: "logging", days: 8 } }, narrative: "Weekday calories too low (<1200), then weekend spikes. Needs a sustainable approach." },
+  { name: "David Park", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm", "milton"], progress: 100, progressLabel: "Report Ready", program: "Fat Loss Phase", startDate: "Jan 5", mealsLogged: 30, weightTrend: 0, proteinAvg: 165, proteinTarget: 160, engagementScore: 98, weekLog: [3,3,3,3,3,3,3], weightData: [185,184.2,183.5,182.8,182.0,181.5,178.5,178.5], steps: 10500, workoutDays: 5, insight: "Perfect logging for 21 days but weight has plateaued for 2 weeks despite good adherence.", coachAngle: "Consider a 2-week diet break or macro adjustment. Metabolic adaptation may be occurring.", streaks: { logging: 21, exercise: 19, steps: 30, best: { type: "steps", days: 30 } }, narrative: "21-day perfect logging but weight plateaued for 2 weeks. May need macro adjustment." },
+  { name: "Rachel Kim", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog"], progress: 25, program: "Post-Pregnancy", startDate: "Mar 1", mealsLogged: 8, weightTrend: -0.5, proteinAvg: 85, proteinTarget: 110, engagementScore: 65, weekLog: [2,1,2,1,2,0,1], weightData: [165,164.8,164.5,164.2,164.0,163.8,163.5,163.5], steps: 4200, workoutDays: 3, insight: "Completed first full week of workouts postpartum! Struggling to find time to log with newborn.", coachAngle: "Send encouragement and offer quick-log meal templates. Keep expectations realistic.", streaks: { logging: 2, exercise: 7, steps: 5, best: { type: "exercise", days: 7 } }, narrative: "First full week of postpartum workouts complete! Huge milestone for a new mom." },
+  { name: "Aaron Smith", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 65, program: "Fat Loss Phase", startDate: "Feb 12", mealsLogged: 21, weightTrend: -2.1, proteinAvg: 78, proteinTarget: 100, engagementScore: 84, weekLog: [3,2,0,0,3,2,1], weightData: [185,184.5,184.2,183.8,183.5,183.2,183.0,182.9], steps: 8420, workoutDays: 4, insight: "Aaron logs meals consistently early in the week but drops off after Wednesday. Protein intake averages 22g below target.", coachAngle: "Focus on simple protein options for busy days. Consider meal prep suggestions for Wed-Fri.", streaks: { logging: 3, exercise: 8, steps: 14, best: { type: "steps", days: 14 } }, narrative: "Down 2.1 lbs but stopped logging Thursday — his usual mid-week drop-off is back." },
+  { name: "Lisa Martinez", alert: "Report Ready", alertType: "blue", connectors: ["watch", "milton", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 8", mealsLogged: 28, weightTrend: 1.3, proteinAvg: 132, proteinTarget: 130, engagementScore: 96, weekLog: [3,3,3,3,3,2,3], weightData: [142,142.3,142.8,143.0,143.2,143.5,143.8,143.3], steps: 10200, workoutDays: 5, insight: "Lisa is highly consistent — logging nearly every meal. Weight gain is on track at 1.3 lbs over 14 days.", coachAngle: "Celebrate consistency. Suggest progressive overload update for next phase.", streaks: { logging: 26, exercise: 18, steps: 22, best: { type: "logging", days: 26 } }, narrative: "On a 26-day logging streak and hitting protein targets — her best month yet." },
+  { name: "Jason Williams", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "milton", "foodlog"], progress: 100, progressLabel: "Report Ready", program: "Maintenance", startDate: "Dec 1", mealsLogged: 24, weightTrend: -0.3, proteinAvg: 105, proteinTarget: 110, engagementScore: 91, weekLog: [3,3,2,3,3,3,3], weightData: [175,175.1,174.8,175.0,174.9,174.7,174.6,174.7], steps: 9100, workoutDays: 4, insight: "Jason is maintaining weight effectively. Slight protein deficit but within acceptable range.", coachAngle: "Reinforce current habits. Discuss goals for next quarter.", streaks: { logging: 19, exercise: 12, steps: 30, best: { type: "steps", days: 30 } }, narrative: "Just hit a 30-day steps streak. Weight holding steady at 174.7 — maintenance is working." },
+  { name: "Daniel Torres", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog", "sleep"], progress: 48, program: "Fat Loss Phase", startDate: "Feb 20", mealsLogged: 14, weightTrend: -1.0, proteinAvg: 65, proteinTarget: 90, engagementScore: 62, weekLog: [2,1,2,0,1,0,0], weightData: [210,209.5,209.8,209.2,209.0,208.8,209.1,209.0], steps: 5800, workoutDays: 2, insight: "Daniel has inconsistent logging and drops off on weekends. Sleep data shows late nights correlating with missed logs.", coachAngle: "Address weekend routine. Pair evening meals with a simple logging reminder.", streaks: { logging: 0, exercise: 2, steps: 4, best: { type: "steps", days: 7 } }, narrative: "Logging streak broke over the weekend — sleep data shows 2 AM bedtimes Fri and Sat." },
+  { name: "Amanda Foster", alert: "Report Ready", alertType: "blue", connectors: ["milton", "cgm", "bloodwork"], progress: 82, program: "Metabolic Health", startDate: "Jan 15", mealsLogged: 19, weightTrend: -0.8, proteinAvg: 88, proteinTarget: 95, engagementScore: 78, weekLog: [3,2,3,2,2,1,2], weightData: [155,154.8,154.5,154.2,154.0,154.3,154.1,154.2], steps: 7200, workoutDays: 3, insight: "Amanda's CGM data shows glucose spikes after lunch consistently. Bloodwork improving on lipid panel.", coachAngle: "Focus on lunch composition — more protein/fiber before carbs. Share CGM insight visually.", streaks: { logging: 11, exercise: 9, steps: 16, best: { type: "steps", days: 16 } }, narrative: "Glucose spikes are down 15% since changing lunch order. Bloodwork trending in the right direction." },
+  { name: "Michael Brown", alert: "Made Progress", alertType: "green", connectors: ["foodlog", "scale", "sleep"], progress: 72, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 18, weightTrend: -1.5, proteinAvg: 72, proteinTarget: 85, engagementScore: 70, weekLog: [3,2,2,1,3,1,0], weightData: [195,194.5,194.0,193.8,193.5,193.2,193.5,193.5], steps: 6500, workoutDays: 3, insight: "Michael shows good weekday adherence but Sunday logging drops completely. Steady weight loss trend.", coachAngle: "Praise the downward trend. Create a simple Sunday meal template.", streaks: { logging: 5, exercise: 6, steps: 10, best: { type: "steps", days: 10 } }, narrative: "Lost 1.5 lbs this week and logging is improving — but Sundays are still a blind spot." },
+  { name: "Jennifer Lee", alert: "Made Progress", alertType: "green", connectors: ["cgm", "watch", "milton"], progress: 55, program: "Performance", startDate: "Mar 1", mealsLogged: 12, weightTrend: 0.2, proteinAvg: 110, proteinTarget: 120, engagementScore: 58, weekLog: [2,1,0,2,1,0,0], weightData: [138,138.2,138.1,138.3,138.2,138.4,138.3,138.2], steps: 11000, workoutDays: 5, insight: "Jennifer trains consistently but logging is sporadic. High activity level but nutrition data gaps make coaching difficult.", coachAngle: "Emphasize that training + logging = results. Suggest photo-logging as a low-friction option.", streaks: { logging: 1, exercise: 21, steps: 28, best: { type: "steps", days: 28 } }, narrative: "Training 5x/week with a 21-day exercise streak, but only logged 1 meal this week." },
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "Here's your daily brief:\n\n🔴 Sarah Chen — hasn't logged in 4 days, her longest gap yet. Recommend a supportive check-in.\n\n🟡 Emily Rodriguez — weekday calories are too low. Worth scheduling a call.\n\n🟢 Marcus Johnson — 7-day protein streak! Ready to level up.\n\n🟢 David Park — 21-day perfect logging, but weight plateaued. May need a macro adjustment.\n\n🆕 Rachel Kim — just completed her first full week of workouts postpartum!\n\nWhat would you like to tackle first?" },
+  { type: "ai", title: "Good morning, Coach!", text: "You have 12 active clients. Top priority: Sarah Chen hasn't logged in 4 days. I'd recommend reaching out before it becomes a pattern." },
 ];
 
 const suggestedPrompts = [
@@ -101,134 +106,165 @@ const suggestedPrompts = [
   "What should I do next?",
 ];
 
-function generateAIResponse(msg, clientNames, clientsData) {
+// Demo client data for Milton AI responses
+const demoClients = {
+  sarah: {
+    name: "Sarah Chen",
+    goal: "Lose 15 lbs for wedding in 3 months",
+    status: "at-risk",
+    week: 6,
+    issue: "Missed logging for 4 days straight — her longest gap yet",
+    protein: "95g avg (target: 120g)",
+    weight: "Up 1.2 lbs this week",
+    loggingStreak: 0,
+    action: "Send a supportive check-in message",
+    insight: "Weekend logging drops 60% compared to weekdays. Monday weigh-ins suggest weekend calories are higher than logged."
+  },
+  marcus: {
+    name: "Marcus Johnson", 
+    goal: "Build muscle, gain 10 lbs lean mass",
+    status: "highly-engaged",
+    week: 8,
+    win: "Hit protein goal 7 days straight",
+    protein: "185g avg (target: 180g)",
+    weight: "Up 0.8 lbs (on track)",
+    loggingStreak: 14,
+    action: "Celebrate streak and suggest increasing calorie target by 100",
+    insight: "Ready for a progressive overload conversation. Strength is up 12% this month."
+  },
+  emily: {
+    name: "Emily Rodriguez",
+    goal: "Improve energy and relationship with food", 
+    status: "moderate-concern",
+    week: 4,
+    issue: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends",
+    protein: "68g avg (target: 100g)",
+    weight: "Fluctuating +/- 2 lbs weekly",
+    loggingStreak: 5,
+    action: "Schedule a call about sustainable eating patterns",
+    insight: "Classic restrict-binge pattern. Needs permission to eat more consistently."
+  },
+  david: {
+    name: "David Park",
+    goal: "Drop from 22% to 15% body fat",
+    status: "highly-engaged", 
+    week: 10,
+    win: "Perfect logging for 21 days straight",
+    issue: "Weight plateau for 2 weeks despite good adherence",
+    protein: "165g avg (target: 160g)",
+    weight: "Flat for 14 days at 178 lbs",
+    loggingStreak: 21,
+    action: "Consider a 2-week diet break or macro adjustment",
+    insight: "Metabolic adaptation likely. Good candidate for reverse diet discussion."
+  },
+  rachel: {
+    name: "Rachel Kim",
+    goal: "Post-pregnancy fitness and strength",
+    status: "new-client",
+    week: 2,
+    win: "Completed first full week of workouts postpartum",
+    issue: "Struggling to find time to log with newborn",
+    protein: "85g avg (target: 110g)", 
+    weight: "Down 0.5 lbs (healthy pace)",
+    loggingStreak: 2,
+    action: "Send encouragement and offer quick-log meal templates",
+    insight: "Sleep-deprived but motivated. Keep expectations realistic and celebrate small wins."
+  }
+};
+
+function generateAIResponse(msg) {
   const lower = msg.toLowerCase();
-  const matchedClient = clientNames.find(n => lower.includes(n.toLowerCase().split(" ")[0].toLowerCase()));
-  const matchedIdx = matchedClient ? clientsData.findIndex(c => c.name === matchedClient) : -1;
-  const cl = matchedIdx >= 0 ? clientsData[matchedIdx] : null;
+  
+  // Find mentioned client
+  const clientKeys = Object.keys(demoClients);
+  const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
+  const client = matchedKey ? demoClients[matchedKey] : null;
 
-  // Extract numbers from message
-  const nums = msg.match(/\d+\.?\d*/g);
-  const extractNum = () => nums ? parseFloat(nums[nums.length - 1]) : null;
+  // WHO NEEDS ATTENTION
+  if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
+    return { 
+      title: "Priority Queue", 
+      text: `Here's who needs your attention today:\n\n1. Sarah Chen (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n2. Emily Rodriguez (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n3. David Park (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+    };
+  }
 
-  // Extract program names
-  const programs = ["Fat Loss Phase", "Muscle Gain", "Maintenance", "Metabolic Health", "Performance"];
-  const matchedProgram = programs.find(p => lower.includes(p.toLowerCase()));
+  // WHO IS DOING WELL
+  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
+    return {
+      title: "Client Wins",
+      text: `Great news to share:\n\n1. Marcus Johnson — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n2. David Park — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n3. Rachel Kim — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+    };
+  }
 
-  if (matchedClient && cl) {
-    const first = matchedClient.split(" ")[0];
+  // WHAT SHOULD I DO NEXT
+  if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
+    return {
+      title: "Recommended Next Action",
+      text: `Your highest-impact action right now: reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+    };
+  }
 
-    // === MODIFICATION COMMANDS ===
-
-    // Change program
-    if (matchedProgram && (lower.includes("change") || lower.includes("switch") || lower.includes("move") || lower.includes("set") || lower.includes("update"))) {
+  // WRITE A MESSAGE TO [CLIENT]
+  if ((lower.includes("write") || lower.includes("draft") || lower.includes("send") || lower.includes("message")) && client) {
+    const first = client.name.split(" ")[0];
+    if (client.status === "at-risk") {
       return {
-        title: `${first}'s Program Updated`, 
-        text: `Done! I've switched ${first} from ${cl.program} to ${matchedProgram}. Their goal trajectory and report will update to reflect the new program focus.`,
-        clientUpdate: { idx: matchedIdx, changes: { program: matchedProgram } }
+        title: `Message for ${first}`,
+        text: `Here's a draft check-in for ${first}:\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
+      };
+    } else if (client.status === "highly-engaged") {
+      return {
+        title: `Message for ${first}`,
+        text: `Here's a celebration message for ${first}:\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
+      };
+    } else {
+      return {
+        title: `Message for ${first}`,
+        text: `Here's a supportive message for ${first}:\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
+      };
+    }
+  }
+
+  // CLIENT-SPECIFIC QUERIES
+  if (client) {
+    const first = client.name.split(" ")[0];
+    
+    // Nutrition/protein questions
+    if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
+      return {
+        title: `${first}'s Nutrition`,
+        text: `${first}'s current nutrition (Week ${client.week}):\n\nProtein: ${client.protein}\nWeight trend: ${client.weight}\nLogging streak: ${client.loggingStreak} days\n\n${client.insight}\n\nRecommended action: ${client.action}`
       };
     }
 
-    // Change protein target
-    if ((lower.includes("protein") && (lower.includes("target") || lower.includes("goal") || lower.includes("change") || lower.includes("set") || lower.includes("update"))) && extractNum()) {
-      const newTarget = extractNum();
-      if (newTarget > 30 && newTarget < 300) {
-        return {
-          title: `${first}'s Protein Target Updated`,
-          text: `Updated ${first}'s protein target from ${cl.proteinTarget}g to ${newTarget}g. Their goal trajectory chart will now project toward ${newTarget}g. This change is live.`,
-          clientUpdate: { idx: matchedIdx, changes: { proteinTarget: newTarget } }
-        };
-      }
-    }
-
-    // Change weight / goal weight
-    if ((lower.includes("weight") || lower.includes("goal")) && (lower.includes("change") || lower.includes("set") || lower.includes("update") || lower.includes("target")) && extractNum()) {
-      const newWeight = extractNum();
-      if (newWeight > 80 && newWeight < 400) {
-        const newData = [...(cl.weightData || [])];
-        newData[newData.length - 1] = newWeight;
-        return {
-          title: `${first}'s Weight Updated`,
-          text: `Updated ${first}'s current weight to ${newWeight} lbs. The goal trajectory and transformation charts now reflect this change.`,
-          clientUpdate: { idx: matchedIdx, changes: { weightData: newData, weightTrend: Math.round((newWeight - (cl.weightData?.[0] || 185)) * 10) / 10 } }
-        };
-      }
-    }
-
-    // Change start date
-    if (lower.includes("start") && (lower.includes("date") || lower.includes("change") || lower.includes("set") || lower.includes("update"))) {
-      const dateMatch = msg.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2}/i);
-      if (dateMatch) {
-        const newDate = dateMatch[0].replace(/(\w{3})\w*/, '$1');
-        return {
-          title: `${first}'s Start Date Updated`,
-          text: `Updated ${first}'s program start date to ${newDate}. Timeline and transformation views now reflect the new start date.`,
-          clientUpdate: { idx: matchedIdx, changes: { startDate: newDate } }
-        };
-      }
-    }
-
-    // Change calorie / meals
-    if ((lower.includes("calorie") || lower.includes("calories")) && (lower.includes("change") || lower.includes("set") || lower.includes("update") || lower.includes("increase") || lower.includes("decrease")) && extractNum()) {
-      const newCal = extractNum();
+    // Progress/status questions  
+    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
       return {
-        title: `${first}'s Calorie Target Updated`,
-        text: `Updated ${first}'s daily calorie target to ${newCal}. This will be reflected in their nutrition tracking and reports.`,
+        title: `${first}'s Status`,
+        text: `${first} — Week ${client.week}, ${client.status.replace("-", " ")}\n\nGoal: ${client.goal}\n${client.win ? `Recent win: ${client.win}` : `Current issue: ${client.issue}`}\n\nWeight: ${client.weight}\nProtein: ${client.protein}\nLogging: ${client.loggingStreak} day streak\n\nMy take: ${client.insight}\n\nRecommended: ${client.action}`
       };
     }
 
-    // Change steps goal
-    if (lower.includes("steps") && (lower.includes("goal") || lower.includes("change") || lower.includes("set") || lower.includes("target")) && extractNum()) {
-      const newSteps = extractNum();
-      if (newSteps >= 1000) {
-        return {
-          title: `${first}'s Steps Goal Updated`,
-          text: `Updated ${first}'s daily steps goal to ${newSteps.toLocaleString()}. Progress rings will now track against this target.`,
-          clientUpdate: { idx: matchedIdx, changes: { steps: Math.round(newSteps * 0.85) } }
-        };
-      }
-    }
-
-    // === QUERY COMMANDS ===
-    if (lower.includes("protein") || lower.includes("macro") || lower.includes("calor") || lower.includes("nutri")) {
-      return { title: `${first}'s Nutrition`, text: `${first}'s 7-day averages:\n\nCalories: 1,580 • Protein: ${cl.proteinAvg}g (target: ${cl.proteinTarget}g)\nCarbs: ${Math.round(cl.proteinAvg*1.8)}g • Fats: ${Math.round(cl.proteinAvg*0.55)}g • Fiber: 22g\n\nProtein is ${cl.proteinTarget - cl.proteinAvg}g below target — the gap is mostly at breakfast. I'd suggest adding a Greek yogurt or protein shake to their morning routine.\n\nYou can say "Set ${first}'s protein target to 140g" to adjust.` };
-    }
-    if (lower.includes("weight") || lower.includes("progress") || lower.includes("trend")) {
-      return { title: `${first}'s Progress`, text: `${first} is ${cl.weightTrend > 0 ? "up" : "down"} ${Math.abs(cl.weightTrend)} lbs over the past 14 days, tracking at a healthy rate. Consistency score is ${65 + (cl.engagementScore % 30)} — weekday adherence is strong but weekends are the gap. Want me to generate a full report?` };
-    }
-    if (lower.includes("plan") || lower.includes("program") || lower.includes("adjust")) {
-      return { title: `${first}'s Current Plan`, text: `${first} is on the ${cl.program} program (started ${cl.startDate}).\n\nTo change, just say:\n• "Switch ${first} to Muscle Gain"\n• "Change ${first}'s protein target to 140g"\n• "Update ${first}'s start date to March 15"` };
-    }
-    if (lower.includes("sleep") || lower.includes("rest") || lower.includes("recovery")) {
-      return { title: `${first}'s Sleep & Recovery`, text: `${first} is averaging 6.8 hrs/night with a bedtime consistency of 72%. Tue-Thu they sleep 7+ hours but weekends drop to 5.5-6 hrs. Sleep quality is rated "Good" on weekdays, "Fair" on weekends. Better sleep correlates with their better weekday logging — there's a lifestyle pattern here.` };
-    }
-    if (lower.includes("report")) {
-      return { title: `${first}'s Report`, text: `I've pulled together ${first}'s progress report with their consistency score, goal trajectory, Rule of 30 progress, and key insights. You can open their profile and tap "Generate Report" to see the full visualization.` };
-    }
-    if (lower.includes("send") || lower.includes("message") || lower.includes("tip")) {
-      return { title: `Message Sent`, text: `Done! I sent ${first} a check-in message with a personalized tip based on their latest data. I included their weekly wins and a gentle nudge about the areas to focus on. They usually respond within a few hours.` };
-    }
-    const score = 65 + (cl.engagementScore % 25);
-    return { title: `About ${first}`, text: `${first} is on the ${cl.program} program (started ${cl.startDate}).\n\nConsistency Score: ${score}\nStrongest pillar: Exercise (${Math.min(30, cl.workoutDays*4+2)}/30 days)\nNeeds work: Meal logging (${cl.mealsLogged + 5}/30 days)\n\nTo make changes, try:\n• "Switch ${first} to Performance"\n• "Set ${first}'s protein target to 130g"\n• "Update ${first}'s start date to Feb 1"` };
+    // Default client info
+    return {
+      title: `About ${first}`,
+      text: `${client.name} — Week ${client.week}\n\nGoal: ${client.goal}\nStatus: ${client.status.replace("-", " ")}\n${client.win ? `Win: ${client.win}` : `Issue: ${client.issue}`}\n\nProtein: ${client.protein}\nWeight: ${client.weight}\n\nRecommended action: ${client.action}`
+    };
   }
 
-  if (lower.includes("report") || lower.includes("generate")) {
-    return { title: "Reports", text: "I can generate reports for any client. Just say something like \"Generate a report for Sarah\" or \"Show me Aaron's progress.\" I'll pull together their consistency score, goal trajectory, and key insights." };
-  }
-  if (lower.includes("attention") || lower.includes("priority") || lower.includes("who needs") || lower.includes("queue")) {
-    return { title: "Priority Clients Today", text: "3 clients need attention:\n\n🔴 Sarah Chen — missed 2 logging days, weekend pattern recurring\n🔴 Aaron Brooks — protein averaging 15g below target for 5 days\n🟢 Mike Torres — hit 30-day exercise streak! Send congratulations?\n\nWho would you like to start with?" };
-  }
-  if (lower.includes("schedule") || lower.includes("today") || lower.includes("session")) {
-    return { title: "Today's Schedule", text: "You have 4 sessions today:\n\n9:00 AM — Sarah Chen (check-in, address logging gaps)\n10:30 AM — Aaron Brooks (nutrition review)\n1:00 PM — Lisa Park (new client onboarding)\n3:30 PM — Mike Torres (milestone celebration)\n\nWant me to prep talking points for any of these?" };
-  }
-  if (lower.includes("milestone") || lower.includes("celebrate") || lower.includes("wins")) {
-    return { title: "Client Wins This Week", text: "Some great wins to celebrate:\n\n⭐ Mike Torres — 30-day exercise streak\n⭐ Sarah Chen — best protein week (avg 128g)\n⭐ Lisa Park — logged every meal for 2 weeks straight\n⭐ Aaron Brooks — down 4 lbs this month\n\nWant me to send personalized congratulation messages?" };
-  }
-  if (lower.includes("help") || lower.includes("what can you")) {
-    return { title: "How I Can Help", text: "I can help you with:\n\n• Client check-ins — \"How is Sarah doing?\"\n• Adjust plans — \"Change Aaron's program to Muscle Gain\"\n• Set targets — \"Set Aaron's protein target to 140g\"\n• Update dates — \"Change Aaron's start date to March 1\"\n• Generate reports — \"Create a report for Mike\"\n• Send messages �� \"Send Lisa a meal prep tip\"\n• Review data — \"Show me Sarah's sleep trends\"\n\nChanges happen in real-time — watch the charts update!" };
+  // HELP / CAPABILITIES
+  if (lower.includes("help") || lower.includes("what can")) {
+    return {
+      title: "How I Can Help",
+      text: `I'm Milton, your coaching copilot. Try asking me:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is Marcus doing?"\n• "Who is doing well?"\n• "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+    };
   }
 
-  return { title: "Milton AI", text: `I can help with that! Try asking about a specific client by name, or ask me things like "Who needs attention today?", "Show me Sarah's nutrition", or "Change Aaron's program to Muscle Gain."\n\nI can update client data in real-time — just tell me what to change.` };
+  // DEFAULT
+  return { 
+    title: "Milton", 
+    text: `I'm here to help! Try asking:\n\n• "Who needs attention today?"\n• "What should I do next?"\n• "Write a message to Sarah"\n• "How is David doing?"\n• "Who is doing well?"`
+  };
 }
 
 function Avatar({ name, size = 36 }) {
@@ -3097,68 +3133,143 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Call real LLM API with streaming
-    try {
-      // Get current selected client context if any
-      const selectedClientData = selectedClient !== null ? clients[selectedClient] : null;
-      const clientContext = {
-        allClients: clients.map(c => ({ name: c.name, program: c.program, proteinTarget: c.proteinTarget })),
-        selectedClient: selectedClientData,
-      };
-
-      const allMessages = [...chatMessages, newUserMessage];
-      
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: allMessages }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get AI response");
-      }
-
-      // Stream the response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      
-      // Add placeholder AI message for streaming
-      setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: "" }]);
-      setChatTyping(false);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+    // Call Anthropic API directly
+    (async () => {
+      try {
+        const allMessages = [...chatMessages, newUserMessage];
         
-        const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-        
-        // Update the last message with streamed content
-        setChatMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { type: "ai", title: "Milton", text: fullText };
-          return updated;
+        const systemPrompt = `You are Milton, an AI coaching copilot for nutrition and fitness coaches. You have real-time access to all client data shown below.
+
+## Your Personality
+- Warm but efficient — like a trusted colleague
+- Action-oriented — always suggest a clear next step
+- Concise — keep responses to 2-4 sentences unless asked for more detail
+
+## Response Rules
+- ONLY reference the 12 clients listed below — never invent clients or data
+- Use specific names and numbers from the data
+- When asked "who needs attention": prioritize clients with red alerts (Sarah, Emily, Aaron)
+- When asked to write a message: write it ready to copy/paste, casual and encouraging tone
+- When summarizing: use bullet points
+- When asked "who is doing well": highlight highly-engaged clients (Marcus, David, Lisa, Jason, Amanda)
+
+## Current Client Roster (12 clients):
+
+**Sarah Chen** (Week 6, at-risk, Fat Loss Phase)
+- Issue: Missed logging for 4 days — her longest gap yet
+- Protein: 95g (target: 120g), Weight: up 1.2 lbs
+- Recommended: Send a supportive check-in message
+
+**Marcus Johnson** (Week 8, highly-engaged, Muscle Gain)
+- Win: Hit protein goal 7 days straight, 14-day logging streak
+- Protein: 185g (target: 180g), Weight: up 0.8 lbs (on track)
+- Recommended: Celebrate streak and suggest higher calorie target
+
+**Emily Rodriguez** (Week 4, moderate concern, Metabolic Health)
+- Issue: Calories under 1200 on weekdays, spikes to 2400+ on weekends
+- Protein: 68g (target: 100g), Weight: fluctuating +/- 2 lbs
+- Recommended: Schedule call about sustainable eating
+
+**David Park** (Week 10, highly-engaged, Fat Loss Phase)
+- Win: Perfect logging for 21 days
+- Issue: Weight plateau for 2 weeks despite good adherence
+- Protein: 165g (target: 160g), Weight: flat for 14 days
+- Recommended: Consider macro adjustment or diet break
+
+**Rachel Kim** (Week 2, new-client, Post-Pregnancy)
+- Win: Completed first full week of workouts postpartum
+- Issue: Struggling to find time to log with newborn
+- Protein: 85g (target: 110g), Weight: down 0.5 lbs
+- Recommended: Send encouragement and offer quick-log templates
+
+**Aaron Smith** (Week 5, needs attention, Fat Loss Phase)
+- Issue: Logs early in week but drops off after Wednesday
+- Protein: 78g (target: 100g), Weight: down 2.1 lbs
+- Recommended: Focus on simple protein options for busy days
+
+**Lisa Martinez** (Week 10, highly-engaged, Muscle Gain)
+- Win: 26-day logging streak, hitting protein targets
+- Protein: 132g (target: 130g), Weight: up 1.3 lbs (on track)
+- Recommended: Celebrate consistency, suggest progressive overload
+
+**Jason Williams** (Week 14, highly-engaged, Maintenance)
+- Win: 30-day steps streak, maintaining weight effectively
+- Protein: 105g (target: 110g), Weight: stable at 174.7 lbs
+- Recommended: Reinforce current habits, discuss next quarter goals
+
+**Daniel Torres** (Week 3, moderate, Fat Loss Phase)
+- Issue: Inconsistent logging, drops off on weekends, late nights
+- Protein: 65g (target: 90g), Weight: down 1.0 lb
+- Recommended: Address weekend routine, add logging reminders
+
+**Amanda Foster** (Week 8, engaged, Metabolic Health)
+- Win: Glucose spikes down 15%, bloodwork improving
+- Issue: Still has post-lunch glucose spikes
+- Protein: 88g (target: 95g), Weight: down 0.8 lbs
+- Recommended: Focus on lunch composition — more protein/fiber first
+
+**Michael Brown** (Week 6, moderate, Fat Loss Phase)
+- Win: Lost 1.5 lbs this week, good weekday adherence
+- Issue: Sunday logging drops completely
+- Protein: 72g (target: 85g), Weight: down 1.5 lbs
+- Recommended: Create a simple Sunday meal template
+
+**Jennifer Lee** (Week 2, moderate, Performance)
+- Win: 21-day exercise streak, training 5x/week
+- Issue: Only logged 1 meal this week despite high activity
+- Protein: 110g (target: 120g), Weight: stable
+- Recommended: Emphasize training + logging = results
+
+## Today's Context
+- Clients needing attention: Sarah Chen, Emily Rodriguez, Aaron Smith
+- Clients doing well: Marcus Johnson, David Park, Lisa Martinez, Jason Williams
+- New clients: Rachel Kim, Jennifer Lee
+
+Remember: Be specific, be brief, be helpful.`;
+
+        const apiMessages = allMessages
+          .filter(m => m.type === "user" || (m.type === "ai" && m.text))
+          .map(m => ({
+            role: m.type === "user" ? "user" : "assistant",
+            content: m.text || ""
+          }));
+
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: apiMessages
+          }),
         });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const aiText = data.content?.[0]?.text || "I couldn't generate a response.";
         
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        setChatMessages(prev => [...prev, { type: "ai", title: "Milton", text: aiText }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      } catch (error) {
+        console.error("[v0] Chat error:", error);
+        // Fallback to local AI
+        const resp = generateAIResponse(text);
+        setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text + "\n\n(API unavailable: " + error.message + ")" }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      // Fallback to local response on error
-      const resp = generateAIResponse(text, clientNames, clients);
-      if (resp.clientUpdate) {
-        const { idx, changes } = resp.clientUpdate;
-        setClients(prev => {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...changes };
-          return updated;
-        });
-      }
-      setChatMessages(prev => [...prev, { type: "ai", title: resp.title, text: resp.text }]);
-      setChatTyping(false);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }
+    })();
   };
 
 
@@ -3350,7 +3461,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
 
-          {/* ── Card 2: Engagement Rate - Dot Grid ── */}
+          {/* ���─ Card 2: Engagement Rate - Dot Grid ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
