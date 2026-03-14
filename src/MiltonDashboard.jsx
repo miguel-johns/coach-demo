@@ -3339,7 +3339,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════���������═���������════════ */
+   ════════════════════════════════�����������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4160,7 +4160,7 @@ function WorkoutCanvas({ data, onClose }) {
       </div>
       
       {/* Calendar grid - weeks as rows, days as columns */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0" }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
         {weeks.map((weekNum, weekIdx) => {
           const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
           
@@ -4191,8 +4191,8 @@ function WorkoutCanvas({ data, onClose }) {
               {/* Days columns */}
               <div style={{ 
                 display: "flex", gap: 8, overflowX: "auto", paddingRight: 16,
-                paddingBottom: 8
-              }}>
+                paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none"
+              }} className="hide-scrollbar">
                 {dayLabels.map((day, dayIdx) => {
                   const workoutType = schedule[dayIdx];
                   const workout = workoutTemplates[workoutType];
@@ -5781,6 +5781,7 @@ Remember: Be specific, be brief, be helpful.`;
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${BORDER}; border-radius: 3px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         input::placeholder { color: ${TEXT_SEC}; opacity: 0.7; }
       `}</style>
     </div>
