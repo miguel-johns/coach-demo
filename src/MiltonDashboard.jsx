@@ -761,24 +761,8 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
           }}>
             {/* Drag handle */}
             <div onMouseDown={onDragStart} onTouchStart={onDragStart}
-              style={{ cursor: "grab", padding: "10px 0 0", touchAction: "none", flexShrink: 0 }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(43,122,120,0.2)", margin: "0 auto 8px" }} />
-            </div>
-            {/* Header */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "0 16px 12px", borderBottom: "1px solid rgba(224,235,232,0.5)", flexShrink: 0
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28, borderRadius: 8 }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Milton AI</span>
-              </div>
-              <div onClick={() => setChatOpen(false)} style={{
-                cursor: "pointer", color: TEXT_SEC, padding: 6, borderRadius: 8,
-                display: "flex", background: "rgba(224,235,232,0.3)"
-              }}>
-                <NavIcon icon="x" size={16} />
-              </div>
+              style={{ cursor: "grab", padding: "12px 0 6px", touchAction: "none", flexShrink: 0 }}>
+              <div style={{ width: 40, height: 5, borderRadius: 3, background: "rgba(43,122,120,0.25)", margin: "0 auto" }} />
             </div>
             {/* Messages */}
             <div style={{
