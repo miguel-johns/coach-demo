@@ -248,6 +248,155 @@ const suggestedPrompts = [
   "Summarize my coaching queue",
 ];
 
+// Generate a meal plan for a client
+function generateMealPlan(clientName, targetCalories = 1800, targetProtein = 120) {
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + 1); // Start from Monday
+  const weekStartStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  
+  const mealTemplates = {
+    breakfast: [
+      { name: "Greek Yogurt Bowl", calories: 350, protein: 25, carbs: 35, fat: 12 },
+      { name: "Eggs & Avocado Toast", calories: 420, protein: 22, carbs: 30, fat: 24 },
+      { name: "Protein Oatmeal", calories: 380, protein: 28, carbs: 45, fat: 10 },
+      { name: "Smoothie Bowl", calories: 340, protein: 24, carbs: 42, fat: 8 },
+      { name: "Veggie Omelet", calories: 360, protein: 26, carbs: 12, fat: 22 },
+      { name: "Cottage Cheese Parfait", calories: 320, protein: 30, carbs: 28, fat: 8 },
+      { name: "Protein Pancakes", calories: 400, protein: 28, carbs: 40, fat: 12 },
+    ],
+    lunch: [
+      { name: "Grilled Chicken Salad", calories: 450, protein: 42, carbs: 20, fat: 22 },
+      { name: "Turkey Wrap", calories: 480, protein: 35, carbs: 42, fat: 18 },
+      { name: "Salmon & Quinoa Bowl", calories: 520, protein: 38, carbs: 45, fat: 20 },
+      { name: "Chicken Stir-Fry", calories: 440, protein: 36, carbs: 38, fat: 16 },
+      { name: "Tuna Poke Bowl", calories: 460, protein: 40, carbs: 42, fat: 14 },
+      { name: "Mediterranean Bowl", calories: 490, protein: 32, carbs: 48, fat: 20 },
+      { name: "Grilled Shrimp Tacos", calories: 420, protein: 34, carbs: 36, fat: 16 },
+    ],
+    dinner: [
+      { name: "Baked Salmon & Veggies", calories: 520, protein: 44, carbs: 25, fat: 26 },
+      { name: "Lean Beef Stir-Fry", calories: 480, protein: 38, carbs: 32, fat: 22 },
+      { name: "Grilled Chicken Breast", calories: 440, protein: 46, carbs: 18, fat: 18 },
+      { name: "Turkey Meatballs & Pasta", calories: 540, protein: 40, carbs: 52, fat: 18 },
+      { name: "Herb Roasted Cod", calories: 380, protein: 42, carbs: 15, fat: 16 },
+      { name: "Chicken Curry & Rice", calories: 520, protein: 36, carbs: 55, fat: 18 },
+      { name: "Pork Tenderloin", calories: 460, protein: 44, carbs: 22, fat: 20 },
+    ],
+    snack: [
+      { name: "Protein Shake", calories: 180, protein: 25, carbs: 8, fat: 4 },
+      { name: "Greek Yogurt", calories: 150, protein: 15, carbs: 12, fat: 4 },
+      { name: "Almonds & Apple", calories: 220, protein: 6, carbs: 22, fat: 14 },
+      { name: "Protein Bar", calories: 200, protein: 20, carbs: 18, fat: 8 },
+      { name: "Cottage Cheese", calories: 160, protein: 18, carbs: 6, fat: 5 },
+      { name: "Hummus & Veggies", calories: 180, protein: 8, carbs: 20, fat: 10 },
+      { name: "Hard Boiled Eggs", calories: 140, protein: 12, carbs: 2, fat: 10 },
+    ]
+  };
+  
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  
+  return {
+    weekStart: weekStartStr,
+    weeklyTargets: { calories: targetCalories, protein: targetProtein, carbs: Math.round(targetCalories * 0.4 / 4), fat: Math.round(targetCalories * 0.25 / 9) },
+    days: days.map((day, i) => ({
+      day,
+      meals: [
+        { ...mealTemplates.breakfast[i % mealTemplates.breakfast.length], type: "breakfast" },
+        { ...mealTemplates.lunch[i % mealTemplates.lunch.length], type: "lunch" },
+        { ...mealTemplates.dinner[i % mealTemplates.dinner.length], type: "dinner" },
+        { ...mealTemplates.snack[i % mealTemplates.snack.length], type: "snack" },
+      ]
+    }))
+  };
+}
+
+// Parse meal plan edit commands
+function parseMealPlanEditCommand(text, currentData) {
+  if (!currentData) return null;
+  const low = text.toLowerCase();
+  
+  // Swap a meal: "swap Monday lunch with salmon salad"
+  const swapMatch = low.match(/swap\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?:'?s?)?\s+(breakfast|lunch|dinner|snack)\s+(?:with|to|for)\s+(.+)/i);
+  if (swapMatch) {
+    const [, day, mealType, newMealName] = swapMatch;
+    const dayIndex = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].indexOf(day.toLowerCase());
+    if (dayIndex === -1) return null;
+    
+    // Generate a new meal based on the name
+    const newMeal = {
+      type: mealType.toLowerCase(),
+      name: newMealName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      calories: Math.floor(Math.random() * 150) + 350,
+      protein: Math.floor(Math.random() * 15) + 25,
+      carbs: Math.floor(Math.random() * 20) + 20,
+      fat: Math.floor(Math.random() * 10) + 10,
+    };
+    
+    const newData = JSON.parse(JSON.stringify(currentData));
+    const mealIndex = newData.days[dayIndex].meals.findIndex(m => m.type === mealType.toLowerCase());
+    if (mealIndex !== -1) {
+      newData.days[dayIndex].meals[mealIndex] = newMeal;
+    }
+    return { type: "swap", newData, description: `Swapped ${day}'s ${mealType} to ${newMeal.name}` };
+  }
+  
+  // Increase protein: "increase protein on all days by 20g" or "add more protein"
+  const proteinMatch = low.match(/(?:increase|add|boost)\s+protein(?:\s+(?:on|for|by))?\s*(?:all\s+days?)?\s*(?:by)?\s*(\d+)?/i);
+  if (proteinMatch) {
+    const increase = parseInt(proteinMatch[1]) || 15;
+    const newData = JSON.parse(JSON.stringify(currentData));
+    newData.days.forEach(day => {
+      day.meals.forEach(meal => {
+        meal.protein += Math.floor(increase / 4);
+        meal.calories += Math.floor(increase / 4) * 4;
+      });
+    });
+    newData.weeklyTargets.protein += increase;
+    return { type: "adjust", newData, description: `Increased daily protein target by ${increase}g` };
+  }
+  
+  // Reduce calories: "reduce calories by 200"
+  const calorieMatch = low.match(/(?:reduce|decrease|lower|cut)\s+calories?\s*(?:by)?\s*(\d+)?/i);
+  if (calorieMatch) {
+    const decrease = parseInt(calorieMatch[1]) || 150;
+    const newData = JSON.parse(JSON.stringify(currentData));
+    newData.weeklyTargets.calories -= decrease;
+    // Proportionally reduce meal calories
+    const factor = (newData.weeklyTargets.calories) / (newData.weeklyTargets.calories + decrease);
+    newData.days.forEach(day => {
+      day.meals.forEach(meal => {
+        meal.calories = Math.round(meal.calories * factor);
+        meal.carbs = Math.round(meal.carbs * factor);
+        meal.fat = Math.round(meal.fat * factor);
+      });
+    });
+    return { type: "adjust", newData, description: `Reduced daily calorie target by ${decrease}` };
+  }
+  
+  // Add a snack: "add a snack after lunch"
+  const addSnackMatch = low.match(/add\s+(?:a\s+)?(?:another\s+)?snack/i);
+  if (addSnackMatch) {
+    const newData = JSON.parse(JSON.stringify(currentData));
+    const snack = {
+      type: "snack",
+      name: "Protein Shake",
+      calories: 180,
+      protein: 25,
+      carbs: 8,
+      fat: 4,
+    };
+    newData.days.forEach(day => {
+      if (day.meals.filter(m => m.type === "snack").length < 2) {
+        day.meals.push({ ...snack, name: "Afternoon Protein Shake" });
+      }
+    });
+    return { type: "add", newData, description: "Added an afternoon protein shake to each day" };
+  }
+  
+  return null;
+}
+
 // Demo client data for Milton AI responses
 const demoClients = {
   sarah: {
@@ -536,9 +685,11 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
   );
 }
 
-function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing }) {
+function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, selectedClient, onCreateMealPlan }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
   const showSuggestions = messages.length <= 1 && !typing;
+  const showCanvasButtons = selectedClient && !typing;
+  
   return (
     <>
     <div style={{
@@ -630,6 +781,113 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
       ))}
     </div>
     )}
+    {/* Canvas Action Buttons when client is selected */}
+    {showCanvasButtons && (
+      <div style={{ 
+        display: "flex", flexDirection: "column", gap: 8, marginTop: 12,
+        padding: "12px",
+        background: TEAL_LIGHT,
+        borderRadius: 12,
+        border: `1px solid ${BORDER}`,
+        opacity: 0, animation: "fadeSlideIn 0.4s ease 0.2s forwards"
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 4 }}>
+          Quick Actions for {selectedClient.name.split(" ")[0]}
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button
+            onClick={() => onCreateMealPlan && onCreateMealPlan(selectedClient)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+              border: "none",
+              borderRadius: 20,
+              padding: "8px 14px",
+              fontSize: 12,
+              fontFamily: font,
+              color: WHITE,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              boxShadow: "0 2px 8px rgba(43,122,120,0.25)",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(43,122,120,0.35)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(43,122,120,0.25)";
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+            </svg>
+            Create Meal Plan
+          </button>
+          <button
+            onClick={() => onSend(`Create a workout plan for ${selectedClient.name}`)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: WHITE,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 20,
+              padding: "8px 14px",
+              fontSize: 12,
+              fontFamily: font,
+              color: TEXT,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = TEAL;
+              e.currentTarget.style.color = TEAL;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BORDER;
+              e.currentTarget.style.color = TEXT;
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M6.5 6.5L17.5 17.5M6.5 17.5L17.5 6.5M12 22V2M2 12h20"/>
+            </svg>
+            Workout Plan
+          </button>
+          <button
+            onClick={() => onSend(`Draft a check-in message for ${selectedClient.name}`)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: WHITE,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 20,
+              padding: "8px 14px",
+              fontSize: 12,
+              fontFamily: font,
+              color: TEXT,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = TEAL;
+              e.currentTarget.style.color = TEAL;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BORDER;
+              e.currentTarget.style.color = TEXT;
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            Message
+          </button>
+        </div>
+      </div>
+    )}
     <div ref={chatEndRef} />
     </div>
       <div style={{ padding: isMobile ? "8px 12px 12px" : "12px 16px 16px" }}>
@@ -659,7 +917,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
 }
 
 /* ─── Mobile Glass Chat Bar + Expandable Sheet ─── */
-function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing }) {
+function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, selectedClient, onCreateMealPlan }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
   const startH = useRef(65);
@@ -839,6 +1097,63 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                       {prompt}
                     </button>
                   ))}
+                </div>
+              )}
+              {/* Canvas Action Buttons when client is selected on mobile */}
+              {selectedClient && !typing && (
+                <div style={{ 
+                  display: "flex", flexDirection: "column", gap: 8, marginTop: 12,
+                  padding: "12px",
+                  background: "rgba(232,245,243,0.8)",
+                  borderRadius: 12,
+                  border: "1px solid rgba(224,235,232,0.7)",
+                  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.2s forwards"
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 4 }}>
+                    Quick Actions for {selectedClient.name.split(" ")[0]}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <button
+                      onClick={() => onCreateMealPlan && onCreateMealPlan(selectedClient)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                        border: "none",
+                        borderRadius: 18,
+                        padding: "8px 12px",
+                        fontSize: 12,
+                        fontFamily: font,
+                        color: WHITE,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                      </svg>
+                      Meal Plan
+                    </button>
+                    <button
+                      onClick={() => onSend(`Draft a check-in message for ${selectedClient.name}`)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        background: "rgba(255,255,255,0.85)",
+                        border: "1px solid rgba(224,235,232,0.7)",
+                        borderRadius: 18,
+                        padding: "8px 12px",
+                        fontSize: 12,
+                        fontFamily: font,
+                        color: TEXT,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                      </svg>
+                      Message
+                    </button>
+                  </div>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -3203,6 +3518,318 @@ function AddClientModal({ onClose, isMobile }) {
 }
 
 /* ═══════════════════════════════════════════
+   MEAL PLAN CANVAS
+   ═══════════════════════════════════════════ */
+function MealCard({ meal }) {
+  return (
+    <div style={{
+      background: WHITE,
+      borderRadius: 10,
+      padding: "10px 12px",
+      border: `1px solid ${BORDER}`,
+      marginBottom: 8
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>{meal.name}</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11, color: TEXT_SEC }}>{meal.calories} cal</span>
+        <span style={{ fontSize: 11, color: TEAL, fontWeight: 500 }}>P: {meal.protein}g</span>
+        <span style={{ fontSize: 11, color: "#e67e22" }}>C: {meal.carbs}g</span>
+        <span style={{ fontSize: 11, color: "#8e44ad" }}>F: {meal.fat}g</span>
+      </div>
+    </div>
+  );
+}
+
+function DayColumn({ day, targets }) {
+  const totalCalories = day.meals.reduce((sum, m) => sum + m.calories, 0);
+  const totalProtein = day.meals.reduce((sum, m) => sum + m.protein, 0);
+  const caloriePercent = Math.min(100, Math.round((totalCalories / targets.calories) * 100));
+  const proteinPercent = Math.min(100, Math.round((totalProtein / targets.protein) * 100));
+  
+  const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
+  const mealLabels = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
+  const mealIcons = { 
+    breakfast: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+    lunch: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
+    dinner: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e67e22" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
+    snack: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8e44ad" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+  };
+
+  return (
+    <div style={{
+      flex: "1 1 140px",
+      minWidth: 140,
+      background: "#fafcfb",
+      borderRadius: 12,
+      padding: 12,
+      border: `1px solid ${BORDER}`
+    }}>
+      <div style={{ 
+        fontSize: 13, 
+        fontWeight: 700, 
+        color: TEXT, 
+        marginBottom: 10,
+        paddingBottom: 8,
+        borderBottom: `1px solid ${BORDER}`,
+        textAlign: "center"
+      }}>
+        {day.day}
+      </div>
+      
+      {mealTypes.map(type => {
+        const meal = day.meals.find(m => m.type === type);
+        return meal ? (
+          <div key={type} style={{ marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              {mealIcons[type]}
+              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                {mealLabels[type]}
+              </span>
+            </div>
+            <MealCard meal={meal} />
+          </div>
+        ) : null;
+      })}
+      
+      {/* Day Totals */}
+      <div style={{ 
+        marginTop: 12, 
+        paddingTop: 10, 
+        borderTop: `1px solid ${BORDER}` 
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, marginBottom: 6 }}>Daily Totals</div>
+        <div style={{ marginBottom: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>
+            <span>Calories</span>
+            <span style={{ fontWeight: 600, color: caloriePercent >= 90 && caloriePercent <= 110 ? MINT : caloriePercent > 110 ? ALERT_RED : TEXT }}>
+              {totalCalories} / {targets.calories}
+            </span>
+          </div>
+          <div style={{ height: 4, background: "#e8f0ee", borderRadius: 2 }}>
+            <div style={{ 
+              height: "100%", 
+              width: `${caloriePercent}%`, 
+              borderRadius: 2,
+              background: caloriePercent >= 90 && caloriePercent <= 110 ? MINT : caloriePercent > 110 ? ALERT_RED : TEAL,
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+        </div>
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>
+            <span>Protein</span>
+            <span style={{ fontWeight: 600, color: proteinPercent >= 90 ? MINT : TEXT }}>{totalProtein}g / {targets.protein}g</span>
+          </div>
+          <div style={{ height: 4, background: "#e8f0ee", borderRadius: 2 }}>
+            <div style={{ 
+              height: "100%", 
+              width: `${proteinPercent}%`, 
+              borderRadius: 2,
+              background: proteinPercent >= 90 ? MINT : TEAL,
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MealPlanCanvas({ data, client, onClose }) {
+  if (!data) return null;
+  
+  const weeklyTotals = {
+    calories: data.days.reduce((sum, d) => sum + d.meals.reduce((s, m) => s + m.calories, 0), 0),
+    protein: data.days.reduce((sum, d) => sum + d.meals.reduce((s, m) => s + m.protein, 0), 0),
+    carbs: data.days.reduce((sum, d) => sum + d.meals.reduce((s, m) => s + m.carbs, 0), 0),
+    fat: data.days.reduce((sum, d) => sum + d.meals.reduce((s, m) => s + m.fat, 0), 0),
+  };
+  const avgDaily = {
+    calories: Math.round(weeklyTotals.calories / data.days.length),
+    protein: Math.round(weeklyTotals.protein / data.days.length),
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Header */}
+      <div style={{
+        padding: "16px 20px",
+        borderBottom: `1px solid ${BORDER}`,
+        background: "linear-gradient(135deg, #f7faf9 0%, #e8f5f3 100%)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontSize: 14, fontWeight: 700
+            }}>
+              {client?.charAt(0) || "M"}
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{client ? `${client}'s Meal Plan` : "Meal Plan"}</div>
+              <div style={{ fontSize: 11, color: TEXT_SEC }}>Week of {data.weekStart}</div>
+            </div>
+          </div>
+          <div 
+            onClick={onClose}
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: WHITE, border: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.color = ALERT_RED; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+        
+        {/* Weekly Summary */}
+        <div style={{
+          display: "flex", gap: 16, flexWrap: "wrap",
+          padding: "12px 14px",
+          background: WHITE,
+          borderRadius: 10,
+          border: `1px solid ${BORDER}`
+        }}>
+          <div style={{ flex: "1 1 auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em" }}>Daily Target</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{data.weeklyTargets.calories} <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>cal</span></div>
+          </div>
+          <div style={{ flex: "1 1 auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em" }}>Avg Planned</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: Math.abs(avgDaily.calories - data.weeklyTargets.calories) <= 50 ? MINT : TEXT }}>
+              {avgDaily.calories} <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>cal</span>
+            </div>
+          </div>
+          <div style={{ flex: "1 1 auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.03em" }}>Protein Goal</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{data.weeklyTargets.protein}g <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>/ day</span></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Canvas hint */}
+      <div style={{
+        padding: "8px 20px",
+        background: TEAL_LIGHT,
+        borderBottom: `1px solid #b6dfd8`,
+        display: "flex", alignItems: "center", gap: 8
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <span style={{ fontSize: 11, color: TEAL, fontWeight: 500 }}>
+          Edit via chat: "swap Monday lunch" or "increase protein on all days"
+        </span>
+      </div>
+      
+      {/* Days Grid */}
+      <div style={{ 
+        flex: 1, 
+        overflowY: "auto", 
+        overflowX: "auto",
+        padding: 16 
+      }}>
+        <div style={{ 
+          display: "flex", 
+          gap: 12,
+          minWidth: "fit-content"
+        }}>
+          {data.days.map((day, i) => (
+            <DayColumn key={i} day={day} targets={data.weeklyTargets} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS PANEL
+   ═══════════════════════════════════════════ */
+function CanvasPanel({ open, type, data, client, onClose, isMobile }) {
+  if (!open) return null;
+  
+  return (
+    <div style={{
+      width: isMobile ? "100%" : 480,
+      flexShrink: 0,
+      background: WHITE,
+      borderLeft: isMobile ? "none" : `1px solid ${BORDER}`,
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+      animation: "slideInCanvas 0.3s ease"
+    }}>
+      {type === "mealPlan" && (
+        <MealPlanCanvas data={data} client={client} onClose={onClose} />
+      )}
+      {type === "workout" && (
+        <div style={{ padding: 20, textAlign: "center", color: TEXT_SEC }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Workout Builder</div>
+          <div style={{ fontSize: 12 }}>Coming soon...</div>
+        </div>
+      )}
+      {type === "campaign" && (
+        <div style={{ padding: 20, textAlign: "center", color: TEXT_SEC }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Message Campaign</div>
+          <div style={{ fontSize: 12 }}>Coming soon...</div>
+        </div>
+      )}
+      {type === "report" && (
+        <div style={{ padding: 20, textAlign: "center", color: TEXT_SEC }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Report Builder</div>
+          <div style={{ fontSize: 12 }}>Coming soon...</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE CANVAS SHEET
+   ═══════════════════════════════════════════ */
+function MobileCanvasSheet({ open, type, data, client, onClose }) {
+  if (!open) return null;
+  
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: 0, left: 0, right: 0,
+      height: "85vh",
+      background: WHITE,
+      borderRadius: "20px 20px 0 0",
+      boxShadow: "0 -4px 30px rgba(0,0,0,0.15)",
+      zIndex: 200,
+      display: "flex",
+      flexDirection: "column",
+      animation: "slideUpCanvas 0.3s ease"
+    }}>
+      {/* Handle */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        padding: "10px 0 6px",
+        cursor: "pointer"
+      }} onClick={onClose}>
+        <div style={{ width: 36, height: 4, background: BORDER, borderRadius: 2 }} />
+      </div>
+      
+      {type === "mealPlan" && (
+        <MealPlanCanvas data={data} client={client} onClose={onClose} />
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    MAIN DASHBOARD
    ═══════════════════════════════════════════ */
 export default function MiltonDashboard() {
@@ -3220,8 +3847,34 @@ export default function MiltonDashboard() {
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
+  
+  // Canvas state
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'campaign' | 'report'
+  const [canvasData, setCanvasData] = useState(null);
+  const [canvasClient, setCanvasClient] = useState(null);
 
   const clientNames = clients.map(c => c.name);
+
+  // Handle creating a meal plan for a client
+  const handleCreateMealPlan = (client) => {
+    const targetCalories = client.calorieTarget || 1800;
+    const targetProtein = client.proteinTarget || 120;
+    const mealPlanData = generateMealPlan(client.name, targetCalories, targetProtein);
+    
+    setCanvasType("mealPlan");
+    setCanvasData(mealPlanData);
+    setCanvasClient(client.name);
+    setCanvasOpen(true);
+    
+    // Add a message to chat
+    const firstName = client.name.split(" ")[0];
+    setChatMessages(prev => [...prev, {
+      type: "ai",
+      text: `**I've created a 7-day meal plan for ${firstName}!**\n\nThe plan targets **${targetCalories} calories** and **${targetProtein}g protein** per day, based on ${firstName}'s current goals.\n\nYou can see it in the canvas on the right. To make changes, just tell me:\n- "Swap Monday's lunch with grilled salmon"\n- "Increase protein on all days"\n- "Add a snack between lunch and dinner"\n- "Reduce calories by 200"`
+    }]);
+    setChatTyping(false);
+  };
 
   const handleChatSend = async (text) => {
     const newUserMessage = { type: "user", text };
@@ -3294,6 +3947,53 @@ export default function MiltonDashboard() {
         };
         setChatMessages(prev => [...prev, { type: "ai", ...(msgs[reportCmd.action] || msgs.add) }]);
         setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
+    // Meal plan canvas commands - detect intent to create or edit meal plans
+    const mealPlanIntent = (() => {
+      // Create meal plan: "create a meal plan for Sarah", "build a nutrition plan for Marcus"
+      const createMatch = low.match(/(?:create|build|make|generate|design)\s+(?:a\s+)?(?:meal|nutrition|eating|diet)\s+plan\s+(?:for\s+)?(\w+)?/i);
+      if (createMatch) {
+        const clientNamePart = createMatch[1]?.toLowerCase();
+        let targetClient = null;
+        
+        if (clientNamePart) {
+          targetClient = clients.find(c => c.name.toLowerCase().startsWith(clientNamePart));
+        } else if (selectedClient !== null) {
+          targetClient = clients[selectedClient];
+        }
+        
+        if (targetClient) {
+          return { action: "create", client: targetClient };
+        }
+      }
+      
+      // Edit existing meal plan (only if canvas is open)
+      if (canvasOpen && canvasType === "mealPlan" && canvasData) {
+        const editCmd = parseMealPlanEditCommand(text, canvasData);
+        if (editCmd) {
+          return { action: "edit", editCmd };
+        }
+      }
+      
+      return null;
+    })();
+
+    if (mealPlanIntent) {
+      setTimeout(() => {
+        if (mealPlanIntent.action === "create") {
+          handleCreateMealPlan(mealPlanIntent.client);
+        } else if (mealPlanIntent.action === "edit" && mealPlanIntent.editCmd) {
+          setCanvasData(mealPlanIntent.editCmd.newData);
+          setChatMessages(prev => [...prev, {
+            type: "ai",
+            text: `**Done!** ${mealPlanIntent.editCmd.description}.\n\nThe meal plan has been updated. Let me know if you'd like any other changes.`
+          }]);
+          setChatTyping(false);
+        }
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, delay);
       return;
@@ -3623,13 +4323,32 @@ Remember: Be specific, be brief, be helpful.`;
               <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
               <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
-            <ChatContent
-              chatInput={chatInput} setChatInput={setChatInput}
-              messages={chatMessages} onSend={handleChatSend}
-              chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
-            />
+<ChatContent
+  chatInput={chatInput} setChatInput={setChatInput}
+  messages={chatMessages} onSend={handleChatSend}
+  chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
+  selectedClient={selectedClient !== null ? clients[selectedClient] : null}
+  onCreateMealPlan={handleCreateMealPlan}
+  />
           </section>
         </div>
+      )}
+
+      {/* ═══ DESKTOP CANVAS PANEL ═══ */}
+      {!isMobile && canvasOpen && (
+        <CanvasPanel
+          open={canvasOpen}
+          type={canvasType}
+          data={canvasData}
+          client={canvasClient}
+          onClose={() => {
+            setCanvasOpen(false);
+            setCanvasType(null);
+            setCanvasData(null);
+            setCanvasClient(null);
+          }}
+          isMobile={false}
+        />
       )}
 
       {/* ═══ MAIN CONTENT ═══ */}
@@ -4098,11 +4817,29 @@ Remember: Be specific, be brief, be helpful.`;
 
       {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
       {isMobile && (
-        <MobileChatSheet
-          chatOpen={chatOpen} setChatOpen={setChatOpen}
-          chatInput={chatInput} setChatInput={setChatInput}
-          messages={chatMessages} onSend={handleChatSend}
-          chatEndRef={chatEndRef} typing={chatTyping}
+<MobileChatSheet
+  chatOpen={chatOpen} setChatOpen={setChatOpen}
+  chatInput={chatInput} setChatInput={setChatInput}
+  messages={chatMessages} onSend={handleChatSend}
+  chatEndRef={chatEndRef} typing={chatTyping}
+  selectedClient={selectedClient !== null ? clients[selectedClient] : null}
+  onCreateMealPlan={handleCreateMealPlan}
+  />
+      )}
+
+      {/* ═══ MOBILE CANVAS SHEET ═══ */}
+      {isMobile && canvasOpen && (
+        <MobileCanvasSheet
+          open={canvasOpen}
+          type={canvasType}
+          data={canvasData}
+          client={canvasClient}
+          onClose={() => {
+            setCanvasOpen(false);
+            setCanvasType(null);
+            setCanvasData(null);
+            setCanvasClient(null);
+          }}
         />
       )}
 
@@ -4118,6 +4855,14 @@ Remember: Be specific, be brief, be helpful.`;
         @keyframes typingDot {
           0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
           30% { opacity: 1; transform: translateY(-3px); }
+        }
+        @keyframes slideInCanvas {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideUpCanvas {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 6px; }
