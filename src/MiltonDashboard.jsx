@@ -27,6 +27,148 @@ function useIsMobile() {
   return isMobile;
 }
 
+// Simple markdown-like formatter for AI responses
+function FormattedText({ text, color = TEXT_SEC }) {
+  if (!text) return null;
+  
+  // Split into paragraphs first
+  const paragraphs = text.split(/\n\n+/);
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {paragraphs.map((paragraph, pIdx) => {
+        // Check if this paragraph is a list (lines starting with - or *)
+        const lines = paragraph.split('\n');
+        const isList = lines.every(line => line.trim() === '' || /^[\-\*•]\s/.test(line.trim()));
+        
+        if (isList) {
+          const listItems = lines.filter(line => /^[\-\*•]\s/.test(line.trim()));
+          return (
+            <ul key={pIdx} style={{ 
+              margin: 0, 
+              paddingLeft: 20, 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 8 
+            }}>
+              {listItems.map((item, idx) => {
+                const content = item.replace(/^[\-\*•]\s*/, '').trim();
+                return (
+                  <li key={idx} style={{ 
+                    color, 
+                    fontSize: 14, 
+                    lineHeight: 1.6,
+                    paddingLeft: 4
+                  }}>
+                    <FormatInline text={content} color={color} />
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        }
+        
+        // Check if it's a numbered list
+        const isNumberedList = lines.every(line => line.trim() === '' || /^\d+[\.\)]\s/.test(line.trim()));
+        if (isNumberedList) {
+          const listItems = lines.filter(line => /^\d+[\.\)]\s/.test(line.trim()));
+          return (
+            <ol key={pIdx} style={{ 
+              margin: 0, 
+              paddingLeft: 20, 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 8 
+            }}>
+              {listItems.map((item, idx) => {
+                const content = item.replace(/^\d+[\.\)]\s*/, '').trim();
+                return (
+                  <li key={idx} style={{ 
+                    color, 
+                    fontSize: 14, 
+                    lineHeight: 1.6,
+                    paddingLeft: 4
+                  }}>
+                    <FormatInline text={content} color={color} />
+                  </li>
+                );
+              })}
+            </ol>
+          );
+        }
+        
+        // Regular paragraph - handle line breaks within
+        return (
+          <p key={pIdx} style={{ margin: 0, color, fontSize: 14, lineHeight: 1.6 }}>
+            {lines.map((line, lIdx) => (
+              <span key={lIdx}>
+                {lIdx > 0 && <br />}
+                <FormatInline text={line} color={color} />
+              </span>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// Format inline elements like **bold** and *italic*
+function FormatInline({ text, color }) {
+  if (!text) return null;
+  
+  // Process bold (**text**) and italic (*text*)
+  const parts = [];
+  let remaining = text;
+  let key = 0;
+  
+  while (remaining.length > 0) {
+    // Check for bold first
+    const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+    if (boldMatch && boldMatch.index === 0) {
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: TEXT }}>
+          {boldMatch[1]}
+        </strong>
+      );
+      remaining = remaining.slice(boldMatch[0].length);
+      continue;
+    }
+    
+    // Find next special pattern
+    const nextBold = remaining.indexOf('**');
+    
+    if (nextBold === -1) {
+      // No more patterns, add rest as text
+      parts.push(<span key={key++}>{remaining}</span>);
+      break;
+    }
+    
+    // Add text before the pattern
+    if (nextBold > 0) {
+      parts.push(<span key={key++}>{remaining.slice(0, nextBold)}</span>);
+      remaining = remaining.slice(nextBold);
+    }
+    
+    // Process the bold pattern
+    const endBold = remaining.indexOf('**', 2);
+    if (endBold > 2) {
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: TEXT }}>
+          {remaining.slice(2, endBold)}
+        </strong>
+      );
+      remaining = remaining.slice(endBold + 2);
+    } else {
+      // Unclosed bold, treat as text
+      parts.push(<span key={key++}>{remaining.slice(0, 2)}</span>);
+      remaining = remaining.slice(2);
+    }
+  }
+  
+  return <>{parts}</>;
+}
+
 function NavIcon({ icon, size = 20 }) {
   const s = { width: size, height: size, strokeWidth: 1.6, stroke: "currentColor", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" };
   const icons = {
@@ -95,7 +237,7 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", title: "Good morning, Coach!", text: "You have 12 active clients. Top priority: Sarah Chen hasn't logged in 4 days. I'd recommend reaching out before it becomes a pattern." },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 12 active clients today. Here's what needs your attention:\n\n- **Sarah Chen** hasn't logged in 4 days — her longest gap yet\n- **Emily Rodriguez** showing a restrict-binge pattern\n- **Aaron Smith** dropped off mid-week again\n\nI'd recommend reaching out to Sarah first before it becomes a pattern." },
 ];
 
 const suggestedPrompts = [
@@ -391,9 +533,9 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   return (
     <>
     <div style={{
-    flex: 1, overflowY: "auto", padding: isMobile ? "12px 14px 8px" : "16px 16px 8px",
-    display: "flex", flexDirection: "column", gap: 12,
-    background: isMobile ? "transparent" : "#f7faf9"
+    flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 8px" : "20px 20px 8px",
+    display: "flex", flexDirection: "column", gap: 20,
+    background: isMobile ? "transparent" : "#fafcfb"
     }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
@@ -410,33 +552,33 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
                 boxShadow: "0 2px 8px rgba(43,122,120,0.15)"
               }}>{msg.text}</div>
             ) : (
-              <div style={{ display: "flex", gap: 10, maxWidth: "90%" }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginTop: 2 }}>
-                  <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-                </div>
-                <div style={{
-                  background: WHITE, padding: "12px 16px", borderRadius: "4px 18px 18px 18px",
-                  border: `1px solid ${BORDER}`, fontSize: 13.5, lineHeight: 1.55,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+              <div style={{ display: "flex", gap: 12, maxWidth: "95%", width: "100%" }}>
+                <div style={{ 
+                  width: 28, height: 28, borderRadius: "50%", overflow: "hidden", 
+                  flexShrink: 0, marginTop: 2,
+                  background: TEAL,
+                  display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  {msg.title && <div style={{ fontWeight: 700, color: TEXT, marginBottom: 4, fontSize: 14 }}>{msg.title}</div>}
-                  <div style={{ color: TEXT_SEC, whiteSpace: "pre-line" }}>{msg.text}</div>
+                  <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28 }} />
+                </div>
+                <div style={{ flex: 1, paddingTop: 4 }}>
+                  <FormattedText text={msg.text} color={TEXT_SEC} />
                 </div>
               </div>
             )}
           </div>
         ))}
 {typing && (
-    <div style={{ display: "flex", gap: 10, maxWidth: "90%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-    <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-    <img src={LOGO_URL} alt="Milton" style={{ width: 32, height: 32 }} />
-    </div>
-    <div style={{
-    background: WHITE, padding: "14px 18px", borderRadius: "4px 18px 18px 18px",
-    border: `1px solid ${BORDER}`, display: "flex", gap: 5, alignItems: "center"
+    <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+    <div style={{ 
+      width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+      background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
     }}>
+    <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28 }} />
+    </div>
+    <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 8 }}>
     {[0,1,2].map(j => (
-    <div key={j} style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, opacity: 0.4, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
+    <div key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, opacity: 0.5, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
     ))}
     </div>
     </div>
