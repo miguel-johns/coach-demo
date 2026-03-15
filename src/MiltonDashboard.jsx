@@ -4431,18 +4431,11 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
     tips: "#ec4899"
   };
   
-  // Initialize with first question
-  useEffect(() => {
-    if (!initialized && setChatMessages) {
-      setInitialized(true);
-      setChatMessages(prev => [...prev, {
-        type: "ai",
-        text: "Let's set up your automated message sequence. Who should receive these messages?",
-        options: clients.map(c => c.name),
-        onSelect: handleClientSelect
-      }]);
-    }
-  }, [initialized, setChatMessages]);
+  // Handler refs to avoid stale closures
+  const handleClientSelectRef = useRef(null);
+  const handleTypesSelectRef = useRef(null);
+  const handleFrequencySelectRef = useRef(null);
+  const handleDurationSelectRef = useRef(null);
   
   const handleClientSelect = (clientName) => {
     const client = clients.find(c => c.name === clientName) || { name: clientName };
@@ -4457,7 +4450,7 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
         text: `Great! What types of messages do you want to send to ${client.name === "All Clients" ? "all your clients" : client.name}? You can pick multiple.`,
         options: messageTypes.map(t => t.label),
         multiSelect: true,
-        onSelect: handleTypesSelect
+        onSelect: (val) => handleTypesSelectRef.current?.(val)
       }]);
       setChatTyping(false);
       setChatStep(1);
@@ -4475,7 +4468,7 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
         type: "ai",
         text: "How often should messages go out?",
         options: frequencies.map(f => f.label),
-        onSelect: handleFrequencySelect
+        onSelect: (val) => handleFrequencySelectRef.current?.(val)
       }]);
       setChatTyping(false);
       setChatStep(2);
@@ -4493,7 +4486,7 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
         type: "ai",
         text: "How long should this sequence run?",
         options: durations.map(d => d.label),
-        onSelect: handleDurationSelect
+        onSelect: (val) => handleDurationSelectRef.current?.(val)
       }]);
       setChatTyping(false);
       setChatStep(3);
@@ -4554,6 +4547,30 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
     }
     return messages;
   };
+  
+  // Keep refs updated
+  handleClientSelectRef.current = handleClientSelect;
+  handleTypesSelectRef.current = handleTypesSelect;
+  handleFrequencySelectRef.current = handleFrequencySelect;
+  handleDurationSelectRef.current = handleDurationSelect;
+  
+  // Initialize with first question - runs once on mount
+  useEffect(() => {
+    console.log("[v0] MessagesCanvas useEffect running, initialized:", initialized, "setChatMessages:", typeof setChatMessages);
+    if (!initialized && setChatMessages) {
+      console.log("[v0] MessagesCanvas initializing chat with first question");
+      setInitialized(true);
+      setChatMessages(prev => {
+        console.log("[v0] Adding message to chat, prev length:", prev.length);
+        return [...prev, {
+          type: "ai",
+          text: "Let's set up your automated message sequence. Who should receive these messages?",
+          options: clients.map(c => c.name),
+          onSelect: (val) => handleClientSelectRef.current?.(val)
+        }];
+      });
+    }
+  }, [initialized, setChatMessages]);
   
   return (
     <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
@@ -6651,13 +6668,15 @@ Remember: Be specific, be brief, be helpful.`;
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
-  {canvasType === "messages" && (
+{canvasType === "messages" && (
   <MessagesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
   />
   )}
   {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
+  <MealPlanCanvas
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
