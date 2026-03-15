@@ -189,6 +189,9 @@ function NavIcon({ icon, size = 20 }) {
     calendar: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     inbox: <svg {...s} viewBox="0 0 24 24"><polyline points="22,12 16,12 14,15 10,15 8,12 2,12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>,
     canvas: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
+    send: <svg {...s} viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>,
+    file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
+    chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -4730,6 +4733,7 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
+  const [showCanvasTemplates, setShowCanvasTemplates] = useState(false); // Canvas templates view
 
   const clientNames = clients.map(c => c.name);
 
@@ -5420,6 +5424,169 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
+      {/* ═══ CANVAS TEMPLATES VIEW ═══ */}
+      {showCanvasTemplates && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)", zIndex: 100,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "fadeIn 0.2s ease"
+        }} onClick={() => setShowCanvasTemplates(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: WHITE, borderRadius: 20, width: "90%", maxWidth: 560,
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+            animation: "scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: "20px 24px", borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Canvas</h2>
+                <p style={{ fontSize: 13, color: TEXT_SEC, margin: "4px 0 0" }}>Create deliverables for your clients</p>
+              </div>
+              <div onClick={() => setShowCanvasTemplates(false)} style={{
+                width: 32, height: 32, borderRadius: 8, background: "#f0f4f3",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}>
+                <NavIcon icon="x" size={16} />
+              </div>
+            </div>
+            
+            {/* Templates Grid */}
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Active Templates */}
+              {[
+                { 
+                  icon: "calendar", 
+                  title: "Meal Plan", 
+                  desc: "Build custom nutrition plans with macros",
+                  type: "mealPlan",
+                  active: true
+                },
+                { 
+                  icon: "chart", 
+                  title: "Workout Program", 
+                  desc: "Design structured training programs",
+                  type: "workout",
+                  active: true
+                }
+              ].map(template => (
+                <div
+                  key={template.type}
+                  onClick={() => {
+                    setShowCanvasTemplates(false);
+                    setCanvasType(template.type);
+                    setCanvasData(template.type === "mealPlan" ? {
+                      clientName: "New Client",
+                      weekStart: "Week of Mar 17",
+                      dailyTargets: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
+                      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => ({
+                        day,
+                        meals: [
+                          { type: "Breakfast", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 },
+                          { type: "Lunch", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 },
+                          { type: "Dinner", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 }
+                        ]
+                      }))
+                    } : {
+                      clientName: "New Client",
+                      programName: "Custom Program",
+                      weeks: 4,
+                      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => ({
+                        day,
+                        focus: day === "Sunday" || day === "Saturday" ? "Rest" : "Training",
+                        exercises: []
+                      }))
+                    });
+                    setCanvasClient("New Client");
+                    setCanvasMode(true);
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 16, padding: 16,
+                    background: "#f8fafa", borderRadius: 14, border: `1px solid ${BORDER}`,
+                    cursor: "pointer", transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { 
+                    e.currentTarget.style.background = TEAL_LIGHT; 
+                    e.currentTarget.style.borderColor = TEAL; 
+                  }}
+                  onMouseLeave={e => { 
+                    e.currentTarget.style.background = "#f8fafa"; 
+                    e.currentTarget.style.borderColor = BORDER; 
+                  }}
+                >
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, background: WHITE,
+                    border: `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: TEAL
+                  }}>
+                    <NavIcon icon={template.icon} size={22} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.title}</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>{template.desc}</div>
+                  </div>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,6 15,12 9,18"/>
+                  </svg>
+                </div>
+              ))}
+              
+              {/* Coming Soon Templates */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+                  Coming Soon
+                </div>
+                {[
+                  { 
+                    icon: "send", 
+                    title: "Automated Messages", 
+                    desc: "Schedule check-ins and reminders",
+                    type: "messages"
+                  },
+                  { 
+                    icon: "file", 
+                    title: "Progress Reports", 
+                    desc: "Generate client progress summaries",
+                    type: "reports"
+                  }
+                ].map(template => (
+                  <div
+                    key={template.type}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 16, padding: 16,
+                      background: "#fafafa", borderRadius: 14, border: `1px solid ${BORDER}`,
+                      opacity: 0.6, cursor: "not-allowed", marginBottom: 12
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 12, background: WHITE,
+                      border: `1px solid ${BORDER}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: TEXT_SEC
+                    }}>
+                      <NavIcon icon={template.icon} size={22} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.title}</div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>{template.desc}</div>
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, color: TEXT_SEC,
+                      background: "#eee", padding: "4px 8px", borderRadius: 6
+                    }}>Soon</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
@@ -5449,21 +5616,23 @@ Remember: Be specific, be brief, be helpful.`;
             {!isMobile && (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
-                  { icon: "calendar", label: "Schedule" },
-                  { icon: "inbox", label: "Inbox" },
-                  { icon: "canvas", label: "Canvas" }
+                  { icon: "calendar", label: "Schedule", action: null },
+                  { icon: "inbox", label: "Inbox", action: null },
+                  { icon: "canvas", label: "Canvas", action: () => setShowCanvasTemplates(true) }
                 ].map(item => (
                   <div
                     key={item.icon}
+                    onClick={item.action}
                     style={{
                       width: 36, height: 36, borderRadius: 10,
                       background: "#f0f4f3", border: `1px solid ${BORDER}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", color: TEXT_SEC,
+                      cursor: item.action ? "pointer" : "default", color: TEXT_SEC,
+                      opacity: item.action ? 1 : 0.5,
                       transition: "all 0.15s ease"
                     }}
                     title={item.label}
-                    onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
+                    onMouseEnter={e => { if (item.action) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
                     onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
                   >
                     <NavIcon icon={item.icon} size={18} />
@@ -5918,6 +6087,14 @@ Remember: Be specific, be brief, be helpful.`;
       )}
 
       <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
