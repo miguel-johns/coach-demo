@@ -5915,6 +5915,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   const availableWidgets = [
     { id: "consistencyScore", type: "score", label: "Consistency Score", locked: true },
     { id: "transformation", type: "chart", label: "Transformation Chart" },
+    { id: "goalTrajectory", type: "trajectory", label: "Goal Trajectory" },
     { id: "rule30", type: "rings", label: "Rule of 30" },
     { id: "dataCards", type: "cards", label: "Weekly Metrics" },
     { id: "calendar", type: "calendar", label: "Daily Activity" },
@@ -5958,10 +5959,11 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
       const defaultWidgets = [
         { id: "consistencyScore", order: 0 },
         { id: "transformation", order: 1 },
-        { id: "rule30", order: 2 },
-        { id: "dataCards", order: 3 },
-        { id: "calendar", order: 4 },
-        { id: "insight", order: 5 }
+        { id: "goalTrajectory", order: 2 },
+        { id: "rule30", order: 3 },
+        { id: "dataCards", order: 4 },
+        { id: "calendar", order: 5 },
+        { id: "insight", order: 6 }
       ];
       setWidgets(defaultWidgets);
       setChatMessages(prev => [...prev, {
@@ -6336,6 +6338,80 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
       );
     }
     
+    // Goal Trajectory Widget
+    if (widget.id === "goalTrajectory") {
+      const isFatLoss = client.phase === "Fat Loss" || client.phase === "Metabolic Health";
+      const startVal = 165;
+      const currentVal = 160.5;
+      const goalVal = isFatLoss ? 155 : 140;
+      const weeksTotal = 12, weeksCurrent = 4;
+      const cw = 320, ch = 140, padL = 36, padR = 16, padT = 14, padB = 26;
+      const plotW = cw - padL - padR, plotH = ch - padT - padB;
+      const valMin = goalVal - 2, valMax = startVal + 2, valRange = valMax - valMin;
+      const toY = (v) => padT + (1 - (v - valMin) / valRange) * plotH;
+      const toX = (w) => padL + (w / weeksTotal) * plotW;
+      const actualPts = []; for (let w = 0; w <= weeksCurrent; w++) { const t = w / weeksCurrent; actualPts.push({ x: toX(w), y: toY(startVal + (currentVal - startVal) * t) }); }
+      const projPts = []; for (let w = weeksCurrent; w <= weeksTotal; w++) { const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent); projPts.push({ x: toX(w), y: toY(currentVal + (goalVal - currentVal) * t) }); }
+      const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
+      const actualPath = smooth(actualPts), projPath = smooth(projPts);
+      const lastActual = actualPts[actualPts.length - 1];
+      const goalY = toY(goalVal), goalX = toX(weeksTotal);
+      const actualArea = `${actualPath} L ${lastActual.x},${padT + plotH} L ${actualPts[0].x},${padT + plotH} Z`;
+      
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)">
+          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>We predict you'll reach</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: TEXT, marginBottom: 2 }}>
+            <span style={{ color: TEAL }}>{goalVal} lbs</span> by <span style={{ color: TEAL }}>Week {weeksTotal}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <div style={{ padding: "3px 8px", borderRadius: 10, background: `${ALERT_GREEN}18`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>On Track</div>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>8 weeks away</span>
+          </div>
+          <div style={{ borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}`, padding: "8px 4px" }}>
+            <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+              <defs>
+                <linearGradient id="trajAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.15"/>
+                  <stop offset="100%" stopColor={TEAL} stopOpacity="0.02"/>
+                </linearGradient>
+              </defs>
+              {/* Goal line */}
+              <line x1={padL} y1={goalY} x2={cw - padR} y2={goalY} stroke={ALERT_GREEN} strokeWidth="1.5" strokeDasharray="4,4" opacity="0.7"/>
+              <text x={cw - padR - 2} y={goalY - 6} textAnchor="end" fill={ALERT_GREEN} fontSize="9" fontWeight="700">Goal: {goalVal}</text>
+              {/* Actual area */}
+              <path d={actualArea} fill="url(#trajAreaGrad)"/>
+              {/* Actual line */}
+              <path d={actualPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round"/>
+              {/* Projected line */}
+              <path d={projPath} fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.6"/>
+              {/* Current point */}
+              <circle cx={lastActual.x} cy={lastActual.y} r="6" fill={WHITE} stroke={TEAL} strokeWidth="2.5"/>
+              <rect x={lastActual.x - 18} y={lastActual.y - 22} width="36" height="16" rx="8" fill={TEAL}/>
+              <text x={lastActual.x} y={lastActual.y - 11} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{currentVal}</text>
+              {/* Goal point */}
+              <circle cx={goalX} cy={goalY} r="5" fill={ALERT_GREEN} opacity="0.3"/>
+              <circle cx={goalX} cy={goalY} r="3" fill={ALERT_GREEN}/>
+              {/* Week labels */}
+              {[0, 4, 8, 12].map(w => (
+                <text key={w} x={toX(w)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="600">W{w || 1}</text>
+              ))}
+            </svg>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 14, height: 3, borderRadius: 2, background: TEAL }}/>
+              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>Actual</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 14, height: 0, borderTop: `2px dashed ${TEAL}`, opacity: 0.6 }}/>
+              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
+            </div>
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
     // Coach Notes Widget
     if (widget.id === "coachNotes") {
       return (
@@ -6590,6 +6666,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       {w.type === "chart" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
+                      {w.type === "trajectory" && <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/><circle cx="18" cy="6" r="3"/></>}
                       {w.type === "rings" && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>}
                       {w.type === "cards" && <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}
                       {w.type === "insight" && <><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></>}
