@@ -3345,7 +3345,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════���������������═���������════════ */
+   ════════════════════════════��═══���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3699,6 +3699,217 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
           </svg>
         </div>
         <span>Click any day to view and edit with Milton</span>
+      </div>
+    </div>
+  );
+}
+
+function CanvasTemplates({ onSelect, onClose }) {
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  
+  const templates = [
+    { 
+      id: "mealPlan",
+      icon: "calendar", 
+      title: "Meal Plan", 
+      desc: "Build custom nutrition plans with daily meals, macros, and recipes",
+      color: "#2B7A78",
+      available: true
+    },
+    { 
+      id: "workout",
+      icon: "chart", 
+      title: "Workout Program", 
+      desc: "Design structured training programs with exercises and progressions",
+      color: "#3aafa9",
+      available: true
+    },
+    { 
+      id: "messages",
+      icon: "send", 
+      title: "Automated Messages", 
+      desc: "Schedule check-ins, reminders, and motivational messages",
+      color: "#5CDB95",
+      available: false
+    },
+    { 
+      id: "reports",
+      icon: "file", 
+      title: "Progress Reports", 
+      desc: "Generate comprehensive client progress summaries",
+      color: "#45818e",
+      available: false
+    }
+  ];
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Main content */}
+      <div style={{ 
+        flex: 1, display: "flex", flexDirection: "column",
+        padding: "60px 48px 48px", overflowY: "auto"
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: TEAL_LIGHT, padding: "6px 12px", borderRadius: 20,
+            marginBottom: 16
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Canvas</span>
+          </div>
+          <h1 style={{ 
+            fontSize: 32, fontWeight: 700, color: TEXT, margin: 0,
+            letterSpacing: "-0.02em", lineHeight: 1.2
+          }}>
+            What would you like to create?
+          </h1>
+          <p style={{ 
+            fontSize: 15, color: TEXT_SEC, margin: "12px 0 0", 
+            maxWidth: 400, lineHeight: 1.5
+          }}>
+            Choose a template to get started. Milton will help you build and customize it.
+          </p>
+        </div>
+        
+        {/* Templates Grid */}
+        <div style={{ 
+          display: "grid", gridTemplateColumns: "repeat(2, 1fr)", 
+          gap: 16, maxWidth: 600
+        }}>
+          {templates.map((template, idx) => (
+            <div
+              key={template.id}
+              onClick={() => template.available && onSelect(template.id)}
+              onMouseEnter={() => template.available && setHoveredTemplate(template.id)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              style={{
+                background: WHITE,
+                borderRadius: 16,
+                border: `1px solid ${hoveredTemplate === template.id ? template.color : BORDER}`,
+                padding: 24,
+                cursor: template.available ? "pointer" : "default",
+                opacity: template.available ? 1 : 0.5,
+                transition: "all 0.2s ease",
+                transform: hoveredTemplate === template.id ? "translateY(-2px)" : "translateY(0)",
+                boxShadow: hoveredTemplate === template.id 
+                  ? `0 8px 24px rgba(43,122,120,0.15)` 
+                  : "0 2px 8px rgba(0,0,0,0.04)",
+                animation: `fadeSlideIn 0.4s ease ${idx * 0.08}s both`
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: template.available 
+                  ? (hoveredTemplate === template.id ? template.color : `${template.color}15`)
+                  : "#f0f0f0",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 16, transition: "all 0.2s ease",
+                color: template.available 
+                  ? (hoveredTemplate === template.id ? WHITE : template.color)
+                  : TEXT_SEC
+              }}>
+                <NavIcon icon={template.icon} size={24} />
+              </div>
+              
+              {/* Title + Badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <h3 style={{ 
+                  fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 
+                }}>
+                  {template.title}
+                </h3>
+                {!template.available && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                    background: "#eee", padding: "3px 8px", borderRadius: 10,
+                    textTransform: "uppercase", letterSpacing: "0.03em"
+                  }}>Soon</span>
+                )}
+              </div>
+              
+              {/* Description */}
+              <p style={{ 
+                fontSize: 13, color: TEXT_SEC, margin: 0, lineHeight: 1.5 
+              }}>
+                {template.desc}
+              </p>
+              
+              {/* Arrow indicator for available templates */}
+              {template.available && (
+                <div style={{
+                  marginTop: 16, display: "flex", alignItems: "center", gap: 6,
+                  color: hoveredTemplate === template.id ? template.color : TEXT_SEC,
+                  fontSize: 13, fontWeight: 500, transition: "all 0.2s ease"
+                }}>
+                  <span>Get started</span>
+                  <svg 
+                    width="14" height="14" viewBox="0 0 24 24" 
+                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    style={{ 
+                      transform: hoveredTemplate === template.id ? "translateX(4px)" : "translateX(0)",
+                      transition: "transform 0.2s ease"
+                    }}
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12,5 19,12 12,19"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Bottom hint */}
+        <div style={{
+          marginTop: 40, padding: "16px 20px", background: "#f0f4f3",
+          borderRadius: 12, display: "flex", alignItems: "center", gap: 12,
+          maxWidth: 600
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, background: WHITE,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: TEAL
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>
+              Describe what you need in chat
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+              Milton can also create these from natural language requests
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -4733,7 +4944,6 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
-  const [showCanvasTemplates, setShowCanvasTemplates] = useState(false); // Canvas templates view
 
   const clientNames = clients.map(c => c.name);
 
@@ -5292,7 +5502,7 @@ Remember: Be specific, be brief, be helpful.`;
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {canvasMode ? (
               <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+                {canvasType === "templates" ? "Canvas" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
               </span>
             ) : (
               <>
@@ -5363,6 +5573,28 @@ Remember: Be specific, be brief, be helpful.`;
           overflow: "hidden",
           animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
         }}>
+          {canvasType === "templates" && (
+            <CanvasTemplates 
+              onSelect={(templateType) => {
+                if (templateType === "mealPlan") {
+                  setCanvasType("mealPlan");
+                  setCanvasData({
+                    client: "New Client",
+                    goals: "General health and fitness",
+                    weeklyTargets: { calories: 2000, protein: 150 }
+                  });
+                } else if (templateType === "workout") {
+                  setCanvasType("workout");
+                  setCanvasData({
+                    clientName: "New Client",
+                    programName: "Custom Program",
+                    weeks: 4
+                  });
+                }
+              }}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+            />
+          )}
           {canvasType === "mealPlan" && (
             <MealPlanCanvas 
               data={canvasData} 
@@ -5390,20 +5622,42 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
-      {/* ═══ MOBILE CANVAS VIEW ═══ */}
-      {canvasMode && isMobile && (
-        <div style={{
-          position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
-          background: WHITE, zIndex: 40, overflow: "hidden",
-          display: "flex", flexDirection: "column"
-        }}>
-          {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-          {canvasType === "workout" && (
+{/* ═══ MOBILE CANVAS VIEW ═══ */}
+  {canvasMode && isMobile && (
+  <div style={{
+  position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
+  background: WHITE, zIndex: 40, overflow: "hidden",
+  display: "flex", flexDirection: "column"
+  }}>
+  {canvasType === "templates" && (
+  <CanvasTemplates 
+    onSelect={(templateType) => {
+      if (templateType === "mealPlan") {
+        setCanvasType("mealPlan");
+        setCanvasData({
+          client: "New Client",
+          goals: "General health and fitness",
+          weeklyTargets: { calories: 2000, protein: 150 }
+        });
+      } else if (templateType === "workout") {
+        setCanvasType("workout");
+        setCanvasData({
+          clientName: "New Client",
+          programName: "Custom Program",
+          weeks: 4
+        });
+      }
+    }}
+    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "mealPlan" && (
+  <MealPlanCanvas
+  data={canvasData}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -5421,169 +5675,6 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-        </div>
-      )}
-
-      {/* ═══ CANVAS TEMPLATES VIEW ═══ */}
-      {showCanvasTemplates && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.5)", zIndex: 100,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          animation: "fadeIn 0.2s ease"
-        }} onClick={() => setShowCanvasTemplates(false)}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: WHITE, borderRadius: 20, width: "90%", maxWidth: 560,
-            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-            animation: "scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: "20px 24px", borderBottom: `1px solid ${BORDER}`,
-              display: "flex", alignItems: "center", justifyContent: "space-between"
-            }}>
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Canvas</h2>
-                <p style={{ fontSize: 13, color: TEXT_SEC, margin: "4px 0 0" }}>Create deliverables for your clients</p>
-              </div>
-              <div onClick={() => setShowCanvasTemplates(false)} style={{
-                width: 32, height: 32, borderRadius: 8, background: "#f0f4f3",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: TEXT_SEC
-              }}>
-                <NavIcon icon="x" size={16} />
-              </div>
-            </div>
-            
-            {/* Templates Grid */}
-            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Active Templates */}
-              {[
-                { 
-                  icon: "calendar", 
-                  title: "Meal Plan", 
-                  desc: "Build custom nutrition plans with macros",
-                  type: "mealPlan",
-                  active: true
-                },
-                { 
-                  icon: "chart", 
-                  title: "Workout Program", 
-                  desc: "Design structured training programs",
-                  type: "workout",
-                  active: true
-                }
-              ].map(template => (
-                <div
-                  key={template.type}
-                  onClick={() => {
-                    setShowCanvasTemplates(false);
-                    setCanvasType(template.type);
-                    setCanvasData(template.type === "mealPlan" ? {
-                      clientName: "New Client",
-                      weekStart: "Week of Mar 17",
-                      dailyTargets: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
-                      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => ({
-                        day,
-                        meals: [
-                          { type: "Breakfast", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 },
-                          { type: "Lunch", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 },
-                          { type: "Dinner", name: "Add meal...", calories: 0, protein: 0, carbs: 0, fat: 0 }
-                        ]
-                      }))
-                    } : {
-                      clientName: "New Client",
-                      programName: "Custom Program",
-                      weeks: 4,
-                      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => ({
-                        day,
-                        focus: day === "Sunday" || day === "Saturday" ? "Rest" : "Training",
-                        exercises: []
-                      }))
-                    });
-                    setCanvasClient("New Client");
-                    setCanvasMode(true);
-                  }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 16, padding: 16,
-                    background: "#f8fafa", borderRadius: 14, border: `1px solid ${BORDER}`,
-                    cursor: "pointer", transition: "all 0.15s ease"
-                  }}
-                  onMouseEnter={e => { 
-                    e.currentTarget.style.background = TEAL_LIGHT; 
-                    e.currentTarget.style.borderColor = TEAL; 
-                  }}
-                  onMouseLeave={e => { 
-                    e.currentTarget.style.background = "#f8fafa"; 
-                    e.currentTarget.style.borderColor = BORDER; 
-                  }}
-                >
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, background: WHITE,
-                    border: `1px solid ${BORDER}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: TEAL
-                  }}>
-                    <NavIcon icon={template.icon} size={22} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.title}</div>
-                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>{template.desc}</div>
-                  </div>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                    <polyline points="9,6 15,12 9,18"/>
-                  </svg>
-                </div>
-              ))}
-              
-              {/* Coming Soon Templates */}
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
-                  Coming Soon
-                </div>
-                {[
-                  { 
-                    icon: "send", 
-                    title: "Automated Messages", 
-                    desc: "Schedule check-ins and reminders",
-                    type: "messages"
-                  },
-                  { 
-                    icon: "file", 
-                    title: "Progress Reports", 
-                    desc: "Generate client progress summaries",
-                    type: "reports"
-                  }
-                ].map(template => (
-                  <div
-                    key={template.type}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 16, padding: 16,
-                      background: "#fafafa", borderRadius: 14, border: `1px solid ${BORDER}`,
-                      opacity: 0.6, cursor: "not-allowed", marginBottom: 12
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, background: WHITE,
-                      border: `1px solid ${BORDER}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: TEXT_SEC
-                    }}>
-                      <NavIcon icon={template.icon} size={22} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.title}</div>
-                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>{template.desc}</div>
-                    </div>
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, color: TEXT_SEC,
-                      background: "#eee", padding: "4px 8px", borderRadius: 6
-                    }}>Soon</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -5618,7 +5709,7 @@ Remember: Be specific, be brief, be helpful.`;
                 {[
                   { icon: "calendar", label: "Schedule", action: null },
                   { icon: "inbox", label: "Inbox", action: null },
-                  { icon: "canvas", label: "Canvas", action: () => setShowCanvasTemplates(true) }
+                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
                     key={item.icon}
