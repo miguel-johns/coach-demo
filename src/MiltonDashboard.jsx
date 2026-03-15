@@ -5913,15 +5913,14 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   ];
   
   const availableWidgets = [
-    { id: "summary", type: "summary", label: "Summary Card", icon: "user", locked: true },
-    { id: "weightChart", type: "chart", label: "Weight Progress", icon: "chart" },
-    { id: "consistencyCalendar", type: "calendar", label: "Consistency Calendar", icon: "calendar" },
-    { id: "macroBreakdown", type: "pie", label: "Macro Breakdown", icon: "pie" },
-    { id: "achievements", type: "list", label: "Achievements", icon: "trophy" },
-    { id: "mealCompliance", type: "bar", label: "Meal Compliance", icon: "utensils" },
-    { id: "workoutStats", type: "stats", label: "Workout Stats", icon: "dumbbell" },
-    { id: "coachNotes", type: "text", label: "Coach Notes", icon: "edit" },
-    { id: "nextSteps", type: "checklist", label: "Next Steps", icon: "check" }
+    { id: "consistencyScore", type: "score", label: "Consistency Score", locked: true },
+    { id: "transformation", type: "chart", label: "Transformation Chart" },
+    { id: "rule30", type: "rings", label: "Rule of 30" },
+    { id: "dataCards", type: "cards", label: "Weekly Metrics" },
+    { id: "calendar", type: "calendar", label: "Daily Activity" },
+    { id: "insight", type: "insight", label: "Milton Insight" },
+    { id: "nutrition", type: "nutrition", label: "Nutrition Breakdown" },
+    { id: "coachNotes", type: "text", label: "Coach Notes" }
   ];
   
   // Handler refs
@@ -5957,12 +5956,12 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
     // Generate report
     setTimeout(() => {
       const defaultWidgets = [
-        { id: "summary", order: 0 },
-        { id: "weightChart", order: 1 },
-        { id: "consistencyCalendar", order: 2 },
-        { id: "achievements", order: 3 },
-        { id: "coachNotes", order: 4 },
-        { id: "nextSteps", order: 5 }
+        { id: "consistencyScore", order: 0 },
+        { id: "transformation", order: 1 },
+        { id: "rule30", order: 2 },
+        { id: "dataCards", order: 3 },
+        { id: "calendar", order: 4 },
+        { id: "insight", order: 5 }
       ];
       setWidgets(defaultWidgets);
       setChatMessages(prev => [...prev, {
@@ -5991,21 +5990,21 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   
   // Drag handlers
   const handleDragStart = (e, widgetId) => {
-    if (widgetId === "summary") return; // Summary is locked
+    if (widgetId === "consistencyScore") return; // Consistency score is locked
     setDraggedWidget(widgetId);
     e.dataTransfer.effectAllowed = "move";
   };
   
   const handleDragOver = (e, widgetId) => {
     e.preventDefault();
-    if (widgetId !== draggedWidget && widgetId !== "summary") {
+    if (widgetId !== draggedWidget && widgetId !== "consistencyScore") {
       setDragOverWidget(widgetId);
     }
   };
   
   const handleDrop = (e, targetId) => {
     e.preventDefault();
-    if (!draggedWidget || targetId === "summary" || draggedWidget === "summary") return;
+    if (!draggedWidget || targetId === "consistencyScore" || draggedWidget === "consistencyScore") return;
     
     const newWidgets = [...widgets];
     const dragIdx = newWidgets.findIndex(w => w.id === draggedWidget);
@@ -6034,217 +6033,370 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   };
   
   const removeWidget = (widgetId) => {
-    if (widgetId === "summary") return;
+    if (widgetId === "consistencyScore") return;
     setWidgets(prev => prev.filter(w => w.id !== widgetId));
   };
   
-  // Widget renderer
+  // Widget renderer - matching existing report design
   const renderWidget = (widget) => {
     const config = availableWidgets.find(w => w.id === widget.id);
     if (!config) return null;
     
     const isDragging = draggedWidget === widget.id;
     const isDragOver = dragOverWidget === widget.id;
-    const isLocked = widget.id === "summary";
+    const isLocked = widget.id === "consistencyScore";
+    const isMobile = viewMode === "mobile";
     
-    return (
+    // Client data for widgets
+    const client = selectedClient || {};
+    const wData = [165, 164.2, 163.5, 162.8, 162.0, 161.5, 161.0, 160.5];
+    const mealsScore = Math.round(((client.mealsLogged || 18) / 21) * 100);
+    const exerciseScore = Math.round((client.workoutDays || 4) / 5 * 100);
+    const movementScore = Math.round((client.steps || 8000) / 10000 * 100);
+    const sleepScore = 78;
+    const consistencyScore = client.score || 85;
+    const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+    
+    const ovPillars = [
+      { key: "exercise", label: "Exercise", days: Math.min(30, (client.workoutDays || 4) * 4 + 2), color: TEAL },
+      { key: "steps", label: "Steps", days: Math.min(30, Math.round((client.steps || 8000) / 350)), color: "#3aafa9" },
+      { key: "meals", label: "Meals", days: Math.min(30, (client.mealsLogged || 18) + 5), color: "#ef6c3e" },
+      { key: "sleep", label: "Sleep", days: Math.min(30, 21), color: "#8e7cc3" },
+    ];
+    
+    const WidgetWrapper = ({ children, gradient }) => (
       <div
-        key={widget.id}
         draggable={!isLocked}
         onDragStart={(e) => handleDragStart(e, widget.id)}
         onDragOver={(e) => handleDragOver(e, widget.id)}
         onDrop={(e) => handleDrop(e, widget.id)}
         onDragEnd={handleDragEnd}
         style={{
-          background: WHITE,
-          borderRadius: 12,
+          background: gradient || WHITE,
+          borderRadius: 20,
           border: `2px solid ${isDragOver ? GREEN : BORDER}`,
-          padding: 14,
+          padding: isMobile ? 18 : 24,
           opacity: isDragging ? 0.5 : 1,
           transform: isDragOver ? "scale(1.02)" : "scale(1)",
           transition: "all 0.15s ease",
-          cursor: isLocked ? "default" : "grab"
+          cursor: isLocked ? "default" : "grab",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          position: "relative"
         }}
       >
-        {/* Widget header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          {!isLocked && (
-            <div style={{ color: TEXT_SEC, cursor: "grab" }}>
+        {!isLocked && (
+          <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}>
+            <div style={{ color: TEXT_SEC, cursor: "grab", padding: 4 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
                 <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
                 <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
               </svg>
             </div>
-          )}
-          <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: TEXT, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-            {config.label}
-          </div>
-          {!isLocked && (
-            <div 
-              onClick={() => removeWidget(widget.id)}
-              style={{ color: TEXT_SEC, cursor: "pointer", opacity: 0.5, padding: 4 }}
-            >
+            <div onClick={() => removeWidget(widget.id)} style={{ color: TEXT_SEC, cursor: "pointer", opacity: 0.5, padding: 4 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </div>
-          )}
-        </div>
-        
-        {/* Widget content */}
-        {widget.id === "summary" && selectedClient && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 12, background: `${TEAL}20`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, fontWeight: 700, color: TEAL
-            }}>
-              {selectedClient.initials}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{selectedClient.name}</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>Week {selectedClient.week} • {selectedClient.phase}</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: TEAL }}>{selectedClient.score}</div>
-              <div style={{ fontSize: 10, color: TEXT_SEC }}>Score</div>
-            </div>
           </div>
         )}
-        
-        {widget.id === "weightChart" && (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: TEXT_SEC }}>Start: 165 lbs</span>
-              <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>Current: 158 lbs</span>
+        {children}
+      </div>
+    );
+    
+    // Consistency Score Widget (like top3 block)
+    if (widget.id === "consistencyScore") {
+      const sz = 100, r = sz / 2 - 9, circ = 2 * Math.PI * r;
+      const offset = circ * (1 - consistencyScore / 100);
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 18 }}>
+            <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="8"/>
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="8"
+                strokeDasharray={circ} strokeDashoffset={offset}
+                strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+              />
+              <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 30, fontWeight: 800, fill: TEXT }}>{consistencyScore}</text>
+            </svg>
+            <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Consistency Score</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, marginTop: 2 }}>
+              {consistencyScore >= 85 ? "Exceptional" : consistencyScore >= 70 ? "Strong" : consistencyScore >= 55 ? "Building" : "Getting Started"}
             </div>
-            <svg width="100%" height="60" viewBox="0 0 200 60">
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[
+              { label: "Meals", pct: mealsScore, color: "#ef6c3e" },
+              { label: "Exercise", pct: exerciseScore, color: TEAL },
+              { label: "Steps", pct: movementScore, color: "#3aafa9" },
+              { label: "Sleep", pct: sleepScore, color: "#8e7cc3" },
+            ].map((w, i) => (
+              <div key={i}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{w.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: w.color }}>{w.pct}</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 3, background: w.color, width: `${w.pct}%`, transition: "width 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Transformation Widget (dual-line chart)
+    if (widget.id === "transformation") {
+      const startW = 165, currW = 160.5;
+      const w1c = Math.max(15, consistencyScore - 32);
+      const consistencyData = [w1c, w1c + 12, w1c + 22, consistencyScore];
+      const goalData = [startW, startW - 1.2, startW - 2.5, currW];
+      const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
+      const cw = 320, ch = 160, padL = 36, padR = 36, padT = 14, padB = 28;
+      const plotW = cw - padL - padR, plotH = ch - padT - padB;
+      const cMin = 0, cMax = 100;
+      const toYc = (v) => padT + (1 - (v - cMin) / (cMax - cMin)) * plotH;
+      const toX = (i) => padL + (i / (weeks.length - 1)) * plotW;
+      const gVals = goalData, gMin = Math.min(...gVals) - 3, gMax = Math.max(...gVals) + 3;
+      const toYg = (v) => padT + (1 - (v - gMin) / (gMax - gMin)) * plotH;
+      const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
+      const cPts = consistencyData.map((v, i) => ({ x: toX(i), y: toYc(v) }));
+      const gPts = goalData.map((v, i) => ({ x: toX(i), y: toYg(v) }));
+      const cPath = smooth(cPts), gPath = smooth(gPts);
+      const cArea = `${cPath} L ${cPts[cPts.length-1].x},${padT + plotH} L ${cPts[0].x},${padT + plotH} Z`;
+      const cLast = cPts[cPts.length - 1], gLast = gPts[gPts.length - 1];
+      const totalChange = `${(startW - currW).toFixed(1)} lbs lost`;
+      const scoreChange = consistencyScore - w1c;
+      
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)">
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name?.split(" ")[0] || "Client"}'s Transformation</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Consistency drives results — 4 weeks of progress</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>+{scoreChange} pts</div>
+              <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
+            </div>
+          </div>
+          <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: "10px 6px" }}>
+            <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
               <defs>
-                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor={TEAL} stopOpacity="0"/>
+                <linearGradient id="repAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
+                  <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
                 </linearGradient>
               </defs>
-              <path d="M0,50 Q30,45 50,40 T100,30 T150,25 T200,15" fill="none" stroke={TEAL} strokeWidth="2"/>
-              <path d="M0,50 Q30,45 50,40 T100,30 T150,25 T200,15 L200,60 L0,60 Z" fill="url(#chartGrad)"/>
-              <line x1="0" y1="20" x2="200" y2="20" stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4" opacity="0.3"/>
-              <text x="195" y="16" fontSize="8" fill={TEXT_SEC}>Goal</text>
+              {[0, 25, 50, 75, 100].map((v, i) => (
+                <line key={i} x1={padL} y1={toYc(v)} x2={cw - padR} y2={toYc(v)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
+              ))}
+              {weeks.map((w, i) => (
+                <text key={i} x={toX(i)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="600">{`W${i+1}`}</text>
+              ))}
+              <path d={cArea} fill="url(#repAreaGrad)" />
+              <path d={cPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
+              <path d={gPath} fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
+              {cPts.map((p, i) => (
+                <circle key={`c${i}`} cx={p.x} cy={p.y} r={i === cPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+              ))}
+              {gPts.map((p, i) => (
+                <circle key={`g${i}`} cx={p.x} cy={p.y} r={i === gPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={ALERT_GREEN} strokeWidth="2"/>
+              ))}
+              <g><rect x={cLast.x - 16} y={cLast.y - 22} width="32" height="16" rx="8" fill={TEAL}/><text x={cLast.x} y={cLast.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{consistencyScore}</text></g>
+              <g><rect x={gLast.x - 22} y={gLast.y + 8} width="44" height="16" rx="8" fill={ALERT_GREEN}/><text x={gLast.x} y={gLast.y + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{currW}</text></g>
             </svg>
           </div>
-        )}
-        
-        {widget.id === "consistencyCalendar" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-            {["M","T","W","T","F","S","S"].map((d,i) => (
-              <div key={i} style={{ textAlign: "center", fontSize: 9, color: TEXT_SEC, marginBottom: 4 }}>{d}</div>
-            ))}
-            {Array.from({length: 28}, (_, i) => {
-              const intensity = Math.random();
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 3, borderRadius: 2, background: TEAL }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>Consistency</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${ALERT_GREEN}` }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>Weight</span>
+            </div>
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Rule of 30 Widget
+    if (widget.id === "rule30") {
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)">
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Rule of 30</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Every 30 days you unlock a new learning about yourself</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+            {ovPillars.map((p, pIdx) => {
+              const sz = 70, r = 26, circ = 2 * Math.PI * r;
+              const pct = p.days / 30;
+              const off = circ * (1 - pct);
               return (
-                <div key={i} style={{
-                  aspectRatio: "1", borderRadius: 3,
-                  background: intensity > 0.7 ? TEAL : intensity > 0.4 ? `${TEAL}60` : intensity > 0.2 ? `${TEAL}30` : "#f0f0f0"
-                }}/>
+                <div key={pIdx} style={{ textAlign: "center", padding: 16, borderRadius: 16, background: WHITE, border: `1px solid ${BORDER}` }}>
+                  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ display: "block", margin: "0 auto 8px" }}>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="6"/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={p.color} strokeWidth="6"
+                      strokeDasharray={circ} strokeDashoffset={off}
+                      strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                      style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                    />
+                    <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 15, fontWeight: 800, fill: TEXT }}>{p.days}</text>
+                  </svg>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: p.color }}>{p.label}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{p.days} / 30 days</div>
+                </div>
               );
             })}
           </div>
-        )}
-        
-        {widget.id === "macroBreakdown" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <svg width="60" height="60" viewBox="0 0 60 60">
-              <circle cx="30" cy="30" r="25" fill="none" stroke="#e0e0e0" strokeWidth="8"/>
-              <circle cx="30" cy="30" r="25" fill="none" stroke="#3b82f6" strokeWidth="8" 
-                strokeDasharray="47 110" strokeDashoffset="0" transform="rotate(-90 30 30)"/>
-              <circle cx="30" cy="30" r="25" fill="none" stroke="#f59e0b" strokeWidth="8" 
-                strokeDasharray="31 126" strokeDashoffset="-47" transform="rotate(-90 30 30)"/>
-              <circle cx="30" cy="30" r="25" fill="none" stroke="#10b981" strokeWidth="8" 
-                strokeDasharray="31 126" strokeDashoffset="-78" transform="rotate(-90 30 30)"/>
-            </svg>
-            <div style={{ flex: 1, fontSize: 11 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#3b82f6" }}/>
-                <span style={{ color: TEXT_SEC }}>Protein</span>
-                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>30%</span>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Data Cards Widget
+    if (widget.id === "dataCards") {
+      const cards = [
+        { label: "Meals Logged", value: client.mealsLogged || 18, unit: "/21", color: "#ef6c3e" },
+        { label: "Avg Steps", value: ((client.steps || 8000) / 1000).toFixed(1), unit: "k", color: "#3aafa9" },
+        { label: "Workouts", value: client.workoutDays || 4, unit: "/5", color: TEAL },
+        { label: "Weight Change", value: -4.5, unit: " lbs", color: ALERT_GREEN }
+      ];
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Weekly Metrics</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            {cards.map((c, i) => (
+              <div key={i} style={{ padding: 16, borderRadius: 14, background: `${c.color}08`, border: `1px solid ${c.color}20`, textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}{c.unit}</div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4 }}>{c.label}</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#f59e0b" }}/>
-                <span style={{ color: TEXT_SEC }}>Carbs</span>
-                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>40%</span>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Calendar Widget
+    if (widget.id === "calendar") {
+      const dayNames = ["M","T","W","T","F","S","S"];
+      const calDays = Array.from({ length: 28 }).map((_, i) => {
+        const rand = Math.random();
+        return { logged: rand > 0.3, meals: rand > 0.7 ? 3 : rand > 0.4 ? 2 : 1 };
+      });
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Daily Activity</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+            {dayNames.map((d, i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC, marginBottom: 4 }}>{d}</div>
+            ))}
+            {calDays.map((day, i) => (
+              <div key={i} style={{
+                aspectRatio: "1", borderRadius: 8,
+                background: day.logged ? (day.meals === 3 ? TEAL : day.meals === 2 ? `${TEAL}80` : `${TEAL}40`) : "#f0f4f3",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                {day.meals === 3 && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#10b981" }}/>
-                <span style={{ color: TEXT_SEC }}>Fat</span>
-                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>30%</span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center" }}>
+            {[{c: TEAL, l: "3 meals"}, {c: `${TEAL}80`, l: "2 meals"}, {c: `${TEAL}40`, l: "1 meal"}].map((leg, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: leg.c }}/>
+                <span style={{ fontSize: 10, color: TEXT_SEC }}>{leg.l}</span>
+              </div>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Milton Insight Widget
+    if (widget.id === "insight") {
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #eef9f6, #e8f5f0)">
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Milton's Insight</div>
+              <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>
+                {client.name?.split(" ")[0] || "This client"} has shown excellent consistency this week. Protein intake is improving but still 15% below target — recommending a post-workout shake habit. Weekend logging remains the biggest opportunity.
               </div>
             </div>
           </div>
-        )}
-        
-        {widget.id === "achievements" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {["7-day streak", "First 5 lbs lost", "100% meal compliance"].map((a, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}20`, 
-                  display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3">
-                    <polyline points="20,6 9,17 4,12"/>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Coach Notes Widget
+    if (widget.id === "coachNotes") {
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "#f0e8ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Coach Notes</div>
+          </div>
+          <div style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.65, padding: "14px 16px", borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}` }}>
+            Great week overall for {client.name?.split(" ")[0] || "this client"}. Consistency score trending up and weight is moving in the right direction. Main opportunity is protein intake — let's discuss meal prep strategies in our next session.
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Nutrition Breakdown Widget
+    if (widget.id === "nutrition") {
+      const macros = [
+        { label: "Protein", value: client.proteinAvg || 95, target: client.proteinTarget || 120, unit: "g", color: TEAL },
+        { label: "Carbs", value: 145, target: 180, unit: "g", color: "#3aafa9" },
+        { label: "Fats", value: 52, target: 60, unit: "g", color: "#ef6c3e" },
+      ];
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #fdf8f4, #faf5ee, #fdf9f5)">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Nutrition Breakdown</div>
+              <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Average daily intake — past 7 days</div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {macros.map((m, i) => {
+              const pct = Math.min(100, Math.round((m.value / m.target) * 100));
+              const sz = 60, r = 22, circ = 2 * Math.PI * r, off = circ * (1 - pct / 100);
+              return (
+                <div key={i} style={{ padding: 12, borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+                  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ display: "block", margin: "0 auto 8px" }}>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="5"/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={m.color} strokeWidth="5"
+                      strokeDasharray={circ} strokeDashoffset={off}
+                      strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                    />
+                    <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 800, fill: TEXT }}>{pct}%</text>
                   </svg>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.value}{m.unit}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{m.label}</div>
                 </div>
-                <span style={{ fontSize: 13, color: TEXT }}>{a}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        )}
-        
-        {widget.id === "mealCompliance" && (
-          <div>
-            {[{day: "Mon", val: 100}, {day: "Tue", val: 85}, {day: "Wed", val: 100}, {day: "Thu", val: 70}, {day: "Fri", val: 100}, {day: "Sat", val: 60}, {day: "Sun", val: 80}].map(d => (
-              <div key={d.day} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 28, fontSize: 10, color: TEXT_SEC }}>{d.day}</div>
-                <div style={{ flex: 1, height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ width: `${d.val}%`, height: "100%", background: d.val === 100 ? GREEN : d.val >= 80 ? TEAL : "#f59e0b", borderRadius: 4 }}/>
-                </div>
-                <div style={{ width: 28, fontSize: 10, fontWeight: 600, color: TEXT, textAlign: "right" }}>{d.val}%</div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {widget.id === "workoutStats" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-            {[{label: "Sessions", value: "5/5"}, {label: "Volume", value: "12,450 lbs"}, {label: "PRs", value: "2"}].map(s => (
-              <div key={s.label} style={{ textAlign: "center", padding: 10, background: `${TEAL}10`, borderRadius: 8 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: TEAL }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {widget.id === "coachNotes" && (
-          <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, fontStyle: "italic" }}>
-            "Great progress this week! Your consistency with meals has really improved. Keep focusing on protein timing around workouts. Let's discuss increasing cardio next week."
-          </div>
-        )}
-        
-        {widget.id === "nextSteps" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {["Increase protein to 140g daily", "Add 2 cardio sessions", "Schedule check-in call"].map((item, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${BORDER}` }}/>
-                <span style={{ fontSize: 13, color: TEXT }}>{item}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+        </WidgetWrapper>
+      );
+    }
+    
+    return null;
   };
   
   const sortedWidgets = [...widgets].sort((a, b) => a.order - b.order);
-  const addableWidgets = availableWidgets.filter(w => !widgets.find(ww => ww.id === w.id) && w.id !== "summary");
+  const addableWidgets = availableWidgets.filter(w => !widgets.find(ww => ww.id === w.id) && w.id !== "consistencyScore");
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f8faf9", position: "relative" }}>
@@ -6456,12 +6608,11 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       {w.type === "chart" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
-                      {w.type === "pie" && <><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>}
-                      {w.type === "bar" && <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>}
-                      {w.type === "stats" && <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}
-                      {w.type === "list" && <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>}
+                      {w.type === "rings" && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>}
+                      {w.type === "cards" && <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}
+                      {w.type === "insight" && <><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></>}
+                      {w.type === "nutrition" && <><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></>}
                       {w.type === "text" && <><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></>}
-                      {w.type === "checklist" && <><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></>}
                       {w.type === "calendar" && <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>}
                     </svg>
                   </div>
