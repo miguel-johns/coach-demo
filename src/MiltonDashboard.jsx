@@ -6613,7 +6613,27 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
             transition: "width 0.3s ease, max-width 0.3s ease"
           }}>
               <div style={{ padding: viewMode === "mobile" ? 16 : 24, display: "flex", flexDirection: "column", gap: 12 }}>
-              {sortedWidgets.map(widget => renderWidget(widget))}
+              {(() => {
+                const result = [];
+                let i = 0;
+                while (i < sortedWidgets.length) {
+                  const widget = sortedWidgets[i];
+                  // Group transformation and goalTrajectory side by side on desktop
+                  if (viewMode === "desktop" && widget.id === "transformation" && sortedWidgets[i + 1]?.id === "goalTrajectory") {
+                    result.push(
+                      <div key="charts-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        {renderWidget(widget)}
+                        {renderWidget(sortedWidgets[i + 1])}
+                      </div>
+                    );
+                    i += 2;
+                  } else {
+                    result.push(renderWidget(widget));
+                    i++;
+                  }
+                }
+                return result;
+              })()}
               
               {/* Add section button */}
               {addableWidgets.length > 0 && (
