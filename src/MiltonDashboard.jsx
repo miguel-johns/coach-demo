@@ -889,7 +889,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ═══════���═══════════════════════════════════ */
+   ════��══���═══════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -4312,6 +4312,366 @@ function ScheduleCanvas({ onClose }) {
   );
 }
 
+function MessagesCanvas({ onClose }) {
+  const [step, setStep] = useState("setup"); // setup, generating, preview
+  const [messageType, setMessageType] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [frequency, setFrequency] = useState("weekly");
+  const [generatedMessages, setGeneratedMessages] = useState([]);
+  const [activeMessage, setActiveMessage] = useState(0);
+  
+  const messageTypes = [
+    { id: "checkin", label: "Check-ins", desc: "Weekly progress check-ins", icon: "chat" },
+    { id: "motivation", label: "Motivation", desc: "Encouraging messages", icon: "star" },
+    { id: "reminder", label: "Reminders", desc: "Habit & session reminders", icon: "bell" },
+    { id: "celebration", label: "Celebrations", desc: "Milestone celebrations", icon: "trophy" }
+  ];
+  
+  const clients = [
+    { name: "Sarah Chen", phase: "Fat Loss", week: 6 },
+    { name: "Marcus Johnson", phase: "Muscle Gain", week: 8 },
+    { name: "Emily Rodriguez", phase: "Metabolic Health", week: 4 },
+    { name: "All Clients", phase: "Broadcast", week: null }
+  ];
+  
+  const handleGenerate = () => {
+    setStep("generating");
+    // Simulate AI generation
+    setTimeout(() => {
+      const messages = [
+        {
+          id: 1,
+          day: "Monday",
+          time: "9:00 AM",
+          subject: `Weekly Check-in`,
+          content: selectedClient?.name === "All Clients" 
+            ? `Hey team! New week, new opportunities. How are you feeling about your goals this week? Reply with one word that describes your energy level today.`
+            : `Hey ${selectedClient?.name?.split(' ')[0]}! Starting week ${(selectedClient?.week || 0) + 1} strong. How did last week feel? Any wins you want to celebrate?`,
+          status: "scheduled"
+        },
+        {
+          id: 2,
+          day: "Wednesday",
+          time: "12:00 PM", 
+          subject: "Mid-week Boost",
+          content: selectedClient?.name === "All Clients"
+            ? `Midweek momentum check! You're halfway there. Remember: consistency beats perfection. What's one small win you've had so far this week?`
+            : `Quick mid-week check ${selectedClient?.name?.split(' ')[0]}! How's the ${selectedClient?.phase?.toLowerCase()} phase treating you? Remember, small daily actions add up to big results.`,
+          status: "scheduled"
+        },
+        {
+          id: 3,
+          day: "Friday",
+          time: "5:00 PM",
+          subject: "Weekend Prep",
+          content: selectedClient?.name === "All Clients"
+            ? `Weekend's almost here! Before you head out - what's your plan to stay on track? Having a loose plan makes all the difference.`
+            : `Happy Friday ${selectedClient?.name?.split(' ')[0]}! Quick thought before the weekend: What's one thing you can do to set yourself up for success? Even 10 minutes of meal prep helps!`,
+          status: "scheduled"
+        },
+        {
+          id: 4,
+          day: "Sunday",
+          time: "7:00 PM",
+          subject: "Week Ahead",
+          content: selectedClient?.name === "All Clients"
+            ? `New week loading... Take 5 minutes tonight to visualize your best week yet. What does success look like for you this week?`
+            : `${selectedClient?.name?.split(' ')[0]}, excited for the week ahead! Based on your progress, I think this could be a breakthrough week. Let's make it count.`,
+          status: "scheduled"
+        }
+      ];
+      setGeneratedMessages(messages);
+      setStep("preview");
+    }, 1500);
+  };
+  
+  const GREEN = "#5CDB95";
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Close button */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {step === "setup" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "48px 40px", overflowY: "auto" }}>
+          {/* Header */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ 
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: `${GREEN}20`, padding: "6px 12px", borderRadius: 20, marginBottom: 12
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: GREEN }}>Automated Messages</span>
+            </div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
+              Set up your message sequence
+            </h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", maxWidth: 400 }}>
+              Choose a client and message type. AI will generate personalized messages you can review and schedule.
+            </p>
+          </div>
+          
+          {/* Client Selection */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
+              Who is this for?
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {clients.map(client => (
+                <div
+                  key={client.name}
+                  onClick={() => setSelectedClient(client)}
+                  style={{
+                    padding: "10px 16px", borderRadius: 10,
+                    background: selectedClient?.name === client.name ? GREEN : WHITE,
+                    border: `1px solid ${selectedClient?.name === client.name ? GREEN : BORDER}`,
+                    color: selectedClient?.name === client.name ? WHITE : TEXT,
+                    cursor: "pointer", fontSize: 13, fontWeight: 500,
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  {client.name}
+                  {client.week && <span style={{ opacity: 0.7, marginLeft: 6 }}>W{client.week}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Message Type */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
+              Message type
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+              {messageTypes.map(type => (
+                <div
+                  key={type.id}
+                  onClick={() => setMessageType(type.id)}
+                  style={{
+                    padding: 16, borderRadius: 12,
+                    background: messageType === type.id ? `${GREEN}10` : WHITE,
+                    border: `1px solid ${messageType === type.id ? GREEN : BORDER}`,
+                    cursor: "pointer", transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 600, color: messageType === type.id ? GREEN : TEXT }}>
+                    {type.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>{type.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Frequency */}
+          <div style={{ marginBottom: 32 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
+              Frequency
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["daily", "weekly", "custom"].map(f => (
+                <div
+                  key={f}
+                  onClick={() => setFrequency(f)}
+                  style={{
+                    padding: "10px 20px", borderRadius: 10,
+                    background: frequency === f ? GREEN : WHITE,
+                    border: `1px solid ${frequency === f ? GREEN : BORDER}`,
+                    color: frequency === f ? WHITE : TEXT,
+                    cursor: "pointer", fontSize: 13, fontWeight: 500,
+                    textTransform: "capitalize", transition: "all 0.15s ease"
+                  }}
+                >
+                  {f}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Generate Button */}
+          <button
+            onClick={handleGenerate}
+            disabled={!selectedClient || !messageType}
+            style={{
+              padding: "14px 28px", borderRadius: 12, border: "none",
+              background: selectedClient && messageType ? GREEN : "#e0e0e0",
+              color: selectedClient && messageType ? WHITE : TEXT_SEC,
+              fontSize: 14, fontWeight: 600, cursor: selectedClient && messageType ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", gap: 8, width: "fit-content",
+              transition: "all 0.15s ease"
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Generate with AI
+          </button>
+        </div>
+      )}
+      
+      {step === "generating" && (
+        <div style={{ 
+          flex: 1, display: "flex", flexDirection: "column", 
+          alignItems: "center", justifyContent: "center", padding: 48 
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 16, background: `${GREEN}15`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 20, animation: "pulse 1.5s ease-in-out infinite"
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
+            Generating messages...
+          </h3>
+          <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0 }}>
+            Crafting personalized content for {selectedClient?.name}
+          </p>
+        </div>
+      )}
+      
+      {step === "preview" && (
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* Message List */}
+          <div style={{ 
+            width: 280, borderRight: `1px solid ${BORDER}`, 
+            display: "flex", flexDirection: "column", background: WHITE 
+          }}>
+            <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {generatedMessages.length} messages for {selectedClient?.name}
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {generatedMessages.map((msg, idx) => (
+                <div
+                  key={msg.id}
+                  onClick={() => setActiveMessage(idx)}
+                  style={{
+                    padding: "14px 16px", borderBottom: `1px solid ${BORDER}`,
+                    background: activeMessage === idx ? `${GREEN}08` : "transparent",
+                    borderLeft: activeMessage === idx ? `3px solid ${GREEN}` : "3px solid transparent",
+                    cursor: "pointer", transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{msg.day}</span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{msg.time}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, 
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" 
+                  }}>
+                    {msg.subject}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: 12, borderTop: `1px solid ${BORDER}` }}>
+              <button
+                onClick={() => setStep("setup")}
+                style={{
+                  width: "100%", padding: "10px", borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+          
+          {/* Message Preview */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#fafcfb" }}>
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}`, background: WHITE }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
+                    {generatedMessages[activeMessage]?.subject}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                    {generatedMessages[activeMessage]?.day} at {generatedMessages[activeMessage]?.time}
+                  </div>
+                </div>
+                <div style={{
+                  padding: "4px 10px", borderRadius: 6,
+                  background: `${GREEN}15`, color: GREEN,
+                  fontSize: 11, fontWeight: 600
+                }}>
+                  Scheduled
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+              <div style={{
+                background: WHITE, borderRadius: 12, padding: 20,
+                border: `1px solid ${BORDER}`, maxWidth: 500
+              }}>
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: TEXT }}>
+                  {generatedMessages[activeMessage]?.content}
+                </p>
+              </div>
+              
+              <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`,
+                  background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>
+                  Edit message
+                </button>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`,
+                  background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>
+                  Change time
+                </button>
+              </div>
+            </div>
+            
+            <div style={{ 
+              padding: "16px 24px", borderTop: `1px solid ${BORDER}`, 
+              background: WHITE, display: "flex", justifyContent: "flex-end", gap: 10 
+            }}>
+              <button style={{
+                padding: "12px 20px", borderRadius: 10, border: `1px solid ${BORDER}`,
+                background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer"
+              }}>
+                Save as Draft
+              </button>
+              <button style={{
+                padding: "12px 24px", borderRadius: 10, border: "none",
+                background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+              }}>
+                Activate Sequence
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CanvasTemplates({ onSelect, onClose }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
@@ -4338,7 +4698,7 @@ function CanvasTemplates({ onSelect, onClose }) {
       title: "Automated Messages", 
       desc: "Schedule check-ins, reminders, and motivational messages",
       color: "#5CDB95",
-      available: false
+      available: true
     },
     { 
       id: "reports",
@@ -6110,7 +6470,7 @@ Remember: Be specific, be brief, be helpful.`;
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {canvasMode ? (
               <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "messages" ? "Messages" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
               </span>
             ) : (
               <>
@@ -6191,19 +6551,27 @@ Remember: Be specific, be brief, be helpful.`;
                     goals: "General health and fitness",
                     weeklyTargets: { calories: 2000, protein: 150 }
                   });
-                } else if (templateType === "workout") {
-                  setCanvasType("workout");
-                  setCanvasData({
-                    clientName: "New Client",
-                    programName: "Custom Program",
-                    weeks: 4
-                  });
-                }
-              }}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-          {canvasType === "mealPlan" && (
+} else if (templateType === "workout") {
+  setCanvasType("workout");
+  setCanvasData({
+  clientName: "New Client",
+  programName: "Custom Program",
+  weeks: 4
+  });
+  } else if (templateType === "messages") {
+  setCanvasType("messages");
+  setCanvasData({});
+  }
+  }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "messages" && (
+  <MessagesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "mealPlan" && (
             <MealPlanCanvas 
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -6257,16 +6625,24 @@ Remember: Be specific, be brief, be helpful.`;
           goals: "General health and fitness",
           weeklyTargets: { calories: 2000, protein: 150 }
         });
-      } else if (templateType === "workout") {
-        setCanvasType("workout");
-        setCanvasData({
-          clientName: "New Client",
-          programName: "Custom Program",
-          weeks: 4
-        });
-      }
-    }}
-    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+} else if (templateType === "workout") {
+  setCanvasType("workout");
+  setCanvasData({
+  clientName: "New Client",
+  programName: "Custom Program",
+  weeks: 4
+  });
+  } else if (templateType === "messages") {
+  setCanvasType("messages");
+  setCanvasData({});
+  }
+  }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "messages" && (
+  <MessagesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
   {canvasType === "mealPlan" && (
