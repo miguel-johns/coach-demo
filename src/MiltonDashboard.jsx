@@ -4590,25 +4590,25 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
       {/* Timeline Preview Panel */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE, overflow: "hidden" }}>
         {/* Header */}
-        <div style={{ 
-          padding: "16px 24px", borderBottom: `1px solid ${BORDER}`,
-          display: "flex", alignItems: "center", justifyContent: "space-between"
-        }}>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Message Sequence</h2>
-            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
-              {chatStep < 5 ? "Building your sequence..." : `${generatedMessages.length} messages scheduled`}
-            </p>
-          </div>
-          {chatStep === 5 && (
-            <button style={{
-              padding: "10px 20px", borderRadius: 10, border: "none",
-              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
-            }}>
-              Activate
-            </button>
-          )}
-        </div>
+<div style={{
+  padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`,
+  display: "flex", alignItems: "center", justifyContent: "space-between"
+  }}>
+  <div>
+  <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Message Sequence</h2>
+  <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
+  {chatStep < 5 ? "Building your sequence..." : `${generatedMessages.length} messages scheduled`}
+  </p>
+  </div>
+  {chatStep === 5 && (
+  <button style={{
+  padding: "10px 20px", borderRadius: 10, border: "none",
+  background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+  }}>
+  Activate
+  </button>
+  )}
+  </div>
         
         {/* Timeline Content */}
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
