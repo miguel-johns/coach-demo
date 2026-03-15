@@ -3757,8 +3757,27 @@ function InboxCanvas({ onClose }) {
   
   return (
     <div style={{
-      display: "flex", height: "100%", background: WHITE
+      display: "flex", height: "100%", background: WHITE, position: "relative"
     }}>
+      {/* Close button */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
       {/* Sidebar - Conversation List */}
       <div style={{
         width: 300, borderRight: `1px solid ${BORDER}`,
@@ -4090,7 +4109,26 @@ function ScheduleCanvas({ onClose }) {
   const getCategoryColor = (cat) => categories.find(c => c.id === cat)?.color || TEXT_SEC;
   
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb", position: "relative" }}>
+      {/* Close button */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
       {/* Header */}
       <div style={{
         padding: "16px 20px", borderBottom: `1px solid ${BORDER}`,
