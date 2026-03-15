@@ -889,7 +889,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ════��══���═══════════════════════════════════ */
+   ════��═������═══════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -4313,82 +4313,123 @@ function ScheduleCanvas({ onClose }) {
 }
 
 function MessagesCanvas({ onClose }) {
-  const [step, setStep] = useState("setup"); // setup, generating, preview
-  const [messageType, setMessageType] = useState(null);
+  const [chatStep, setChatStep] = useState(0); // 0: who, 1: types, 2: frequency, 3: duration, 4: generating, 5: done
   const [selectedClient, setSelectedClient] = useState(null);
-  const [frequency, setFrequency] = useState("weekly");
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [frequency, setFrequency] = useState(null);
+  const [duration, setDuration] = useState(null);
   const [generatedMessages, setGeneratedMessages] = useState([]);
-  const [activeMessage, setActiveMessage] = useState(0);
-  
-  const messageTypes = [
-    { id: "checkin", label: "Check-ins", desc: "Weekly progress check-ins", icon: "chat" },
-    { id: "motivation", label: "Motivation", desc: "Encouraging messages", icon: "star" },
-    { id: "reminder", label: "Reminders", desc: "Habit & session reminders", icon: "bell" },
-    { id: "celebration", label: "Celebrations", desc: "Milestone celebrations", icon: "trophy" }
-  ];
-  
-  const clients = [
-    { name: "Sarah Chen", phase: "Fat Loss", week: 6 },
-    { name: "Marcus Johnson", phase: "Muscle Gain", week: 8 },
-    { name: "Emily Rodriguez", phase: "Metabolic Health", week: 4 },
-    { name: "All Clients", phase: "Broadcast", week: null }
-  ];
-  
-  const handleGenerate = () => {
-    setStep("generating");
-    // Simulate AI generation
-    setTimeout(() => {
-      const messages = [
-        {
-          id: 1,
-          day: "Monday",
-          time: "9:00 AM",
-          subject: `Weekly Check-in`,
-          content: selectedClient?.name === "All Clients" 
-            ? `Hey team! New week, new opportunities. How are you feeling about your goals this week? Reply with one word that describes your energy level today.`
-            : `Hey ${selectedClient?.name?.split(' ')[0]}! Starting week ${(selectedClient?.week || 0) + 1} strong. How did last week feel? Any wins you want to celebrate?`,
-          status: "scheduled"
-        },
-        {
-          id: 2,
-          day: "Wednesday",
-          time: "12:00 PM", 
-          subject: "Mid-week Boost",
-          content: selectedClient?.name === "All Clients"
-            ? `Midweek momentum check! You're halfway there. Remember: consistency beats perfection. What's one small win you've had so far this week?`
-            : `Quick mid-week check ${selectedClient?.name?.split(' ')[0]}! How's the ${selectedClient?.phase?.toLowerCase()} phase treating you? Remember, small daily actions add up to big results.`,
-          status: "scheduled"
-        },
-        {
-          id: 3,
-          day: "Friday",
-          time: "5:00 PM",
-          subject: "Weekend Prep",
-          content: selectedClient?.name === "All Clients"
-            ? `Weekend's almost here! Before you head out - what's your plan to stay on track? Having a loose plan makes all the difference.`
-            : `Happy Friday ${selectedClient?.name?.split(' ')[0]}! Quick thought before the weekend: What's one thing you can do to set yourself up for success? Even 10 minutes of meal prep helps!`,
-          status: "scheduled"
-        },
-        {
-          id: 4,
-          day: "Sunday",
-          time: "7:00 PM",
-          subject: "Week Ahead",
-          content: selectedClient?.name === "All Clients"
-            ? `New week loading... Take 5 minutes tonight to visualize your best week yet. What does success look like for you this week?`
-            : `${selectedClient?.name?.split(' ')[0]}, excited for the week ahead! Based on your progress, I think this could be a breakthrough week. Let's make it count.`,
-          status: "scheduled"
-        }
-      ];
-      setGeneratedMessages(messages);
-      setStep("preview");
-    }, 1500);
-  };
+  const [expandedMessage, setExpandedMessage] = useState(null);
   
   const GREEN = "#5CDB95";
   
+  const clients = [
+    { name: "Sarah Chen", initials: "SC" },
+    { name: "Marcus Johnson", initials: "MJ" },
+    { name: "Emily Rodriguez", initials: "ER" },
+    { name: "All Clients", initials: "ALL" }
+  ];
+  
+  const messageTypes = [
+    { id: "checkin", label: "Check-ins", icon: "chat" },
+    { id: "motivation", label: "Motivation", icon: "star" },
+    { id: "reminder", label: "Reminders", icon: "bell" },
+    { id: "tips", label: "Tips & Education", icon: "book" }
+  ];
+  
+  const frequencies = [
+    { id: "daily", label: "Daily" },
+    { id: "3x", label: "3x per week" },
+    { id: "weekly", label: "Weekly" }
+  ];
+  
+  const durations = [
+    { id: "2weeks", label: "2 weeks" },
+    { id: "4weeks", label: "4 weeks" },
+    { id: "8weeks", label: "8 weeks" }
+  ];
+  
+  const handleClientSelect = (client) => {
+    setSelectedClient(client);
+    setTimeout(() => setChatStep(1), 400);
+  };
+  
+  const handleTypeToggle = (typeId) => {
+    setSelectedTypes(prev => 
+      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
+    );
+  };
+  
+  const handleTypesConfirm = () => {
+    if (selectedTypes.length > 0) {
+      setTimeout(() => setChatStep(2), 400);
+    }
+  };
+  
+  const handleFrequencySelect = (freq) => {
+    setFrequency(freq);
+    setTimeout(() => setChatStep(3), 400);
+  };
+  
+  const handleDurationSelect = (dur) => {
+    setDuration(dur);
+    setTimeout(() => {
+      setChatStep(4);
+      // Generate messages after a delay
+      setTimeout(() => {
+        const msgs = generateMessages();
+        setGeneratedMessages(msgs);
+        setChatStep(5);
+      }, 2000);
+    }, 400);
+  };
+  
+  const generateMessages = () => {
+    const name = selectedClient?.name === "All Clients" ? "team" : selectedClient?.name?.split(' ')[0];
+    const weeksNum = duration === "2weeks" ? 2 : duration === "4weeks" ? 4 : 8;
+    const perWeek = frequency === "daily" ? 7 : frequency === "3x" ? 3 : 1;
+    const messages = [];
+    
+    const typeContents = {
+      checkin: ["How are you feeling today?", "Quick check-in - how's your energy?", "What's one win from this week?"],
+      motivation: ["You're doing amazing!", "Remember why you started.", "Every step counts."],
+      reminder: ["Don't forget your session today!", "Time for your workout!", "Meal prep reminder!"],
+      tips: ["Try drinking water before meals.", "Sleep is key to recovery.", "Consistency beats perfection."]
+    };
+    
+    let msgId = 1;
+    for (let week = 1; week <= Math.min(weeksNum, 4); week++) {
+      const weekMsgs = [];
+      selectedTypes.forEach((type, typeIdx) => {
+        const dayOffset = typeIdx * (7 / selectedTypes.length);
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const dayName = days[Math.floor(dayOffset) % 7];
+        const contents = typeContents[type];
+        weekMsgs.push({
+          id: msgId++,
+          week,
+          day: dayName,
+          time: `${9 + typeIdx * 3}:00 AM`,
+          type: messageTypes.find(t => t.id === type)?.label,
+          typeId: type,
+          content: `Hey ${name}! ${contents[week % contents.length]}`,
+          status: "scheduled"
+        });
+      });
+      messages.push(...weekMsgs);
+    }
+    return messages;
+  };
+  
+  const typeColors = {
+    checkin: TEAL,
+    motivation: "#f59e0b",
+    reminder: "#6366f1",
+    tips: "#ec4899"
+  };
+  
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+    <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
       {/* Close button */}
       <div
         onClick={onClose}
@@ -4408,266 +4449,384 @@ function MessagesCanvas({ onClose }) {
         </svg>
       </div>
       
-      {step === "setup" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "48px 40px", overflowY: "auto" }}>
-          {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ 
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: `${GREEN}20`, padding: "6px 12px", borderRadius: 20, marginBottom: 12
+      {/* Left Panel - Chat Q&A */}
+      <div style={{ 
+        width: 340, borderRight: `1px solid ${BORDER}`, 
+        display: "flex", flexDirection: "column", background: WHITE 
+      }}>
+        {/* Chat messages area */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+          {/* AI greeting */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 20, animation: "fadeSlideIn 0.4s ease" }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 600, color: GREEN }}>Automated Messages</span>
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
-              Set up your message sequence
-            </h1>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", maxWidth: 400 }}>
-              Choose a client and message type. AI will generate personalized messages you can review and schedule.
+            <div style={{
+              background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
+              fontSize: 14, color: TEXT, lineHeight: 1.5
+            }}>
+              Let's set up your automated message sequence. Who should receive these messages?
+            </div>
+          </div>
+          
+          {/* Step 0: Client selection */}
+          {chatStep >= 0 && (
+            <div style={{ marginBottom: 20, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginLeft: 42 }}>
+                {clients.map(client => (
+                  <button
+                    key={client.name}
+                    onClick={() => !selectedClient && handleClientSelect(client)}
+                    disabled={selectedClient !== null}
+                    style={{
+                      padding: "8px 14px", borderRadius: 20,
+                      background: selectedClient?.name === client.name ? GREEN : WHITE,
+                      border: `1px solid ${selectedClient?.name === client.name ? GREEN : BORDER}`,
+                      color: selectedClient?.name === client.name ? WHITE : TEXT,
+                      fontSize: 13, fontWeight: 500, cursor: selectedClient ? "default" : "pointer",
+                      opacity: selectedClient && selectedClient.name !== client.name ? 0.4 : 1,
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    {client.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Step 1: Message types */}
+          {chatStep >= 1 && (
+            <>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
+                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                  Great! What types of messages do you want to send? You can pick multiple.
+                </div>
+              </div>
+              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: chatStep === 1 ? 12 : 0 }}>
+                  {messageTypes.map(type => (
+                    <button
+                      key={type.id}
+                      onClick={() => chatStep === 1 && handleTypeToggle(type.id)}
+                      disabled={chatStep > 1}
+                      style={{
+                        padding: "8px 14px", borderRadius: 20,
+                        background: selectedTypes.includes(type.id) ? typeColors[type.id] : WHITE,
+                        border: `1px solid ${selectedTypes.includes(type.id) ? typeColors[type.id] : BORDER}`,
+                        color: selectedTypes.includes(type.id) ? WHITE : TEXT,
+                        fontSize: 13, fontWeight: 500, cursor: chatStep === 1 ? "pointer" : "default",
+                        opacity: chatStep > 1 && !selectedTypes.includes(type.id) ? 0.4 : 1,
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                {chatStep === 1 && selectedTypes.length > 0 && (
+                  <button
+                    onClick={handleTypesConfirm}
+                    style={{
+                      padding: "8px 16px", borderRadius: 20, border: "none",
+                      background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+                    }}
+                  >
+                    Continue
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+          
+          {/* Step 2: Frequency */}
+          {chatStep >= 2 && (
+            <>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
+                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                  How often should messages go out?
+                </div>
+              </div>
+              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {frequencies.map(freq => (
+                    <button
+                      key={freq.id}
+                      onClick={() => chatStep === 2 && handleFrequencySelect(freq.id)}
+                      disabled={chatStep > 2}
+                      style={{
+                        padding: "8px 14px", borderRadius: 20,
+                        background: frequency === freq.id ? GREEN : WHITE,
+                        border: `1px solid ${frequency === freq.id ? GREEN : BORDER}`,
+                        color: frequency === freq.id ? WHITE : TEXT,
+                        fontSize: 13, fontWeight: 500, cursor: chatStep === 2 ? "pointer" : "default",
+                        opacity: chatStep > 2 && frequency !== freq.id ? 0.4 : 1,
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {freq.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          
+          {/* Step 3: Duration */}
+          {chatStep >= 3 && (
+            <>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
+                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                  How long should this sequence run?
+                </div>
+              </div>
+              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {durations.map(dur => (
+                    <button
+                      key={dur.id}
+                      onClick={() => chatStep === 3 && handleDurationSelect(dur.id)}
+                      disabled={chatStep > 3}
+                      style={{
+                        padding: "8px 14px", borderRadius: 20,
+                        background: duration === dur.id ? GREEN : WHITE,
+                        border: `1px solid ${duration === dur.id ? GREEN : BORDER}`,
+                        color: duration === dur.id ? WHITE : TEXT,
+                        fontSize: 13, fontWeight: 500, cursor: chatStep === 3 ? "pointer" : "default",
+                        opacity: chatStep > 3 && duration !== dur.id ? 0.4 : 1,
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {dur.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          
+          {/* Step 4+5: Generating/Complete */}
+          {chatStep >= 4 && (
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
+                fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                {chatStep === 4 ? "Generating your message sequence..." : 
+                  `Done! I've created ${generatedMessages.length} messages for ${selectedClient?.name}. Review them on the right and activate when ready.`}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Right Panel - Timeline Preview */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE, overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{ 
+          padding: "16px 24px", borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Message Sequence</h2>
+            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
+              {chatStep < 5 ? "Building your sequence..." : `${generatedMessages.length} messages scheduled`}
             </p>
           </div>
-          
-          {/* Client Selection */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
-              Who is this for?
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {clients.map(client => (
-                <div
-                  key={client.name}
-                  onClick={() => setSelectedClient(client)}
-                  style={{
-                    padding: "10px 16px", borderRadius: 10,
-                    background: selectedClient?.name === client.name ? GREEN : WHITE,
-                    border: `1px solid ${selectedClient?.name === client.name ? GREEN : BORDER}`,
-                    color: selectedClient?.name === client.name ? WHITE : TEXT,
-                    cursor: "pointer", fontSize: 13, fontWeight: 500,
-                    transition: "all 0.15s ease"
-                  }}
-                >
-                  {client.name}
-                  {client.week && <span style={{ opacity: 0.7, marginLeft: 6 }}>W{client.week}</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Message Type */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
-              Message type
-            </label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
-              {messageTypes.map(type => (
-                <div
-                  key={type.id}
-                  onClick={() => setMessageType(type.id)}
-                  style={{
-                    padding: 16, borderRadius: 12,
-                    background: messageType === type.id ? `${GREEN}10` : WHITE,
-                    border: `1px solid ${messageType === type.id ? GREEN : BORDER}`,
-                    cursor: "pointer", transition: "all 0.15s ease"
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 600, color: messageType === type.id ? GREEN : TEXT }}>
-                    {type.label}
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>{type.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Frequency */}
-          <div style={{ marginBottom: 32 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: TEXT, display: "block", marginBottom: 10 }}>
-              Frequency
-            </label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["daily", "weekly", "custom"].map(f => (
-                <div
-                  key={f}
-                  onClick={() => setFrequency(f)}
-                  style={{
-                    padding: "10px 20px", borderRadius: 10,
-                    background: frequency === f ? GREEN : WHITE,
-                    border: `1px solid ${frequency === f ? GREEN : BORDER}`,
-                    color: frequency === f ? WHITE : TEXT,
-                    cursor: "pointer", fontSize: 13, fontWeight: 500,
-                    textTransform: "capitalize", transition: "all 0.15s ease"
-                  }}
-                >
-                  {f}
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={!selectedClient || !messageType}
-            style={{
-              padding: "14px 28px", borderRadius: 12, border: "none",
-              background: selectedClient && messageType ? GREEN : "#e0e0e0",
-              color: selectedClient && messageType ? WHITE : TEXT_SEC,
-              fontSize: 14, fontWeight: 600, cursor: selectedClient && messageType ? "pointer" : "not-allowed",
-              display: "flex", alignItems: "center", gap: 8, width: "fit-content",
-              transition: "all 0.15s ease"
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-            Generate with AI
-          </button>
+          {chatStep === 5 && (
+            <button style={{
+              padding: "10px 20px", borderRadius: 10, border: "none",
+              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+            }}>
+              Activate
+            </button>
+          )}
         </div>
-      )}
-      
-      {step === "generating" && (
-        <div style={{ 
-          flex: 1, display: "flex", flexDirection: "column", 
-          alignItems: "center", justifyContent: "center", padding: 48 
-        }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 16, background: `${GREEN}15`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            marginBottom: 20, animation: "pulse 1.5s ease-in-out infinite"
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
-            Generating messages...
-          </h3>
-          <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0 }}>
-            Crafting personalized content for {selectedClient?.name}
-          </p>
-        </div>
-      )}
-      
-      {step === "preview" && (
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          {/* Message List */}
-          <div style={{ 
-            width: 280, borderRight: `1px solid ${BORDER}`, 
-            display: "flex", flexDirection: "column", background: WHITE 
-          }}>
-            <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {generatedMessages.length} messages for {selectedClient?.name}
-              </div>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              {generatedMessages.map((msg, idx) => (
-                <div
-                  key={msg.id}
-                  onClick={() => setActiveMessage(idx)}
-                  style={{
-                    padding: "14px 16px", borderBottom: `1px solid ${BORDER}`,
-                    background: activeMessage === idx ? `${GREEN}08` : "transparent",
-                    borderLeft: activeMessage === idx ? `3px solid ${GREEN}` : "3px solid transparent",
-                    cursor: "pointer", transition: "all 0.15s ease"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{msg.day}</span>
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{msg.time}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC, 
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" 
-                  }}>
-                    {msg.subject}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: 12, borderTop: `1px solid ${BORDER}` }}>
-              <button
-                onClick={() => setStep("setup")}
-                style={{
-                  width: "100%", padding: "10px", borderRadius: 8,
-                  border: `1px solid ${BORDER}`, background: WHITE,
-                  color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
-                }}
-              >
-                Regenerate
-              </button>
-            </div>
-          </div>
-          
-          {/* Message Preview */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#fafcfb" }}>
-            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}`, background: WHITE }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
-                    {generatedMessages[activeMessage]?.subject}
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
-                    {generatedMessages[activeMessage]?.day} at {generatedMessages[activeMessage]?.time}
-                  </div>
-                </div>
-                <div style={{
-                  padding: "4px 10px", borderRadius: 6,
-                  background: `${GREEN}15`, color: GREEN,
-                  fontSize: 11, fontWeight: 600
-                }}>
-                  Scheduled
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+        
+        {/* Timeline Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
+          {chatStep < 4 ? (
+            /* Building Animation */
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div style={{
-                background: WHITE, borderRadius: 12, padding: 20,
-                border: `1px solid ${BORDER}`, maxWidth: 500
+                width: 80, height: 80, borderRadius: 20, background: `${GREEN}10`,
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24
               }}>
-                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: TEXT }}>
-                  {generatedMessages[activeMessage]?.content}
-                </p>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                {chatStep === 0 && "Let's set up your messages"}
+                {chatStep === 1 && "Great choice!"}
+                {chatStep === 2 && "Adding message types..."}
+                {chatStep === 3 && "Almost there..."}
+              </div>
+              <div style={{ fontSize: 14, color: TEXT_SEC }}>
+                Answer the questions to build your sequence
               </div>
               
-              <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
-                <button style={{
-                  padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
-                }}>
-                  Edit message
-                </button>
-                <button style={{
-                  padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 500, cursor: "pointer"
-                }}>
-                  Change time
-                </button>
+              {/* Progress dots */}
+              <div style={{ display: "flex", gap: 8, marginTop: 32 }}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: i <= chatStep ? GREEN : BORDER,
+                    transition: "all 0.3s ease"
+                  }} />
+                ))}
               </div>
             </div>
-            
-            <div style={{ 
-              padding: "16px 24px", borderTop: `1px solid ${BORDER}`, 
-              background: WHITE, display: "flex", justifyContent: "flex-end", gap: 10 
-            }}>
-              <button style={{
-                padding: "12px 20px", borderRadius: 10, border: `1px solid ${BORDER}`,
-                background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer"
+          ) : chatStep === 4 ? (
+            /* Generating Animation */
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+              <div style={{
+                width: 80, height: 80, borderRadius: 20, background: `${GREEN}15`,
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24,
+                animation: "pulse 1.5s ease-in-out infinite"
               }}>
-                Save as Draft
-              </button>
-              <button style={{
-                padding: "12px 24px", borderRadius: 10, border: "none",
-                background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
-              }}>
-                Activate Sequence
-              </button>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                Generating messages...
+              </div>
+              <div style={{ fontSize: 14, color: TEXT_SEC }}>
+                Crafting personalized content for {selectedClient?.name}
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Mailchimp-style Vertical Timeline */
+            <div style={{ maxWidth: 500, margin: "0 auto" }}>
+              {/* Group by week */}
+              {[...new Set(generatedMessages.map(m => m.week))].map(week => (
+                <div key={week} style={{ marginBottom: 32 }}>
+                  <div style={{ 
+                    fontSize: 11, fontWeight: 600, color: TEXT_SEC, 
+                    textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 
+                  }}>
+                    Week {week}
+                  </div>
+                  
+                  {/* Timeline */}
+                  <div style={{ position: "relative", paddingLeft: 24 }}>
+                    {/* Vertical line */}
+                    <div style={{
+                      position: "absolute", left: 5, top: 8, bottom: 8,
+                      width: 2, background: BORDER, borderRadius: 1
+                    }} />
+                    
+                    {generatedMessages.filter(m => m.week === week).map((msg, idx) => (
+                      <div 
+                        key={msg.id}
+                        onClick={() => setExpandedMessage(expandedMessage === msg.id ? null : msg.id)}
+                        style={{ 
+                          position: "relative", marginBottom: 16, cursor: "pointer",
+                          animation: `fadeSlideIn 0.4s ease ${idx * 0.1}s both`
+                        }}
+                      >
+                        {/* Timeline dot */}
+                        <div style={{
+                          position: "absolute", left: -24, top: 12,
+                          width: 12, height: 12, borderRadius: "50%",
+                          background: typeColors[msg.typeId] || TEAL,
+                          border: `2px solid ${WHITE}`
+                        }} />
+                        
+                        {/* Card */}
+                        <div style={{
+                          background: "#fafcfb", borderRadius: 12, 
+                          border: `1px solid ${expandedMessage === msg.id ? typeColors[msg.typeId] : BORDER}`,
+                          overflow: "hidden", transition: "all 0.2s ease"
+                        }}>
+                          {/* Card header */}
+                          <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{
+                              padding: "4px 10px", borderRadius: 6,
+                              background: `${typeColors[msg.typeId]}15`,
+                              color: typeColors[msg.typeId],
+                              fontSize: 11, fontWeight: 600
+                            }}>
+                              {msg.type}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{msg.day}</span>
+                              <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 8 }}>{msg.time}</span>
+                            </div>
+                            <svg 
+                              width="16" height="16" viewBox="0 0 24 24" 
+                              fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
+                              style={{ 
+                                transform: expandedMessage === msg.id ? "rotate(180deg)" : "rotate(0deg)",
+                                transition: "transform 0.2s ease"
+                              }}
+                            >
+                              <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                          </div>
+                          
+                          {/* Expanded content */}
+                          {expandedMessage === msg.id && (
+                            <div style={{ 
+                              padding: "0 16px 16px", borderTop: `1px solid ${BORDER}`,
+                              paddingTop: 12, animation: "fadeIn 0.2s ease"
+                            }}>
+                              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: TEXT }}>
+                                {msg.content}
+                              </p>
+                              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                                <button style={{
+                                  padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                                  background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 500, cursor: "pointer"
+                                }}>Edit</button>
+                                <button style={{
+                                  padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                                  background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 500, cursor: "pointer"
+                                }}>Reschedule</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
