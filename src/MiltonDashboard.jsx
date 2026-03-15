@@ -3704,6 +3704,377 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
+function InboxView({ onClose }) {
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedConvo, setSelectedConvo] = useState(null);
+  const [messageInput, setMessageInput] = useState("");
+  
+  const filters = [
+    { id: "all", label: "All" },
+    { id: "team", label: "Team", color: "#6366f1" },
+    { id: "client", label: "Client", color: TEAL },
+    { id: "announcement", label: "Announcements", color: "#f59e0b" }
+  ];
+  
+  const conversations = [
+    { 
+      id: 1, name: "Sarah Chen", avatar: "SC", tag: "client",
+      lastMessage: "Thanks for the updated meal plan!", time: "2m",
+      unread: 2, online: true
+    },
+    { 
+      id: 2, name: "Coaching Team", avatar: "CT", tag: "team", isGroup: true,
+      lastMessage: "New protocol doc is ready for review", time: "15m",
+      unread: 0, members: 5
+    },
+    { 
+      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "client",
+      lastMessage: "Can we move tomorrow's session?", time: "1h",
+      unread: 1, online: false
+    },
+    { 
+      id: 4, name: "Platform Updates", avatar: "M", tag: "announcement", isGroup: true,
+      lastMessage: "New feature: Canvas templates are live!", time: "3h",
+      unread: 0
+    },
+    { 
+      id: 5, name: "Emily Rodriguez", avatar: "ER", tag: "client",
+      lastMessage: "Just finished week 3 of the program!", time: "5h",
+      unread: 0, online: true
+    },
+    { 
+      id: 6, name: "Nutrition Team", avatar: "NT", tag: "team", isGroup: true,
+      lastMessage: "Updated macro guidelines attached", time: "1d",
+      unread: 0, members: 3
+    }
+  ];
+  
+  const filteredConvos = activeFilter === "all" 
+    ? conversations 
+    : conversations.filter(c => c.tag === activeFilter);
+  
+  const tagColors = { team: "#6366f1", client: TEAL, announcement: "#f59e0b" };
+  
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: WHITE, zIndex: 100, display: "flex",
+      animation: "fadeIn 0.2s ease"
+    }}>
+      {/* Sidebar - Conversation List */}
+      <div style={{
+        width: 340, borderRight: `1px solid ${BORDER}`,
+        display: "flex", flexDirection: "column", background: "#fafcfb"
+      }}>
+        {/* Header */}
+        <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: 0 }}>Inbox</h2>
+            <div 
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, background: "#f0f4f3",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {[
+              { icon: "video", label: "Go Live", color: "#ef4444" },
+              { icon: "user", label: "1-on-1" },
+              { icon: "users", label: "Group" }
+            ].map(btn => (
+              <button
+                key={btn.label}
+                style={{
+                  flex: 1, padding: "10px 12px", borderRadius: 10,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  cursor: "pointer", fontSize: 12, fontWeight: 600, color: btn.color || TEXT,
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color || TEAL; e.currentTarget.style.background = btn.color ? `${btn.color}10` : TEAL_LIGHT; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = WHITE; }}
+              >
+                {btn.icon === "video" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>}
+                {btn.icon === "user" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                {btn.icon === "users" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+                {btn.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Filter Tags */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {filters.map(f => (
+              <button
+                key={f.id}
+                onClick={() => setActiveFilter(f.id)}
+                style={{
+                  padding: "6px 12px", borderRadius: 20,
+                  border: activeFilter === f.id ? "none" : `1px solid ${BORDER}`,
+                  background: activeFilter === f.id ? (f.color || TEXT) : "transparent",
+                  color: activeFilter === f.id ? WHITE : TEXT_SEC,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Conversation List */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {filteredConvos.map((convo, idx) => (
+            <div
+              key={convo.id}
+              onClick={() => setSelectedConvo(convo)}
+              style={{
+                padding: "14px 20px", display: "flex", gap: 12, cursor: "pointer",
+                background: selectedConvo?.id === convo.id ? TEAL_LIGHT : "transparent",
+                borderBottom: `1px solid ${BORDER}`,
+                animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
+              }}
+              onMouseEnter={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "#f5f7f6"; }}
+              onMouseLeave={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "transparent"; }}
+            >
+              {/* Avatar */}
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: convo.isGroup ? "#f0f4f3" : `${tagColors[convo.tag]}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: 600, color: convo.isGroup ? TEXT_SEC : tagColors[convo.tag]
+                }}>
+                  {convo.avatar}
+                </div>
+                {convo.online && (
+                  <div style={{
+                    position: "absolute", bottom: 0, right: 0,
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: "#22c55e", border: `2px solid ${WHITE}`
+                  }} />
+                )}
+              </div>
+              
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{convo.name}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 600, color: tagColors[convo.tag],
+                    background: `${tagColors[convo.tag]}15`, padding: "2px 6px",
+                    borderRadius: 6, textTransform: "uppercase"
+                  }}>{convo.tag}</span>
+                </div>
+                <p style={{
+                  fontSize: 13, color: TEXT_SEC, margin: 0,
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                }}>{convo.lastMessage}</p>
+              </div>
+              
+              {/* Meta */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                <span style={{ fontSize: 11, color: TEXT_SEC }}>{convo.time}</span>
+                {convo.unread > 0 && (
+                  <div style={{
+                    minWidth: 18, height: 18, borderRadius: 9,
+                    background: TEAL, color: WHITE, fontSize: 11, fontWeight: 600,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "0 5px"
+                  }}>{convo.unread}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Main - Message View */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE }}>
+        {selectedConvo ? (
+          <>
+            {/* Convo Header */}
+            <div style={{
+              padding: "14px 24px", borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: selectedConvo.isGroup ? "#f0f4f3" : `${tagColors[selectedConvo.tag]}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 600, color: selectedConvo.isGroup ? TEXT_SEC : tagColors[selectedConvo.tag]
+                }}>
+                  {selectedConvo.avatar}
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{selectedConvo.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {selectedConvo.online ? "Online" : selectedConvo.members ? `${selectedConvo.members} members` : "Offline"}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </button>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                  </svg>
+                </button>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Sample messages */}
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: `${tagColors[selectedConvo.tag]}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 600, color: tagColors[selectedConvo.tag]
+                  }}>{selectedConvo.avatar}</div>
+                  <div>
+                    <div style={{
+                      background: "#f0f4f3", padding: "12px 16px", borderRadius: "4px 16px 16px 16px",
+                      maxWidth: 320
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                        Hey! Just wanted to check in about my progress this week.
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block" }}>10:32 AM</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <div>
+                    <div style={{
+                      background: TEAL, padding: "12px 16px", borderRadius: "16px 4px 16px 16px",
+                      maxWidth: 320
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, color: WHITE, lineHeight: 1.5 }}>
+                        {selectedConvo.lastMessage}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Input */}
+            <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+                <button style={{
+                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+                <div style={{
+                  flex: 1, background: "#f5f7f6", borderRadius: 12,
+                  display: "flex", alignItems: "flex-end", padding: "4px 4px 4px 16px"
+                }}>
+                  <textarea
+                    value={messageInput}
+                    onChange={e => setMessageInput(e.target.value)}
+                    placeholder="Type a message..."
+                    rows={1}
+                    style={{
+                      flex: 1, border: "none", background: "transparent", outline: "none",
+                      fontSize: 14, color: TEXT, resize: "none", padding: "8px 0",
+                      maxHeight: 120
+                    }}
+                  />
+                  <button style={{
+                    width: 36, height: 36, borderRadius: 10, border: "none",
+                    background: messageInput.trim() ? TEAL : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: messageInput.trim() ? "pointer" : "default",
+                    color: messageInput.trim() ? WHITE : TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+                    </svg>
+                  </button>
+                </div>
+                <button style={{
+                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Empty state */
+          <div style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", padding: 48
+          }}>
+            <div style={{
+              width: 80, height: 80, borderRadius: 20, background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 24, color: TEXT_SEC
+            }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
+              Select a conversation
+            </h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, textAlign: "center", maxWidth: 280 }}>
+              Choose a chat from the sidebar or start a new conversation
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CanvasTemplates({ onSelect, onClose }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
@@ -4944,6 +5315,7 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
+  const [showInbox, setShowInbox] = useState(false); // Inbox view
 
   const clientNames = clients.map(c => c.name);
 
@@ -5678,6 +6050,11 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
+      {/* ═══ INBOX VIEW ═══ */}
+      {showInbox && (
+        <InboxView onClose={() => setShowInbox(false)} />
+      )}
+
       {/* ═══ MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
@@ -5708,7 +6085,7 @@ Remember: Be specific, be brief, be helpful.`;
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
                   { icon: "calendar", label: "Schedule", action: null },
-                  { icon: "inbox", label: "Inbox", action: null },
+                  { icon: "inbox", label: "Inbox", action: () => setShowInbox(true) },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
