@@ -27,8 +27,66 @@ function useIsMobile() {
   return isMobile;
 }
 
-// Simple markdown-like formatter for AI responses
-function FormattedText({ text, color = TEXT_SEC }) {
+// Chat options component for interactive selections
+  function ChatOptions({ options, multiSelect, onSelect, disabled }) {
+    const [selected, setSelected] = useState(multiSelect ? [] : null);
+    const GREEN = "#5CDB95";
+    
+    const handleClick = (option) => {
+      if (disabled) return;
+      if (multiSelect) {
+        setSelected(prev => prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]);
+      } else {
+        setSelected(option);
+        onSelect(option);
+      }
+    };
+    
+    const handleConfirm = () => {
+      if (selected.length > 0) {
+        onSelect(selected);
+      }
+    };
+    
+    return (
+      <div style={{ marginTop: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {options.map(opt => (
+            <button
+              key={opt}
+              onClick={() => handleClick(opt)}
+              disabled={disabled}
+              style={{
+                padding: "8px 14px", borderRadius: 20,
+                background: (multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : WHITE,
+                border: `1px solid ${(multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : BORDER}`,
+                color: (multiSelect ? selected.includes(opt) : selected === opt) ? WHITE : TEXT,
+                fontSize: 13, fontWeight: 500, cursor: disabled ? "default" : "pointer",
+                opacity: disabled ? 0.5 : 1,
+                transition: "all 0.15s ease"
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        {multiSelect && !disabled && selected.length > 0 && (
+          <button
+            onClick={handleConfirm}
+            style={{
+              marginTop: 10, padding: "8px 16px", borderRadius: 20, border: "none",
+              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Continue
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Simple markdown-like formatter for AI responses
+  function FormattedText({ text, color = TEXT_SEC }) {
   if (!text) return null;
   
   // Split into paragraphs first
@@ -578,6 +636,14 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
                 </div>
                 <div style={{ flex: 1, paddingTop: 4 }}>
                   <FormattedText text={msg.text} color={TEXT_SEC} />
+                  {msg.options && msg.onSelect && (
+                    <ChatOptions 
+                      options={msg.options} 
+                      multiSelect={msg.multiSelect} 
+                      onSelect={msg.onSelect}
+                      disabled={msg.answered}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -799,19 +865,27 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                       }}>
                         <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
                       </div>
-                      <div style={{ flex: 1, paddingTop: 2 }}>
-                        <FormattedText text={msg.text} color={TEXT_SEC} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {typing && (
-                <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-                  <div style={{ 
-                    width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
-                    background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>
+<div style={{ flex: 1, paddingTop: 2 }}>
+                <FormattedText text={msg.text} color={TEXT_SEC} />
+                {msg.options && msg.onSelect && (
+                  <ChatOptions 
+                    options={msg.options} 
+                    multiSelect={msg.multiSelect} 
+                    onSelect={msg.onSelect}
+                    disabled={msg.answered}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+      {typing && (
+    <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+    <div style={{ 
+      width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+      background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
                     <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
                   </div>
                   <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 6 }}>
@@ -889,7 +963,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ════��═������═══════════════════════════════════ */
+   ════��═��������═══════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -3345,7 +3419,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════�����═══���������������═���������════════ */
+   ══════════════════════���═════�����═══���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4312,7 +4386,7 @@ function ScheduleCanvas({ onClose }) {
   );
 }
 
-function MessagesCanvas({ onClose }) {
+function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
   const [chatStep, setChatStep] = useState(0); // 0: who, 1: types, 2: frequency, 3: duration, 4: generating, 5: done
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -4320,6 +4394,7 @@ function MessagesCanvas({ onClose }) {
   const [duration, setDuration] = useState(null);
   const [generatedMessages, setGeneratedMessages] = useState([]);
   const [expandedMessage, setExpandedMessage] = useState(null);
+  const [initialized, setInitialized] = useState(false);
   
   const GREEN = "#5CDB95";
   
@@ -4331,10 +4406,10 @@ function MessagesCanvas({ onClose }) {
   ];
   
   const messageTypes = [
-    { id: "checkin", label: "Check-ins", icon: "chat" },
-    { id: "motivation", label: "Motivation", icon: "star" },
-    { id: "reminder", label: "Reminders", icon: "bell" },
-    { id: "tips", label: "Tips & Education", icon: "book" }
+    { id: "checkin", label: "Check-ins" },
+    { id: "motivation", label: "Motivation" },
+    { id: "reminder", label: "Reminders" },
+    { id: "tips", label: "Tips & Education" }
   ];
   
   const frequencies = [
@@ -4349,45 +4424,106 @@ function MessagesCanvas({ onClose }) {
     { id: "8weeks", label: "8 weeks" }
   ];
   
-  const handleClientSelect = (client) => {
-    setSelectedClient(client);
-    setTimeout(() => setChatStep(1), 400);
+  const typeColors = {
+    checkin: TEAL,
+    motivation: "#f59e0b",
+    reminder: "#6366f1",
+    tips: "#ec4899"
   };
   
-  const handleTypeToggle = (typeId) => {
-    setSelectedTypes(prev => 
-      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
-    );
-  };
-  
-  const handleTypesConfirm = () => {
-    if (selectedTypes.length > 0) {
-      setTimeout(() => setChatStep(2), 400);
+  // Initialize with first question
+  useEffect(() => {
+    if (!initialized && setChatMessages) {
+      setInitialized(true);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: "Let's set up your automated message sequence. Who should receive these messages?",
+        options: clients.map(c => c.name),
+        onSelect: handleClientSelect
+      }]);
     }
-  };
+  }, [initialized, setChatMessages]);
   
-  const handleFrequencySelect = (freq) => {
-    setFrequency(freq);
-    setTimeout(() => setChatStep(3), 400);
-  };
-  
-  const handleDurationSelect = (dur) => {
-    setDuration(dur);
+  const handleClientSelect = (clientName) => {
+    const client = clients.find(c => c.name === clientName) || { name: clientName };
+    setSelectedClient(client);
+    // Mark previous options as answered
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: clientName }]);
+    setChatTyping(true);
     setTimeout(() => {
-      setChatStep(4);
-      // Generate messages after a delay
-      setTimeout(() => {
-        const msgs = generateMessages();
-        setGeneratedMessages(msgs);
-        setChatStep(5);
-      }, 2000);
-    }, 400);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Great! What types of messages do you want to send to ${client.name === "All Clients" ? "all your clients" : client.name}? You can pick multiple.`,
+        options: messageTypes.map(t => t.label),
+        multiSelect: true,
+        onSelect: handleTypesSelect
+      }]);
+      setChatTyping(false);
+      setChatStep(1);
+    }, 500);
   };
   
-  const generateMessages = () => {
+  const handleTypesSelect = (selected) => {
+    const typeIds = selected.map(label => messageTypes.find(t => t.label === label)?.id).filter(Boolean);
+    setSelectedTypes(typeIds);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: selected.join(", ") }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: "How often should messages go out?",
+        options: frequencies.map(f => f.label),
+        onSelect: handleFrequencySelect
+      }]);
+      setChatTyping(false);
+      setChatStep(2);
+    }, 500);
+  };
+  
+  const handleFrequencySelect = (freqLabel) => {
+    const freq = frequencies.find(f => f.label === freqLabel)?.id || "weekly";
+    setFrequency(freq);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: freqLabel }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: "How long should this sequence run?",
+        options: durations.map(d => d.label),
+        onSelect: handleDurationSelect
+      }]);
+      setChatTyping(false);
+      setChatStep(3);
+    }, 500);
+  };
+  
+  const handleDurationSelect = (durLabel) => {
+    const dur = durations.find(d => d.label === durLabel)?.id || "4weeks";
+    setDuration(dur);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: durLabel }]);
+    setChatTyping(true);
+    setChatStep(4);
+    
+    // Generate messages
+    setTimeout(() => {
+      const msgs = generateMessagesWithParams(dur);
+      setGeneratedMessages(msgs);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Done! I've created ${msgs.length} messages for ${selectedClient?.name || "your clients"}. Review them in the timeline and activate when you're ready.`
+      }]);
+      setChatTyping(false);
+      setChatStep(5);
+    }, 2000);
+  };
+  
+  const generateMessagesWithParams = (dur) => {
     const name = selectedClient?.name === "All Clients" ? "team" : selectedClient?.name?.split(' ')[0];
-    const weeksNum = duration === "2weeks" ? 2 : duration === "4weeks" ? 4 : 8;
-    const perWeek = frequency === "daily" ? 7 : frequency === "3x" ? 3 : 1;
+    const weeksNum = dur === "2weeks" ? 2 : dur === "4weeks" ? 4 : 8;
     const messages = [];
     
     const typeContents = {
@@ -4399,13 +4535,12 @@ function MessagesCanvas({ onClose }) {
     
     let msgId = 1;
     for (let week = 1; week <= Math.min(weeksNum, 4); week++) {
-      const weekMsgs = [];
       selectedTypes.forEach((type, typeIdx) => {
         const dayOffset = typeIdx * (7 / selectedTypes.length);
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         const dayName = days[Math.floor(dayOffset) % 7];
         const contents = typeContents[type];
-        weekMsgs.push({
+        messages.push({
           id: msgId++,
           week,
           day: dayName,
@@ -4416,16 +4551,8 @@ function MessagesCanvas({ onClose }) {
           status: "scheduled"
         });
       });
-      messages.push(...weekMsgs);
     }
     return messages;
-  };
-  
-  const typeColors = {
-    checkin: TEAL,
-    motivation: "#f59e0b",
-    reminder: "#6366f1",
-    tips: "#ec4899"
   };
   
   return (
@@ -4449,208 +4576,7 @@ function MessagesCanvas({ onClose }) {
         </svg>
       </div>
       
-      {/* Left Panel - Chat Q&A */}
-      <div style={{ 
-        width: 340, borderRight: `1px solid ${BORDER}`, 
-        display: "flex", flexDirection: "column", background: WHITE 
-      }}>
-        {/* Chat messages area */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
-          {/* AI greeting */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 20, animation: "fadeSlideIn 0.4s ease" }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
-            <div style={{
-              background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
-              fontSize: 14, color: TEXT, lineHeight: 1.5
-            }}>
-              Let's set up your automated message sequence. Who should receive these messages?
-            </div>
-          </div>
-          
-          {/* Step 0: Client selection */}
-          {chatStep >= 0 && (
-            <div style={{ marginBottom: 20, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginLeft: 42 }}>
-                {clients.map(client => (
-                  <button
-                    key={client.name}
-                    onClick={() => !selectedClient && handleClientSelect(client)}
-                    disabled={selectedClient !== null}
-                    style={{
-                      padding: "8px 14px", borderRadius: 20,
-                      background: selectedClient?.name === client.name ? GREEN : WHITE,
-                      border: `1px solid ${selectedClient?.name === client.name ? GREEN : BORDER}`,
-                      color: selectedClient?.name === client.name ? WHITE : TEXT,
-                      fontSize: 13, fontWeight: 500, cursor: selectedClient ? "default" : "pointer",
-                      opacity: selectedClient && selectedClient.name !== client.name ? 0.4 : 1,
-                      transition: "all 0.15s ease"
-                    }}
-                  >
-                    {client.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Step 1: Message types */}
-          {chatStep >= 1 && (
-            <>
-              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                </div>
-                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
-                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
-                  Great! What types of messages do you want to send? You can pick multiple.
-                </div>
-              </div>
-              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: chatStep === 1 ? 12 : 0 }}>
-                  {messageTypes.map(type => (
-                    <button
-                      key={type.id}
-                      onClick={() => chatStep === 1 && handleTypeToggle(type.id)}
-                      disabled={chatStep > 1}
-                      style={{
-                        padding: "8px 14px", borderRadius: 20,
-                        background: selectedTypes.includes(type.id) ? typeColors[type.id] : WHITE,
-                        border: `1px solid ${selectedTypes.includes(type.id) ? typeColors[type.id] : BORDER}`,
-                        color: selectedTypes.includes(type.id) ? WHITE : TEXT,
-                        fontSize: 13, fontWeight: 500, cursor: chatStep === 1 ? "pointer" : "default",
-                        opacity: chatStep > 1 && !selectedTypes.includes(type.id) ? 0.4 : 1,
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-                {chatStep === 1 && selectedTypes.length > 0 && (
-                  <button
-                    onClick={handleTypesConfirm}
-                    style={{
-                      padding: "8px 16px", borderRadius: 20, border: "none",
-                      background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
-                    }}
-                  >
-                    Continue
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-          
-          {/* Step 2: Frequency */}
-          {chatStep >= 2 && (
-            <>
-              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                </div>
-                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
-                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
-                  How often should messages go out?
-                </div>
-              </div>
-              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {frequencies.map(freq => (
-                    <button
-                      key={freq.id}
-                      onClick={() => chatStep === 2 && handleFrequencySelect(freq.id)}
-                      disabled={chatStep > 2}
-                      style={{
-                        padding: "8px 14px", borderRadius: 20,
-                        background: frequency === freq.id ? GREEN : WHITE,
-                        border: `1px solid ${frequency === freq.id ? GREEN : BORDER}`,
-                        color: frequency === freq.id ? WHITE : TEXT,
-                        fontSize: 13, fontWeight: 500, cursor: chatStep === 2 ? "pointer" : "default",
-                        opacity: chatStep > 2 && frequency !== freq.id ? 0.4 : 1,
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      {freq.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-          
-          {/* Step 3: Duration */}
-          {chatStep >= 3 && (
-            <>
-              <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                </div>
-                <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
-                  fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
-                  How long should this sequence run?
-                </div>
-              </div>
-              <div style={{ marginBottom: 20, marginLeft: 42, animation: "fadeSlideIn 0.4s ease 0.2s both" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {durations.map(dur => (
-                    <button
-                      key={dur.id}
-                      onClick={() => chatStep === 3 && handleDurationSelect(dur.id)}
-                      disabled={chatStep > 3}
-                      style={{
-                        padding: "8px 14px", borderRadius: 20,
-                        background: duration === dur.id ? GREEN : WHITE,
-                        border: `1px solid ${duration === dur.id ? GREEN : BORDER}`,
-                        color: duration === dur.id ? WHITE : TEXT,
-                        fontSize: 13, fontWeight: 500, cursor: chatStep === 3 ? "pointer" : "default",
-                        opacity: chatStep > 3 && duration !== dur.id ? 0.4 : 1,
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      {dur.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-          
-          {/* Step 4+5: Generating/Complete */}
-          {chatStep >= 4 && (
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, animation: "fadeSlideIn 0.4s ease" }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: `${GREEN}15`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <div style={{ background: "#f5f7f6", padding: "12px 14px", borderRadius: "4px 14px 14px 14px",
-                fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
-                {chatStep === 4 ? "Generating your message sequence..." : 
-                  `Done! I've created ${generatedMessages.length} messages for ${selectedClient?.name}. Review them on the right and activate when ready.`}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Right Panel - Timeline Preview */}
+      {/* Timeline Preview Panel */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ 
@@ -6802,6 +6728,8 @@ Remember: Be specific, be brief, be helpful.`;
   {canvasType === "messages" && (
   <MessagesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
   />
   )}
   {canvasType === "mealPlan" && (
