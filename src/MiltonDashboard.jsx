@@ -889,7 +889,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ═══════════════════════════════════════════ */
+   ═══════���═══════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -3345,7 +3345,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════���═══���������������═���������════════ */
+   ════════════════════════════�����═══���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3757,27 +3757,8 @@ function InboxCanvas({ onClose }) {
   
   return (
     <div style={{
-      display: "flex", height: "100%", background: WHITE, position: "relative"
+      display: "flex", height: "100%", background: WHITE
     }}>
-      {/* Close button */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 16, right: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </div>
-      
       {/* Sidebar - Conversation List */}
       <div style={{
         width: 300, borderRight: `1px solid ${BORDER}`,
@@ -3953,6 +3934,20 @@ function InboxCanvas({ onClose }) {
                     <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
                   </svg>
                 </button>
+                <button 
+                  onClick={onClose}
+                  style={{
+                    width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
               </div>
             </div>
             
@@ -4052,8 +4047,23 @@ function InboxCanvas({ onClose }) {
           /* Empty state */
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", padding: 48
+            alignItems: "center", justifyContent: "center", padding: 48, position: "relative"
           }}>
+            <button 
+              onClick={onClose}
+              style={{
+                position: "absolute", top: 16, right: 16,
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
             <div style={{
               width: 80, height: 80, borderRadius: 20, background: "#f0f4f3",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -4109,30 +4119,11 @@ function ScheduleCanvas({ onClose }) {
   const getCategoryColor = (cat) => categories.find(c => c.id === cat)?.color || TEXT_SEC;
   
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb", position: "relative" }}>
-      {/* Close button */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 16, right: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </div>
-      
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
       {/* Header */}
       <div style={{
-        padding: "16px 20px", borderBottom: `1px solid ${BORDER}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE
+        padding: "12px 16px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Navigation */}
@@ -4176,14 +4167,29 @@ function ScheduleCanvas({ onClose }) {
           </button>
         </div>
         
-        {/* Categories Legend */}
-        <div style={{ display: "flex", gap: 16 }}>
+        {/* Categories Legend + Close */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {categories.map(cat => (
             <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
               <span style={{ fontSize: 12, color: TEXT_SEC }}>{cat.label}</span>
             </div>
           ))}
+          <div
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 8, marginLeft: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`,
+              background: WHITE, transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
         </div>
       </div>
       
