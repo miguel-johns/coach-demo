@@ -3282,7 +3282,7 @@ function AddClientModal({ onClose, isMobile }) {
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ══════��════════════════════════════════════
    CANVAS DATA GENERATORS
    ═══════════════════════════════════════════ */
 
@@ -4633,16 +4633,17 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
                 Answer the questions to build your sequence
               </div>
               
-              {/* Progress dots */}
-              <div style={{ display: "flex", gap: 8, marginTop: 32 }}>
-                {[0, 1, 2, 3].map(i => (
-                  <div key={i} style={{
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: i <= chatStep ? GREEN : BORDER,
-                    transition: "all 0.3s ease"
-                  }} />
-                ))}
-              </div>
+{/* Progress dots with bounce animation */}
+  <div style={{ display: "flex", gap: 8, marginTop: 32, height: 20, alignItems: "center" }}>
+  {[0, 1, 2, 3].map(i => (
+  <div key={i} style={{
+  width: 8, height: 8, borderRadius: "50%",
+  background: i <= chatStep ? GREEN : BORDER,
+  transition: "background 0.3s ease",
+  animation: i <= chatStep ? `dotBounce 1.2s ease-in-out ${i * 0.15}s infinite` : "none"
+  }} />
+  ))}
+  </div>
             </div>
           ) : chatStep === 4 ? (
             /* Generating Animation */
@@ -7293,10 +7294,14 @@ Remember: Be specific, be brief, be helpful.`;
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
         }
-        @keyframes fadeSlideIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes dotBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  }
         @keyframes slideInLeft {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
