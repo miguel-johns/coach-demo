@@ -3850,11 +3850,11 @@ function InboxCanvas({ onClose }) {
               <button
                 key={btn.label}
                 style={{
-                  flex: 1, padding: "10px 12px", borderRadius: 10,
+                  flex: 1, padding: "10px 8px", borderRadius: 10,
                   border: `1px solid ${BORDER}`, background: WHITE,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  cursor: "pointer", fontSize: 12, fontWeight: 600, color: btn.color || TEXT,
-                  transition: "all 0.15s ease"
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                  cursor: "pointer", fontSize: 11, fontWeight: 600, color: btn.color || TEXT,
+                  transition: "all 0.15s ease", minWidth: 0, whiteSpace: "nowrap"
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color || TEAL; e.currentTarget.style.background = btn.color ? `${btn.color}10` : TEAL_LIGHT; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = WHITE; }}
