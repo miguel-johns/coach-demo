@@ -7153,6 +7153,9 @@ Remember: Be specific, be brief, be helpful.`;
   } else if (templateType === "messages") {
   setCanvasType("messages");
   setCanvasData({});
+  } else if (templateType === "reports") {
+  setCanvasType("report");
+  setCanvasData({});
   }
   }}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
