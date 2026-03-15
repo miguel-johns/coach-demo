@@ -3345,7 +3345,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════��═══���������������═���������════════ */
+   ════════════════════════════���═══���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3704,7 +3704,7 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function InboxView({ onClose }) {
+function InboxCanvas({ onClose }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -3757,33 +3757,15 @@ function InboxView({ onClose }) {
   
   return (
     <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: WHITE, zIndex: 100, display: "flex",
-      animation: "fadeIn 0.2s ease"
+      display: "flex", height: "100%", background: WHITE
     }}>
       {/* Sidebar - Conversation List */}
       <div style={{
-        width: 340, borderRight: `1px solid ${BORDER}`,
+        width: 300, borderRight: `1px solid ${BORDER}`,
         display: "flex", flexDirection: "column", background: "#fafcfb"
       }}>
         {/* Header */}
-        <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: 0 }}>Inbox</h2>
-            <div 
-              onClick={onClose}
-              style={{
-                width: 32, height: 32, borderRadius: 8, background: "#f0f4f3",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: TEXT_SEC
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </div>
-          </div>
-          
+        <div style={{ padding: "16px 16px", borderBottom: `1px solid ${BORDER}` }}>
           {/* Action Buttons */}
           <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
             {[
@@ -3839,7 +3821,7 @@ function InboxView({ onClose }) {
               key={convo.id}
               onClick={() => setSelectedConvo(convo)}
               style={{
-                padding: "14px 20px", display: "flex", gap: 12, cursor: "pointer",
+                padding: "12px 16px", display: "flex", gap: 10, cursor: "pointer",
                 background: selectedConvo?.id === convo.id ? TEAL_LIGHT : "transparent",
                 borderBottom: `1px solid ${BORDER}`,
                 animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
@@ -4070,6 +4052,217 @@ function InboxView({ onClose }) {
             </p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ScheduleCanvas({ onClose }) {
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [viewMode, setViewMode] = useState("week"); // week or month
+  
+  const categories = [
+    { id: "session", label: "Sessions", color: TEAL },
+    { id: "meeting", label: "Meetings", color: "#6366f1" },
+    { id: "backoffice", label: "Back Office", color: "#f59e0b" },
+    { id: "work", label: "Work Hours", color: "#94a3b8" }
+  ];
+  
+  const events = [
+    { id: 1, title: "Sarah Chen - Check-in", category: "session", day: 0, start: 9, duration: 1 },
+    { id: 2, title: "Marcus Johnson - Training", category: "session", day: 0, start: 14, duration: 1.5 },
+    { id: 3, title: "Team Standup", category: "meeting", day: 1, start: 10, duration: 0.5 },
+    { id: 4, title: "Emily Rodriguez - Assessment", category: "session", day: 1, start: 13, duration: 1 },
+    { id: 5, title: "Content Planning", category: "backoffice", day: 2, start: 9, duration: 2 },
+    { id: 6, title: "Alex Kim - Progress Review", category: "session", day: 2, start: 15, duration: 1 },
+    { id: 7, title: "Client Onboarding Call", category: "meeting", day: 3, start: 11, duration: 1 },
+    { id: 8, title: "Program Updates", category: "backoffice", day: 3, start: 14, duration: 1.5 },
+    { id: 9, title: "Group Session - Nutrition", category: "session", day: 4, start: 10, duration: 1.5 },
+    { id: 10, title: "Admin & Billing", category: "backoffice", day: 4, start: 16, duration: 1 },
+  ];
+  
+  const workHours = { start: 8, end: 18 };
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekStart = new Date(currentDate);
+  weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+  
+  const getCategoryColor = (cat) => categories.find(c => c.id === cat)?.color || TEXT_SEC;
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{
+        padding: "16px 20px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Navigation */}
+          <div style={{ display: "flex", gap: 4 }}>
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+            </button>
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+            {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          </span>
+          <button
+            onClick={() => setCurrentDate(new Date(2026, 2, 15))}
+            style={{
+              padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", fontSize: 12, fontWeight: 500, color: TEXT_SEC
+            }}
+          >
+            Today
+          </button>
+        </div>
+        
+        {/* Categories Legend */}
+        <div style={{ display: "flex", gap: 16 }}>
+          {categories.map(cat => (
+            <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>{cat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Calendar Grid */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Time Column */}
+        <div style={{ width: 60, borderRight: `1px solid ${BORDER}`, background: WHITE }}>
+          <div style={{ height: 48, borderBottom: `1px solid ${BORDER}` }} />
+          {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
+            <div key={i} style={{
+              height: 60, borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
+              padding: "4px 8px", fontSize: 11, color: TEXT_SEC, fontWeight: 500
+            }}>
+              {((workHours.start + i) % 12 || 12)}{(workHours.start + i) >= 12 ? "pm" : "am"}
+            </div>
+          ))}
+        </div>
+        
+        {/* Days Grid */}
+        <div style={{ flex: 1, display: "flex", overflowX: "auto" }}>
+          {days.map((day, dayIdx) => {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + dayIdx);
+            const isToday = dayDate.toDateString() === new Date(2026, 2, 15).toDateString();
+            const isWeekend = dayIdx === 0 || dayIdx === 6;
+            const dayEvents = events.filter(e => e.day === dayIdx);
+            
+            return (
+              <div key={dayIdx} style={{ flex: 1, minWidth: 100, borderRight: `1px solid ${BORDER}` }}>
+                {/* Day Header */}
+                <div style={{
+                  height: 48, borderBottom: `1px solid ${BORDER}`,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  background: isToday ? TEAL_LIGHT : WHITE
+                }}>
+                  <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
+                  <span style={{
+                    fontSize: 16, fontWeight: 600,
+                    color: isToday ? TEAL : TEXT,
+                    width: 28, height: 28, borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: isToday ? TEAL : "transparent",
+                    color: isToday ? WHITE : TEXT
+                  }}>
+                    {dayDate.getDate()}
+                  </span>
+                </div>
+                
+                {/* Time Slots */}
+                <div style={{ position: "relative", background: isWeekend ? "#fafafa" : WHITE }}>
+                  {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
+                    <div key={i} style={{ height: 60, borderBottom: `1px solid ${BORDER}` }} />
+                  ))}
+                  
+                  {/* Events */}
+                  {dayEvents.map(event => (
+                    <div
+                      key={event.id}
+                      onClick={() => setSelectedEvent(event)}
+                      style={{
+                        position: "absolute",
+                        top: (event.start - workHours.start) * 60 + 2,
+                        left: 4, right: 4,
+                        height: event.duration * 60 - 4,
+                        background: `${getCategoryColor(event.category)}15`,
+                        borderLeft: `3px solid ${getCategoryColor(event.category)}`,
+                        borderRadius: 6, padding: "6px 8px",
+                        cursor: "pointer", overflow: "hidden",
+                        transition: "all 0.15s ease"
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}25`}
+                      onMouseLeave={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}15`}
+                    >
+                      <div style={{
+                        fontSize: 12, fontWeight: 600, color: getCategoryColor(event.category),
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                      }}>
+                        {event.title}
+                      </div>
+                      <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
+                        {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Quick Add Bar */}
+      <div style={{
+        padding: "12px 20px", borderTop: `1px solid ${BORDER}`, background: WHITE,
+        display: "flex", alignItems: "center", gap: 12
+      }}>
+        <span style={{ fontSize: 12, color: TEXT_SEC }}>Quick add:</span>
+        {[
+          { label: "+ Session", cat: "session" },
+          { label: "+ Meeting", cat: "meeting" },
+          { label: "+ Block Time", cat: "backoffice" }
+        ].map(btn => (
+          <button
+            key={btn.cat}
+            style={{
+              padding: "8px 14px", borderRadius: 8,
+              border: `1px solid ${BORDER}`, background: WHITE,
+              fontSize: 12, fontWeight: 500, color: getCategoryColor(btn.cat),
+              cursor: "pointer", transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${getCategoryColor(btn.cat)}10`; e.currentTarget.style.borderColor = getCategoryColor(btn.cat); }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.borderColor = BORDER; }}
+          >
+            {btn.label}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -5315,7 +5508,6 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
-  const [showInbox, setShowInbox] = useState(false); // Inbox view
 
   const clientNames = clients.map(c => c.name);
 
@@ -5874,7 +6066,7 @@ Remember: Be specific, be brief, be helpful.`;
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {canvasMode ? (
               <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "templates" ? "Canvas" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
               </span>
             ) : (
               <>
@@ -5991,10 +6183,20 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-        </div>
-      )}
-
-{/* ═══ MOBILE CANVAS VIEW ═══ */}
+{canvasType === "inbox" && (
+  <InboxCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "schedule" && (
+  <ScheduleCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  </div>
+  )}
+  
+  {/* ═══ MOBILE CANVAS VIEW ═══ */}
   {canvasMode && isMobile && (
   <div style={{
   position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
@@ -6047,15 +6249,22 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-        </div>
-      )}
-
-      {/* ═══ INBOX VIEW ═══ */}
-      {showInbox && (
-        <InboxView onClose={() => setShowInbox(false)} />
-      )}
-
-      {/* ═══ MAIN CONTENT ═══ */}
+{canvasType === "inbox" && (
+  <InboxCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "schedule" && (
+  <ScheduleCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  </div>
+  )}
+  
+  
+  
+  {/* ═══ MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
@@ -6084,8 +6293,8 @@ Remember: Be specific, be brief, be helpful.`;
             {!isMobile && (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
-                  { icon: "calendar", label: "Schedule", action: null },
-                  { icon: "inbox", label: "Inbox", action: () => setShowInbox(true) },
+                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
