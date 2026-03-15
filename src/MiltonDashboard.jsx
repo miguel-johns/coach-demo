@@ -6523,58 +6523,38 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
             </div>
           </div>
         ) : (
-          /* Report preview with device frame */
+          /* Report preview - scaled by view mode */
           <div style={{
             width: viewMode === "mobile" ? 375 : "100%",
             maxWidth: viewMode === "desktop" ? 800 : 375,
-            background: viewMode === "mobile" ? "#1a1a1a" : "transparent",
-            borderRadius: viewMode === "mobile" ? 40 : 0,
-            padding: viewMode === "mobile" ? "12px 12px 24px" : 0,
+            background: WHITE,
+            borderRadius: 16,
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            border: `1px solid ${BORDER}`,
             transition: "all 0.3s ease"
           }}>
-            {/* Phone notch */}
-            {viewMode === "mobile" && (
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-                <div style={{ width: 80, height: 24, background: "#1a1a1a", borderRadius: 12 }}/>
-              </div>
-            )}
-            
-            {/* Report content */}
-            <div style={{
-              background: WHITE,
-              borderRadius: viewMode === "mobile" ? 28 : 16,
-              overflow: "hidden",
-              minHeight: viewMode === "mobile" ? 600 : "auto"
-            }}>
               <div style={{ padding: viewMode === "mobile" ? 16 : 24, display: "flex", flexDirection: "column", gap: 12 }}>
-                {sortedWidgets.map(widget => renderWidget(widget))}
-                
-                {/* Add section button */}
-                {addableWidgets.length > 0 && (
-                  <button
-                    onClick={() => setShowAddWidget(true)}
-                    style={{
-                      padding: 16, borderRadius: 12, border: `2px dashed ${BORDER}`,
-                      background: "transparent", color: TEXT_SEC, cursor: "pointer",
-                      fontSize: 13, fontWeight: 500, transition: "all 0.15s ease",
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Add Section
-                  </button>
-                )}
-              </div>
+              {sortedWidgets.map(widget => renderWidget(widget))}
+              
+              {/* Add section button */}
+              {addableWidgets.length > 0 && (
+                <button
+                  onClick={() => setShowAddWidget(true)}
+                  style={{
+                    padding: 16, borderRadius: 12, border: `2px dashed ${BORDER}`,
+                    background: "transparent", color: TEXT_SEC, cursor: "pointer",
+                    fontSize: 13, fontWeight: 500, transition: "all 0.15s ease",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add Section
+                </button>
+              )}
             </div>
-            
-            {/* Phone home indicator */}
-            {viewMode === "mobile" && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-                <div style={{ width: 120, height: 4, background: "#fff", borderRadius: 2, opacity: 0.3 }}/>
-              </div>
-            )}
           </div>
         )}
       </div>
