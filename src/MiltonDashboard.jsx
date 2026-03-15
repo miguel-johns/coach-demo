@@ -5888,23 +5888,379 @@ function MessageSequenceCanvas({ data, onClose }) {
   );
 }
 
-function ReportCanvas({ data, onClose }) {
-  if (!data) return null;
+function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
+  const [viewMode, setViewMode] = useState("mobile"); // mobile | desktop
+  const [chatStep, setChatStep] = useState(0); // 0: client, 1: timeframe, 2: generating, 3: done
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [timeframe, setTimeframe] = useState(null);
+  const [widgets, setWidgets] = useState([]);
+  const [draggedWidget, setDraggedWidget] = useState(null);
+  const [dragOverWidget, setDragOverWidget] = useState(null);
+  const [showAddWidget, setShowAddWidget] = useState(false);
+  
+  const GREEN = "#5CDB95";
+  
+  const clients = [
+    { name: "Sarah Chen", initials: "SC", week: 6, phase: "Fat Loss", score: 87 },
+    { name: "Marcus Johnson", initials: "MJ", week: 8, phase: "Muscle Gain", score: 92 },
+    { name: "Emily Rodriguez", initials: "ER", week: 4, phase: "Metabolic Health", score: 78 }
+  ];
+  
+  const timeframes = [
+    { id: "week", label: "This Week" },
+    { id: "month", label: "This Month" },
+    { id: "quarter", label: "This Quarter" }
+  ];
+  
+  const availableWidgets = [
+    { id: "summary", type: "summary", label: "Summary Card", icon: "user", locked: true },
+    { id: "weightChart", type: "chart", label: "Weight Progress", icon: "chart" },
+    { id: "consistencyCalendar", type: "calendar", label: "Consistency Calendar", icon: "calendar" },
+    { id: "macroBreakdown", type: "pie", label: "Macro Breakdown", icon: "pie" },
+    { id: "achievements", type: "list", label: "Achievements", icon: "trophy" },
+    { id: "mealCompliance", type: "bar", label: "Meal Compliance", icon: "utensils" },
+    { id: "workoutStats", type: "stats", label: "Workout Stats", icon: "dumbbell" },
+    { id: "coachNotes", type: "text", label: "Coach Notes", icon: "edit" },
+    { id: "nextSteps", type: "checklist", label: "Next Steps", icon: "check" }
+  ];
+  
+  // Handler refs
+  const handleClientSelectRef = useRef(null);
+  const handleTimeframeSelectRef = useRef(null);
+  
+  const handleClientSelect = (clientName) => {
+    const client = clients.find(c => c.name === clientName);
+    setSelectedClient(client);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: clientName }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Great! What time period should this report cover for ${client?.name?.split(' ')[0]}?`,
+        options: timeframes.map(t => t.label),
+        onSelect: (val) => handleTimeframeSelectRef.current?.(val)
+      }]);
+      setChatTyping(false);
+      setChatStep(1);
+    }, 500);
+  };
+  
+  const handleTimeframeSelect = (tfLabel) => {
+    const tf = timeframes.find(t => t.label === tfLabel)?.id || "week";
+    setTimeframe(tf);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: tfLabel }]);
+    setChatTyping(true);
+    setChatStep(2);
+    
+    // Generate report
+    setTimeout(() => {
+      const defaultWidgets = [
+        { id: "summary", order: 0 },
+        { id: "weightChart", order: 1 },
+        { id: "consistencyCalendar", order: 2 },
+        { id: "achievements", order: 3 },
+        { id: "coachNotes", order: 4 },
+        { id: "nextSteps", order: 5 }
+      ];
+      setWidgets(defaultWidgets);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Done! I've created a progress report for ${selectedClient?.name}. Drag sections to reorder, or click + to add more widgets like Macro Breakdown or Workout Stats.`
+      }]);
+      setChatTyping(false);
+      setChatStep(3);
+    }, 1500);
+  };
+  
+  handleClientSelectRef.current = handleClientSelect;
+  handleTimeframeSelectRef.current = handleTimeframeSelect;
+  
+  // Initialize chat
+  useEffect(() => {
+    if (setChatMessages) {
+      setChatMessages([{
+        type: "ai",
+        text: "Let's build a progress report. Which client is this for?",
+        options: clients.map(c => c.name),
+        onSelect: (val) => handleClientSelectRef.current?.(val)
+      }]);
+    }
+  }, []);
+  
+  // Drag handlers
+  const handleDragStart = (e, widgetId) => {
+    if (widgetId === "summary") return; // Summary is locked
+    setDraggedWidget(widgetId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  
+  const handleDragOver = (e, widgetId) => {
+    e.preventDefault();
+    if (widgetId !== draggedWidget && widgetId !== "summary") {
+      setDragOverWidget(widgetId);
+    }
+  };
+  
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!draggedWidget || targetId === "summary" || draggedWidget === "summary") return;
+    
+    const newWidgets = [...widgets];
+    const dragIdx = newWidgets.findIndex(w => w.id === draggedWidget);
+    const dropIdx = newWidgets.findIndex(w => w.id === targetId);
+    
+    if (dragIdx !== -1 && dropIdx !== -1) {
+      const [removed] = newWidgets.splice(dragIdx, 1);
+      newWidgets.splice(dropIdx, 0, removed);
+      newWidgets.forEach((w, i) => w.order = i);
+      setWidgets(newWidgets);
+    }
+    
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+  };
+  
+  const addWidget = (widgetId) => {
+    if (widgets.find(w => w.id === widgetId)) return;
+    setWidgets(prev => [...prev, { id: widgetId, order: prev.length }]);
+    setShowAddWidget(false);
+  };
+  
+  const removeWidget = (widgetId) => {
+    if (widgetId === "summary") return;
+    setWidgets(prev => prev.filter(w => w.id !== widgetId));
+  };
+  
+  // Widget renderer
+  const renderWidget = (widget) => {
+    const config = availableWidgets.find(w => w.id === widget.id);
+    if (!config) return null;
+    
+    const isDragging = draggedWidget === widget.id;
+    const isDragOver = dragOverWidget === widget.id;
+    const isLocked = widget.id === "summary";
+    
+    return (
+      <div
+        key={widget.id}
+        draggable={!isLocked}
+        onDragStart={(e) => handleDragStart(e, widget.id)}
+        onDragOver={(e) => handleDragOver(e, widget.id)}
+        onDrop={(e) => handleDrop(e, widget.id)}
+        onDragEnd={handleDragEnd}
+        style={{
+          background: WHITE,
+          borderRadius: 12,
+          border: `2px solid ${isDragOver ? GREEN : BORDER}`,
+          padding: 14,
+          opacity: isDragging ? 0.5 : 1,
+          transform: isDragOver ? "scale(1.02)" : "scale(1)",
+          transition: "all 0.15s ease",
+          cursor: isLocked ? "default" : "grab"
+        }}
+      >
+        {/* Widget header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          {!isLocked && (
+            <div style={{ color: TEXT_SEC, cursor: "grab" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
+                <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
+                <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
+              </svg>
+            </div>
+          )}
+          <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: TEXT, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+            {config.label}
+          </div>
+          {!isLocked && (
+            <div 
+              onClick={() => removeWidget(widget.id)}
+              style={{ color: TEXT_SEC, cursor: "pointer", opacity: 0.5, padding: 4 }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          )}
+        </div>
+        
+        {/* Widget content */}
+        {widget.id === "summary" && selectedClient && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: `${TEAL}20`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, fontWeight: 700, color: TEAL
+            }}>
+              {selectedClient.initials}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{selectedClient.name}</div>
+              <div style={{ fontSize: 12, color: TEXT_SEC }}>Week {selectedClient.week} • {selectedClient.phase}</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: TEAL }}>{selectedClient.score}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>Score</div>
+            </div>
+          </div>
+        )}
+        
+        {widget.id === "weightChart" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 11, color: TEXT_SEC }}>Start: 165 lbs</span>
+              <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>Current: 158 lbs</span>
+            </div>
+            <svg width="100%" height="60" viewBox="0 0 200 60">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.3"/>
+                  <stop offset="100%" stopColor={TEAL} stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,50 Q30,45 50,40 T100,30 T150,25 T200,15" fill="none" stroke={TEAL} strokeWidth="2"/>
+              <path d="M0,50 Q30,45 50,40 T100,30 T150,25 T200,15 L200,60 L0,60 Z" fill="url(#chartGrad)"/>
+              <line x1="0" y1="20" x2="200" y2="20" stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4" opacity="0.3"/>
+              <text x="195" y="16" fontSize="8" fill={TEXT_SEC}>Goal</text>
+            </svg>
+          </div>
+        )}
+        
+        {widget.id === "consistencyCalendar" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+            {["M","T","W","T","F","S","S"].map((d,i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: 9, color: TEXT_SEC, marginBottom: 4 }}>{d}</div>
+            ))}
+            {Array.from({length: 28}, (_, i) => {
+              const intensity = Math.random();
+              return (
+                <div key={i} style={{
+                  aspectRatio: "1", borderRadius: 3,
+                  background: intensity > 0.7 ? TEAL : intensity > 0.4 ? `${TEAL}60` : intensity > 0.2 ? `${TEAL}30` : "#f0f0f0"
+                }}/>
+              );
+            })}
+          </div>
+        )}
+        
+        {widget.id === "macroBreakdown" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="25" fill="none" stroke="#e0e0e0" strokeWidth="8"/>
+              <circle cx="30" cy="30" r="25" fill="none" stroke="#3b82f6" strokeWidth="8" 
+                strokeDasharray="47 110" strokeDashoffset="0" transform="rotate(-90 30 30)"/>
+              <circle cx="30" cy="30" r="25" fill="none" stroke="#f59e0b" strokeWidth="8" 
+                strokeDasharray="31 126" strokeDashoffset="-47" transform="rotate(-90 30 30)"/>
+              <circle cx="30" cy="30" r="25" fill="none" stroke="#10b981" strokeWidth="8" 
+                strokeDasharray="31 126" strokeDashoffset="-78" transform="rotate(-90 30 30)"/>
+            </svg>
+            <div style={{ flex: 1, fontSize: 11 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#3b82f6" }}/>
+                <span style={{ color: TEXT_SEC }}>Protein</span>
+                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>30%</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#f59e0b" }}/>
+                <span style={{ color: TEXT_SEC }}>Carbs</span>
+                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>40%</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: "#10b981" }}/>
+                <span style={{ color: TEXT_SEC }}>Fat</span>
+                <span style={{ marginLeft: "auto", fontWeight: 600, color: TEXT }}>30%</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {widget.id === "achievements" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {["7-day streak", "First 5 lbs lost", "100% meal compliance"].map((a, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}20`, 
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+                <span style={{ fontSize: 13, color: TEXT }}>{a}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {widget.id === "mealCompliance" && (
+          <div>
+            {[{day: "Mon", val: 100}, {day: "Tue", val: 85}, {day: "Wed", val: 100}, {day: "Thu", val: 70}, {day: "Fri", val: 100}, {day: "Sat", val: 60}, {day: "Sun", val: 80}].map(d => (
+              <div key={d.day} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{ width: 28, fontSize: 10, color: TEXT_SEC }}>{d.day}</div>
+                <div style={{ flex: 1, height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: `${d.val}%`, height: "100%", background: d.val === 100 ? GREEN : d.val >= 80 ? TEAL : "#f59e0b", borderRadius: 4 }}/>
+                </div>
+                <div style={{ width: 28, fontSize: 10, fontWeight: 600, color: TEXT, textAlign: "right" }}>{d.val}%</div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {widget.id === "workoutStats" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {[{label: "Sessions", value: "5/5"}, {label: "Volume", value: "12,450 lbs"}, {label: "PRs", value: "2"}].map(s => (
+              <div key={s.label} style={{ textAlign: "center", padding: 10, background: `${TEAL}10`, borderRadius: 8 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: TEAL }}>{s.value}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {widget.id === "coachNotes" && (
+          <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, fontStyle: "italic" }}>
+            "Great progress this week! Your consistency with meals has really improved. Keep focusing on protein timing around workouts. Let's discuss increasing cardio next week."
+          </div>
+        )}
+        
+        {widget.id === "nextSteps" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {["Increase protein to 140g daily", "Add 2 cardio sessions", "Schedule check-in call"].map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${BORDER}` }}/>
+                <span style={{ fontSize: 13, color: TEXT }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  const sortedWidgets = [...widgets].sort((a, b) => a.order - b.order);
+  const addableWidgets = availableWidgets.filter(w => !widgets.find(ww => ww.id === w.id) && w.id !== "summary");
   
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
-      {/* Subtle close button */}
-      <div 
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f8faf9", position: "relative" }}>
+      {/* Close button */}
+      <div
         onClick={onClose}
-        style={{ 
-          position: "absolute", top: 12, right: 12, zIndex: 10,
-          width: 28, height: 28, borderRadius: 8,
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 20,
+          width: 32, height: 32, borderRadius: 10,
           display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
-          transition: "opacity 0.15s ease"
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
         }}
-        onMouseEnter={e => e.currentTarget.style.opacity = 1}
-        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -5912,72 +6268,210 @@ function ReportCanvas({ data, onClose }) {
       </div>
       
       {/* Header */}
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.title}</div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Progress report for {data.client}</div>
-      </div>
-      
-      {/* Report sections */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {data.sections?.map((section, sIdx) => (
-            <div key={sIdx} style={{
-              background: WHITE, borderRadius: 10, padding: 14,
-              border: `1px solid ${BORDER}`
-            }}>
-              <div style={{ 
-                fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 10,
-                textTransform: "uppercase", letterSpacing: "0.03em"
-              }}>
-                {section.title}
-              </div>
-              
-              {section.content && (
-                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
-                  {section.content}
-                </div>
-              )}
-              
-              {section.data && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Meals</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Protein</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
-                      {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend}
-                    </div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Weight</div>
-                  </div>
-                </div>
-              )}
-              
-              {section.items && (
-                <ul style={{ margin: 0, paddingLeft: 18, marginTop: 4 }}>
-                  {section.items.map((item, iIdx) => (
-                    <li key={iIdx} style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, marginBottom: 2 }}>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
+      <div style={{ padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Progress Report</h2>
+          <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
+            {chatStep < 3 ? "Building your report..." : `Report for ${selectedClient?.name}`}
+          </p>
         </div>
+        
+        {/* View toggle */}
+        {chatStep === 3 && (
+          <div style={{ display: "flex", background: "#f0f2f1", borderRadius: 8, padding: 3 }}>
+            {["mobile", "desktop"].map(mode => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  padding: "6px 12px", borderRadius: 6, border: "none",
+                  background: viewMode === mode ? WHITE : "transparent",
+                  color: viewMode === mode ? TEXT : TEXT_SEC,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  boxShadow: viewMode === mode ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s ease", textTransform: "capitalize"
+                }}
+              >
+                {mode === "mobile" ? (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                      <line x1="12" y1="18" x2="12" y2="18"/>
+                    </svg>
+                    Mobile
+                  </span>
+                ) : (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Desktop
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* Add widget button */}
+        {chatStep === 3 && addableWidgets.length > 0 && (
+          <button
+            onClick={() => setShowAddWidget(true)}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, color: TEXT_SEC, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s ease"
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        )}
       </div>
       
-      {/* Hint bar */}
-      <div style={{
-        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
-        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
-      }}>
-        Chat with Milton: "Add nutrition section" or "Make summary more encouraging"
+      {/* Report preview area */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", justifyContent: "center" }}>
+        {chatStep < 3 ? (
+          /* Building state */
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+            <div style={{
+              width: 80, height: 80, borderRadius: 20, background: `${GREEN}10`,
+              display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24
+            }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10,9 9,9 8,9"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+              {chatStep === 0 && "Let's build your report"}
+              {chatStep === 1 && "Setting up..."}
+              {chatStep === 2 && "Generating report..."}
+            </div>
+            <div style={{ fontSize: 14, color: TEXT_SEC }}>
+              Answer the questions to create a progress report
+            </div>
+            {/* Progress dots */}
+            <div style={{ display: "flex", gap: 8, marginTop: 32, height: 20, alignItems: "center" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: i <= chatStep ? GREEN : BORDER,
+                  transition: "background 0.3s ease",
+                  animation: i <= chatStep && chatStep < 3 ? `dotBounce 1.2s ease-in-out ${i * 0.15}s infinite` : "none"
+                }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Report preview with device frame */
+          <div style={{
+            width: viewMode === "mobile" ? 375 : "100%",
+            maxWidth: viewMode === "desktop" ? 800 : 375,
+            background: viewMode === "mobile" ? "#1a1a1a" : "transparent",
+            borderRadius: viewMode === "mobile" ? 40 : 0,
+            padding: viewMode === "mobile" ? "12px 12px 24px" : 0,
+            transition: "all 0.3s ease"
+          }}>
+            {/* Phone notch */}
+            {viewMode === "mobile" && (
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+                <div style={{ width: 80, height: 24, background: "#1a1a1a", borderRadius: 12 }}/>
+              </div>
+            )}
+            
+            {/* Report content */}
+            <div style={{
+              background: WHITE,
+              borderRadius: viewMode === "mobile" ? 28 : 16,
+              overflow: "hidden",
+              minHeight: viewMode === "mobile" ? 600 : "auto"
+            }}>
+              <div style={{ padding: viewMode === "mobile" ? 16 : 24, display: "flex", flexDirection: "column", gap: 12 }}>
+                {sortedWidgets.map(widget => renderWidget(widget))}
+                
+                {/* Add section button */}
+                {addableWidgets.length > 0 && (
+                  <button
+                    onClick={() => setShowAddWidget(true)}
+                    style={{
+                      padding: 16, borderRadius: 12, border: `2px dashed ${BORDER}`,
+                      background: "transparent", color: TEXT_SEC, cursor: "pointer",
+                      fontSize: 13, fontWeight: 500, transition: "all 0.15s ease",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Section
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Phone home indicator */}
+            {viewMode === "mobile" && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+                <div style={{ width: 120, height: 4, background: "#fff", borderRadius: 2, opacity: 0.3 }}/>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+      
+      {/* Add widget modal */}
+      {showAddWidget && (
+        <div style={{
+          position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30
+        }} onClick={() => setShowAddWidget(false)}>
+          <div style={{
+            background: WHITE, borderRadius: 16, padding: 20, width: 300,
+            maxHeight: "70%", overflowY: "auto"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 16 }}>Add Section</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {addableWidgets.map(w => (
+                <button
+                  key={w.id}
+                  onClick={() => addWidget(w.id)}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: WHITE, textAlign: "left", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12,
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, background: `${TEAL}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center", color: TEAL
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      {w.type === "chart" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
+                      {w.type === "pie" && <><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>}
+                      {w.type === "bar" && <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>}
+                      {w.type === "stats" && <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}
+                      {w.type === "list" && <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>}
+                      {w.type === "text" && <><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></>}
+                      {w.type === "checklist" && <><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></>}
+                      {w.type === "calendar" && <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>}
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{w.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -6689,12 +7183,13 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-          {canvasType === "report" && (
-            <ReportCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
+{canvasType === "report" && (
+  <ReportsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
 {canvasType === "inbox" && (
   <InboxCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -6765,12 +7260,13 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-          {canvasType === "report" && (
-            <ReportCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
+{canvasType === "report" && (
+  <ReportsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
 {canvasType === "inbox" && (
   <InboxCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
