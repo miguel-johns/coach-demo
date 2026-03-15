@@ -6527,12 +6527,14 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
           <div style={{
             width: viewMode === "mobile" ? 375 : "100%",
             maxWidth: viewMode === "desktop" ? 800 : 375,
+            maxHeight: "100%",
             background: WHITE,
             borderRadius: 16,
-            overflow: "hidden",
+            overflowY: "auto",
+            overflowX: "hidden",
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             border: `1px solid ${BORDER}`,
-            transition: "all 0.3s ease"
+            transition: "width 0.3s ease, max-width 0.3s ease"
           }}>
               <div style={{ padding: viewMode === "mobile" ? 16 : 24, display: "flex", flexDirection: "column", gap: 12 }}>
               {sortedWidgets.map(widget => renderWidget(widget))}
