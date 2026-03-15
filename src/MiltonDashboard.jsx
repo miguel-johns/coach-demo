@@ -600,9 +600,9 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
   );
 }
 
-function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing }) {
+function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
-  const showSuggestions = messages.length <= 1 && !typing;
+  const showSuggestions = messages.length <= 1 && !typing && canvasType !== "messages";
   return (
     <>
     <div style={{
@@ -895,12 +895,12 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                   </div>
                 </div>
               )}
-              {messages.length <= 1 && !typing && (
-                <div style={{
-                  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
-                  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
-                }}>
-                  {suggestedPrompts.map((prompt, i) => (
+{messages.length <= 1 && !typing && !canvasMode && (
+  <div style={{
+  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
+  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
+  }}>
+  {suggestedPrompts.map((prompt, i) => (
                     <button
                       key={i}
                       onClick={() => { onSend(prompt); }}
@@ -6619,10 +6619,11 @@ Remember: Be specific, be brief, be helpful.`;
               <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
               <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
-            <ChatContent
-              chatInput={chatInput} setChatInput={setChatInput}
-              messages={chatMessages} onSend={handleChatSend}
-              chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
+<ChatContent
+  chatInput={chatInput} setChatInput={setChatInput}
+  messages={chatMessages} onSend={handleChatSend}
+  chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
+  canvasType={canvasType}
             />
           </section>
         </div>
