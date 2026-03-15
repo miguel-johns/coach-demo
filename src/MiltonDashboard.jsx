@@ -6106,43 +6106,59 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
       </div>
     );
     
-    // Consistency Score Widget (like top3 block)
+    // Consistency Score Widget (matching existing design)
     if (widget.id === "consistencyScore") {
-      const sz = 100, r = sz / 2 - 9, circ = 2 * Math.PI * r;
+      const sz = 160, r = sz / 2 - 12, circ = 2 * Math.PI * r;
       const offset = circ * (1 - consistencyScore / 100);
+      const statusLabel = consistencyScore >= 85 ? "Exceptional Progress" : consistencyScore >= 70 ? "Strong Momentum" : consistencyScore >= 55 ? "Building Momentum" : "Getting Started";
+      const statusDesc = consistencyScore >= 70 
+        ? "You're crushing it! This score reflects daily commitment across meals, exercise, movement, and sleep."
+        : "Slow & steady wins the race. This score reflects daily commitment across meals, exercise, movement, and sleep.";
+      const pillars = [
+        { label: "Meals", value: mealsScore, weight: 40 },
+        { label: "Exercise", value: exerciseScore, weight: 25 },
+        { label: "Movement", value: movementScore, weight: 20 },
+        { label: "Sleep", value: sleepScore, weight: 15 },
+      ];
+      
       return (
-        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)">
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 18 }}>
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f8fcfa, #f0f9f5, #f5faf8)">
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              {client.name?.toUpperCase() || "CLIENT"}'S CONSISTENCY SCORE
+            </div>
+          </div>
+          
+          {/* Large Score Ring */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 20 }}>
             <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="8"/>
-              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="8"
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="10"/>
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="10"
                 strokeDasharray={circ} strokeDashoffset={offset}
                 strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
                 style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
               />
-              <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
-                style={{ fontSize: 30, fontWeight: 800, fill: TEXT }}>{consistencyScore}</text>
+              <text x={sz/2} y={sz/2 - 6} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 48, fontWeight: 300, fill: TEXT }}>{consistencyScore}</text>
+              <text x={sz/2} y={sz/2 + 24} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 11, fontWeight: 600, fill: TEXT_SEC, letterSpacing: "0.08em" }}>OUT OF 100</text>
             </svg>
-            <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Consistency Score</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, marginTop: 2 }}>
-              {consistencyScore >= 85 ? "Exceptional" : consistencyScore >= 70 ? "Strong" : consistencyScore >= 55 ? "Building" : "Getting Started"}
-            </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              { label: "Meals", pct: mealsScore, color: "#ef6c3e" },
-              { label: "Exercise", pct: exerciseScore, color: TEAL },
-              { label: "Steps", pct: movementScore, color: "#3aafa9" },
-              { label: "Sleep", pct: sleepScore, color: "#8e7cc3" },
-            ].map((w, i) => (
+          
+          {/* Status Label & Description */}
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: scoreColor, marginBottom: 8 }}>{statusLabel}</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, maxWidth: 320, margin: "0 auto" }}>{statusDesc}</div>
+          </div>
+          
+          {/* Four Metric Columns */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, textAlign: "center" }}>
+            {pillars.map((p, i) => (
               <div key={i}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{w.label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: w.color }}>{w.pct}</span>
-                </div>
-                <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
-                  <div style={{ height: "100%", borderRadius: 3, background: w.color, width: `${w.pct}%`, transition: "width 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }} />
-                </div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: TEAL }}>{p.value}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, marginTop: 2 }}>{p.label}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.7, marginTop: 1 }}>{p.weight}%</div>
               </div>
             ))}
           </div>
@@ -6708,7 +6724,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
 
 /* ═══════════════════════════════════════════
    MAIN DASHBOARD
-   ═══════════════════════════════════════════ */
+   ═══════════════════════════════════���═══════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
