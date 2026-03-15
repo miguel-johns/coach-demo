@@ -4394,7 +4394,6 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
   const [duration, setDuration] = useState(null);
   const [generatedMessages, setGeneratedMessages] = useState([]);
   const [expandedMessage, setExpandedMessage] = useState(null);
-  const [initialized, setInitialized] = useState(false);
   
   const GREEN = "#5CDB95";
   
@@ -4554,23 +4553,18 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
   handleFrequencySelectRef.current = handleFrequencySelect;
   handleDurationSelectRef.current = handleDurationSelect;
   
-  // Initialize with first question - runs once on mount
+// Initialize with first question - starts fresh chat, runs once on mount
   useEffect(() => {
-    console.log("[v0] MessagesCanvas useEffect running, initialized:", initialized, "setChatMessages:", typeof setChatMessages);
-    if (!initialized && setChatMessages) {
-      console.log("[v0] MessagesCanvas initializing chat with first question");
-      setInitialized(true);
-      setChatMessages(prev => {
-        console.log("[v0] Adding message to chat, prev length:", prev.length);
-        return [...prev, {
-          type: "ai",
-          text: "Let's set up your automated message sequence. Who should receive these messages?",
-          options: clients.map(c => c.name),
-          onSelect: (val) => handleClientSelectRef.current?.(val)
-        }];
-      });
-    }
-  }, [initialized, setChatMessages]);
+  if (setChatMessages) {
+  // Start fresh chat with just the message builder question
+  setChatMessages([{
+  type: "ai",
+  text: "Let's set up your automated message sequence. Who should receive these messages?",
+  options: clients.map(c => c.name),
+  onSelect: (val) => handleClientSelectRef.current?.(val)
+  }]);
+  }
+  }, []);
   
   return (
     <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
