@@ -4803,7 +4803,7 @@ function CanvasTemplates({ onSelect, onClose }) {
       title: "Progress Reports", 
       desc: "Generate comprehensive client progress summaries",
       color: "#45818e",
-      available: false
+      available: true
     }
   ];
   
@@ -7229,6 +7229,9 @@ Remember: Be specific, be brief, be helpful.`;
   });
   } else if (templateType === "messages") {
   setCanvasType("messages");
+  setCanvasData({});
+  } else if (templateType === "reports") {
+  setCanvasType("report");
   setCanvasData({});
   }
   }}
