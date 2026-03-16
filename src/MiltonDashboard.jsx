@@ -27,8 +27,66 @@ function useIsMobile() {
   return isMobile;
 }
 
-// Simple markdown-like formatter for AI responses
-function FormattedText({ text, color = TEXT_SEC }) {
+// Chat options component for interactive selections
+  function ChatOptions({ options, multiSelect, onSelect, disabled }) {
+    const [selected, setSelected] = useState(multiSelect ? [] : null);
+    const GREEN = "#5CDB95";
+    
+    const handleClick = (option) => {
+      if (disabled) return;
+      if (multiSelect) {
+        setSelected(prev => prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]);
+      } else {
+        setSelected(option);
+        onSelect(option);
+      }
+    };
+    
+    const handleConfirm = () => {
+      if (selected.length > 0) {
+        onSelect(selected);
+      }
+    };
+    
+    return (
+      <div style={{ marginTop: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {options.map(opt => (
+            <button
+              key={opt}
+              onClick={() => handleClick(opt)}
+              disabled={disabled}
+              style={{
+                padding: "8px 14px", borderRadius: 20,
+                background: (multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : WHITE,
+                border: `1px solid ${(multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : BORDER}`,
+                color: (multiSelect ? selected.includes(opt) : selected === opt) ? WHITE : TEXT,
+                fontSize: 13, fontWeight: 500, cursor: disabled ? "default" : "pointer",
+                opacity: disabled ? 0.5 : 1,
+                transition: "all 0.15s ease"
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        {multiSelect && !disabled && selected.length > 0 && (
+          <button
+            onClick={handleConfirm}
+            style={{
+              marginTop: 10, padding: "8px 16px", borderRadius: 20, border: "none",
+              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Continue
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Simple markdown-like formatter for AI responses
+  function FormattedText({ text, color = TEXT_SEC }) {
   if (!text) return null;
   
   // Split into paragraphs first
@@ -186,6 +244,12 @@ function NavIcon({ icon, size = 20 }) {
     "chevron-left": <svg {...s} viewBox="0 0 24 24" style={{...s, width: 18, height: 18}}><polyline points="15,18 9,12 15,6"/></svg>,
     menu: <svg {...s} viewBox="0 0 24 24" style={{...s, width: 18, height: 18}}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
     x: <svg {...s} viewBox="0 0 24 24" style={{...s, width: 18, height: 18}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    calendar: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    inbox: <svg {...s} viewBox="0 0 24 24"><polyline points="22,12 16,12 14,15 10,15 8,12 2,12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>,
+    canvas: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
+    send: <svg {...s} viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>,
+    file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
+    chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -536,9 +600,9 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
   );
 }
 
-function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing }) {
+function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
-  const showSuggestions = messages.length <= 1 && !typing;
+  const showSuggestions = messages.length <= 1 && !typing && canvasType !== "messages";
   return (
     <>
     <div style={{
@@ -572,6 +636,14 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
                 </div>
                 <div style={{ flex: 1, paddingTop: 4 }}>
                   <FormattedText text={msg.text} color={TEXT_SEC} />
+                  {msg.options && msg.onSelect && (
+                    <ChatOptions 
+                      options={msg.options} 
+                      multiSelect={msg.multiSelect} 
+                      onSelect={msg.onSelect}
+                      disabled={msg.answered}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -793,19 +865,27 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                       }}>
                         <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
                       </div>
-                      <div style={{ flex: 1, paddingTop: 2 }}>
-                        <FormattedText text={msg.text} color={TEXT_SEC} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {typing && (
-                <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
-                  <div style={{ 
-                    width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
-                    background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>
+<div style={{ flex: 1, paddingTop: 2 }}>
+                <FormattedText text={msg.text} color={TEXT_SEC} />
+                {msg.options && msg.onSelect && (
+                  <ChatOptions 
+                    options={msg.options} 
+                    multiSelect={msg.multiSelect} 
+                    onSelect={msg.onSelect}
+                    disabled={msg.answered}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+      {typing && (
+    <div style={{ display: "flex", gap: 12, maxWidth: "95%", opacity: 0, animation: "fadeSlideIn 0.3s ease forwards" }}>
+    <div style={{ 
+      width: 26, height: 26, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+      background: TEAL, display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
                     <img src={LOGO_URL} alt="Milton" style={{ width: 26, height: 26 }} />
                   </div>
                   <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 6 }}>
@@ -815,12 +895,12 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                   </div>
                 </div>
               )}
-              {messages.length <= 1 && !typing && (
-                <div style={{
-                  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
-                  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
-                }}>
-                  {suggestedPrompts.map((prompt, i) => (
+{messages.length <= 1 && !typing && !canvasMode && (
+  <div style={{
+  display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8,
+  opacity: 0, animation: "fadeSlideIn 0.4s ease 0.3s forwards"
+  }}>
+  {suggestedPrompts.map((prompt, i) => (
                     <button
                       key={i}
                       onClick={() => { onSend(prompt); }}
@@ -883,7 +963,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ═══════════════════════════════════════════ */
+   ════��═��������═══════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -3202,7 +3282,7 @@ function AddClientModal({ onClose, isMobile }) {
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ══════��════════════════════════════════════
    CANVAS DATA GENERATORS
    ═══════════════════════════════════════════ */
 
@@ -3339,7 +3419,7 @@ function generateProgressReport(clientName, clientData) {
 
 /* ═══════════════════════════════════════════
    CANVAS COMPONENTS - Calendar View
-   ════════════════════════════════�������������═���������════════ */
+   ══════════════════════���═════�����═══���������������═���������════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -3693,6 +3773,1208 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
           </svg>
         </div>
         <span>Click any day to view and edit with Milton</span>
+      </div>
+    </div>
+  );
+}
+
+function InboxCanvas({ onClose }) {
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedConvo, setSelectedConvo] = useState(null);
+  const [messageInput, setMessageInput] = useState("");
+  
+  const filters = [
+    { id: "all", label: "All" },
+    { id: "team", label: "Team", color: "#6366f1" },
+    { id: "client", label: "Client", color: TEAL },
+    { id: "announcement", label: "Announcements", color: "#f59e0b" }
+  ];
+  
+  const conversations = [
+    { 
+      id: 1, name: "Sarah Chen", avatar: "SC", tag: "client",
+      lastMessage: "Thanks for the updated meal plan!", time: "2m",
+      unread: 2, online: true
+    },
+    { 
+      id: 2, name: "Coaching Team", avatar: "CT", tag: "team", isGroup: true,
+      lastMessage: "New protocol doc is ready for review", time: "15m",
+      unread: 0, members: 5
+    },
+    { 
+      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "client",
+      lastMessage: "Can we move tomorrow's session?", time: "1h",
+      unread: 1, online: false
+    },
+    { 
+      id: 4, name: "Platform Updates", avatar: "M", tag: "announcement", isGroup: true,
+      lastMessage: "New feature: Canvas templates are live!", time: "3h",
+      unread: 0
+    },
+    { 
+      id: 5, name: "Emily Rodriguez", avatar: "ER", tag: "client",
+      lastMessage: "Just finished week 3 of the program!", time: "5h",
+      unread: 0, online: true
+    },
+    { 
+      id: 6, name: "Nutrition Team", avatar: "NT", tag: "team", isGroup: true,
+      lastMessage: "Updated macro guidelines attached", time: "1d",
+      unread: 0, members: 3
+    }
+  ];
+  
+  const filteredConvos = activeFilter === "all" 
+    ? conversations 
+    : conversations.filter(c => c.tag === activeFilter);
+  
+  const tagColors = { team: "#6366f1", client: TEAL, announcement: "#f59e0b" };
+  
+  return (
+    <div style={{
+      display: "flex", height: "100%", background: WHITE
+    }}>
+      {/* Sidebar - Conversation List */}
+      <div style={{
+        width: 300, borderRight: `1px solid ${BORDER}`,
+        display: "flex", flexDirection: "column", background: "#fafcfb"
+      }}>
+        {/* Header */}
+        <div style={{ padding: "16px 16px", borderBottom: `1px solid ${BORDER}` }}>
+          {/* Action Buttons */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {[
+              { icon: "video", label: "Go Live", color: "#ef4444" },
+              { icon: "user", label: "1-on-1" },
+              { icon: "users", label: "Group" }
+            ].map(btn => (
+              <button
+                key={btn.label}
+                style={{
+                  flex: 1, padding: "10px 8px", borderRadius: 10,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                  cursor: "pointer", fontSize: 11, fontWeight: 600, color: btn.color || TEXT,
+                  transition: "all 0.15s ease", minWidth: 0, whiteSpace: "nowrap"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color || TEAL; e.currentTarget.style.background = btn.color ? `${btn.color}10` : TEAL_LIGHT; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = WHITE; }}
+              >
+                {btn.icon === "video" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>}
+                {btn.icon === "user" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                {btn.icon === "users" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+                {btn.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Filter Tags */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {filters.map(f => (
+              <button
+                key={f.id}
+                onClick={() => setActiveFilter(f.id)}
+                style={{
+                  padding: "6px 12px", borderRadius: 20,
+                  border: activeFilter === f.id ? "none" : `1px solid ${BORDER}`,
+                  background: activeFilter === f.id ? (f.color || TEXT) : "transparent",
+                  color: activeFilter === f.id ? WHITE : TEXT_SEC,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Conversation List */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {filteredConvos.map((convo, idx) => (
+            <div
+              key={convo.id}
+              onClick={() => setSelectedConvo(convo)}
+              style={{
+                padding: "12px 16px", display: "flex", gap: 10, cursor: "pointer",
+                background: selectedConvo?.id === convo.id ? TEAL_LIGHT : "transparent",
+                borderBottom: `1px solid ${BORDER}`,
+                animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
+              }}
+              onMouseEnter={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "#f5f7f6"; }}
+              onMouseLeave={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "transparent"; }}
+            >
+              {/* Avatar */}
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: convo.isGroup ? "#f0f4f3" : `${tagColors[convo.tag]}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: 600, color: convo.isGroup ? TEXT_SEC : tagColors[convo.tag]
+                }}>
+                  {convo.avatar}
+                </div>
+                {convo.online && (
+                  <div style={{
+                    position: "absolute", bottom: 0, right: 0,
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: "#22c55e", border: `2px solid ${WHITE}`
+                  }} />
+                )}
+              </div>
+              
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{convo.name}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 600, color: tagColors[convo.tag],
+                    background: `${tagColors[convo.tag]}15`, padding: "2px 6px",
+                    borderRadius: 6, textTransform: "uppercase"
+                  }}>{convo.tag}</span>
+                </div>
+                <p style={{
+                  fontSize: 13, color: TEXT_SEC, margin: 0,
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                }}>{convo.lastMessage}</p>
+              </div>
+              
+              {/* Meta */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                <span style={{ fontSize: 11, color: TEXT_SEC }}>{convo.time}</span>
+                {convo.unread > 0 && (
+                  <div style={{
+                    minWidth: 18, height: 18, borderRadius: 9,
+                    background: TEAL, color: WHITE, fontSize: 11, fontWeight: 600,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "0 5px"
+                  }}>{convo.unread}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Main - Message View */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE }}>
+        {selectedConvo ? (
+          <>
+            {/* Convo Header */}
+            <div style={{
+              padding: "14px 24px", borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: selectedConvo.isGroup ? "#f0f4f3" : `${tagColors[selectedConvo.tag]}15`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 600, color: selectedConvo.isGroup ? TEXT_SEC : tagColors[selectedConvo.tag]
+                }}>
+                  {selectedConvo.avatar}
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{selectedConvo.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {selectedConvo.online ? "Online" : selectedConvo.members ? `${selectedConvo.members} members` : "Offline"}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </button>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                  </svg>
+                </button>
+                <button style={{
+                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                  </svg>
+                </button>
+                <button 
+                  onClick={onClose}
+                  style={{
+                    width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Sample messages */}
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: `${tagColors[selectedConvo.tag]}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 600, color: tagColors[selectedConvo.tag]
+                  }}>{selectedConvo.avatar}</div>
+                  <div>
+                    <div style={{
+                      background: "#f0f4f3", padding: "12px 16px", borderRadius: "4px 16px 16px 16px",
+                      maxWidth: 320
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
+                        Hey! Just wanted to check in about my progress this week.
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block" }}>10:32 AM</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <div>
+                    <div style={{
+                      background: TEAL, padding: "12px 16px", borderRadius: "16px 4px 16px 16px",
+                      maxWidth: 320
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, color: WHITE, lineHeight: 1.5 }}>
+                        {selectedConvo.lastMessage}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Input */}
+            <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+                <button style={{
+                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+                <div style={{
+                  flex: 1, background: "#f5f7f6", borderRadius: 12,
+                  display: "flex", alignItems: "flex-end", padding: "4px 4px 4px 16px"
+                }}>
+                  <textarea
+                    value={messageInput}
+                    onChange={e => setMessageInput(e.target.value)}
+                    placeholder="Type a message..."
+                    rows={1}
+                    style={{
+                      flex: 1, border: "none", background: "transparent", outline: "none",
+                      fontSize: 14, color: TEXT, resize: "none", padding: "8px 0",
+                      maxHeight: 120
+                    }}
+                  />
+                  <button style={{
+                    width: 36, height: 36, borderRadius: 10, border: "none",
+                    background: messageInput.trim() ? TEAL : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: messageInput.trim() ? "pointer" : "default",
+                    color: messageInput.trim() ? WHITE : TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+                    </svg>
+                  </button>
+                </div>
+                <button style={{
+                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Empty state */
+          <div style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", padding: 48, position: "relative"
+          }}>
+            <button 
+              onClick={onClose}
+              style={{
+                position: "absolute", top: 16, right: 16,
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <div style={{
+              width: 80, height: 80, borderRadius: 20, background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 24, color: TEXT_SEC
+            }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
+              Select a conversation
+            </h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, textAlign: "center", maxWidth: 280 }}>
+              Choose a chat from the sidebar or start a new conversation
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ScheduleCanvas({ onClose }) {
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [viewMode, setViewMode] = useState("week"); // week or month
+  
+  const categories = [
+    { id: "session", label: "Sessions", color: TEAL },
+    { id: "meeting", label: "Meetings", color: "#6366f1" },
+    { id: "backoffice", label: "Back Office", color: "#f59e0b" },
+    { id: "work", label: "Work Hours", color: "#94a3b8" }
+  ];
+  
+  const events = [
+    { id: 1, title: "Sarah Chen - Check-in", category: "session", day: 0, start: 9, duration: 1 },
+    { id: 2, title: "Marcus Johnson - Training", category: "session", day: 0, start: 14, duration: 1.5 },
+    { id: 3, title: "Team Standup", category: "meeting", day: 1, start: 10, duration: 0.5 },
+    { id: 4, title: "Emily Rodriguez - Assessment", category: "session", day: 1, start: 13, duration: 1 },
+    { id: 5, title: "Content Planning", category: "backoffice", day: 2, start: 9, duration: 2 },
+    { id: 6, title: "Alex Kim - Progress Review", category: "session", day: 2, start: 15, duration: 1 },
+    { id: 7, title: "Client Onboarding Call", category: "meeting", day: 3, start: 11, duration: 1 },
+    { id: 8, title: "Program Updates", category: "backoffice", day: 3, start: 14, duration: 1.5 },
+    { id: 9, title: "Group Session - Nutrition", category: "session", day: 4, start: 10, duration: 1.5 },
+    { id: 10, title: "Admin & Billing", category: "backoffice", day: 4, start: 16, duration: 1 },
+  ];
+  
+  const workHours = { start: 8, end: 18 };
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekStart = new Date(currentDate);
+  weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+  
+  const getCategoryColor = (cat) => categories.find(c => c.id === cat)?.color || TEXT_SEC;
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{
+        padding: "12px 16px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Navigation */}
+          <div style={{ display: "flex", gap: 4 }}>
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+            </button>
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+            {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          </span>
+          <button
+            onClick={() => setCurrentDate(new Date(2026, 2, 15))}
+            style={{
+              padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", fontSize: 12, fontWeight: 500, color: TEXT_SEC
+            }}
+          >
+            Today
+          </button>
+        </div>
+        
+        {/* Categories Legend + Close */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {categories.map(cat => (
+            <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>{cat.label}</span>
+            </div>
+          ))}
+          <div
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 8, marginLeft: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`,
+              background: WHITE, transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      {/* Calendar Grid */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Time Column */}
+        <div style={{ width: 60, borderRight: `1px solid ${BORDER}`, background: WHITE }}>
+          <div style={{ height: 48, borderBottom: `1px solid ${BORDER}` }} />
+          {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
+            <div key={i} style={{
+              height: 60, borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
+              padding: "4px 8px", fontSize: 11, color: TEXT_SEC, fontWeight: 500
+            }}>
+              {((workHours.start + i) % 12 || 12)}{(workHours.start + i) >= 12 ? "pm" : "am"}
+            </div>
+          ))}
+        </div>
+        
+        {/* Days Grid */}
+        <div style={{ flex: 1, display: "flex", overflowX: "auto" }}>
+          {days.map((day, dayIdx) => {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + dayIdx);
+            const isToday = dayDate.toDateString() === new Date(2026, 2, 15).toDateString();
+            const isWeekend = dayIdx === 0 || dayIdx === 6;
+            const dayEvents = events.filter(e => e.day === dayIdx);
+            
+            return (
+              <div key={dayIdx} style={{ flex: 1, minWidth: 100, borderRight: `1px solid ${BORDER}` }}>
+                {/* Day Header */}
+                <div style={{
+                  height: 48, borderBottom: `1px solid ${BORDER}`,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  background: isToday ? TEAL_LIGHT : WHITE
+                }}>
+                  <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
+                  <span style={{
+                    fontSize: 16, fontWeight: 600,
+                    color: isToday ? TEAL : TEXT,
+                    width: 28, height: 28, borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: isToday ? TEAL : "transparent",
+                    color: isToday ? WHITE : TEXT
+                  }}>
+                    {dayDate.getDate()}
+                  </span>
+                </div>
+                
+                {/* Time Slots */}
+                <div style={{ position: "relative", background: isWeekend ? "#fafafa" : WHITE }}>
+                  {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
+                    <div key={i} style={{ height: 60, borderBottom: `1px solid ${BORDER}` }} />
+                  ))}
+                  
+                  {/* Events */}
+                  {dayEvents.map(event => (
+                    <div
+                      key={event.id}
+                      onClick={() => setSelectedEvent(event)}
+                      style={{
+                        position: "absolute",
+                        top: (event.start - workHours.start) * 60 + 2,
+                        left: 4, right: 4,
+                        height: event.duration * 60 - 4,
+                        background: `${getCategoryColor(event.category)}15`,
+                        borderLeft: `3px solid ${getCategoryColor(event.category)}`,
+                        borderRadius: 6, padding: "6px 8px",
+                        cursor: "pointer", overflow: "hidden",
+                        transition: "all 0.15s ease"
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}25`}
+                      onMouseLeave={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}15`}
+                    >
+                      <div style={{
+                        fontSize: 12, fontWeight: 600, color: getCategoryColor(event.category),
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                      }}>
+                        {event.title}
+                      </div>
+                      <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
+                        {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Quick Add Bar */}
+      <div style={{
+        padding: "12px 20px", borderTop: `1px solid ${BORDER}`, background: WHITE,
+        display: "flex", alignItems: "center", gap: 12
+      }}>
+        <span style={{ fontSize: 12, color: TEXT_SEC }}>Quick add:</span>
+        {[
+          { label: "+ Session", cat: "session" },
+          { label: "+ Meeting", cat: "meeting" },
+          { label: "+ Block Time", cat: "backoffice" }
+        ].map(btn => (
+          <button
+            key={btn.cat}
+            style={{
+              padding: "8px 14px", borderRadius: 8,
+              border: `1px solid ${BORDER}`, background: WHITE,
+              fontSize: 12, fontWeight: 500, color: getCategoryColor(btn.cat),
+              cursor: "pointer", transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${getCategoryColor(btn.cat)}10`; e.currentTarget.style.borderColor = getCategoryColor(btn.cat); }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.borderColor = BORDER; }}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
+  const [chatStep, setChatStep] = useState(0); // 0: who, 1: types, 2: frequency, 3: duration, 4: generating, 5: done
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [frequency, setFrequency] = useState(null);
+  const [duration, setDuration] = useState(null);
+  const [generatedMessages, setGeneratedMessages] = useState([]);
+  const [expandedMessage, setExpandedMessage] = useState(null);
+  
+  const GREEN = "#5CDB95";
+  
+  const clients = [
+    { name: "Sarah Chen", initials: "SC" },
+    { name: "Marcus Johnson", initials: "MJ" },
+    { name: "Emily Rodriguez", initials: "ER" },
+    { name: "All Clients", initials: "ALL" }
+  ];
+  
+  const messageTypes = [
+    { id: "checkin", label: "Check-ins" },
+    { id: "motivation", label: "Motivation" },
+    { id: "reminder", label: "Reminders" },
+    { id: "tips", label: "Tips & Education" }
+  ];
+  
+  const frequencies = [
+    { id: "daily", label: "Daily" },
+    { id: "3x", label: "3x per week" },
+    { id: "weekly", label: "Weekly" }
+  ];
+  
+  const durations = [
+    { id: "2weeks", label: "2 weeks" },
+    { id: "4weeks", label: "4 weeks" },
+    { id: "8weeks", label: "8 weeks" }
+  ];
+  
+  const typeColors = {
+    checkin: TEAL,
+    motivation: "#f59e0b",
+    reminder: "#6366f1",
+    tips: "#ec4899"
+  };
+  
+  // Handler refs to avoid stale closures
+  const handleClientSelectRef = useRef(null);
+  const handleTypesSelectRef = useRef(null);
+  const handleFrequencySelectRef = useRef(null);
+  const handleDurationSelectRef = useRef(null);
+  
+  const handleClientSelect = (clientName) => {
+    const client = clients.find(c => c.name === clientName) || { name: clientName };
+    setSelectedClient(client);
+    // Mark previous options as answered
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: clientName }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Great! What types of messages do you want to send to ${client.name === "All Clients" ? "all your clients" : client.name}? You can pick multiple.`,
+        options: messageTypes.map(t => t.label),
+        multiSelect: true,
+        onSelect: (val) => handleTypesSelectRef.current?.(val)
+      }]);
+      setChatTyping(false);
+      setChatStep(1);
+    }, 500);
+  };
+  
+  const handleTypesSelect = (selected) => {
+    const typeIds = selected.map(label => messageTypes.find(t => t.label === label)?.id).filter(Boolean);
+    setSelectedTypes(typeIds);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: selected.join(", ") }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: "How often should messages go out?",
+        options: frequencies.map(f => f.label),
+        onSelect: (val) => handleFrequencySelectRef.current?.(val)
+      }]);
+      setChatTyping(false);
+      setChatStep(2);
+    }, 500);
+  };
+  
+  const handleFrequencySelect = (freqLabel) => {
+    const freq = frequencies.find(f => f.label === freqLabel)?.id || "weekly";
+    setFrequency(freq);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: freqLabel }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: "How long should this sequence run?",
+        options: durations.map(d => d.label),
+        onSelect: (val) => handleDurationSelectRef.current?.(val)
+      }]);
+      setChatTyping(false);
+      setChatStep(3);
+    }, 500);
+  };
+  
+  const handleDurationSelect = (durLabel) => {
+    const dur = durations.find(d => d.label === durLabel)?.id || "4weeks";
+    setDuration(dur);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: durLabel }]);
+    setChatTyping(true);
+    setChatStep(4);
+    
+    // Generate messages
+    setTimeout(() => {
+      const msgs = generateMessagesWithParams(dur);
+      setGeneratedMessages(msgs);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Done! I've created ${msgs.length} messages for ${selectedClient?.name || "your clients"}. Review them in the timeline and activate when you're ready.`
+      }]);
+      setChatTyping(false);
+      setChatStep(5);
+    }, 2000);
+  };
+  
+  const generateMessagesWithParams = (dur) => {
+    const name = selectedClient?.name === "All Clients" ? "team" : selectedClient?.name?.split(' ')[0];
+    const weeksNum = dur === "2weeks" ? 2 : dur === "4weeks" ? 4 : 8;
+    const messages = [];
+    
+    const typeContents = {
+      checkin: ["How are you feeling today?", "Quick check-in - how's your energy?", "What's one win from this week?"],
+      motivation: ["You're doing amazing!", "Remember why you started.", "Every step counts."],
+      reminder: ["Don't forget your session today!", "Time for your workout!", "Meal prep reminder!"],
+      tips: ["Try drinking water before meals.", "Sleep is key to recovery.", "Consistency beats perfection."]
+    };
+    
+    let msgId = 1;
+    for (let week = 1; week <= Math.min(weeksNum, 4); week++) {
+      selectedTypes.forEach((type, typeIdx) => {
+        const dayOffset = typeIdx * (7 / selectedTypes.length);
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const dayName = days[Math.floor(dayOffset) % 7];
+        const contents = typeContents[type];
+        messages.push({
+          id: msgId++,
+          week,
+          day: dayName,
+          time: `${9 + typeIdx * 3}:00 AM`,
+          type: messageTypes.find(t => t.id === type)?.label,
+          typeId: type,
+          content: `Hey ${name}! ${contents[week % contents.length]}`,
+          status: "scheduled"
+        });
+      });
+    }
+    return messages;
+  };
+  
+  // Keep refs updated
+  handleClientSelectRef.current = handleClientSelect;
+  handleTypesSelectRef.current = handleTypesSelect;
+  handleFrequencySelectRef.current = handleFrequencySelect;
+  handleDurationSelectRef.current = handleDurationSelect;
+  
+// Initialize with first question - starts fresh chat, runs once on mount
+  useEffect(() => {
+  if (setChatMessages) {
+  // Start fresh chat with just the message builder question
+  setChatMessages([{
+  type: "ai",
+  text: "Let's set up your automated message sequence. Who should receive these messages?",
+  options: clients.map(c => c.name),
+  onSelect: (val) => handleClientSelectRef.current?.(val)
+  }]);
+  }
+  }, []);
+  
+  return (
+    <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
+      {/* Close button */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Timeline Preview Panel */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE, overflow: "hidden" }}>
+        {/* Header */}
+<div style={{
+  padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`,
+  display: "flex", alignItems: "center", justifyContent: "space-between"
+  }}>
+  <div>
+  <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Message Sequence</h2>
+  <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
+  {chatStep < 5 ? "Building your sequence..." : `${generatedMessages.length} messages scheduled`}
+  </p>
+  </div>
+  {chatStep === 5 && (
+  <button style={{
+  padding: "10px 20px", borderRadius: 10, border: "none",
+  background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+  }}>
+  Activate
+  </button>
+  )}
+  </div>
+        
+        {/* Timeline Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
+          {chatStep < 4 ? (
+            /* Building Animation */
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+              <div style={{
+                width: 80, height: 80, borderRadius: 20, background: `${GREEN}10`,
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24
+              }}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                {chatStep === 0 && "Let's set up your messages"}
+                {chatStep === 1 && "Great choice!"}
+                {chatStep === 2 && "Adding message types..."}
+                {chatStep === 3 && "Almost there..."}
+              </div>
+              <div style={{ fontSize: 14, color: TEXT_SEC }}>
+                Answer the questions to build your sequence
+              </div>
+              
+{/* Progress dots with bounce animation */}
+  <div style={{ display: "flex", gap: 8, marginTop: 32, height: 20, alignItems: "center" }}>
+  {[0, 1, 2, 3].map(i => (
+  <div key={i} style={{
+  width: 8, height: 8, borderRadius: "50%",
+  background: i <= chatStep ? GREEN : BORDER,
+  transition: "background 0.3s ease",
+  animation: i <= chatStep ? `dotBounce 1.2s ease-in-out ${i * 0.15}s infinite` : "none"
+  }} />
+  ))}
+  </div>
+            </div>
+          ) : chatStep === 4 ? (
+            /* Generating Animation */
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+              <div style={{
+                width: 80, height: 80, borderRadius: 20, background: `${GREEN}15`,
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24,
+                animation: "pulse 1.5s ease-in-out infinite"
+              }}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                Generating messages...
+              </div>
+              <div style={{ fontSize: 14, color: TEXT_SEC }}>
+                Crafting personalized content for {selectedClient?.name}
+              </div>
+            </div>
+          ) : (
+            /* Mailchimp-style Vertical Timeline */
+            <div style={{ maxWidth: 500, margin: "0 auto" }}>
+              {/* Group by week */}
+              {[...new Set(generatedMessages.map(m => m.week))].map(week => (
+                <div key={week} style={{ marginBottom: 32 }}>
+                  <div style={{ 
+                    fontSize: 11, fontWeight: 600, color: TEXT_SEC, 
+                    textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 
+                  }}>
+                    Week {week}
+                  </div>
+                  
+                  {/* Timeline */}
+                  <div style={{ position: "relative", paddingLeft: 24 }}>
+                    {/* Vertical line */}
+                    <div style={{
+                      position: "absolute", left: 5, top: 8, bottom: 8,
+                      width: 2, background: BORDER, borderRadius: 1
+                    }} />
+                    
+                    {generatedMessages.filter(m => m.week === week).map((msg, idx) => (
+                      <div 
+                        key={msg.id}
+                        onClick={() => setExpandedMessage(expandedMessage === msg.id ? null : msg.id)}
+                        style={{ 
+                          position: "relative", marginBottom: 16, cursor: "pointer",
+                          animation: `fadeSlideIn 0.4s ease ${idx * 0.1}s both`
+                        }}
+                      >
+                        {/* Timeline dot */}
+                        <div style={{
+                          position: "absolute", left: -24, top: 12,
+                          width: 12, height: 12, borderRadius: "50%",
+                          background: typeColors[msg.typeId] || TEAL,
+                          border: `2px solid ${WHITE}`
+                        }} />
+                        
+                        {/* Card */}
+                        <div style={{
+                          background: "#fafcfb", borderRadius: 12, 
+                          border: `1px solid ${expandedMessage === msg.id ? typeColors[msg.typeId] : BORDER}`,
+                          overflow: "hidden", transition: "all 0.2s ease"
+                        }}>
+                          {/* Card header */}
+                          <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{
+                              padding: "4px 10px", borderRadius: 6,
+                              background: `${typeColors[msg.typeId]}15`,
+                              color: typeColors[msg.typeId],
+                              fontSize: 11, fontWeight: 600
+                            }}>
+                              {msg.type}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{msg.day}</span>
+                              <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 8 }}>{msg.time}</span>
+                            </div>
+                            <svg 
+                              width="16" height="16" viewBox="0 0 24 24" 
+                              fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
+                              style={{ 
+                                transform: expandedMessage === msg.id ? "rotate(180deg)" : "rotate(0deg)",
+                                transition: "transform 0.2s ease"
+                              }}
+                            >
+                              <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                          </div>
+                          
+                          {/* Expanded content */}
+                          {expandedMessage === msg.id && (
+                            <div style={{ 
+                              padding: "0 16px 16px", borderTop: `1px solid ${BORDER}`,
+                              paddingTop: 12, animation: "fadeIn 0.2s ease"
+                            }}>
+                              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: TEXT }}>
+                                {msg.content}
+                              </p>
+                              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                                <button style={{
+                                  padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                                  background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 500, cursor: "pointer"
+                                }}>Edit</button>
+                                <button style={{
+                                  padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                                  background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 500, cursor: "pointer"
+                                }}>Reschedule</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CanvasTemplates({ onSelect, onClose }) {
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  
+  const templates = [
+    { 
+      id: "mealPlan",
+      icon: "calendar", 
+      title: "Meal Plan", 
+      desc: "Build custom nutrition plans with daily meals, macros, and recipes",
+      color: "#2B7A78",
+      available: true
+    },
+    { 
+      id: "workout",
+      icon: "chart", 
+      title: "Workout Program", 
+      desc: "Design structured training programs with exercises and progressions",
+      color: "#3aafa9",
+      available: true
+    },
+    { 
+      id: "messages",
+      icon: "send", 
+      title: "Automated Messages", 
+      desc: "Schedule check-ins, reminders, and motivational messages",
+      color: "#5CDB95",
+      available: true
+    },
+    { 
+      id: "reports",
+      icon: "file", 
+      title: "Progress Reports", 
+      desc: "Generate comprehensive client progress summaries",
+      color: "#45818e",
+      available: true
+    }
+  ];
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Close button */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: "absolute", top: 16, right: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      
+      {/* Main content */}
+      <div style={{ 
+        flex: 1, display: "flex", flexDirection: "column",
+        padding: "60px 48px 48px", overflowY: "auto"
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ 
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: TEAL_LIGHT, padding: "6px 12px", borderRadius: 20,
+            marginBottom: 16
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Canvas</span>
+          </div>
+          <h1 style={{ 
+            fontSize: 32, fontWeight: 700, color: TEXT, margin: 0,
+            letterSpacing: "-0.02em", lineHeight: 1.2
+          }}>
+            What would you like to create?
+          </h1>
+          <p style={{ 
+            fontSize: 15, color: TEXT_SEC, margin: "12px 0 0", 
+            maxWidth: 400, lineHeight: 1.5
+          }}>
+            Choose a template to get started. Milton will help you build and customize it.
+          </p>
+        </div>
+        
+        {/* Templates Grid */}
+        <div style={{ 
+          display: "grid", gridTemplateColumns: "repeat(2, 1fr)", 
+          gap: 16, maxWidth: 600
+        }}>
+          {templates.map((template, idx) => (
+            <div
+              key={template.id}
+              onClick={() => template.available && onSelect(template.id)}
+              onMouseEnter={() => template.available && setHoveredTemplate(template.id)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              style={{
+                background: WHITE,
+                borderRadius: 16,
+                border: `1px solid ${hoveredTemplate === template.id ? template.color : BORDER}`,
+                padding: 24,
+                cursor: template.available ? "pointer" : "default",
+                opacity: template.available ? 1 : 0.5,
+                transition: "all 0.2s ease",
+                transform: hoveredTemplate === template.id ? "translateY(-2px)" : "translateY(0)",
+                boxShadow: hoveredTemplate === template.id 
+                  ? `0 8px 24px rgba(43,122,120,0.15)` 
+                  : "0 2px 8px rgba(0,0,0,0.04)",
+                animation: `fadeSlideIn 0.4s ease ${idx * 0.08}s both`
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: template.available 
+                  ? (hoveredTemplate === template.id ? template.color : `${template.color}15`)
+                  : "#f0f0f0",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 16, transition: "all 0.2s ease",
+                color: template.available 
+                  ? (hoveredTemplate === template.id ? WHITE : template.color)
+                  : TEXT_SEC
+              }}>
+                <NavIcon icon={template.icon} size={24} />
+              </div>
+              
+              {/* Title + Badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <h3 style={{ 
+                  fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 
+                }}>
+                  {template.title}
+                </h3>
+                {!template.available && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                    background: "#eee", padding: "3px 8px", borderRadius: 10,
+                    textTransform: "uppercase", letterSpacing: "0.03em"
+                  }}>Soon</span>
+                )}
+              </div>
+              
+              {/* Description */}
+              <p style={{ 
+                fontSize: 13, color: TEXT_SEC, margin: 0, lineHeight: 1.5 
+              }}>
+                {template.desc}
+              </p>
+              
+              {/* Arrow indicator for available templates */}
+              {template.available && (
+                <div style={{
+                  marginTop: 16, display: "flex", alignItems: "center", gap: 6,
+                  color: hoveredTemplate === template.id ? template.color : TEXT_SEC,
+                  fontSize: 13, fontWeight: 500, transition: "all 0.2s ease"
+                }}>
+                  <span>Get started</span>
+                  <svg 
+                    width="14" height="14" viewBox="0 0 24 24" 
+                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    style={{ 
+                      transform: hoveredTemplate === template.id ? "translateX(4px)" : "translateX(0)",
+                      transition: "transform 0.2s ease"
+                    }}
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12,5 19,12 12,19"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Bottom hint */}
+        <div style={{
+          marginTop: 40, padding: "16px 20px", background: "#f0f4f3",
+          borderRadius: 12, display: "flex", alignItems: "center", gap: 12,
+          maxWidth: 600
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, background: WHITE,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: TEAL
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>
+              Describe what you need in chat
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+              Milton can also create these from natural language requests
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -4606,23 +5888,623 @@ function MessageSequenceCanvas({ data, onClose }) {
   );
 }
 
-function ReportCanvas({ data, onClose }) {
-  if (!data) return null;
+function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
+  const [viewMode, setViewMode] = useState("mobile"); // mobile | desktop
+  const [chatStep, setChatStep] = useState(0); // 0: client, 1: timeframe, 2: generating, 3: done
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [timeframe, setTimeframe] = useState(null);
+  const [widgets, setWidgets] = useState([]);
+  const [draggedWidget, setDraggedWidget] = useState(null);
+  const [dragOverWidget, setDragOverWidget] = useState(null);
+  const [showAddWidget, setShowAddWidget] = useState(false);
+  
+  const GREEN = "#5CDB95";
+  
+  const clients = [
+    { name: "Sarah Chen", initials: "SC", week: 6, phase: "Fat Loss", score: 87 },
+    { name: "Marcus Johnson", initials: "MJ", week: 8, phase: "Muscle Gain", score: 92 },
+    { name: "Emily Rodriguez", initials: "ER", week: 4, phase: "Metabolic Health", score: 78 }
+  ];
+  
+  const timeframes = [
+    { id: "week", label: "This Week" },
+    { id: "month", label: "This Month" },
+    { id: "quarter", label: "This Quarter" }
+  ];
+  
+  const availableWidgets = [
+    { id: "consistencyScore", type: "score", label: "Consistency Score", locked: true },
+    { id: "transformation", type: "chart", label: "Transformation Chart" },
+    { id: "goalTrajectory", type: "trajectory", label: "Goal Trajectory" },
+    { id: "rule30", type: "rings", label: "Rule of 30" },
+    { id: "dataCards", type: "cards", label: "Weekly Metrics" },
+    { id: "calendar", type: "calendar", label: "Daily Activity" },
+    { id: "insight", type: "insight", label: "Milton Insight" },
+    { id: "nutrition", type: "nutrition", label: "Nutrition Breakdown" },
+    { id: "coachNotes", type: "text", label: "Coach Notes" }
+  ];
+  
+  // Handler refs
+  const handleClientSelectRef = useRef(null);
+  const handleTimeframeSelectRef = useRef(null);
+  
+  const handleClientSelect = (clientName) => {
+    const client = clients.find(c => c.name === clientName);
+    setSelectedClient(client);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: clientName }]);
+    setChatTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Great! What time period should this report cover for ${client?.name?.split(' ')[0]}?`,
+        options: timeframes.map(t => t.label),
+        onSelect: (val) => handleTimeframeSelectRef.current?.(val)
+      }]);
+      setChatTyping(false);
+      setChatStep(1);
+    }, 500);
+  };
+  
+  const handleTimeframeSelect = (tfLabel) => {
+    const tf = timeframes.find(t => t.label === tfLabel)?.id || "week";
+    setTimeframe(tf);
+    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
+    setChatMessages(prev => [...prev, { type: "user", text: tfLabel }]);
+    setChatTyping(true);
+    setChatStep(2);
+    
+    // Generate report
+    setTimeout(() => {
+      const defaultWidgets = [
+        { id: "consistencyScore", order: 0 },
+        { id: "transformation", order: 1 },
+        { id: "goalTrajectory", order: 2 },
+        { id: "rule30", order: 3 },
+        { id: "dataCards", order: 4 },
+        { id: "calendar", order: 5 },
+        { id: "insight", order: 6 }
+      ];
+      setWidgets(defaultWidgets);
+      setChatMessages(prev => [...prev, {
+        type: "ai",
+        text: `Done! I've created a progress report for ${selectedClient?.name}. Drag sections to reorder, or click + to add more widgets like Macro Breakdown or Workout Stats.`
+      }]);
+      setChatTyping(false);
+      setChatStep(3);
+    }, 1500);
+  };
+  
+  handleClientSelectRef.current = handleClientSelect;
+  handleTimeframeSelectRef.current = handleTimeframeSelect;
+  
+  // Initialize chat
+  useEffect(() => {
+    if (setChatMessages) {
+      setChatMessages([{
+        type: "ai",
+        text: "Let's build a progress report. Which client is this for?",
+        options: clients.map(c => c.name),
+        onSelect: (val) => handleClientSelectRef.current?.(val)
+      }]);
+    }
+  }, []);
+  
+  // Drag handlers
+  const handleDragStart = (e, widgetId) => {
+    if (widgetId === "consistencyScore") return; // Consistency score is locked
+    setDraggedWidget(widgetId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  
+  const handleDragOver = (e, widgetId) => {
+    e.preventDefault();
+    if (widgetId !== draggedWidget && widgetId !== "consistencyScore") {
+      setDragOverWidget(widgetId);
+    }
+  };
+  
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!draggedWidget || targetId === "consistencyScore" || draggedWidget === "consistencyScore") return;
+    
+    const newWidgets = [...widgets];
+    const dragIdx = newWidgets.findIndex(w => w.id === draggedWidget);
+    const dropIdx = newWidgets.findIndex(w => w.id === targetId);
+    
+    if (dragIdx !== -1 && dropIdx !== -1) {
+      const [removed] = newWidgets.splice(dragIdx, 1);
+      newWidgets.splice(dropIdx, 0, removed);
+      newWidgets.forEach((w, i) => w.order = i);
+      setWidgets(newWidgets);
+    }
+    
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+  };
+  
+  const addWidget = (widgetId) => {
+    if (widgets.find(w => w.id === widgetId)) return;
+    setWidgets(prev => [...prev, { id: widgetId, order: prev.length }]);
+    setShowAddWidget(false);
+  };
+  
+  const removeWidget = (widgetId) => {
+    if (widgetId === "consistencyScore") return;
+    setWidgets(prev => prev.filter(w => w.id !== widgetId));
+  };
+  
+  // Widget renderer - matching existing report design
+  const renderWidget = (widget) => {
+    const config = availableWidgets.find(w => w.id === widget.id);
+    if (!config) return null;
+    
+    const isDragging = draggedWidget === widget.id;
+    const isDragOver = dragOverWidget === widget.id;
+    const isLocked = widget.id === "consistencyScore";
+    const isMobile = viewMode === "mobile";
+    
+    // Client data for widgets
+    const client = selectedClient || {};
+    const wData = [165, 164.2, 163.5, 162.8, 162.0, 161.5, 161.0, 160.5];
+    const mealsScore = Math.round(((client.mealsLogged || 18) / 21) * 100);
+    const exerciseScore = Math.round((client.workoutDays || 4) / 5 * 100);
+    const movementScore = Math.round((client.steps || 8000) / 10000 * 100);
+    const sleepScore = 78;
+    const consistencyScore = client.score || 85;
+    const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+    
+    const ovPillars = [
+      { key: "exercise", label: "Exercise", days: Math.min(30, (client.workoutDays || 4) * 4 + 2), color: TEAL },
+      { key: "steps", label: "Steps", days: Math.min(30, Math.round((client.steps || 8000) / 350)), color: "#3aafa9" },
+      { key: "meals", label: "Meals", days: Math.min(30, (client.mealsLogged || 18) + 5), color: "#ef6c3e" },
+      { key: "sleep", label: "Sleep", days: Math.min(30, 21), color: "#8e7cc3" },
+    ];
+    
+    const WidgetWrapper = ({ children, gradient }) => (
+      <div
+        draggable={!isLocked}
+        onDragStart={(e) => handleDragStart(e, widget.id)}
+        onDragOver={(e) => handleDragOver(e, widget.id)}
+        onDrop={(e) => handleDrop(e, widget.id)}
+        onDragEnd={handleDragEnd}
+        style={{
+          background: gradient || WHITE,
+          borderRadius: 20,
+          border: `2px solid ${isDragOver ? GREEN : BORDER}`,
+          padding: isMobile ? 18 : 24,
+          opacity: isDragging ? 0.5 : 1,
+          transform: isDragOver ? "scale(1.02)" : "scale(1)",
+          transition: "all 0.15s ease",
+          cursor: isLocked ? "default" : "grab",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          position: "relative"
+        }}
+      >
+        {!isLocked && (
+          <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}>
+            <div style={{ color: TEXT_SEC, cursor: "grab", padding: 4 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
+                <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
+                <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
+              </svg>
+            </div>
+            <div onClick={() => removeWidget(widget.id)} style={{ color: TEXT_SEC, cursor: "pointer", opacity: 0.5, padding: 4 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          </div>
+        )}
+        {children}
+      </div>
+    );
+    
+    // Consistency Score Widget (matching existing design)
+    if (widget.id === "consistencyScore") {
+      const sz = 160, r = sz / 2 - 12, circ = 2 * Math.PI * r;
+      const offset = circ * (1 - consistencyScore / 100);
+      const statusLabel = consistencyScore >= 85 ? "Exceptional Progress" : consistencyScore >= 70 ? "Strong Momentum" : consistencyScore >= 55 ? "Building Momentum" : "Getting Started";
+      const statusDesc = consistencyScore >= 70 
+        ? "You're crushing it! This score reflects daily commitment across meals, exercise, movement, and sleep."
+        : "Slow & steady wins the race. This score reflects daily commitment across meals, exercise, movement, and sleep.";
+      const pillars = [
+        { label: "Meals", value: mealsScore, weight: 40 },
+        { label: "Exercise", value: exerciseScore, weight: 25 },
+        { label: "Movement", value: movementScore, weight: 20 },
+        { label: "Sleep", value: sleepScore, weight: 15 },
+      ];
+      
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f8fcfa, #f0f9f5, #f5faf8)">
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              {client.name?.toUpperCase() || "CLIENT"}'S CONSISTENCY SCORE
+            </div>
+          </div>
+          
+          {/* Large Score Ring */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 20 }}>
+            <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="10"/>
+              <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="10"
+                strokeDasharray={circ} strokeDashoffset={offset}
+                strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+              />
+              <text x={sz/2} y={sz/2 - 6} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 48, fontWeight: 300, fill: TEXT }}>{consistencyScore}</text>
+              <text x={sz/2} y={sz/2 + 24} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 11, fontWeight: 600, fill: TEXT_SEC, letterSpacing: "0.08em" }}>OUT OF 100</text>
+            </svg>
+          </div>
+          
+          {/* Status Label & Description */}
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: scoreColor, marginBottom: 8 }}>{statusLabel}</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, maxWidth: 320, margin: "0 auto" }}>{statusDesc}</div>
+          </div>
+          
+          {/* Four Metric Columns */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, textAlign: "center" }}>
+            {pillars.map((p, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 22, fontWeight: 700, color: TEAL }}>{p.value}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, marginTop: 2 }}>{p.label}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.7, marginTop: 1 }}>{p.weight}%</div>
+              </div>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Transformation Widget (dual-line chart)
+    if (widget.id === "transformation") {
+      const startW = 165, currW = 160.5;
+      const w1c = Math.max(15, consistencyScore - 32);
+      const consistencyData = [w1c, w1c + 12, w1c + 22, consistencyScore];
+      const goalData = [startW, startW - 1.2, startW - 2.5, currW];
+      const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
+      const cw = 320, ch = 160, padL = 36, padR = 36, padT = 14, padB = 28;
+      const plotW = cw - padL - padR, plotH = ch - padT - padB;
+      const cMin = 0, cMax = 100;
+      const toYc = (v) => padT + (1 - (v - cMin) / (cMax - cMin)) * plotH;
+      const toX = (i) => padL + (i / (weeks.length - 1)) * plotW;
+      const gVals = goalData, gMin = Math.min(...gVals) - 3, gMax = Math.max(...gVals) + 3;
+      const toYg = (v) => padT + (1 - (v - gMin) / (gMax - gMin)) * plotH;
+      const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
+      const cPts = consistencyData.map((v, i) => ({ x: toX(i), y: toYc(v) }));
+      const gPts = goalData.map((v, i) => ({ x: toX(i), y: toYg(v) }));
+      const cPath = smooth(cPts), gPath = smooth(gPts);
+      const cArea = `${cPath} L ${cPts[cPts.length-1].x},${padT + plotH} L ${cPts[0].x},${padT + plotH} Z`;
+      const cLast = cPts[cPts.length - 1], gLast = gPts[gPts.length - 1];
+      const totalChange = `${(startW - currW).toFixed(1)} lbs lost`;
+      const scoreChange = consistencyScore - w1c;
+      
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)">
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name?.split(" ")[0] || "Client"}'s Transformation</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Consistency drives results — 4 weeks of progress</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>+{scoreChange} pts</div>
+              <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
+            </div>
+          </div>
+          <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: "10px 6px" }}>
+            <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+              <defs>
+                <linearGradient id="repAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
+                  <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
+                </linearGradient>
+              </defs>
+              {[0, 25, 50, 75, 100].map((v, i) => (
+                <line key={i} x1={padL} y1={toYc(v)} x2={cw - padR} y2={toYc(v)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
+              ))}
+              {weeks.map((w, i) => (
+                <text key={i} x={toX(i)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="600">{`W${i+1}`}</text>
+              ))}
+              <path d={cArea} fill="url(#repAreaGrad)" />
+              <path d={cPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
+              <path d={gPath} fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
+              {cPts.map((p, i) => (
+                <circle key={`c${i}`} cx={p.x} cy={p.y} r={i === cPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+              ))}
+              {gPts.map((p, i) => (
+                <circle key={`g${i}`} cx={p.x} cy={p.y} r={i === gPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={ALERT_GREEN} strokeWidth="2"/>
+              ))}
+              <g><rect x={cLast.x - 16} y={cLast.y - 22} width="32" height="16" rx="8" fill={TEAL}/><text x={cLast.x} y={cLast.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{consistencyScore}</text></g>
+              <g><rect x={gLast.x - 22} y={gLast.y + 8} width="44" height="16" rx="8" fill={ALERT_GREEN}/><text x={gLast.x} y={gLast.y + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{currW}</text></g>
+            </svg>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 3, borderRadius: 2, background: TEAL }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>Consistency</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${ALERT_GREEN}` }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>Weight</span>
+            </div>
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Rule of 30 Widget
+    if (widget.id === "rule30") {
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)">
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Rule of 30</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Every 30 days you unlock a new learning about yourself</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+            {ovPillars.map((p, pIdx) => {
+              const sz = 70, r = 26, circ = 2 * Math.PI * r;
+              const pct = p.days / 30;
+              const off = circ * (1 - pct);
+              return (
+                <div key={pIdx} style={{ textAlign: "center", padding: 16, borderRadius: 16, background: WHITE, border: `1px solid ${BORDER}` }}>
+                  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ display: "block", margin: "0 auto 8px" }}>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="6"/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={p.color} strokeWidth="6"
+                      strokeDasharray={circ} strokeDashoffset={off}
+                      strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                      style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                    />
+                    <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 15, fontWeight: 800, fill: TEXT }}>{p.days}</text>
+                  </svg>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: p.color }}>{p.label}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{p.days} / 30 days</div>
+                </div>
+              );
+            })}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Data Cards Widget
+    if (widget.id === "dataCards") {
+      const cards = [
+        { label: "Meals Logged", value: client.mealsLogged || 18, unit: "/21", color: "#ef6c3e" },
+        { label: "Avg Steps", value: ((client.steps || 8000) / 1000).toFixed(1), unit: "k", color: "#3aafa9" },
+        { label: "Workouts", value: client.workoutDays || 4, unit: "/5", color: TEAL },
+        { label: "Weight Change", value: -4.5, unit: " lbs", color: ALERT_GREEN }
+      ];
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Weekly Metrics</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            {cards.map((c, i) => (
+              <div key={i} style={{ padding: 16, borderRadius: 14, background: `${c.color}08`, border: `1px solid ${c.color}20`, textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}{c.unit}</div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4 }}>{c.label}</div>
+              </div>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Calendar Widget
+    if (widget.id === "calendar") {
+      const dayNames = ["M","T","W","T","F","S","S"];
+      const calDays = Array.from({ length: 28 }).map((_, i) => {
+        const rand = Math.random();
+        return { logged: rand > 0.3, meals: rand > 0.7 ? 3 : rand > 0.4 ? 2 : 1 };
+      });
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Daily Activity</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+            {dayNames.map((d, i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC, marginBottom: 4 }}>{d}</div>
+            ))}
+            {calDays.map((day, i) => (
+              <div key={i} style={{
+                aspectRatio: "1", borderRadius: 8,
+                background: day.logged ? (day.meals === 3 ? TEAL : day.meals === 2 ? `${TEAL}80` : `${TEAL}40`) : "#f0f4f3",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                {day.meals === 3 && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center" }}>
+            {[{c: TEAL, l: "3 meals"}, {c: `${TEAL}80`, l: "2 meals"}, {c: `${TEAL}40`, l: "1 meal"}].map((leg, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: leg.c }}/>
+                <span style={{ fontSize: 10, color: TEXT_SEC }}>{leg.l}</span>
+              </div>
+            ))}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Milton Insight Widget
+    if (widget.id === "insight") {
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #eef9f6, #e8f5f0)">
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Milton's Insight</div>
+              <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>
+                {client.name?.split(" ")[0] || "This client"} has shown excellent consistency this week. Protein intake is improving but still 15% below target — recommending a post-workout shake habit. Weekend logging remains the biggest opportunity.
+              </div>
+            </div>
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Goal Trajectory Widget
+    if (widget.id === "goalTrajectory") {
+      const isFatLoss = client.phase === "Fat Loss" || client.phase === "Metabolic Health";
+      const startVal = 165;
+      const currentVal = 160.5;
+      const goalVal = isFatLoss ? 155 : 140;
+      const weeksTotal = 12, weeksCurrent = 4;
+      const cw = 320, ch = 140, padL = 36, padR = 16, padT = 14, padB = 26;
+      const plotW = cw - padL - padR, plotH = ch - padT - padB;
+      const valMin = goalVal - 2, valMax = startVal + 2, valRange = valMax - valMin;
+      const toY = (v) => padT + (1 - (v - valMin) / valRange) * plotH;
+      const toX = (w) => padL + (w / weeksTotal) * plotW;
+      const actualPts = []; for (let w = 0; w <= weeksCurrent; w++) { const t = w / weeksCurrent; actualPts.push({ x: toX(w), y: toY(startVal + (currentVal - startVal) * t) }); }
+      const projPts = []; for (let w = weeksCurrent; w <= weeksTotal; w++) { const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent); projPts.push({ x: toX(w), y: toY(currentVal + (goalVal - currentVal) * t) }); }
+      const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
+      const actualPath = smooth(actualPts), projPath = smooth(projPts);
+      const lastActual = actualPts[actualPts.length - 1];
+      const goalY = toY(goalVal), goalX = toX(weeksTotal);
+      const actualArea = `${actualPath} L ${lastActual.x},${padT + plotH} L ${actualPts[0].x},${padT + plotH} Z`;
+      
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)">
+          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>We predict you'll reach</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: TEXT, marginBottom: 2 }}>
+            <span style={{ color: TEAL }}>{goalVal} lbs</span> by <span style={{ color: TEAL }}>Week {weeksTotal}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <div style={{ padding: "3px 8px", borderRadius: 10, background: `${ALERT_GREEN}18`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>On Track</div>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>8 weeks away</span>
+          </div>
+          <div style={{ borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}`, padding: "8px 4px" }}>
+            <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+              <defs>
+                <linearGradient id="trajAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={TEAL} stopOpacity="0.15"/>
+                  <stop offset="100%" stopColor={TEAL} stopOpacity="0.02"/>
+                </linearGradient>
+              </defs>
+              {/* Goal line */}
+              <line x1={padL} y1={goalY} x2={cw - padR} y2={goalY} stroke={ALERT_GREEN} strokeWidth="1.5" strokeDasharray="4,4" opacity="0.7"/>
+              <text x={cw - padR - 2} y={goalY - 6} textAnchor="end" fill={ALERT_GREEN} fontSize="9" fontWeight="700">Goal: {goalVal}</text>
+              {/* Actual area */}
+              <path d={actualArea} fill="url(#trajAreaGrad)"/>
+              {/* Actual line */}
+              <path d={actualPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round"/>
+              {/* Projected line */}
+              <path d={projPath} fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.6"/>
+              {/* Current point */}
+              <circle cx={lastActual.x} cy={lastActual.y} r="6" fill={WHITE} stroke={TEAL} strokeWidth="2.5"/>
+              <rect x={lastActual.x - 18} y={lastActual.y - 22} width="36" height="16" rx="8" fill={TEAL}/>
+              <text x={lastActual.x} y={lastActual.y - 11} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700">{currentVal}</text>
+              {/* Goal point */}
+              <circle cx={goalX} cy={goalY} r="5" fill={ALERT_GREEN} opacity="0.3"/>
+              <circle cx={goalX} cy={goalY} r="3" fill={ALERT_GREEN}/>
+              {/* Week labels */}
+              {[0, 4, 8, 12].map(w => (
+                <text key={w} x={toX(w)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="600">W{w || 1}</text>
+              ))}
+            </svg>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 14, height: 3, borderRadius: 2, background: TEAL }}/>
+              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>Actual</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 14, height: 0, borderTop: `2px dashed ${TEAL}`, opacity: 0.6 }}/>
+              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
+            </div>
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Coach Notes Widget
+    if (widget.id === "coachNotes") {
+      return (
+        <WidgetWrapper key={widget.id}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "#f0e8ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Coach Notes</div>
+          </div>
+          <div style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.65, padding: "14px 16px", borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}` }}>
+            Great week overall for {client.name?.split(" ")[0] || "this client"}. Consistency score trending up and weight is moving in the right direction. Main opportunity is protein intake — let's discuss meal prep strategies in our next session.
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    // Nutrition Breakdown Widget
+    if (widget.id === "nutrition") {
+      const macros = [
+        { label: "Protein", value: client.proteinAvg || 95, target: client.proteinTarget || 120, unit: "g", color: TEAL },
+        { label: "Carbs", value: 145, target: 180, unit: "g", color: "#3aafa9" },
+        { label: "Fats", value: 52, target: 60, unit: "g", color: "#ef6c3e" },
+      ];
+      return (
+        <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #fdf8f4, #faf5ee, #fdf9f5)">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Nutrition Breakdown</div>
+              <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Average daily intake — past 7 days</div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {macros.map((m, i) => {
+              const pct = Math.min(100, Math.round((m.value / m.target) * 100));
+              const sz = 60, r = 22, circ = 2 * Math.PI * r, off = circ * (1 - pct / 100);
+              return (
+                <div key={i} style={{ padding: 12, borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+                  <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ display: "block", margin: "0 auto 8px" }}>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="5"/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={m.color} strokeWidth="5"
+                      strokeDasharray={circ} strokeDashoffset={off}
+                      strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                    />
+                    <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 800, fill: TEXT }}>{pct}%</text>
+                  </svg>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.value}{m.unit}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{m.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </WidgetWrapper>
+      );
+    }
+    
+    return null;
+  };
+  
+  const sortedWidgets = [...widgets].sort((a, b) => a.order - b.order);
+  const addableWidgets = availableWidgets.filter(w => !widgets.find(ww => ww.id === w.id) && w.id !== "consistencyScore");
   
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
-      {/* Subtle close button */}
-      <div 
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f8faf9", position: "relative" }}>
+      {/* Close button */}
+      <div
         onClick={onClose}
-        style={{ 
-          position: "absolute", top: 12, right: 12, zIndex: 10,
-          width: 28, height: 28, borderRadius: 8,
+        style={{
+          position: "absolute", top: 16, right: 16, zIndex: 20,
+          width: 32, height: 32, borderRadius: 10,
           display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.5,
-          transition: "opacity 0.15s ease"
+          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+          transition: "all 0.15s ease"
         }}
-        onMouseEnter={e => e.currentTarget.style.opacity = 1}
-        onMouseLeave={e => e.currentTarget.style.opacity = 0.5}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -4630,79 +6512,219 @@ function ReportCanvas({ data, onClose }) {
       </div>
       
       {/* Header */}
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{data.title}</div>
-        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Progress report for {data.client}</div>
+      <div style={{ padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Progress Report</h2>
+          <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
+            {chatStep < 3 ? "Building your report..." : `Report for ${selectedClient?.name}`}
+          </p>
+        </div>
+        
+        {/* View toggle */}
+        {chatStep === 3 && (
+          <div style={{ display: "flex", background: "#f0f2f1", borderRadius: 8, padding: 3 }}>
+            {["mobile", "desktop"].map(mode => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  padding: "6px 12px", borderRadius: 6, border: "none",
+                  background: viewMode === mode ? WHITE : "transparent",
+                  color: viewMode === mode ? TEXT : TEXT_SEC,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  boxShadow: viewMode === mode ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s ease", textTransform: "capitalize"
+                }}
+              >
+                {mode === "mobile" ? (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                      <line x1="12" y1="18" x2="12" y2="18"/>
+                    </svg>
+                    Mobile
+                  </span>
+                ) : (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Desktop
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* Add widget button */}
+        {chatStep === 3 && addableWidgets.length > 0 && (
+          <button
+            onClick={() => setShowAddWidget(true)}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, color: TEXT_SEC, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s ease"
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        )}
       </div>
       
-      {/* Report sections */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {data.sections?.map((section, sIdx) => (
-            <div key={sIdx} style={{
-              background: WHITE, borderRadius: 10, padding: 14,
-              border: `1px solid ${BORDER}`
+      {/* Report preview area */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", justifyContent: "center" }}>
+        {chatStep < 3 ? (
+          /* Building state */
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+            <div style={{
+              width: 80, height: 80, borderRadius: 20, background: `${GREEN}10`,
+              display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24
             }}>
-              <div style={{ 
-                fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 10,
-                textTransform: "uppercase", letterSpacing: "0.03em"
-              }}>
-                {section.title}
-              </div>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.5" strokeLinecap="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10,9 9,9 8,9"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+              {chatStep === 0 && "Let's build your report"}
+              {chatStep === 1 && "Setting up..."}
+              {chatStep === 2 && "Generating report..."}
+            </div>
+            <div style={{ fontSize: 14, color: TEXT_SEC }}>
+              Answer the questions to create a progress report
+            </div>
+            {/* Progress dots */}
+            <div style={{ display: "flex", gap: 8, marginTop: 32, height: 20, alignItems: "center" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: i <= chatStep ? GREEN : BORDER,
+                  transition: "background 0.3s ease",
+                  animation: i <= chatStep && chatStep < 3 ? `dotBounce 1.2s ease-in-out ${i * 0.15}s infinite` : "none"
+                }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Report preview - scaled by view mode */
+          <div style={{
+            width: viewMode === "mobile" ? 375 : "100%",
+            maxWidth: viewMode === "desktop" ? 800 : 375,
+            maxHeight: "100%",
+            background: WHITE,
+            borderRadius: 16,
+            overflowY: "auto",
+            overflowX: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            border: `1px solid ${BORDER}`,
+            transition: "width 0.3s ease, max-width 0.3s ease"
+          }}>
+              <div style={{ padding: viewMode === "mobile" ? 16 : 24, display: "flex", flexDirection: "column", gap: 12 }}>
+              {(() => {
+                const result = [];
+                let i = 0;
+                while (i < sortedWidgets.length) {
+                  const widget = sortedWidgets[i];
+                  // Group transformation and goalTrajectory side by side on desktop
+                  if (viewMode === "desktop" && widget.id === "transformation" && sortedWidgets[i + 1]?.id === "goalTrajectory") {
+                    result.push(
+                      <div key="charts-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        {renderWidget(widget)}
+                        {renderWidget(sortedWidgets[i + 1])}
+                      </div>
+                    );
+                    i += 2;
+                  } else {
+                    result.push(renderWidget(widget));
+                    i++;
+                  }
+                }
+                return result;
+              })()}
               
-              {section.content && (
-                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
-                  {section.content}
-                </div>
-              )}
-              
-              {section.data && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.mealsLogged}</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Meals</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{section.data.proteinAvg}g</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Protein</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 10, background: TEAL_LIGHT, borderRadius: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: section.data.weightTrend > 0 ? "#ef4444" : "#10b981" }}>
-                      {section.data.weightTrend > 0 ? "+" : ""}{section.data.weightTrend}
-                    </div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Weight</div>
-                  </div>
-                </div>
-              )}
-              
-              {section.items && (
-                <ul style={{ margin: 0, paddingLeft: 18, marginTop: 4 }}>
-                  {section.items.map((item, iIdx) => (
-                    <li key={iIdx} style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, marginBottom: 2 }}>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+              {/* Add section button */}
+              {addableWidgets.length > 0 && (
+                <button
+                  onClick={() => setShowAddWidget(true)}
+                  style={{
+                    padding: 16, borderRadius: 12, border: `2px dashed ${BORDER}`,
+                    background: "transparent", color: TEXT_SEC, cursor: "pointer",
+                    fontSize: 13, fontWeight: 500, transition: "all 0.15s ease",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add Section
+                </button>
               )}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
       
-      {/* Hint bar */}
-      <div style={{
-        padding: "12px 16px", borderTop: `1px solid ${BORDER}`,
-        background: "#fafcfb", fontSize: 12, color: TEXT_SEC
-      }}>
-        Chat with Milton: "Add nutrition section" or "Make summary more encouraging"
-      </div>
+      {/* Add widget modal */}
+      {showAddWidget && (
+        <div style={{
+          position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30
+        }} onClick={() => setShowAddWidget(false)}>
+          <div style={{
+            background: WHITE, borderRadius: 16, padding: 20, width: 300,
+            maxHeight: "70%", overflowY: "auto"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 16 }}>Add Section</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {addableWidgets.map(w => (
+                <button
+                  key={w.id}
+                  onClick={() => addWidget(w.id)}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: WHITE, textAlign: "left", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12,
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, background: `${TEAL}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center", color: TEAL
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      {w.type === "chart" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
+                      {w.type === "trajectory" && <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/><circle cx="18" cy="6" r="3"/></>}
+                      {w.type === "rings" && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>}
+                      {w.type === "cards" && <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>}
+                      {w.type === "insight" && <><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></>}
+                      {w.type === "nutrition" && <><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></>}
+                      {w.type === "text" && <><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></>}
+                      {w.type === "calendar" && <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>}
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{w.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════
    MAIN DASHBOARD
-   ═══════════════════════════════════════════ */
+   ═══════════════════════════════════���═══════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
@@ -5285,7 +7307,7 @@ Remember: Be specific, be brief, be helpful.`;
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {canvasMode ? (
               <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
+                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "messages" ? "Messages" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
               </span>
             ) : (
               <>
@@ -5338,10 +7360,11 @@ Remember: Be specific, be brief, be helpful.`;
               <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
               <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
             </div>
-            <ChatContent
-              chatInput={chatInput} setChatInput={setChatInput}
-              messages={chatMessages} onSend={handleChatSend}
-              chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
+<ChatContent
+  chatInput={chatInput} setChatInput={setChatInput}
+  messages={chatMessages} onSend={handleChatSend}
+  chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
+  canvasType={canvasType}
             />
           </section>
         </div>
@@ -5356,8 +7379,43 @@ Remember: Be specific, be brief, be helpful.`;
           overflow: "hidden",
           animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
         }}>
-          {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
+          {canvasType === "templates" && (
+            <CanvasTemplates 
+              onSelect={(templateType) => {
+                if (templateType === "mealPlan") {
+                  setCanvasType("mealPlan");
+                  setCanvasData({
+                    client: "New Client",
+                    goals: "General health and fitness",
+                    weeklyTargets: { calories: 2000, protein: 150 }
+                  });
+} else if (templateType === "workout") {
+  setCanvasType("workout");
+  setCanvasData({
+  clientName: "New Client",
+  programName: "Custom Program",
+  weeks: 4
+  });
+  } else if (templateType === "messages") {
+  setCanvasType("messages");
+  setCanvasData({});
+  } else if (templateType === "reports") {
+  setCanvasType("report");
+  setCanvasData({});
+  }
+  }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+{canvasType === "messages" && (
+  <MessagesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
+  {canvasType === "mealPlan" && (
+  <MealPlanCanvas
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
@@ -5374,29 +7432,75 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-          {canvasType === "report" && (
-            <ReportCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-        </div>
-      )}
-
-      {/* ═══ MOBILE CANVAS VIEW ═══ */}
-      {canvasMode && isMobile && (
-        <div style={{
-          position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
-          background: WHITE, zIndex: 40, overflow: "hidden",
-          display: "flex", flexDirection: "column"
-        }}>
-          {canvasType === "mealPlan" && (
-            <MealPlanCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-          {canvasType === "workout" && (
+{canvasType === "report" && (
+  <ReportsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
+{canvasType === "inbox" && (
+  <InboxCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "schedule" && (
+  <ScheduleCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  </div>
+  )}
+  
+  {/* ═══ MOBILE CANVAS VIEW ═══ */}
+  {canvasMode && isMobile && (
+  <div style={{
+  position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
+  background: WHITE, zIndex: 40, overflow: "hidden",
+  display: "flex", flexDirection: "column"
+  }}>
+  {canvasType === "templates" && (
+  <CanvasTemplates 
+    onSelect={(templateType) => {
+      if (templateType === "mealPlan") {
+        setCanvasType("mealPlan");
+        setCanvasData({
+          client: "New Client",
+          goals: "General health and fitness",
+          weeklyTargets: { calories: 2000, protein: 150 }
+        });
+} else if (templateType === "workout") {
+  setCanvasType("workout");
+  setCanvasData({
+  clientName: "New Client",
+  programName: "Custom Program",
+  weeks: 4
+  });
+  } else if (templateType === "messages") {
+  setCanvasType("messages");
+  setCanvasData({});
+  } else if (templateType === "reports") {
+  setCanvasType("report");
+  setCanvasData({});
+  }
+  }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "messages" && (
+  <MessagesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
+  {canvasType === "mealPlan" && (
+  <MealPlanCanvas
+  data={canvasData}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -5408,16 +7512,29 @@ Remember: Be specific, be brief, be helpful.`;
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
-          {canvasType === "report" && (
-            <ReportCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-        </div>
-      )}
-
-      {/* ═══ MAIN CONTENT ═══ */}
+{canvasType === "report" && (
+  <ReportsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  />
+  )}
+{canvasType === "inbox" && (
+  <InboxCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  {canvasType === "schedule" && (
+  <ScheduleCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
+  )}
+  </div>
+  )}
+  
+  
+  
+  {/* ═══ MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
@@ -5444,9 +7561,30 @@ Remember: Be specific, be brief, be helpful.`;
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 16 }}>
             {!isMobile && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginRight: 8 }}>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 36, height: 36, borderRadius: 10 }} />
-                <span style={{ fontSize: 22, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>Milton</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {[
+                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
+                ].map(item => (
+                  <div
+                    key={item.icon}
+                    onClick={item.action}
+                    style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: "#f0f4f3", border: `1px solid ${BORDER}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: item.action ? "pointer" : "default", color: TEXT_SEC,
+                      opacity: item.action ? 1 : 0.5,
+                      transition: "all 0.15s ease"
+                    }}
+                    title={item.label}
+                    onMouseEnter={e => { if (item.action) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+                  >
+                    <NavIcon icon={item.icon} size={18} />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -5896,10 +8034,22 @@ Remember: Be specific, be brief, be helpful.`;
       )}
 
       <style>{`
-        @keyframes fadeSlideIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes dotBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  }
         @keyframes slideInLeft {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
