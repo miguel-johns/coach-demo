@@ -733,7 +733,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
 }
 
 /* ─── Mobile Glass Chat Bar + Expandable Sheet ─── */
-function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing }) {
+function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
   const startH = useRef(65);
@@ -8027,12 +8027,13 @@ Remember: Be specific, be brief, be helpful.`;
 
       {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
       {isMobile && (
-        <MobileChatSheet
-          chatOpen={chatOpen} setChatOpen={setChatOpen}
-          chatInput={chatInput} setChatInput={setChatInput}
-          messages={chatMessages} onSend={handleChatSend}
-          chatEndRef={chatEndRef} typing={chatTyping}
-        />
+<MobileChatSheet
+  chatOpen={chatOpen} setChatOpen={setChatOpen}
+  chatInput={chatInput} setChatInput={setChatInput}
+  messages={chatMessages} onSend={handleChatSend}
+  chatEndRef={chatEndRef} typing={chatTyping}
+  canvasMode={canvasMode}
+  />
       )}
 
       <style>{`
