@@ -18,9 +18,11 @@ const LOGO_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAIAAAAB
 
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BP);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= MOBILE_BP : true);
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const h = () => setIsMobile(window.innerWidth <= MOBILE_BP);
+    h(); // Run once on mount to sync with actual window size
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, []);
