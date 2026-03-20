@@ -4305,7 +4305,6 @@ function ScheduleCanvas({ onClose }) {
                   <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
                   <span style={{
                     fontSize: 16, fontWeight: 600,
-                    color: isToday ? TEAL : TEXT,
                     width: 28, height: 28, borderRadius: "50%",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: isToday ? TEAL : "transparent",
