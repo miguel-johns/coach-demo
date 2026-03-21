@@ -773,13 +773,10 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
     WebkitBackdropFilter: "blur(24px) saturate(180%)",
   };
 
-  // Hide chat bar when canvas mode is active on mobile
-  if (canvasMode) return null;
-  
   return (
     <>
-      {/* ── Collapsed: floating glass chat bar ── */}
-      {!chatOpen && (
+      {/* ── Collapsed: floating glass chat bar (hidden when canvas sheet is open) ── */}
+      {!chatOpen && !canvasMode && (
         <div
           onClick={() => { setChatOpen(true); setTimeout(() => inputRef.current?.focus(), 350); }}
           style={{
@@ -967,8 +964,281 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 }
 
 /* ═══════════════════════════════════════════
+   MOBILE CANVAS SHEET - Swipe up drawer for canvas/inbox/schedule
+   ═════════════════════════════════════════════ */
+function MobileCanvasSheet({ 
+  isOpen, 
+  onClose, 
+  canvasType, 
+  canvasData,
+  setCanvasType,
+  setCanvasData,
+  setCanvasMode,
+  setChatMessages,
+  setChatTyping,
+  onChatSend
+}) {
+  const [sheetHeight, setSheetHeight] = useState(85);
+  const [localChatInput, setLocalChatInput] = useState("");
+  const startY = useRef(0);
+  const startH = useRef(85);
+  const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
+
+  const onDragStart = useCallback((e) => {
+    e.preventDefault();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startY.current = clientY;
+    startH.current = sheetHeight;
+    const onMove = (ev) => {
+      ev.preventDefault();
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const deltaVh = ((startY.current - cy) / window.innerHeight) * 100;
+      setSheetHeight(Math.min(94, Math.max(30, startH.current + deltaVh)));
+    };
+    const onEnd = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onMove, { passive: false });
+      document.removeEventListener("touchend", onEnd);
+      setSheetHeight(h => {
+        if (h < 45) { 
+          onClose(); 
+          return 85; 
+        }
+        return h;
+      });
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onMove, { passive: false });
+    document.addEventListener("touchend", onEnd);
+  }, [sheetHeight, onClose]);
+
+  const glass = {
+    background: "rgba(247, 250, 249, 0.95)",
+    backdropFilter: "blur(24px) saturate(180%)",
+    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  };
+
+  const getTitle = () => {
+    switch(canvasType) {
+      case "schedule": return "Schedule";
+      case "inbox": return "Inbox";
+      case "templates": return "Canvas";
+      case "mealPlan": return "Meal Plan";
+      case "workout": return "Workout Program";
+      case "messages": return "Messages";
+      case "report": return "Reports";
+      case "messageSequence": return "Message Sequence";
+      default: return "Canvas";
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        onClick={onClose} 
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.25)",
+          zIndex: 90, transition: "opacity 0.3s ease"
+        }} 
+      />
+      
+      {/* Sheet */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        height: `${sheetHeight}vh`,
+        ...glass,
+        zIndex: 100, borderRadius: "22px 22px 0 0",
+        boxShadow: "0 -6px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+        border: "1px solid rgba(224,235,232,0.5)", borderBottom: "none",
+        display: "flex", flexDirection: "column", overflow: "hidden"
+      }}>
+        {/* Header with drag handle */}
+        <div style={{ flexShrink: 0 }}>
+          {/* Drag handle */}
+          <div 
+            onMouseDown={onDragStart} 
+            onTouchStart={onDragStart}
+            style={{ cursor: "grab", padding: "12px 0 6px", touchAction: "none" }}
+          >
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: "rgba(43,122,120,0.25)", margin: "0 auto" }} />
+          </div>
+          
+          {/* Title bar */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "4px 16px 12px",
+            borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            
+            <span style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{getTitle()}</span>
+            
+            <button
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Canvas Content */}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {canvasType === "templates" && (
+            <CanvasTemplates 
+              isMobile={true}
+              onSelect={(templateType) => {
+                if (templateType === "mealPlan") {
+                  setCanvasType("mealPlan");
+                  setCanvasData({
+                    client: "New Client",
+                    goals: "General health and fitness",
+                    weeklyTargets: { calories: 2000, protein: 150 }
+                  });
+                } else if (templateType === "workout") {
+                  setCanvasType("workout");
+                  setCanvasData({
+                    clientName: "New Client",
+                    programName: "Custom Program",
+                    weeks: 4
+                  });
+                } else if (templateType === "messages") {
+                  setCanvasType("messages");
+                  setCanvasData({});
+                } else if (templateType === "reports") {
+                  setCanvasType("report");
+                  setCanvasData({});
+                }
+              }}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "messages" && (
+            <MessagesCanvas
+              onClose={onClose}
+              setChatMessages={setChatMessages}
+              setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportsCanvas
+              onClose={onClose}
+              setChatMessages={setChatMessages}
+              setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "inbox" && (
+            <InboxCanvas
+              isMobile={true}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "schedule" && (
+            <ScheduleCanvas
+              isMobile={true}
+              onClose={onClose}
+            />
+          )}
+        </div>
+        
+        {/* Chat Input at Bottom */}
+        <div style={{
+          padding: "8px 12px", paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          borderTop: `1px solid ${BORDER}`,
+          background: "rgba(247,250,249,0.9)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)"
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: "rgba(255,255,255,0.9)", borderRadius: 22,
+            border: "1px solid rgba(224,235,232,0.7)",
+            padding: "10px 12px 10px 16px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <input 
+              value={localChatInput} 
+              onChange={e => setLocalChatInput(e.target.value)}
+              onKeyDown={e => { 
+                if (e.key === "Enter" && localChatInput.trim() && onChatSend) { 
+                  onChatSend(localChatInput.trim()); 
+                  setLocalChatInput(""); 
+                }
+              }}
+              placeholder="Ask Milton anything..."
+              style={{ 
+                flex: 1, border: "none", outline: "none", 
+                fontSize: 14, fontFamily: font, color: TEXT, background: "transparent" 
+              }}
+            />
+            <div 
+              onClick={() => { 
+                if (localChatInput.trim() && onChatSend) { 
+                  onChatSend(localChatInput.trim()); 
+                  setLocalChatInput(""); 
+                }
+              }} 
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: localChatInput.trim() ? `linear-gradient(135deg, ${TEAL}, ${SAGE})` : "#c8d8d4",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: localChatInput.trim() ? "pointer" : "default",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ════��═��������═══════════════════════════════════ */
+   ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -7377,11 +7647,7 @@ Remember: Be specific, be brief, be helpful.`;
           padding: "0 16px", height: 56, background: WHITE,
           borderBottom: `1px solid ${BORDER}`, boxShadow: "0 1px 6px rgba(0,0,0,0.04)"
         }}>
-          {canvasMode ? (
-            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
-            </div>
-          ) : selectedClient !== null ? (
+          {selectedClient !== null ? (
             <div onClick={() => setSelectedClient(null)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
@@ -7397,38 +7663,18 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {canvasMode ? (
-              <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "messages" ? "Messages" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
-              </span>
-            ) : (
-              <>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
-              </>
-            )}
+            <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
           </div>
-          {canvasMode ? (
-            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{
-              width: 34, height: 34, borderRadius: 10, background: "#f0f4f3",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer"
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </div>
-          ) : (
-            <div onClick={() => setShowAddClient(true)} style={{
-              width: 34, height: 34, borderRadius: 10, background: TEAL,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
-            }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
-              </svg>
-            </div>
-          )}
+          <div onClick={() => setShowAddClient(true)} style={{
+            width: 34, height: 34, borderRadius: 10, background: TEAL,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
+          }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+              <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+            </svg>
+          </div>
         </div>
       )}
 
@@ -7462,24 +7708,15 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
-      {/* ═══ CANVAS MODE - Full Dashboard ═══ */}
-      {canvasMode && (
+      {/* ═══ CANVAS MODE - Desktop Only (Mobile uses MobileCanvasSheet) ═══ */}
+      {canvasMode && !isMobile && (
         <div style={{
-          ...(isMobile ? {
-            position: "fixed",
-            top: 56,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 40
-          } : {
-            flex: 1,
-            margin: "14px 14px 14px 0",
-            borderRadius: 20,
-            border: `1px solid ${BORDER}`,
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
-          }),
+          flex: 1,
+          margin: "14px 14px 14px 0",
+          borderRadius: 20,
+          border: `1px solid ${BORDER}`,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
           flexDirection: "column",
           background: WHITE, 
@@ -8052,16 +8289,32 @@ Remember: Be specific, be brief, be helpful.`;
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
 
-      {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
-      {isMobile && (
-<MobileChatSheet
-  chatOpen={chatOpen} setChatOpen={setChatOpen}
-  chatInput={chatInput} setChatInput={setChatInput}
-  messages={chatMessages} onSend={handleChatSend}
-  chatEndRef={chatEndRef} typing={chatTyping}
-  canvasMode={canvasMode}
-  />
-      )}
+  {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
+  {isMobile && (
+    <MobileChatSheet
+      chatOpen={chatOpen} setChatOpen={setChatOpen}
+      chatInput={chatInput} setChatInput={setChatInput}
+      messages={chatMessages} onSend={handleChatSend}
+      chatEndRef={chatEndRef} typing={chatTyping}
+      canvasMode={canvasMode}
+    />
+  )}
+  
+  {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═══ */}
+  {isMobile && (
+    <MobileCanvasSheet
+      isOpen={canvasMode}
+      onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+      canvasType={canvasType}
+      canvasData={canvasData}
+      setCanvasType={setCanvasType}
+      setCanvasData={setCanvasData}
+      setCanvasMode={setCanvasMode}
+      setChatMessages={setChatMessages}
+      setChatTyping={setChatTyping}
+      onChatSend={handleChatSend}
+    />
+  )}
 
       <style>{`
         @keyframes fadeIn {
