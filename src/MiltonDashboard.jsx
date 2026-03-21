@@ -4190,6 +4190,7 @@ function ScheduleCanvas({ onClose, isMobile }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("week"); // week or month
+  const [mobileSelectedDay, setMobileSelectedDay] = useState(0); // 0-6 for day of week on mobile
   
   const categories = [
     { id: "session", label: "Sessions", color: TEAL },
@@ -4225,11 +4226,23 @@ function ScheduleCanvas({ onClose, isMobile }) {
         padding: "12px 16px", borderBottom: `1px solid ${BORDER}`,
         display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
           {/* Navigation */}
           <div style={{ display: "flex", gap: 4 }}>
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))}
+              onClick={() => {
+                if (isMobile) {
+                  // Navigate by day on mobile
+                  if (mobileSelectedDay > 0) {
+                    setMobileSelectedDay(mobileSelectedDay - 1);
+                  } else {
+                    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)));
+                    setMobileSelectedDay(6);
+                  }
+                } else {
+                  setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)));
+                }
+              }}
               style={{
                 width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
                 background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -4241,7 +4254,19 @@ function ScheduleCanvas({ onClose, isMobile }) {
               </svg>
             </button>
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
+              onClick={() => {
+                if (isMobile) {
+                  // Navigate by day on mobile
+                  if (mobileSelectedDay < 6) {
+                    setMobileSelectedDay(mobileSelectedDay + 1);
+                  } else {
+                    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)));
+                    setMobileSelectedDay(0);
+                  }
+                } else {
+                  setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)));
+                }
+              }}
               style={{
                 width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
                 background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -4253,11 +4278,25 @@ function ScheduleCanvas({ onClose, isMobile }) {
               </svg>
             </button>
           </div>
-          <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
-            {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-          </span>
+          {/* Date display - show full date on mobile, month/year on desktop */}
+          {isMobile ? (
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+              {(() => {
+                const dayDate = new Date(weekStart);
+                dayDate.setDate(weekStart.getDate() + mobileSelectedDay);
+                return dayDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+              })()}
+            </span>
+          ) : (
+            <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+              {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </span>
+          )}
           <button
-            onClick={() => setCurrentDate(new Date(2026, 2, 15))}
+            onClick={() => {
+              setCurrentDate(new Date(2026, 2, 15));
+              if (isMobile) setMobileSelectedDay(0);
+            }}
             style={{
               padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
               background: WHITE, cursor: "pointer", fontSize: 12, fontWeight: 500, color: TEXT_SEC
@@ -4315,7 +4354,7 @@ function ScheduleCanvas({ onClose, isMobile }) {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Time Column */}
         <div style={{ width: isMobile ? 45 : 60, borderRight: `1px solid ${BORDER}`, background: WHITE, flexShrink: 0 }}>
-          <div style={{ height: isMobile ? 40 : 48, borderBottom: `1px solid ${BORDER}` }} />
+          {!isMobile && <div style={{ height: 48, borderBottom: `1px solid ${BORDER}` }} />}
           {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
             <div key={i} style={{
               height: isMobile ? 50 : 60, borderBottom: `1px solid ${BORDER}`,
@@ -4328,8 +4367,9 @@ function ScheduleCanvas({ onClose, isMobile }) {
         </div>
         
         {/* Days Grid */}
-        <div style={{ flex: 1, display: "flex", overflowX: "auto" }} className="hide-scrollbar">
-          {days.map((day, dayIdx) => {
+        <div style={{ flex: 1, display: "flex", overflowX: isMobile ? "hidden" : "auto" }} className="hide-scrollbar">
+          {(isMobile ? [days[mobileSelectedDay]] : days).map((day, idx) => {
+            const dayIdx = isMobile ? mobileSelectedDay : idx;
             const dayDate = new Date(weekStart);
             dayDate.setDate(weekStart.getDate() + dayIdx);
             const isToday = dayDate.toDateString() === new Date(2026, 2, 15).toDateString();
@@ -4337,25 +4377,26 @@ function ScheduleCanvas({ onClose, isMobile }) {
             const dayEvents = events.filter(e => e.day === dayIdx);
             
             return (
-              <div key={dayIdx} style={{ flex: isMobile ? "none" : 1, minWidth: isMobile ? 80 : 100, width: isMobile ? 80 : "auto", borderRight: `1px solid ${BORDER}` }}>
-                {/* Day Header */}
-                <div style={{
-                  height: isMobile ? 40 : 48, borderBottom: `1px solid ${BORDER}`,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  background: isToday ? TEAL_LIGHT : WHITE
-                }}>
-                  <span style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
-                  <span style={{
-                    fontSize: isMobile ? 14 : 16, fontWeight: 600,
-                    color: isToday ? TEAL : TEXT,
-                    width: isMobile ? 24 : 28, height: isMobile ? 24 : 28, borderRadius: "50%",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: isToday ? TEAL : "transparent",
-                    color: isToday ? WHITE : TEXT
+              <div key={dayIdx} style={{ flex: 1, minWidth: isMobile ? "100%" : 100, borderRight: isMobile ? "none" : `1px solid ${BORDER}` }}>
+                {/* Day Header - hidden on mobile since date is in nav */}
+                {!isMobile && (
+                  <div style={{
+                    height: 48, borderBottom: `1px solid ${BORDER}`,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    background: isToday ? TEAL_LIGHT : WHITE
                   }}>
-                    {dayDate.getDate()}
-                  </span>
-                </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
+                    <span style={{
+                      fontSize: 16, fontWeight: 600,
+                      width: 28, height: 28, borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: isToday ? TEAL : "transparent",
+                      color: isToday ? WHITE : TEXT
+                    }}>
+                      {dayDate.getDate()}
+                    </span>
+                  </div>
+                )}
                 
                 {/* Time Slots */}
                 <div style={{ position: "relative", background: isWeekend ? "#fafafa" : WHITE }}>
@@ -4373,11 +4414,11 @@ function ScheduleCanvas({ onClose, isMobile }) {
                       style={{
                         position: "absolute",
                         top: (event.start - workHours.start) * slotHeight + 2,
-                        left: 2, right: 2,
+                        left: isMobile ? 8 : 2, right: isMobile ? 8 : 2,
                         height: event.duration * slotHeight - 4,
                         background: `${getCategoryColor(event.category)}15`,
                         borderLeft: `3px solid ${getCategoryColor(event.category)}`,
-                        borderRadius: isMobile ? 4 : 6, padding: isMobile ? "4px 4px" : "6px 8px",
+                        borderRadius: 8, padding: isMobile ? "8px 12px" : "6px 8px",
                         cursor: "pointer", overflow: "hidden",
                         transition: "all 0.15s ease"
                       }}
@@ -4385,16 +4426,14 @@ function ScheduleCanvas({ onClose, isMobile }) {
                       onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}15`; }}
                     >
                       <div style={{
-                        fontSize: isMobile ? 10 : 12, fontWeight: 600, color: getCategoryColor(event.category),
+                        fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
                       }}>
-                        {isMobile ? event.title.split(" - ")[0] : event.title}
+                        {event.title}
                       </div>
-                      {!isMobile && (
-                        <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
-                          {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"}
-                        </div>
-                      )}
+                      <div style={{ fontSize: isMobile ? 12 : 10, color: TEXT_SEC, marginTop: 2 }}>
+                        {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"} · {event.duration}hr
+                      </div>
                     </div>
                   );})}
                 </div>
