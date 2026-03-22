@@ -775,8 +775,8 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 
   return (
     <>
-      {/* ── Collapsed: floating glass chat bar ── */}
-      {!chatOpen && (
+      {/* ── Collapsed: floating glass chat bar (hidden when canvas sheet is open) ── */}
+      {!chatOpen && !canvasMode && (
         <div
           onClick={() => { setChatOpen(true); setTimeout(() => inputRef.current?.focus(), 350); }}
           style={{
@@ -964,8 +964,281 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 }
 
 /* ═══════════════════════════════════════════
+   MOBILE CANVAS SHEET - Swipe up drawer for canvas/inbox/schedule
+   ═════════════════════════════════════════════ */
+function MobileCanvasSheet({ 
+  isOpen, 
+  onClose, 
+  canvasType, 
+  canvasData,
+  setCanvasType,
+  setCanvasData,
+  setCanvasMode,
+  setChatMessages,
+  setChatTyping,
+  onChatSend
+}) {
+  const [sheetHeight, setSheetHeight] = useState(85);
+  const [localChatInput, setLocalChatInput] = useState("");
+  const startY = useRef(0);
+  const startH = useRef(85);
+  const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
+
+  const onDragStart = useCallback((e) => {
+    e.preventDefault();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startY.current = clientY;
+    startH.current = sheetHeight;
+    const onMove = (ev) => {
+      ev.preventDefault();
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const deltaVh = ((startY.current - cy) / window.innerHeight) * 100;
+      setSheetHeight(Math.min(94, Math.max(30, startH.current + deltaVh)));
+    };
+    const onEnd = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onMove, { passive: false });
+      document.removeEventListener("touchend", onEnd);
+      setSheetHeight(h => {
+        if (h < 45) { 
+          onClose(); 
+          return 85; 
+        }
+        return h;
+      });
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onMove, { passive: false });
+    document.addEventListener("touchend", onEnd);
+  }, [sheetHeight, onClose]);
+
+  const glass = {
+    background: "rgba(247, 250, 249, 0.95)",
+    backdropFilter: "blur(24px) saturate(180%)",
+    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  };
+
+  const getTitle = () => {
+    switch(canvasType) {
+      case "schedule": return "Schedule";
+      case "inbox": return "Inbox";
+      case "templates": return "Canvas";
+      case "mealPlan": return "Meal Plan";
+      case "workout": return "Workout Program";
+      case "messages": return "Messages";
+      case "report": return "Reports";
+      case "messageSequence": return "Message Sequence";
+      default: return "Canvas";
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        onClick={onClose} 
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.25)",
+          zIndex: 90, transition: "opacity 0.3s ease"
+        }} 
+      />
+      
+      {/* Sheet */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        height: `${sheetHeight}vh`,
+        ...glass,
+        zIndex: 100, borderRadius: "22px 22px 0 0",
+        boxShadow: "0 -6px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+        border: "1px solid rgba(224,235,232,0.5)", borderBottom: "none",
+        display: "flex", flexDirection: "column", overflow: "hidden"
+      }}>
+        {/* Header with drag handle */}
+        <div style={{ flexShrink: 0 }}>
+          {/* Drag handle */}
+          <div 
+            onMouseDown={onDragStart} 
+            onTouchStart={onDragStart}
+            style={{ cursor: "grab", padding: "12px 0 6px", touchAction: "none" }}
+          >
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: "rgba(43,122,120,0.25)", margin: "0 auto" }} />
+          </div>
+          
+          {/* Title bar */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "4px 16px 12px",
+            borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            
+            <span style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{getTitle()}</span>
+            
+            <button
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Canvas Content */}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {canvasType === "templates" && (
+            <CanvasTemplates 
+              isMobile={true}
+              onSelect={(templateType) => {
+                if (templateType === "mealPlan") {
+                  setCanvasType("mealPlan");
+                  setCanvasData({
+                    client: "New Client",
+                    goals: "General health and fitness",
+                    weeklyTargets: { calories: 2000, protein: 150 }
+                  });
+                } else if (templateType === "workout") {
+                  setCanvasType("workout");
+                  setCanvasData({
+                    clientName: "New Client",
+                    programName: "Custom Program",
+                    weeks: 4
+                  });
+                } else if (templateType === "messages") {
+                  setCanvasType("messages");
+                  setCanvasData({});
+                } else if (templateType === "reports") {
+                  setCanvasType("report");
+                  setCanvasData({});
+                }
+              }}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "messages" && (
+            <MessagesCanvas
+              onClose={onClose}
+              setChatMessages={setChatMessages}
+              setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "mealPlan" && (
+            <MealPlanCanvas
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "messageSequence" && (
+            <MessageSequenceCanvas 
+              data={canvasData}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "report" && (
+            <ReportsCanvas
+              onClose={onClose}
+              setChatMessages={setChatMessages}
+              setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "inbox" && (
+            <InboxCanvas
+              isMobile={true}
+              onClose={onClose}
+            />
+          )}
+          {canvasType === "schedule" && (
+            <ScheduleCanvas
+              isMobile={true}
+              onClose={onClose}
+            />
+          )}
+        </div>
+        
+        {/* Chat Input at Bottom */}
+        <div style={{
+          padding: "8px 12px", paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          borderTop: `1px solid ${BORDER}`,
+          background: "rgba(247,250,249,0.9)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)"
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: "rgba(255,255,255,0.9)", borderRadius: 22,
+            border: "1px solid rgba(224,235,232,0.7)",
+            padding: "10px 12px 10px 16px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <input 
+              value={localChatInput} 
+              onChange={e => setLocalChatInput(e.target.value)}
+              onKeyDown={e => { 
+                if (e.key === "Enter" && localChatInput.trim() && onChatSend) { 
+                  onChatSend(localChatInput.trim()); 
+                  setLocalChatInput(""); 
+                }
+              }}
+              placeholder="Ask Milton anything..."
+              style={{ 
+                flex: 1, border: "none", outline: "none", 
+                fontSize: 14, fontFamily: font, color: TEXT, background: "transparent" 
+              }}
+            />
+            <div 
+              onClick={() => { 
+                if (localChatInput.trim() && onChatSend) { 
+                  onChatSend(localChatInput.trim()); 
+                  setLocalChatInput(""); 
+                }
+              }} 
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: localChatInput.trim() ? `linear-gradient(135deg, ${TEAL}, ${SAGE})` : "#c8d8d4",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: localChatInput.trim() ? "pointer" : "default",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
-   ════��═��������═══════════════════════════════════ */
+   ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
   const [expandedDetail, setExpandedDetail] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -3780,7 +4053,7 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function InboxCanvas({ onClose }) {
+function InboxCanvas({ onClose, isMobile }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -3833,12 +4106,16 @@ function InboxCanvas({ onClose }) {
   
   return (
     <div style={{
-      display: "flex", height: "100%", background: WHITE
+      display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", background: WHITE
     }}>
-      {/* Sidebar - Conversation List */}
+      {/* Sidebar - Conversation List (show full on mobile if no conversation selected, or hide if conversation is selected) */}
       <div style={{
-        width: 300, borderRight: `1px solid ${BORDER}`,
-        display: "flex", flexDirection: "column", background: "#fafcfb"
+        width: isMobile ? "100%" : 300, 
+        borderRight: isMobile ? "none" : `1px solid ${BORDER}`,
+        display: isMobile && selectedConvo ? "none" : "flex", 
+        flexDirection: "column", 
+        background: "#fafcfb",
+        flex: isMobile ? 1 : "none"
       }}>
         {/* Header */}
         <div style={{ padding: "16px 16px", borderBottom: `1px solid ${BORDER}` }}>
@@ -3958,15 +4235,32 @@ function InboxCanvas({ onClose }) {
       </div>
       
       {/* Main - Message View */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE }}>
+      <div style={{ 
+        flex: 1, display: isMobile && !selectedConvo ? "none" : "flex", 
+        flexDirection: "column", background: WHITE 
+      }}>
         {selectedConvo ? (
           <>
             {/* Convo Header */}
             <div style={{
-              padding: "14px 24px", borderBottom: `1px solid ${BORDER}`,
+              padding: isMobile ? "12px 16px" : "14px 24px", borderBottom: `1px solid ${BORDER}`,
               display: "flex", alignItems: "center", justifyContent: "space-between"
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {isMobile && (
+                  <button
+                    onClick={() => setSelectedConvo(null)}
+                    style={{
+                      width: 32, height: 32, borderRadius: 8, border: "none",
+                      background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", color: TEXT_SEC, marginRight: 4
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                  </button>
+                )}
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
                   background: selectedConvo.isGroup ? "#f0f4f3" : `${tagColors[selectedConvo.tag]}15`,
@@ -4162,10 +4456,11 @@ function InboxCanvas({ onClose }) {
   );
 }
 
-function ScheduleCanvas({ onClose }) {
+function ScheduleCanvas({ onClose, isMobile }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("week"); // week or month
+  const [mobileSelectedDay, setMobileSelectedDay] = useState(0); // 0-6 for day of week on mobile
   
   const categories = [
     { id: "session", label: "Sessions", color: TEAL },
@@ -4201,11 +4496,23 @@ function ScheduleCanvas({ onClose }) {
         padding: "12px 16px", borderBottom: `1px solid ${BORDER}`,
         display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
           {/* Navigation */}
           <div style={{ display: "flex", gap: 4 }}>
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))}
+              onClick={() => {
+                if (isMobile) {
+                  // Navigate by day on mobile
+                  if (mobileSelectedDay > 0) {
+                    setMobileSelectedDay(mobileSelectedDay - 1);
+                  } else {
+                    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)));
+                    setMobileSelectedDay(6);
+                  }
+                } else {
+                  setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)));
+                }
+              }}
               style={{
                 width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
                 background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -4217,7 +4524,19 @@ function ScheduleCanvas({ onClose }) {
               </svg>
             </button>
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
+              onClick={() => {
+                if (isMobile) {
+                  // Navigate by day on mobile
+                  if (mobileSelectedDay < 6) {
+                    setMobileSelectedDay(mobileSelectedDay + 1);
+                  } else {
+                    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)));
+                    setMobileSelectedDay(0);
+                  }
+                } else {
+                  setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)));
+                }
+              }}
               style={{
                 width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
                 background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -4229,11 +4548,25 @@ function ScheduleCanvas({ onClose }) {
               </svg>
             </button>
           </div>
-          <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
-            {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-          </span>
+          {/* Date display - show full date on mobile, month/year on desktop */}
+          {isMobile ? (
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+              {(() => {
+                const dayDate = new Date(weekStart);
+                dayDate.setDate(weekStart.getDate() + mobileSelectedDay);
+                return dayDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+              })()}
+            </span>
+          ) : (
+            <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+              {weekStart.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </span>
+          )}
           <button
-            onClick={() => setCurrentDate(new Date(2026, 2, 15))}
+            onClick={() => {
+              setCurrentDate(new Date(2026, 2, 15));
+              if (isMobile) setMobileSelectedDay(0);
+            }}
             style={{
               padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
               background: WHITE, cursor: "pointer", fontSize: 12, fontWeight: 500, color: TEXT_SEC
@@ -4244,41 +4577,59 @@ function ScheduleCanvas({ onClose }) {
         </div>
         
         {/* Categories Legend + Close */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {categories.map(cat => (
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
+          {!isMobile && categories.map(cat => (
             <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
               <span style={{ fontSize: 12, color: TEXT_SEC }}>{cat.label}</span>
             </div>
           ))}
-          <div
-            onClick={onClose}
-            style={{
-              width: 32, height: 32, borderRadius: 8, marginLeft: 8,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`,
-              background: WHITE, transition: "all 0.15s ease"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </div>
+          {!isMobile && (
+            <div
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, marginLeft: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`,
+                background: WHITE, transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* Mobile Categories Legend */}
+      {isMobile && (
+        <div style={{ 
+          display: "flex", gap: 12, padding: "10px 16px", 
+          background: WHITE, borderBottom: `1px solid ${BORDER}`,
+          overflowX: "auto"
+        }}>
+          {categories.map(cat => (
+            <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: cat.color }} />
+              <span style={{ fontSize: 11, color: TEXT_SEC }}>{cat.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
       
       {/* Calendar Grid */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Time Column */}
-        <div style={{ width: 60, borderRight: `1px solid ${BORDER}`, background: WHITE }}>
-          <div style={{ height: 48, borderBottom: `1px solid ${BORDER}` }} />
+        <div style={{ width: isMobile ? 45 : 60, borderRight: `1px solid ${BORDER}`, background: WHITE, flexShrink: 0 }}>
+          {!isMobile && <div style={{ height: 48, borderBottom: `1px solid ${BORDER}` }} />}
           {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
             <div key={i} style={{
-              height: 60, borderBottom: `1px solid ${BORDER}`,
+              height: isMobile ? 50 : 60, borderBottom: `1px solid ${BORDER}`,
               display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
-              padding: "4px 8px", fontSize: 11, color: TEXT_SEC, fontWeight: 500
+              padding: isMobile ? "2px 4px" : "4px 8px", fontSize: isMobile ? 10 : 11, color: TEXT_SEC, fontWeight: 500
             }}>
               {((workHours.start + i) % 12 || 12)}{(workHours.start + i) >= 12 ? "pm" : "am"}
             </div>
@@ -4286,8 +4637,9 @@ function ScheduleCanvas({ onClose }) {
         </div>
         
         {/* Days Grid */}
-        <div style={{ flex: 1, display: "flex", overflowX: "auto" }}>
-          {days.map((day, dayIdx) => {
+        <div style={{ flex: 1, display: "flex", overflowX: isMobile ? "hidden" : "auto" }} className="hide-scrollbar">
+          {(isMobile ? [days[mobileSelectedDay]] : days).map((day, idx) => {
+            const dayIdx = isMobile ? mobileSelectedDay : idx;
             const dayDate = new Date(weekStart);
             dayDate.setDate(weekStart.getDate() + dayIdx);
             const isToday = dayDate.toDateString() === new Date(2026, 2, 15).toDateString();
@@ -4295,62 +4647,65 @@ function ScheduleCanvas({ onClose }) {
             const dayEvents = events.filter(e => e.day === dayIdx);
             
             return (
-              <div key={dayIdx} style={{ flex: 1, minWidth: 100, borderRight: `1px solid ${BORDER}` }}>
-                {/* Day Header */}
-                <div style={{
-                  height: 48, borderBottom: `1px solid ${BORDER}`,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  background: isToday ? TEAL_LIGHT : WHITE
-                }}>
-                  <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
-                  <span style={{
-                    fontSize: 16, fontWeight: 600,
-                    color: isToday ? TEAL : TEXT,
-                    width: 28, height: 28, borderRadius: "50%",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: isToday ? TEAL : "transparent",
-                    color: isToday ? WHITE : TEXT
+              <div key={dayIdx} style={{ flex: 1, minWidth: isMobile ? "100%" : 100, borderRight: isMobile ? "none" : `1px solid ${BORDER}` }}>
+                {/* Day Header - hidden on mobile since date is in nav */}
+                {!isMobile && (
+                  <div style={{
+                    height: 48, borderBottom: `1px solid ${BORDER}`,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    background: isToday ? TEAL_LIGHT : WHITE
                   }}>
-                    {dayDate.getDate()}
-                  </span>
-                </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500 }}>{day}</span>
+                    <span style={{
+                      fontSize: 16, fontWeight: 600,
+                      width: 28, height: 28, borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: isToday ? TEAL : "transparent",
+                      color: isToday ? WHITE : TEXT
+                    }}>
+                      {dayDate.getDate()}
+                    </span>
+                  </div>
+                )}
                 
                 {/* Time Slots */}
                 <div style={{ position: "relative", background: isWeekend ? "#fafafa" : WHITE }}>
                   {Array.from({ length: workHours.end - workHours.start }, (_, i) => (
-                    <div key={i} style={{ height: 60, borderBottom: `1px solid ${BORDER}` }} />
+                    <div key={i} style={{ height: isMobile ? 50 : 60, borderBottom: `1px solid ${BORDER}` }} />
                   ))}
                   
                   {/* Events */}
-                  {dayEvents.map(event => (
+                  {dayEvents.map(event => {
+                    const slotHeight = isMobile ? 50 : 60;
+                    return (
                     <div
                       key={event.id}
                       onClick={() => setSelectedEvent(event)}
                       style={{
                         position: "absolute",
-                        top: (event.start - workHours.start) * 60 + 2,
-                        left: 4, right: 4,
-                        height: event.duration * 60 - 4,
+                        top: (event.start - workHours.start) * slotHeight + 2,
+                        left: isMobile ? 8 : 2, right: isMobile ? 8 : 2,
+                        height: event.duration * slotHeight - 4,
                         background: `${getCategoryColor(event.category)}15`,
                         borderLeft: `3px solid ${getCategoryColor(event.category)}`,
-                        borderRadius: 6, padding: "6px 8px",
+                        borderRadius: 8, padding: isMobile ? "8px 12px" : "6px 8px",
                         cursor: "pointer", overflow: "hidden",
                         transition: "all 0.15s ease"
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}25`}
-                      onMouseLeave={e => e.currentTarget.style.background = `${getCategoryColor(event.category)}15`}
+                      onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}25`; }}
+                      onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}15`; }}
                     >
                       <div style={{
-                        fontSize: 12, fontWeight: 600, color: getCategoryColor(event.category),
+                        fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
                       }}>
                         {event.title}
                       </div>
-                      <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
-                        {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"}
+                      <div style={{ fontSize: isMobile ? 12 : 10, color: TEXT_SEC, marginTop: 2 }}>
+                        {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"} · {event.duration}hr
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             );
@@ -4360,25 +4715,26 @@ function ScheduleCanvas({ onClose }) {
       
       {/* Quick Add Bar */}
       <div style={{
-        padding: "12px 20px", borderTop: `1px solid ${BORDER}`, background: WHITE,
-        display: "flex", alignItems: "center", gap: 12
-      }}>
-        <span style={{ fontSize: 12, color: TEXT_SEC }}>Quick add:</span>
+        padding: isMobile ? "10px 12px" : "12px 20px", borderTop: `1px solid ${BORDER}`, background: WHITE,
+        display: "flex", alignItems: "center", gap: isMobile ? 8 : 12,
+        overflowX: "auto"
+      }} className="hide-scrollbar">
+        {!isMobile && <span style={{ fontSize: 12, color: TEXT_SEC, flexShrink: 0 }}>Quick add:</span>}
         {[
-          { label: "+ Session", cat: "session" },
-          { label: "+ Meeting", cat: "meeting" },
-          { label: "+ Block Time", cat: "backoffice" }
+          { label: isMobile ? "+ Session" : "+ Session", cat: "session" },
+          { label: isMobile ? "+ Meeting" : "+ Meeting", cat: "meeting" },
+          { label: isMobile ? "+ Block" : "+ Block Time", cat: "backoffice" }
         ].map(btn => (
           <button
             key={btn.cat}
             style={{
-              padding: "8px 14px", borderRadius: 8,
+              padding: isMobile ? "6px 10px" : "8px 14px", borderRadius: 8,
               border: `1px solid ${BORDER}`, background: WHITE,
-              fontSize: 12, fontWeight: 500, color: getCategoryColor(btn.cat),
-              cursor: "pointer", transition: "all 0.15s ease"
+              fontSize: isMobile ? 11 : 12, fontWeight: 500, color: getCategoryColor(btn.cat),
+              cursor: "pointer", transition: "all 0.15s ease", flexShrink: 0
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${getCategoryColor(btn.cat)}10`; e.currentTarget.style.borderColor = getCategoryColor(btn.cat); }}
-            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.borderColor = BORDER; }}
+            onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.background = `${getCategoryColor(btn.cat)}10`; e.currentTarget.style.borderColor = getCategoryColor(btn.cat); } }}
+            onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = WHITE; e.currentTarget.style.borderColor = BORDER; } }}
           >
             {btn.label}
           </button>
@@ -4771,7 +5127,7 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
   );
 }
 
-function CanvasTemplates({ onSelect, onClose }) {
+function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
   const templates = [
@@ -4814,50 +5170,54 @@ function CanvasTemplates({ onSelect, onClose }) {
       display: "flex", flexDirection: "column", height: "100%", 
       position: "relative", background: "#fafcfb"
     }}>
-      {/* Close button */}
-      <div 
-        onClick={onClose}
-        style={{ 
-          position: "absolute", top: 16, right: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </div>
+      {/* Close button - only on desktop, mobile uses header back button */}
+      {!isMobile && (
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+            transition: "all 0.15s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      )}
       
       {/* Main content */}
       <div style={{ 
         flex: 1, display: "flex", flexDirection: "column",
-        padding: "60px 48px 48px", overflowY: "auto"
+        padding: isMobile ? "20px 16px 24px" : "60px 48px 48px", overflowY: "auto"
       }}>
         {/* Header */}
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ 
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: TEAL_LIGHT, padding: "6px 12px", borderRadius: 20,
-            marginBottom: 16
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Canvas</span>
-          </div>
+        <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+          {!isMobile && (
+            <div style={{ 
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: TEAL_LIGHT, padding: "6px 12px", borderRadius: 20,
+              marginBottom: 16
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Canvas</span>
+            </div>
+          )}
           <h1 style={{ 
-            fontSize: 32, fontWeight: 700, color: TEXT, margin: 0,
+            fontSize: isMobile ? 24 : 32, fontWeight: 700, color: TEXT, margin: 0,
             letterSpacing: "-0.02em", lineHeight: 1.2
           }}>
             What would you like to create?
           </h1>
           <p style={{ 
-            fontSize: 15, color: TEXT_SEC, margin: "12px 0 0", 
+            fontSize: isMobile ? 14 : 15, color: TEXT_SEC, margin: "12px 0 0", 
             maxWidth: 400, lineHeight: 1.5
           }}>
             Choose a template to get started. Milton will help you build and customize it.
@@ -4866,8 +5226,8 @@ function CanvasTemplates({ onSelect, onClose }) {
         
         {/* Templates Grid */}
         <div style={{ 
-          display: "grid", gridTemplateColumns: "repeat(2, 1fr)", 
-          gap: 16, maxWidth: 600
+          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
+          gap: isMobile ? 12 : 16, maxWidth: isMobile ? "100%" : 600
         }}>
           {templates.map((template, idx) => (
             <div
@@ -7287,11 +7647,7 @@ Remember: Be specific, be brief, be helpful.`;
           padding: "0 16px", height: 56, background: WHITE,
           borderBottom: `1px solid ${BORDER}`, boxShadow: "0 1px 6px rgba(0,0,0,0.04)"
         }}>
-          {canvasMode ? (
-            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
-            </div>
-          ) : selectedClient !== null ? (
+          {selectedClient !== null ? (
             <div onClick={() => setSelectedClient(null)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 6 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
@@ -7307,38 +7663,18 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {canvasMode ? (
-              <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                {canvasType === "templates" ? "Canvas" : canvasType === "inbox" ? "Inbox" : canvasType === "schedule" ? "Schedule" : canvasType === "messages" ? "Messages" : canvasType === "mealPlan" ? "Meal Plan" : canvasType === "workout" ? "Workout" : canvasType === "messageSequence" ? "Messages" : "Report"}
-              </span>
-            ) : (
-              <>
-                <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
-              </>
-            )}
+            <img src={LOGO_URL} alt="Milton" style={{ width: 30, height: 30, borderRadius: 8 }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton</span>
           </div>
-          {canvasMode ? (
-            <div onClick={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }} style={{
-              width: 34, height: 34, borderRadius: 10, background: "#f0f4f3",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer"
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </div>
-          ) : (
-            <div onClick={() => setShowAddClient(true)} style={{
-              width: 34, height: 34, borderRadius: 10, background: TEAL,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
-            }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
-              </svg>
-            </div>
-          )}
+          <div onClick={() => setShowAddClient(true)} style={{
+            width: 34, height: 34, borderRadius: 10, background: TEAL,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", boxShadow: "0 2px 6px rgba(43,122,120,0.3)"
+          }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+              <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+            </svg>
+          </div>
         </div>
       )}
 
@@ -7372,17 +7708,23 @@ Remember: Be specific, be brief, be helpful.`;
         </div>
       )}
 
-      {/* ═══ CANVAS MODE - Full Dashboard ═══ */}
+      {/* ═══ CANVAS MODE - Desktop Only (Mobile uses MobileCanvasSheet) ═══ */}
       {canvasMode && !isMobile && (
         <div style={{
-          flex: 1, display: "flex", flexDirection: "column",
-          background: WHITE, borderRadius: 20, margin: "14px 14px 14px 0",
-          border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          overflow: "hidden",
-          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+          flex: 1,
+          margin: "14px 14px 14px 0",
+          borderRadius: 20,
+          border: `1px solid ${BORDER}`,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          display: "flex", 
+          flexDirection: "column",
+          background: WHITE, 
+          overflow: "hidden"
         }}>
           {canvasType === "templates" && (
             <CanvasTemplates 
+              isMobile={isMobile}
               onSelect={(templateType) => {
                 if (templateType === "mealPlan") {
                   setCanvasType("mealPlan");
@@ -7443,91 +7785,13 @@ Remember: Be specific, be brief, be helpful.`;
   )}
 {canvasType === "inbox" && (
   <InboxCanvas
+  isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  />
-  )}
-  </div>
-  )}
-  
-  {/* ═══ MOBILE CANVAS VIEW ═══ */}
-  {canvasMode && isMobile && (
-  <div style={{
-  position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
-  background: WHITE, zIndex: 40, overflow: "hidden",
-  display: "flex", flexDirection: "column"
-  }}>
-  {canvasType === "templates" && (
-  <CanvasTemplates 
-    onSelect={(templateType) => {
-      if (templateType === "mealPlan") {
-        setCanvasType("mealPlan");
-        setCanvasData({
-          client: "New Client",
-          goals: "General health and fitness",
-          weeklyTargets: { calories: 2000, protein: 150 }
-        });
-} else if (templateType === "workout") {
-  setCanvasType("workout");
-  setCanvasData({
-  clientName: "New Client",
-  programName: "Custom Program",
-  weeks: 4
-  });
-  } else if (templateType === "messages") {
-  setCanvasType("messages");
-  setCanvasData({});
-  } else if (templateType === "reports") {
-  setCanvasType("report");
-  setCanvasData({});
-  }
-  }}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  />
-  )}
-  {canvasType === "messages" && (
-  <MessagesCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  setChatMessages={setChatMessages}
-  setChatTyping={setChatTyping}
-  />
-  )}
-  {canvasType === "mealPlan" && (
-  <MealPlanCanvas
-  data={canvasData}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  />
-  )}
-  {canvasType === "workout" && (
-            <WorkoutCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-          {canvasType === "messageSequence" && (
-            <MessageSequenceCanvas 
-              data={canvasData}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-            />
-          )}
-{canvasType === "report" && (
-  <ReportsCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  setChatMessages={setChatMessages}
-  setChatTyping={setChatTyping}
-  />
-  )}
-{canvasType === "inbox" && (
-  <InboxCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  />
-  )}
-  {canvasType === "schedule" && (
-  <ScheduleCanvas
+  isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
@@ -7561,8 +7825,7 @@ Remember: Be specific, be brief, be helpful.`;
         display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 16 }}>
-            {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
@@ -7573,7 +7836,9 @@ Remember: Be specific, be brief, be helpful.`;
                     key={item.icon}
                     onClick={item.action}
                     style={{
-                      width: 36, height: 36, borderRadius: 10,
+                      width: isMobile ? 32 : 36, 
+                      height: isMobile ? 32 : 36, 
+                      borderRadius: 10,
                       background: "#f0f4f3", border: `1px solid ${BORDER}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       cursor: item.action ? "pointer" : "default", color: TEXT_SEC,
@@ -7581,14 +7846,13 @@ Remember: Be specific, be brief, be helpful.`;
                       transition: "all 0.15s ease"
                     }}
                     title={item.label}
-                    onMouseEnter={e => { if (item.action) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+                    onMouseEnter={e => { if (item.action && !isMobile) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
+                    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; } }}
                   >
-                    <NavIcon icon={item.icon} size={18} />
+                    <NavIcon icon={item.icon} size={isMobile ? 16 : 18} />
                   </div>
                 ))}
               </div>
-            )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {!isMobile && (<>
@@ -8025,16 +8289,32 @@ Remember: Be specific, be brief, be helpful.`;
       {/* ═══ ADD CLIENT MODAL ═══ */}
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
 
-      {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
-      {isMobile && (
-<MobileChatSheet
-  chatOpen={chatOpen} setChatOpen={setChatOpen}
-  chatInput={chatInput} setChatInput={setChatInput}
-  messages={chatMessages} onSend={handleChatSend}
-  chatEndRef={chatEndRef} typing={chatTyping}
-  canvasMode={canvasMode}
-  />
-      )}
+  {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
+  {isMobile && (
+    <MobileChatSheet
+      chatOpen={chatOpen} setChatOpen={setChatOpen}
+      chatInput={chatInput} setChatInput={setChatInput}
+      messages={chatMessages} onSend={handleChatSend}
+      chatEndRef={chatEndRef} typing={chatTyping}
+      canvasMode={canvasMode}
+    />
+  )}
+  
+  {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═══ */}
+  {isMobile && (
+    <MobileCanvasSheet
+      isOpen={canvasMode}
+      onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+      canvasType={canvasType}
+      canvasData={canvasData}
+      setCanvasType={setCanvasType}
+      setCanvasData={setCanvasData}
+      setCanvasMode={setCanvasMode}
+      setChatMessages={setChatMessages}
+      setChatTyping={setChatTyping}
+      onChatSend={handleChatSend}
+    />
+  )}
 
       <style>{`
         @keyframes fadeIn {
