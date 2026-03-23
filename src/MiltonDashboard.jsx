@@ -288,95 +288,1116 @@ const dataConnectors = {
 };
 
 const initialClients = [
-  { name: "Sarah Chen", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog"], progress: 45, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 12, weightTrend: 1.2, proteinAvg: 95, proteinTarget: 120, engagementScore: 52, weekLog: [3,2,0,0,0,0,0], weightData: [158,157.5,157.8,158.2,158.5,159.0,159.2,159.7], steps: 6200, workoutDays: 2, insight: "Sarah hasn't logged in 4 days — her longest gap yet. Weekend logging drops 60% compared to weekdays.", coachAngle: "Send a supportive check-in message. She may be stressed with wedding planning.", streaks: { logging: 0, exercise: 2, steps: 8, best: { type: "steps", days: 12 } }, narrative: "Hasn't logged in 4 days — her longest gap yet. Wedding stress may be a factor." },
-  { name: "Marcus Johnson", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 15", mealsLogged: 28, weightTrend: 0.8, proteinAvg: 185, proteinTarget: 180, engagementScore: 96, weekLog: [3,3,3,3,3,3,3], weightData: [175,175.3,175.8,176.0,176.2,176.5,176.8,175.8], steps: 9800, workoutDays: 5, insight: "Hit protein goal 7 days straight. 14-day logging streak and ready for a calorie increase.", coachAngle: "Celebrate the streak! Suggest increasing calorie target by 100 to support muscle growth.", streaks: { logging: 14, exercise: 18, steps: 22, best: { type: "logging", days: 14 } }, narrative: "7-day protein streak and 14-day logging streak — ready to level up." },
-  { name: "Emily Rodriguez", alert: "Needs Attention", alertType: "red", connectors: ["watch", "foodlog", "sleep"], progress: 35, program: "Metabolic Health", startDate: "Feb 15", mealsLogged: 16, weightTrend: 0.5, proteinAvg: 68, proteinTarget: 100, engagementScore: 58, weekLog: [2,1,2,1,0,3,3], weightData: [145,144.8,145.2,144.5,145.8,147.2,145.5,145.0], steps: 5400, workoutDays: 2, insight: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends. Classic restrict-binge pattern.", coachAngle: "Schedule a call about sustainable eating. She needs permission to eat more consistently.", streaks: { logging: 5, exercise: 4, steps: 6, best: { type: "logging", days: 8 } }, narrative: "Weekday calories too low (<1200), then weekend spikes. Needs a sustainable approach." },
-  { name: "David Park", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm", "milton"], progress: 100, progressLabel: "Report Ready", program: "Fat Loss Phase", startDate: "Jan 5", mealsLogged: 30, weightTrend: 0, proteinAvg: 165, proteinTarget: 160, engagementScore: 98, weekLog: [3,3,3,3,3,3,3], weightData: [185,184.2,183.5,182.8,182.0,181.5,178.5,178.5], steps: 10500, workoutDays: 5, insight: "Perfect logging for 21 days but weight has plateaued for 2 weeks despite good adherence.", coachAngle: "Consider a 2-week diet break or macro adjustment. Metabolic adaptation may be occurring.", streaks: { logging: 21, exercise: 19, steps: 30, best: { type: "steps", days: 30 } }, narrative: "21-day perfect logging but weight plateaued for 2 weeks. May need macro adjustment." },
-  { name: "Rachel Kim", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog"], progress: 25, program: "Post-Pregnancy", startDate: "Mar 1", mealsLogged: 8, weightTrend: -0.5, proteinAvg: 85, proteinTarget: 110, engagementScore: 65, weekLog: [2,1,2,1,2,0,1], weightData: [165,164.8,164.5,164.2,164.0,163.8,163.5,163.5], steps: 4200, workoutDays: 3, insight: "Completed first full week of workouts postpartum! Struggling to find time to log with newborn.", coachAngle: "Send encouragement and offer quick-log meal templates. Keep expectations realistic.", streaks: { logging: 2, exercise: 7, steps: 5, best: { type: "exercise", days: 7 } }, narrative: "First full week of postpartum workouts complete! Huge milestone for a new mom." },
-  { name: "Aaron Smith", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 65, program: "Fat Loss Phase", startDate: "Feb 12", mealsLogged: 21, weightTrend: -2.1, proteinAvg: 78, proteinTarget: 100, engagementScore: 84, weekLog: [3,2,0,0,3,2,1], weightData: [185,184.5,184.2,183.8,183.5,183.2,183.0,182.9], steps: 8420, workoutDays: 4, insight: "Aaron logs meals consistently early in the week but drops off after Wednesday. Protein intake averages 22g below target.", coachAngle: "Focus on simple protein options for busy days. Consider meal prep suggestions for Wed-Fri.", streaks: { logging: 3, exercise: 8, steps: 14, best: { type: "steps", days: 14 } }, narrative: "Down 2.1 lbs but stopped logging Thursday — his usual mid-week drop-off is back." },
-  { name: "Lisa Martinez", alert: "Report Ready", alertType: "blue", connectors: ["watch", "milton", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 8", mealsLogged: 28, weightTrend: 1.3, proteinAvg: 132, proteinTarget: 130, engagementScore: 96, weekLog: [3,3,3,3,3,2,3], weightData: [142,142.3,142.8,143.0,143.2,143.5,143.8,143.3], steps: 10200, workoutDays: 5, insight: "Lisa is highly consistent — logging nearly every meal. Weight gain is on track at 1.3 lbs over 14 days.", coachAngle: "Celebrate consistency. Suggest progressive overload update for next phase.", streaks: { logging: 26, exercise: 18, steps: 22, best: { type: "logging", days: 26 } }, narrative: "On a 26-day logging streak and hitting protein targets — her best month yet." },
-  { name: "Jason Williams", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "milton", "foodlog"], progress: 100, progressLabel: "Report Ready", program: "Maintenance", startDate: "Dec 1", mealsLogged: 24, weightTrend: -0.3, proteinAvg: 105, proteinTarget: 110, engagementScore: 91, weekLog: [3,3,2,3,3,3,3], weightData: [175,175.1,174.8,175.0,174.9,174.7,174.6,174.7], steps: 9100, workoutDays: 4, insight: "Jason is maintaining weight effectively. Slight protein deficit but within acceptable range.", coachAngle: "Reinforce current habits. Discuss goals for next quarter.", streaks: { logging: 19, exercise: 12, steps: 30, best: { type: "steps", days: 30 } }, narrative: "Just hit a 30-day steps streak. Weight holding steady at 174.7 — maintenance is working." },
-  { name: "Daniel Torres", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog", "sleep"], progress: 48, program: "Fat Loss Phase", startDate: "Feb 20", mealsLogged: 14, weightTrend: -1.0, proteinAvg: 65, proteinTarget: 90, engagementScore: 62, weekLog: [2,1,2,0,1,0,0], weightData: [210,209.5,209.8,209.2,209.0,208.8,209.1,209.0], steps: 5800, workoutDays: 2, insight: "Daniel has inconsistent logging and drops off on weekends. Sleep data shows late nights correlating with missed logs.", coachAngle: "Address weekend routine. Pair evening meals with a simple logging reminder.", streaks: { logging: 0, exercise: 2, steps: 4, best: { type: "steps", days: 7 } }, narrative: "Logging streak broke over the weekend — sleep data shows 2 AM bedtimes Fri and Sat." },
-  { name: "Amanda Foster", alert: "Report Ready", alertType: "blue", connectors: ["milton", "cgm", "bloodwork"], progress: 82, program: "Metabolic Health", startDate: "Jan 15", mealsLogged: 19, weightTrend: -0.8, proteinAvg: 88, proteinTarget: 95, engagementScore: 78, weekLog: [3,2,3,2,2,1,2], weightData: [155,154.8,154.5,154.2,154.0,154.3,154.1,154.2], steps: 7200, workoutDays: 3, insight: "Amanda's CGM data shows glucose spikes after lunch consistently. Bloodwork improving on lipid panel.", coachAngle: "Focus on lunch composition — more protein/fiber before carbs. Share CGM insight visually.", streaks: { logging: 11, exercise: 9, steps: 16, best: { type: "steps", days: 16 } }, narrative: "Glucose spikes are down 15% since changing lunch order. Bloodwork trending in the right direction." },
-  { name: "Michael Brown", alert: "Made Progress", alertType: "green", connectors: ["foodlog", "scale", "sleep"], progress: 72, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 18, weightTrend: -1.5, proteinAvg: 72, proteinTarget: 85, engagementScore: 70, weekLog: [3,2,2,1,3,1,0], weightData: [195,194.5,194.0,193.8,193.5,193.2,193.5,193.5], steps: 6500, workoutDays: 3, insight: "Michael shows good weekday adherence but Sunday logging drops completely. Steady weight loss trend.", coachAngle: "Praise the downward trend. Create a simple Sunday meal template.", streaks: { logging: 5, exercise: 6, steps: 10, best: { type: "steps", days: 10 } }, narrative: "Lost 1.5 lbs this week and logging is improving — but Sundays are still a blind spot." },
-  { name: "Jennifer Lee", alert: "Made Progress", alertType: "green", connectors: ["cgm", "watch", "milton"], progress: 55, program: "Performance", startDate: "Mar 1", mealsLogged: 12, weightTrend: 0.2, proteinAvg: 110, proteinTarget: 120, engagementScore: 58, weekLog: [2,1,0,2,1,0,0], weightData: [138,138.2,138.1,138.3,138.2,138.4,138.3,138.2], steps: 11000, workoutDays: 5, insight: "Jennifer trains consistently but logging is sporadic. High activity level but nutrition data gaps make coaching difficult.", coachAngle: "Emphasize that training + logging = results. Suggest photo-logging as a low-friction option.", streaks: { logging: 1, exercise: 21, steps: 28, best: { type: "steps", days: 28 } }, narrative: "Training 5x/week with a 21-day exercise streak, but only logged 1 meal this week." },
+  {
+    name: "Sarah Chen",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Fat Loss — Phase 2",
+    startDate: "Feb 1",
+    assessment: {
+      date: "2026-02-01",
+      bodyweight: 158,
+      bodyFat: 28.5,
+      leanMass: 113,
+      measurements: { waist: 32, hips: 38, chest: 36 },
+      strengthBaselines: {
+        squat: { weight: 95, reps: 8 },
+        deadlift: { weight: 115, reps: 6 },
+        benchPress: { weight: 65, reps: 8 },
+        overheadPress: { weight: 45, reps: 8 },
+      },
+      movementScreen: { score: 14, notes: "Limited ankle dorsiflexion, tight hip flexors" },
+    },
+    current: {
+      bodyweight: 153,
+      bodyFat: 25.2,
+      leanMass: 114.5,
+      measurements: { waist: 30.5, hips: 37, chest: 36 },
+    },
+    goals: {
+      primary: "Lose 20 lbs",
+      targetWeight: 138,
+      targetBodyFat: 22,
+      secondaryGoals: ["Squat 135 lbs", "Run a 5K"],
+      targetDate: "2026-08-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 115, reps: 8, rpe: 7 }, { set: 2, weight: 115, reps: 8, rpe: 7.5 }, { set: 3, weight: 120, reps: 6, rpe: 8 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 95, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 10, rpe: 7.5 }, { set: 3, weight: 100, reps: 8, rpe: 8 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6 }, { set: 2, weight: 200, reps: 10, rpe: 7 }, { set: 3, weight: 200, reps: 10, rpe: 7.5 }] },
+          { name: "Walking Lunges", sets: [{ set: 1, weight: 20, reps: 12, rpe: 7 }, { set: 2, weight: 20, reps: 12, rpe: 7.5 }] },
+        ],
+        notes: "Felt strong today. Squat depth improving. Bumped weight on set 3.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Upper Body Push",
+        duration: 50,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 70, reps: 8, rpe: 7 }, { set: 2, weight: 70, reps: 8, rpe: 7.5 }, { set: 3, weight: 75, reps: 6, rpe: 8 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 50, reps: 8, rpe: 7.5 }, { set: 2, weight: 50, reps: 7, rpe: 8 }] },
+          { name: "Tricep Pushdowns", sets: [{ set: 1, weight: 30, reps: 12, rpe: 6 }, { set: 2, weight: 35, reps: 10, rpe: 7 }] },
+        ],
+        notes: "OHP felt heavy. May need to hold at 50 for another week.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Upper Body Pull",
+        duration: 50,
+        exercises: [
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 85, reps: 8, rpe: 7.5 }] },
+          { name: "Seated Cable Row", sets: [{ set: 1, weight: 70, reps: 10, rpe: 7 }, { set: 2, weight: 75, reps: 10, rpe: 7.5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 25, reps: 15, rpe: 6 }, { set: 2, weight: 25, reps: 15, rpe: 6.5 }] },
+          { name: "Dumbbell Bicep Curls", sets: [{ set: 1, weight: 15, reps: 12, rpe: 7 }, { set: 2, weight: 15, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Good session. Back felt engaged throughout.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 110, reps: 8, rpe: 7 }, { set: 2, weight: 110, reps: 8, rpe: 7.5 }, { set: 3, weight: 115, reps: 6, rpe: 8 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 90, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6.5 }, { set: 2, weight: 180, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Squat felt smoother than last week.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Upper Body Push",
+        duration: 48,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 65, reps: 8, rpe: 7 }, { set: 2, weight: 70, reps: 6, rpe: 8 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 45, reps: 8, rpe: 7 }, { set: 2, weight: 50, reps: 6, rpe: 8 }] },
+        ],
+        notes: "Short session due to time constraints.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 14,
+    streak: { current: 6, best: 9, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 120, calorieAvg: 1650, calorieTarget: 1800 },
+    insight: "Sarah's squat has progressed from 95 to 120 lbs in 6 weeks. Bench is stalling — may need to adjust volume. Next session: Upper Body Pull.",
+    coachAngle: "Test 1RM on squat next week to update training max. Consider adding an extra pressing accessory.",
+    narrative: "Squat up 25 lbs since assessment. Body comp improving — down 5 lbs, gained 1.5 lbs lean mass.",
+    engagementScore: 85,
+    weightData: [158, 157, 156, 155, 154, 153.5, 153],
+  },
+  {
+    name: "Marcus Johnson",
+    alert: "Assessment Due",
+    alertType: "red",
+    program: "Muscle Gain — Hypertrophy",
+    startDate: "Jan 15",
+    assessment: {
+      date: "2026-01-15",
+      bodyweight: 175,
+      bodyFat: 18,
+      leanMass: 143.5,
+      measurements: { waist: 33, hips: 38, chest: 42 },
+      strengthBaselines: {
+        squat: { weight: 185, reps: 5 },
+        deadlift: { weight: 225, reps: 5 },
+        benchPress: { weight: 155, reps: 5 },
+        overheadPress: { weight: 95, reps: 5 },
+      },
+      movementScreen: { score: 16, notes: "Good mobility overall, slight shoulder internal rotation limitation" },
+    },
+    current: {
+      bodyweight: 182,
+      bodyFat: 17.5,
+      leanMass: 150,
+      measurements: { waist: 33.5, hips: 39, chest: 44 },
+    },
+    goals: {
+      primary: "Gain 15 lbs muscle",
+      targetWeight: 195,
+      targetBodyFat: 16,
+      secondaryGoals: ["Bench 225 lbs", "Deadlift 315 lbs"],
+      targetDate: "2026-07-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-20",
+        type: "Push",
+        duration: 65,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }, { set: 3, weight: 180, reps: 4, rpe: 8.5 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 60, reps: 10, rpe: 7 }, { set: 2, weight: 60, reps: 9, rpe: 7.5 }, { set: 3, weight: 60, reps: 8, rpe: 8 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 115, reps: 6, rpe: 7.5 }, { set: 2, weight: 115, reps: 5, rpe: 8 }] },
+          { name: "Cable Flyes", sets: [{ set: 1, weight: 35, reps: 12, rpe: 7 }, { set: 2, weight: 35, reps: 12, rpe: 7 }] },
+          { name: "Lateral Raises", sets: [{ set: 1, weight: 20, reps: 15, rpe: 7 }, { set: 2, weight: 20, reps: 12, rpe: 8 }] },
+        ],
+        notes: "Bench PR attempt next week. Feeling strong.",
+      },
+      {
+        date: "2026-03-18",
+        type: "Pull",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Deadlift", sets: [{ set: 1, weight: 275, reps: 5, rpe: 7.5 }, { set: 2, weight: 285, reps: 3, rpe: 8.5 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 140, reps: 10, rpe: 7 }, { set: 2, weight: 140, reps: 9, rpe: 7.5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 40, reps: 15, rpe: 6.5 }, { set: 2, weight: 40, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Deadlift moving well. Ready to test 300.",
+      },
+      {
+        date: "2026-03-16",
+        type: "Legs",
+        duration: 70,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 225, reps: 5, rpe: 7 }, { set: 2, weight: 235, reps: 4, rpe: 8 }, { set: 3, weight: 225, reps: 5, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 185, reps: 8, rpe: 7 }, { set: 2, weight: 185, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 360, reps: 12, rpe: 7 }, { set: 2, weight: 380, reps: 10, rpe: 8 }] },
+          { name: "Leg Curls", sets: [{ set: 1, weight: 90, reps: 12, rpe: 7 }, { set: 2, weight: 90, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Squat depth is on point. Legs are growing.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Push",
+        duration: 60,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 170, reps: 6, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 110, reps: 6, rpe: 7 }, { set: 2, weight: 115, reps: 5, rpe: 8 }] },
+        ],
+        notes: "Solid session.",
+      },
+    ],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 4,
+    totalSessions: 32,
+    streak: { current: 18, best: 18, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 185, proteinTarget: 180, calorieAvg: 3200, calorieTarget: 3100 },
+    insight: "Marcus has been training for 8 weeks since his last assessment. Strength is up across all lifts. Time to reassess and update training maxes.",
+    coachAngle: "Schedule InBody scan this week. Current lifts suggest he's ready for a new training block.",
+    narrative: "Bench up 20 lbs, deadlift up 50 lbs since assessment. Gained 7 lbs bodyweight with minimal fat gain.",
+    engagementScore: 96,
+    weightData: [175, 176, 177, 178, 179, 180, 181, 182],
+  },
+  {
+    name: "Emily Rodriguez",
+    alert: "Needs Programming",
+    alertType: "red",
+    program: "General Fitness",
+    startDate: "Feb 15",
+    assessment: {
+      date: "2026-02-15",
+      bodyweight: 145,
+      bodyFat: 32,
+      leanMass: 98.6,
+      measurements: { waist: 30, hips: 40, chest: 35 },
+      strengthBaselines: {
+        squat: { weight: 65, reps: 8 },
+        deadlift: { weight: 75, reps: 8 },
+        benchPress: { weight: 45, reps: 8 },
+        overheadPress: { weight: 25, reps: 8 },
+      },
+      movementScreen: { score: 12, notes: "Tight hip flexors, limited thoracic extension" },
+    },
+    current: {
+      bodyweight: 143,
+      bodyFat: 30.5,
+      leanMass: 99.4,
+      measurements: { waist: 29, hips: 39.5, chest: 35 },
+    },
+    goals: {
+      primary: "Lose 25 lbs and feel confident",
+      targetWeight: 125,
+      targetBodyFat: 24,
+      secondaryGoals: ["Complete a full push-up", "Touch toes"],
+      targetDate: "2026-09-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-10",
+        type: "Full Body",
+        duration: 45,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7.5 }] },
+          { name: "Dumbbell Row", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6.5 }, { set: 2, weight: 20, reps: 10, rpe: 7 }] },
+          { name: "Push-ups (Incline)", sets: [{ set: 1, weight: 0, reps: 8, rpe: 7 }, { set: 2, weight: 0, reps: 6, rpe: 8 }] },
+        ],
+        notes: "Good energy today. Push-ups are improving!",
+      },
+      {
+        date: "2026-03-07",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6.5 }, { set: 2, weight: 25, reps: 8, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 50, reps: 10, rpe: 7 }, { set: 2, weight: 50, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Shorter session. Felt tired but pushed through.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 0,
+    totalSessions: 8,
+    streak: { current: 0, best: 4, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 68, proteinTarget: 100, calorieAvg: 1400, calorieTarget: 1600 },
+    insight: "Emily missed the last 2 sessions. She was making good progress but attendance has dropped. Her current program ends this week.",
+    coachAngle: "Check in with Emily. She may be overwhelmed. Design a simpler 2x/week program to restart momentum.",
+    narrative: "Down 2 lbs but missed last 2 weeks. Needs a check-in and fresh programming.",
+    engagementScore: 45,
+    weightData: [145, 144.5, 144, 143.5, 143, 143, 143],
+  },
+  {
+    name: "David Park",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Powerlifting Prep",
+    startDate: "Jan 5",
+    assessment: {
+      date: "2026-01-05",
+      bodyweight: 198,
+      bodyFat: 22,
+      leanMass: 154.4,
+      measurements: { waist: 36, hips: 40, chest: 44 },
+      strengthBaselines: {
+        squat: { weight: 275, reps: 3 },
+        deadlift: { weight: 315, reps: 3 },
+        benchPress: { weight: 185, reps: 3 },
+        overheadPress: { weight: 115, reps: 5 },
+      },
+      movementScreen: { score: 15, notes: "Good overall. Slight knee valgus under heavy loads." },
+    },
+    current: {
+      bodyweight: 195,
+      bodyFat: 20,
+      leanMass: 156,
+      measurements: { waist: 35, hips: 40, chest: 45 },
+    },
+    goals: {
+      primary: "Compete in first powerlifting meet",
+      targetWeight: 198,
+      targetBodyFat: 18,
+      secondaryGoals: ["Squat 315", "Deadlift 405", "Bench 225"],
+      targetDate: "2026-06-15",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Squat Day",
+        duration: 75,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 245, reps: 3, rpe: 6 }, { set: 2, weight: 275, reps: 3, rpe: 7 }, { set: 3, weight: 295, reps: 2, rpe: 8 }, { set: 4, weight: 285, reps: 3, rpe: 7.5 }] },
+          { name: "Pause Squat", sets: [{ set: 1, weight: 225, reps: 3, rpe: 7 }, { set: 2, weight: 225, reps: 3, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 400, reps: 10, rpe: 7 }, { set: 2, weight: 400, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "295 moved well. 315 is within reach in 4-6 weeks.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Bench Day",
+        duration: 65,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 185, reps: 3, rpe: 6.5 }, { set: 2, weight: 195, reps: 3, rpe: 7.5 }, { set: 3, weight: 205, reps: 2, rpe: 8.5 }] },
+          { name: "Close Grip Bench", sets: [{ set: 1, weight: 155, reps: 6, rpe: 7 }, { set: 2, weight: 155, reps: 6, rpe: 7.5 }] },
+          { name: "Dumbbell Incline Press", sets: [{ set: 1, weight: 65, reps: 8, rpe: 7 }, { set: 2, weight: 65, reps: 7, rpe: 7.5 }] },
+        ],
+        notes: "205 is a PR! 225 by meet day looking good.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Deadlift Day",
+        duration: 70,
+        exercises: [
+          { name: "Conventional Deadlift", sets: [{ set: 1, weight: 315, reps: 3, rpe: 6.5 }, { set: 2, weight: 345, reps: 2, rpe: 7.5 }, { set: 3, weight: 365, reps: 1, rpe: 8 }] },
+          { name: "Deficit Deadlift", sets: [{ set: 1, weight: 275, reps: 4, rpe: 7 }, { set: 2, weight: 275, reps: 4, rpe: 7.5 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7 }] },
+        ],
+        notes: "365 single felt smooth. 405 attempt in 3 weeks.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Squat Day",
+        duration: 70,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 245, reps: 3, rpe: 6.5 }, { set: 2, weight: 265, reps: 3, rpe: 7 }, { set: 3, weight: 285, reps: 2, rpe: 8 }] },
+        ],
+        notes: "Good session. Volume day next week.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 28,
+    streak: { current: 12, best: 14, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 200, proteinTarget: 190, calorieAvg: 2800, calorieTarget: 2700 },
+    insight: "David is 12 weeks out from his first meet. All lifts are progressing well. Squat close to 315, deadlift to 405, bench to 225.",
+    coachAngle: "Start peaking protocol in 4 weeks. Consider a mock meet to practice commands.",
+    narrative: "All three lifts trending toward meet goals. Down 3 lbs while getting stronger.",
+    engagementScore: 95,
+    weightData: [198, 197.5, 197, 196, 195.5, 195, 195],
+  },
+  {
+    name: "Rachel Kim",
+    alert: "On Track",
+    alertType: "green",
+    program: "Post-Pregnancy Recovery",
+    startDate: "Mar 1",
+    assessment: {
+      date: "2026-03-01",
+      bodyweight: 165,
+      bodyFat: 35,
+      leanMass: 107.3,
+      measurements: { waist: 35, hips: 42, chest: 37 },
+      strengthBaselines: {
+        squat: { weight: 45, reps: 10 },
+        deadlift: { weight: 55, reps: 10 },
+        benchPress: { weight: 35, reps: 10 },
+        overheadPress: { weight: 20, reps: 10 },
+      },
+      movementScreen: { score: 11, notes: "Core stability needs work. Diastasis recti present but improving." },
+    },
+    current: {
+      bodyweight: 162,
+      bodyFat: 33.5,
+      leanMass: 107.7,
+      measurements: { waist: 34, hips: 41.5, chest: 37 },
+    },
+    goals: {
+      primary: "Return to pre-pregnancy fitness",
+      targetWeight: 145,
+      targetBodyFat: 26,
+      secondaryGoals: ["Rebuild core strength", "Regain energy"],
+      targetDate: "2026-09-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Full Body",
+        duration: 35,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6 }, { set: 2, weight: 20, reps: 10, rpe: 6.5 }] },
+          { name: "Dead Bug", sets: [{ set: 1, weight: 0, reps: 10, rpe: 6 }, { set: 2, weight: 0, reps: 10, rpe: 6 }] },
+          { name: "Band Pull-Apart", sets: [{ set: 1, weight: 0, reps: 15, rpe: 5 }, { set: 2, weight: 0, reps: 15, rpe: 5.5 }] },
+          { name: "Glute Bridge", sets: [{ set: 1, weight: 0, reps: 12, rpe: 5.5 }, { set: 2, weight: 0, reps: 12, rpe: 6 }] },
+        ],
+        notes: "Feeling more confident. Core exercises getting easier.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Full Body",
+        duration: 30,
+        exercises: [
+          { name: "Bodyweight Squat", sets: [{ set: 1, weight: 0, reps: 12, rpe: 5.5 }, { set: 2, weight: 0, reps: 12, rpe: 6 }] },
+          { name: "Modified Push-up", sets: [{ set: 1, weight: 0, reps: 8, rpe: 6.5 }, { set: 2, weight: 0, reps: 6, rpe: 7 }] },
+          { name: "Bird Dog", sets: [{ set: 1, weight: 0, reps: 8, rpe: 5 }, { set: 2, weight: 0, reps: 8, rpe: 5.5 }] },
+        ],
+        notes: "Great energy today despite interrupted sleep.",
+      },
+      {
+        date: "2026-03-15",
+        type: "Full Body",
+        duration: 30,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 15, reps: 10, rpe: 6 }, { set: 2, weight: 15, reps: 10, rpe: 6.5 }] },
+          { name: "Dead Bug", sets: [{ set: 1, weight: 0, reps: 8, rpe: 6 }, { set: 2, weight: 0, reps: 8, rpe: 6.5 }] },
+        ],
+        notes: "First week back. Taking it slow.",
+      },
+    ],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 6,
+    streak: { current: 6, best: 6, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 85, proteinTarget: 110, calorieAvg: 1900, calorieTarget: 1800 },
+    insight: "Rachel has completed all 6 scheduled sessions since starting. Core stability improving. Ready to add light resistance.",
+    coachAngle: "Progress to goblet squats with 25 lbs. Continue core focus. Celebrate the consistency win!",
+    narrative: "Perfect attendance for 3 weeks! Down 3 lbs, core strength returning.",
+    engagementScore: 92,
+    weightData: [165, 164.5, 164, 163, 162.5, 162, 162],
+  },
+  {
+    name: "Aaron Smith",
+    alert: "On Track",
+    alertType: "green",
+    program: "Strength Building",
+    startDate: "Feb 12",
+    assessment: {
+      date: "2026-02-12",
+      bodyweight: 185,
+      bodyFat: 24,
+      leanMass: 140.6,
+      measurements: { waist: 34, hips: 39, chest: 41 },
+      strengthBaselines: {
+        squat: { weight: 155, reps: 5 },
+        deadlift: { weight: 185, reps: 5 },
+        benchPress: { weight: 135, reps: 5 },
+        overheadPress: { weight: 75, reps: 5 },
+      },
+      movementScreen: { score: 14, notes: "Decent mobility. Hip hinge pattern needs reinforcement." },
+    },
+    current: {
+      bodyweight: 183,
+      bodyFat: 22.5,
+      leanMass: 141.8,
+      measurements: { waist: 33.5, hips: 39, chest: 41.5 },
+    },
+    goals: {
+      primary: "Get stronger and leaner",
+      targetWeight: 180,
+      targetBodyFat: 18,
+      secondaryGoals: ["Squat 225", "Visible abs"],
+      targetDate: "2026-07-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Upper Body",
+        duration: 55,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 155, reps: 5, rpe: 7.5 }, { set: 3, weight: 160, reps: 4, rpe: 8 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 135, reps: 8, rpe: 7 }, { set: 2, weight: 135, reps: 8, rpe: 7.5 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 85, reps: 6, rpe: 7 }, { set: 2, weight: 85, reps: 5, rpe: 8 }] },
+          { name: "Dumbbell Curl", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Bench is moving well. Ready to test 165 next week.",
+      },
+      {
+        date: "2026-03-18",
+        type: "Lower Body",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 185, reps: 4, rpe: 8 }, { set: 3, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 270, reps: 10, rpe: 7 }, { set: 2, weight: 270, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Squat depth is finally consistent. 185 felt solid.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Upper Body",
+        duration: 50,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 150, reps: 5, rpe: 7 }, { set: 2, weight: 155, reps: 4, rpe: 8 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 100, reps: 10, rpe: 7 }, { set: 2, weight: 100, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Good session. Focused on form.",
+      },
+      {
+        date: "2026-03-11",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 165, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Deadlift", sets: [{ set: 1, weight: 205, reps: 5, rpe: 7.5 }, { set: 2, weight: 205, reps: 5, rpe: 8 }] },
+        ],
+        notes: "Deadlift form is dialed in.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 15,
+    streak: { current: 8, best: 10, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 165, proteinTarget: 160, calorieAvg: 2400, calorieTarget: 2300 },
+    insight: "Aaron is making steady progress. Squat up 20 lbs, bench up 20 lbs since starting. Body comp improving.",
+    coachAngle: "Continue current programming. Add one session of direct core work per week.",
+    narrative: "Consistent gains across all lifts. Down 2 lbs while getting stronger.",
+    engagementScore: 88,
+    weightData: [185, 184.5, 184, 183.5, 183.5, 183, 183],
+  },
+  {
+    name: "Lisa Martinez",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Olympic Lifting Intro",
+    startDate: "Jan 8",
+    assessment: {
+      date: "2026-01-08",
+      bodyweight: 142,
+      bodyFat: 25,
+      leanMass: 106.5,
+      measurements: { waist: 28, hips: 37, chest: 34 },
+      strengthBaselines: {
+        squat: { weight: 115, reps: 5 },
+        deadlift: { weight: 135, reps: 5 },
+        benchPress: { weight: 75, reps: 5 },
+        overheadPress: { weight: 55, reps: 5 },
+      },
+      movementScreen: { score: 17, notes: "Excellent mobility. Athletic background in volleyball." },
+    },
+    current: {
+      bodyweight: 145,
+      bodyFat: 23,
+      leanMass: 111.7,
+      measurements: { waist: 27.5, hips: 37.5, chest: 35 },
+    },
+    goals: {
+      primary: "Learn Olympic lifts",
+      targetWeight: 148,
+      targetBodyFat: 22,
+      secondaryGoals: ["Clean 100 lbs", "Snatch 75 lbs"],
+      targetDate: "2026-06-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Olympic Technique",
+        duration: 60,
+        exercises: [
+          { name: "Hang Clean", sets: [{ set: 1, weight: 75, reps: 3, rpe: 7 }, { set: 2, weight: 80, reps: 3, rpe: 7.5 }, { set: 3, weight: 85, reps: 2, rpe: 8 }] },
+          { name: "Front Squat", sets: [{ set: 1, weight: 95, reps: 5, rpe: 6.5 }, { set: 2, weight: 105, reps: 4, rpe: 7.5 }] },
+          { name: "Snatch Grip Deadlift", sets: [{ set: 1, weight: 95, reps: 5, rpe: 7 }, { set: 2, weight: 95, reps: 5, rpe: 7 }] },
+          { name: "Overhead Squat", sets: [{ set: 1, weight: 45, reps: 5, rpe: 6 }, { set: 2, weight: 55, reps: 5, rpe: 7 }] },
+        ],
+        notes: "Clean technique is improving. Third pull needs more speed.",
+      },
+      {
+        date: "2026-03-20",
+        type: "Strength",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 135, reps: 5, rpe: 7 }, { set: 2, weight: 145, reps: 3, rpe: 8 }] },
+          { name: "Push Press", sets: [{ set: 1, weight: 65, reps: 5, rpe: 6.5 }, { set: 2, weight: 70, reps: 5, rpe: 7 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 115, reps: 8, rpe: 7 }, { set: 2, weight: 115, reps: 8, rpe: 7.5 }] },
+        ],
+        notes: "Squat PR! 145 for 3 is huge progress.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Olympic Technique",
+        duration: 55,
+        exercises: [
+          { name: "Power Snatch", sets: [{ set: 1, weight: 55, reps: 3, rpe: 7 }, { set: 2, weight: 60, reps: 2, rpe: 8 }] },
+          { name: "Hang Clean", sets: [{ set: 1, weight: 70, reps: 3, rpe: 7 }, { set: 2, weight: 75, reps: 3, rpe: 7.5 }] },
+        ],
+        notes: "Snatch is clicking. Keep drilling position.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Strength",
+        duration: 50,
+        exercises: [
+          { name: "Front Squat", sets: [{ set: 1, weight: 95, reps: 5, rpe: 7 }, { set: 2, weight: 100, reps: 4, rpe: 7.5 }] },
+          { name: "Deadlift", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 165, reps: 3, rpe: 8 }] },
+        ],
+        notes: "Deadlift PR! Posterior chain getting stronger.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 28,
+    streak: { current: 14, best: 16, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 132, proteinTarget: 130, calorieAvg: 2100, calorieTarget: 2000 },
+    insight: "Lisa is a natural! Clean at 85 lbs and climbing. Her volleyball background gives her great explosive power.",
+    coachAngle: "Focus on pull timing for the clean. Ready to start full lifts from the floor.",
+    narrative: "Clean up 30 lbs since learning. Squat up 30 lbs. Added 3 lbs of muscle.",
+    engagementScore: 94,
+    weightData: [142, 143, 143.5, 144, 144.5, 145, 145],
+  },
+  {
+    name: "Jason Williams",
+    alert: "On Track",
+    alertType: "green",
+    program: "Maintenance — Active Lifestyle",
+    startDate: "Dec 1",
+    assessment: {
+      date: "2025-12-01",
+      bodyweight: 175,
+      bodyFat: 18,
+      leanMass: 143.5,
+      measurements: { waist: 32, hips: 38, chest: 42 },
+      strengthBaselines: {
+        squat: { weight: 225, reps: 5 },
+        deadlift: { weight: 275, reps: 5 },
+        benchPress: { weight: 185, reps: 5 },
+        overheadPress: { weight: 115, reps: 5 },
+      },
+      movementScreen: { score: 16, notes: "Well-balanced. Maintain current mobility." },
+    },
+    current: {
+      bodyweight: 176,
+      bodyFat: 17.5,
+      leanMass: 145.2,
+      measurements: { waist: 32, hips: 38, chest: 42.5 },
+    },
+    goals: {
+      primary: "Maintain strength while staying lean",
+      targetWeight: 175,
+      targetBodyFat: 17,
+      secondaryGoals: ["Train for hiking trip", "Stay injury-free"],
+      targetDate: "2026-12-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-20",
+        type: "Full Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 205, reps: 5, rpe: 6.5 }, { set: 2, weight: 205, reps: 5, rpe: 7 }] },
+          { name: "Bench Press", sets: [{ set: 1, weight: 165, reps: 5, rpe: 6.5 }, { set: 2, weight: 165, reps: 5, rpe: 7 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 135, reps: 8, rpe: 6.5 }, { set: 2, weight: 135, reps: 8, rpe: 7 }] },
+        ],
+        notes: "Maintenance session. Felt good, no need to push harder.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Full Body",
+        duration: 45,
+        exercises: [
+          { name: "Deadlift", sets: [{ set: 1, weight: 255, reps: 5, rpe: 6.5 }, { set: 2, weight: 255, reps: 5, rpe: 7 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 105, reps: 5, rpe: 6.5 }, { set: 2, weight: 105, reps: 5, rpe: 7 }] },
+          { name: "Pull-ups", sets: [{ set: 1, weight: 0, reps: 10, rpe: 6 }, { set: 2, weight: 0, reps: 10, rpe: 6.5 }] },
+        ],
+        notes: "Easy day. Prioritizing recovery for weekend hike.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Full Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 215, reps: 5, rpe: 7 }, { set: 2, weight: 215, reps: 5, rpe: 7.5 }] },
+          { name: "Bench Press", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 4, rpe: 8 }] },
+        ],
+        notes: "Solid session. Strength is holding well.",
+      },
+    ],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 24,
+    streak: { current: 10, best: 14, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 155, proteinTarget: 150, calorieAvg: 2600, calorieTarget: 2500 },
+    insight: "Jason is maintaining beautifully. Strength stable, body comp slightly improved. Training supports his active lifestyle.",
+    coachAngle: "Continue current approach. No changes needed. Check in monthly.",
+    narrative: "Maintaining strength on 2x/week while staying active. Goal achieved.",
+    engagementScore: 85,
+    weightData: [175, 175, 176, 175.5, 176, 176, 176],
+  },
+  {
+    name: "Daniel Torres",
+    alert: "Needs Programming",
+    alertType: "red",
+    program: "Fat Loss — Phase 1",
+    startDate: "Feb 20",
+    assessment: {
+      date: "2026-02-20",
+      bodyweight: 245,
+      bodyFat: 35,
+      leanMass: 159.3,
+      measurements: { waist: 42, hips: 44, chest: 46 },
+      strengthBaselines: {
+        squat: { weight: 135, reps: 8 },
+        deadlift: { weight: 155, reps: 8 },
+        benchPress: { weight: 135, reps: 8 },
+        overheadPress: { weight: 75, reps: 8 },
+      },
+      movementScreen: { score: 11, notes: "Limited hip mobility. Knee discomfort in deep squat." },
+    },
+    current: {
+      bodyweight: 238,
+      bodyFat: 33,
+      leanMass: 159.5,
+      measurements: { waist: 41, hips: 43.5, chest: 45.5 },
+    },
+    goals: {
+      primary: "Lose 50 lbs",
+      targetWeight: 195,
+      targetBodyFat: 22,
+      secondaryGoals: ["Get off blood pressure medication", "Play with kids without getting winded"],
+      targetDate: "2026-10-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-15",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat to Box", sets: [{ set: 1, weight: 35, reps: 10, rpe: 7 }, { set: 2, weight: 35, reps: 10, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 100, reps: 10, rpe: 7 }, { set: 2, weight: 100, reps: 10, rpe: 7 }] },
+          { name: "Dumbbell Bench Press", sets: [{ set: 1, weight: 40, reps: 10, rpe: 7 }, { set: 2, weight: 40, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Good session. Breathing better during sets.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Full Body",
+        duration: 35,
+        exercises: [
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 7 }, { set: 2, weight: 180, reps: 12, rpe: 7.5 }] },
+          { name: "Seated Row", sets: [{ set: 1, weight: 90, reps: 10, rpe: 7 }, { set: 2, weight: 90, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Shorter session. Work stress affecting energy.",
+      },
+      {
+        date: "2026-03-08",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat to Box", sets: [{ set: 1, weight: 30, reps: 10, rpe: 6.5 }, { set: 2, weight: 35, reps: 8, rpe: 7.5 }] },
+          { name: "Chest Press Machine", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 80, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Progress on goblet squat! Hip feels better.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 0,
+    totalSessions: 9,
+    streak: { current: 0, best: 5, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 140, proteinTarget: 180, calorieAvg: 2200, calorieTarget: 2000 },
+    insight: "Daniel made great progress initially but hasn't trained in a week. Down 7 lbs which is excellent. Needs re-engagement.",
+    coachAngle: "Reach out with encouragement. Suggest a quick 20-minute session to restart momentum. His health goals are important.",
+    narrative: "Down 7 lbs in 4 weeks but missed last week. Work stress cited. Needs support.",
+    engagementScore: 55,
+    weightData: [245, 243, 241, 240, 239, 238, 238],
+  },
+  {
+    name: "Amanda Foster",
+    alert: "On Track",
+    alertType: "green",
+    program: "Rehab — Shoulder Recovery",
+    startDate: "Jan 15",
+    assessment: {
+      date: "2026-01-15",
+      bodyweight: 155,
+      bodyFat: 28,
+      leanMass: 111.6,
+      measurements: { waist: 30, hips: 38, chest: 36 },
+      strengthBaselines: {
+        squat: { weight: 95, reps: 8 },
+        deadlift: { weight: 115, reps: 8 },
+        benchPress: { weight: 45, reps: 8 },
+        overheadPress: { weight: 20, reps: 8 },
+      },
+      movementScreen: { score: 10, notes: "Right shoulder impingement. Limited overhead mobility. Post-surgery 6 months." },
+    },
+    current: {
+      bodyweight: 153,
+      bodyFat: 26.5,
+      leanMass: 112.5,
+      measurements: { waist: 29.5, hips: 37.5, chest: 36 },
+    },
+    goals: {
+      primary: "Full shoulder recovery",
+      targetWeight: 150,
+      targetBodyFat: 24,
+      secondaryGoals: ["Press overhead pain-free", "Return to swimming"],
+      targetDate: "2026-05-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Upper Body Rehab",
+        duration: 45,
+        exercises: [
+          { name: "Cable External Rotation", sets: [{ set: 1, weight: 10, reps: 15, rpe: 5 }, { set: 2, weight: 10, reps: 15, rpe: 5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 20, reps: 15, rpe: 5.5 }, { set: 2, weight: 20, reps: 15, rpe: 5.5 }] },
+          { name: "Landmine Press", sets: [{ set: 1, weight: 25, reps: 10, rpe: 6 }, { set: 2, weight: 25, reps: 10, rpe: 6.5 }] },
+          { name: "Dumbbell Row", sets: [{ set: 1, weight: 25, reps: 10, rpe: 6 }, { set: 2, weight: 25, reps: 10, rpe: 6 }] },
+        ],
+        notes: "Shoulder feels great. Landmine press is pain-free now!",
+      },
+      {
+        date: "2026-03-18",
+        type: "Lower Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 105, reps: 8, rpe: 6.5 }, { set: 2, weight: 115, reps: 6, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 95, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 10, rpe: 7 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6.5 }, { set: 2, weight: 180, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Lower body getting stronger. Compensating well for limited upper work.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Upper Body Rehab",
+        duration: 40,
+        exercises: [
+          { name: "Band Pull-Aparts", sets: [{ set: 1, weight: 0, reps: 20, rpe: 5 }, { set: 2, weight: 0, reps: 20, rpe: 5 }] },
+          { name: "Cable External Rotation", sets: [{ set: 1, weight: 7.5, reps: 15, rpe: 5 }, { set: 2, weight: 10, reps: 12, rpe: 5.5 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 15, reps: 12, rpe: 6 }, { set: 2, weight: 15, reps: 12, rpe: 6.5 }] },
+        ],
+        notes: "Incline press pain-free for first time!",
+      },
+      {
+        date: "2026-03-11",
+        type: "Lower Body",
+        duration: 45,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 35, reps: 10, rpe: 6 }, { set: 2, weight: 40, reps: 10, rpe: 7 }] },
+          { name: "Hip Thrust", sets: [{ set: 1, weight: 95, reps: 12, rpe: 6.5 }, { set: 2, weight: 95, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Good session. Ready to progress to barbell squat.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 22,
+    streak: { current: 11, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 115, proteinTarget: 120, calorieAvg: 1700, calorieTarget: 1650 },
+    insight: "Amanda's shoulder is recovering beautifully. Landmine and incline press are now pain-free. Ready to test light overhead work.",
+    coachAngle: "Introduce light dumbbell overhead press next session. Continue external rotation work. Swimming trial in 2 weeks.",
+    narrative: "Shoulder ROM improved 40%. Pain-free on most pressing. On track for full recovery.",
+    engagementScore: 90,
+    weightData: [155, 154.5, 154, 153.5, 153.5, 153, 153],
+  },
+  {
+    name: "Michael Brown",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Athletic Performance",
+    startDate: "Feb 1",
+    assessment: {
+      date: "2026-02-01",
+      bodyweight: 195,
+      bodyFat: 20,
+      leanMass: 156,
+      measurements: { waist: 34, hips: 40, chest: 44 },
+      strengthBaselines: {
+        squat: { weight: 205, reps: 5 },
+        deadlift: { weight: 245, reps: 5 },
+        benchPress: { weight: 165, reps: 5 },
+        overheadPress: { weight: 95, reps: 5 },
+      },
+      movementScreen: { score: 15, notes: "Good overall. Former college basketball player. Some knee stiffness." },
+    },
+    current: {
+      bodyweight: 193,
+      bodyFat: 18.5,
+      leanMass: 157.3,
+      measurements: { waist: 33.5, hips: 40, chest: 44.5 },
+    },
+    goals: {
+      primary: "Improve vertical jump and court speed",
+      targetWeight: 190,
+      targetBodyFat: 16,
+      secondaryGoals: ["Add 4 inches to vertical", "Faster 40 time"],
+      targetDate: "2026-06-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Power",
+        duration: 55,
+        exercises: [
+          { name: "Box Jump", sets: [{ set: 1, weight: 0, reps: 5, rpe: 6 }, { set: 2, weight: 0, reps: 5, rpe: 6 }, { set: 3, weight: 0, reps: 5, rpe: 6.5 }] },
+          { name: "Trap Bar Deadlift", sets: [{ set: 1, weight: 245, reps: 3, rpe: 7 }, { set: 2, weight: 265, reps: 3, rpe: 7.5 }, { set: 3, weight: 275, reps: 2, rpe: 8 }] },
+          { name: "Split Squat Jump", sets: [{ set: 1, weight: 0, reps: 6, rpe: 7 }, { set: 2, weight: 0, reps: 6, rpe: 7 }] },
+        ],
+        notes: "Box jump height increased to 32 inches!",
+      },
+      {
+        date: "2026-03-19",
+        type: "Strength",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 225, reps: 5, rpe: 7 }, { set: 2, weight: 235, reps: 4, rpe: 8 }] },
+          { name: "Bulgarian Split Squat", sets: [{ set: 1, weight: 40, reps: 8, rpe: 7 }, { set: 2, weight: 40, reps: 8, rpe: 7.5 }] },
+          { name: "Nordic Curl", sets: [{ set: 1, weight: 0, reps: 6, rpe: 8 }, { set: 2, weight: 0, reps: 5, rpe: 8.5 }] },
+        ],
+        notes: "Squat is moving well. Single leg work is paying off.",
+      },
+      {
+        date: "2026-03-15",
+        type: "Power",
+        duration: 50,
+        exercises: [
+          { name: "Depth Jump", sets: [{ set: 1, weight: 0, reps: 4, rpe: 7 }, { set: 2, weight: 0, reps: 4, rpe: 7 }] },
+          { name: "Hang Clean", sets: [{ set: 1, weight: 135, reps: 3, rpe: 7 }, { set: 2, weight: 145, reps: 2, rpe: 8 }] },
+        ],
+        notes: "Plyos feeling explosive. Clean technique improving.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Strength",
+        duration: 55,
+        exercises: [
+          { name: "Trap Bar Deadlift", sets: [{ set: 1, weight: 255, reps: 5, rpe: 7 }, { set: 2, weight: 265, reps: 3, rpe: 8 }] },
+          { name: "Front Squat", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 165, reps: 4, rpe: 7.5 }] },
+        ],
+        notes: "Trap bar moving well. Legs feeling powerful.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 20,
+    streak: { current: 10, best: 12, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 175, proteinTarget: 170, calorieAvg: 2700, calorieTarget: 2600 },
+    insight: "Michael's vertical has improved 2 inches. Power output is up. Body comp is improving while maintaining strength.",
+    coachAngle: "Add reactive agility drills. Test vertical jump next week to measure progress.",
+    narrative: "Vertical up 2 inches. Down 2 lbs while getting more explosive.",
+    engagementScore: 88,
+    weightData: [195, 194.5, 194, 193.5, 193.5, 193, 193],
+  },
+  {
+    name: "Jennifer Lee",
+    alert: "On Track",
+    alertType: "green",
+    program: "Bodybuilding — Prep",
+    startDate: "Mar 1",
+    assessment: {
+      date: "2026-03-01",
+      bodyweight: 138,
+      bodyFat: 22,
+      leanMass: 107.6,
+      measurements: { waist: 27, hips: 37, chest: 34 },
+      strengthBaselines: {
+        squat: { weight: 135, reps: 8 },
+        deadlift: { weight: 165, reps: 6 },
+        benchPress: { weight: 85, reps: 8 },
+        overheadPress: { weight: 55, reps: 8 },
+      },
+      movementScreen: { score: 16, notes: "Good mobility. Previous figure competition experience." },
+    },
+    current: {
+      bodyweight: 136,
+      bodyFat: 21,
+      leanMass: 107.4,
+      measurements: { waist: 26.5, hips: 36.5, chest: 34 },
+    },
+    goals: {
+      primary: "Compete in bikini division",
+      targetWeight: 125,
+      targetBodyFat: 14,
+      secondaryGoals: ["Build glutes", "Improve shoulder caps"],
+      targetDate: "2026-07-15",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Glutes & Hamstrings",
+        duration: 60,
+        exercises: [
+          { name: "Hip Thrust", sets: [{ set: 1, weight: 155, reps: 10, rpe: 7 }, { set: 2, weight: 165, reps: 8, rpe: 8 }, { set: 3, weight: 155, reps: 10, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 115, reps: 10, rpe: 7 }, { set: 2, weight: 115, reps: 10, rpe: 7.5 }] },
+          { name: "Cable Kickbacks", sets: [{ set: 1, weight: 20, reps: 15, rpe: 7 }, { set: 2, weight: 20, reps: 15, rpe: 7 }] },
+          { name: "Leg Curl", sets: [{ set: 1, weight: 50, reps: 12, rpe: 7 }, { set: 2, weight: 50, reps: 12, rpe: 7.5 }] },
+        ],
+        notes: "Hip thrust PR! Glute development is visible.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Shoulders & Arms",
+        duration: 55,
+        exercises: [
+          { name: "Lateral Raises", sets: [{ set: 1, weight: 12, reps: 15, rpe: 7 }, { set: 2, weight: 12, reps: 15, rpe: 7.5 }, { set: 3, weight: 12, reps: 12, rpe: 8 }] },
+          { name: "Rear Delt Fly", sets: [{ set: 1, weight: 10, reps: 15, rpe: 6.5 }, { set: 2, weight: 10, reps: 15, rpe: 7 }] },
+          { name: "Cable Curl", sets: [{ set: 1, weight: 25, reps: 12, rpe: 7 }, { set: 2, weight: 25, reps: 12, rpe: 7 }] },
+          { name: "Tricep Pushdown", sets: [{ set: 1, weight: 30, reps: 15, rpe: 6.5 }, { set: 2, weight: 30, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Shoulder caps responding well. Good pump.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Quads & Calves",
+        duration: 55,
+        exercises: [
+          { name: "Hack Squat", sets: [{ set: 1, weight: 140, reps: 10, rpe: 7 }, { set: 2, weight: 160, reps: 8, rpe: 8 }] },
+          { name: "Leg Extension", sets: [{ set: 1, weight: 60, reps: 15, rpe: 7 }, { set: 2, weight: 60, reps: 15, rpe: 7.5 }] },
+          { name: "Standing Calf Raise", sets: [{ set: 1, weight: 120, reps: 15, rpe: 7 }, { set: 2, weight: 120, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Quad sweep improving. Hack squat feeling strong.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Back & Chest",
+        duration: 50,
+        exercises: [
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 85, reps: 8, rpe: 7.5 }] },
+          { name: "Seated Row", sets: [{ set: 1, weight: 70, reps: 10, rpe: 7 }, { set: 2, weight: 70, reps: 10, rpe: 7 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 25, reps: 12, rpe: 7 }, { set: 2, weight: 25, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Back width improving. Upper chest is lagging.",
+      },
+    ],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 4,
+    totalSessions: 12,
+    streak: { current: 12, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 145, proteinTarget: 140, calorieAvg: 1550, calorieTarget: 1500 },
+    insight: "Jennifer is 16 weeks out from her show. Physique is developing well. Glutes and shoulders are priority areas.",
+    coachAngle: "Begin posing practice. Add one extra glute session per week. Start cardio protocol next week.",
+    narrative: "Perfect attendance. Down 2 lbs while maintaining muscle. On track for stage.",
+    engagementScore: 98,
+    weightData: [138, 137.5, 137, 136.5, 136.5, 136, 136],
+  },
 ];
 
 const chatSeedMessages = [
-  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 12 active clients today. Here's what needs your attention:\n\n- **Sarah Chen** hasn't logged in 4 days — her longest gap yet\n- **Emily Rodriguez** showing a restrict-binge pattern\n- **Aaron Smith** dropped off mid-week again\n\nI'd recommend reaching out to Sarah first before it becomes a pattern." },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — Lower body today. Squat hit 120x6 last session, ready to test progression\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
 ];
 
 const suggestedPrompts = [
-  "Start with Sarah",
-  "Start with Emily",
-  "Start with Aaron",
-  "Who is doing well?",
-  "Summarize my coaching queue",
+  "Pull up Sarah's program",
+  "What did Marcus do last session?",
+  "Build a workout for Emily",
+  "Who needs programming this week?",
+  "Show me Sarah's squat progression",
 ];
 
 // Demo client data for Milton AI responses
 const demoClients = {
   sarah: {
     name: "Sarah Chen",
-    goal: "Lose 15 lbs for wedding in 3 months",
-    status: "at-risk",
-    week: 6,
-    issue: "Missed logging for 4 days straight — her longest gap yet",
-    protein: "95g avg (target: 120g)",
-    weight: "Up 1.2 lbs this week",
-    loggingStreak: 0,
-    action: "Send a supportive check-in message",
-    insight: "Weekend logging drops 60% compared to weekdays. Monday weigh-ins suggest weekend calories are higher than logged."
+    goal: "Lose 20 lbs, squat 135",
+    status: "progressing",
+    week: 7,
+    win: "Squat up 25 lbs since assessment",
+    issue: "Bench press stalling at 70 lbs for 2 weeks",
+    sessionsThisWeek: "2 of 3 completed",
+    lastSession: "Lower Body — March 21",
+    nextSession: "Upper Body Pull — suggested",
+    action: "Test squat 1RM next week. Add extra pressing volume.",
+    insight: "Strong lower body gains. Upper body needs more frequency or volume to break plateau."
   },
   marcus: {
     name: "Marcus Johnson", 
-    goal: "Build muscle, gain 10 lbs lean mass",
+    goal: "Gain 15 lbs muscle, bench 225",
     status: "highly-engaged",
-    week: 8,
-    win: "Hit protein goal 7 days straight",
-    protein: "185g avg (target: 180g)",
-    weight: "Up 0.8 lbs (on track)",
-    loggingStreak: 14,
-    action: "Celebrate streak and suggest increasing calorie target by 100",
-    insight: "Ready for a progressive overload conversation. Strength is up 12% this month."
+    week: 10,
+    win: "Bench up 20 lbs, deadlift up 50 lbs since assessment",
+    issue: "Assessment overdue — 8 weeks since last InBody",
+    sessionsThisWeek: "4 of 5 completed",
+    lastSession: "Push — March 20",
+    nextSession: "Legs — scheduled",
+    action: "Schedule InBody scan. Update training maxes for new block.",
+    insight: "Gained 7 lbs bodyweight with minimal fat gain. Ready for reassessment."
   },
   emily: {
     name: "Emily Rodriguez",
-    goal: "Improve energy and relationship with food", 
-    status: "moderate-concern",
-    week: 4,
-    issue: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends",
-    protein: "68g avg (target: 100g)",
-    weight: "Fluctuating +/- 2 lbs weekly",
-    loggingStreak: 5,
-    action: "Schedule a call about sustainable eating patterns",
-    insight: "Classic restrict-binge pattern. Needs permission to eat more consistently."
+    goal: "Lose 25 lbs, feel confident", 
+    status: "at-risk",
+    week: 5,
+    issue: "Missed last 2 sessions. Current program ends this week.",
+    sessionsThisWeek: "0 of 3 completed",
+    lastSession: "Full Body — March 10",
+    nextSession: "Needs new program",
+    action: "Check in with Emily. Design a simpler 2x/week program to restart momentum.",
+    insight: "Was making good progress but attendance dropped. May be overwhelmed."
   },
   david: {
     name: "David Park",
-    goal: "Drop from 22% to 15% body fat",
+    goal: "Compete in first powerlifting meet",
     status: "highly-engaged", 
-    week: 10,
-    win: "Perfect logging for 21 days straight",
-    issue: "Weight plateau for 2 weeks despite good adherence",
-    protein: "165g avg (target: 160g)",
-    weight: "Flat for 14 days at 178 lbs",
-    loggingStreak: 21,
-    action: "Consider a 2-week diet break or macro adjustment",
-    insight: "Metabolic adaptation likely. Good candidate for reverse diet discussion."
+    week: 11,
+    win: "All lifts progressing toward meet goals. 295 squat, 205 bench PR, 365 deadlift",
+    sessionsThisWeek: "3 of 4 completed",
+    lastSession: "Squat Day — March 21",
+    nextSession: "Bench Day — today",
+    action: "Start peaking protocol in 4 weeks. Consider mock meet for practice.",
+    insight: "12 weeks out from meet. Squat close to 315, deadlift to 405, bench to 225."
   },
   rachel: {
     name: "Rachel Kim",
-    goal: "Post-pregnancy fitness and strength",
+    goal: "Return to pre-pregnancy fitness",
     status: "new-client",
-    week: 2,
-    win: "Completed first full week of workouts postpartum",
-    issue: "Struggling to find time to log with newborn",
-    protein: "85g avg (target: 110g)", 
-    weight: "Down 0.5 lbs (healthy pace)",
-    loggingStreak: 2,
-    action: "Send encouragement and offer quick-log meal templates",
-    insight: "Sleep-deprived but motivated. Keep expectations realistic and celebrate small wins."
+    week: 3,
+    win: "Perfect attendance — 6 of 6 sessions completed",
+    sessionsThisWeek: "2 of 2 completed",
+    lastSession: "Full Body — March 22",
+    nextSession: "Full Body — scheduled",
+    action: "Progress to goblet squats with 25 lbs. Continue core focus.",
+    insight: "Core stability improving. Ready to add light resistance. Celebrate the consistency!"
   }
 };
 
@@ -388,84 +1409,117 @@ function generateAIResponse(msg) {
   const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
   const client = matchedKey ? demoClients[matchedKey] : null;
 
-  // START WITH [CLIENT] - prioritized handler for quick action prompts
-  if (lower.includes("start with") && client) {
+  // PULL UP PROGRAM / VIEW CLIENT
+  if ((lower.includes("pull up") || lower.includes("show me") || lower.includes("open")) && client) {
     const first = client.name.split(" ")[0];
     return {
-      title: `Starting with ${first}`,
-      text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n${client.issue || client.win}\n\n**Quick stats:**\n- Protein: ${client.protein}\n- Weight: ${client.weight}\n- Logging streak: ${client.loggingStreak} days\n\n**My recommendation:** ${client.action}\n\nWant me to draft a message for ${first}?`
+      title: `${first}'s Program`,
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Training Status:**\n- ${client.sessionsThisWeek}\n- Last session: ${client.lastSession}\n- Next session: ${client.nextSession}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n**My recommendation:** ${client.action}\n\nWant me to build their next workout or show their lift progression?`
     };
   }
 
-  // WHO NEEDS ATTENTION
+  // LAST SESSION / WHAT DID THEY DO
+  if ((lower.includes("last session") || lower.includes("last workout") || lower.includes("what did") || lower.includes("previous")) && client) {
+    const first = client.name.split(" ")[0];
+    return {
+      title: `${first}'s Last Session`,
+      text: `**${first}'s last session:** ${client.lastSession}\n\n${client.win ? `**Highlight:** ${client.win}` : ""}\n\n**Key lifts from recent sessions:**\n- Squat: progressing well\n- Bench: ${client.issue && client.issue.includes("Bench") ? "stalling — needs adjustment" : "on track"}\n- Deadlift: moving up\n\n**Session notes:** Good energy, form improvements noted.\n\nWant me to generate the next session based on this progression?`
+    };
+  }
+
+  // BUILD WORKOUT / GENERATE PROGRAM
+  if ((lower.includes("build") || lower.includes("create") || lower.includes("generate") || lower.includes("make")) && (lower.includes("workout") || lower.includes("program") || lower.includes("session"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
+      return {
+        title: `Building Workout for ${first}`,
+        text: `**I'll create a workout for ${first}!**\n\nBased on their recent sessions and progressive overload, here's what I recommend for ${client.nextSession}:\n\n**Primary focus:** Continue building on recent PRs\n**Suggested exercises:** Based on their program and last session performance\n\nWant me to open the workout canvas so you can review and adjust the full program?`
+      };
+    }
+    return {
+      title: "Build Workout",
+      text: `**I can build a workout!** Which client would you like me to program for?\n\n- Sarah Chen (Lower Body Pull next)\n- Marcus Johnson (Legs day)\n- Emily Rodriguez (Needs new program)\n- David Park (Bench Day today)\n- Rachel Kim (Full Body)`
+    };
+  }
+
+  // WHO NEEDS PROGRAMMING
+  if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
+    return { 
+      title: "Programming Needed", 
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** — Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+    };
+  }
+
+  // SQUAT / LIFT PROGRESSION
+  if ((lower.includes("progression") || lower.includes("progress")) && (lower.includes("squat") || lower.includes("bench") || lower.includes("deadlift") || lower.includes("lift"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
+      return {
+        title: `${first}'s Lift Progression`,
+        text: `**${first}'s strength progression:**\n\n${client.win || "Making steady progress across all lifts."}\n\n**My analysis:** ${client.insight}\n\n**Recommendation:** ${client.action}\n\nWant me to show you the full progression chart or update their training maxes?`
+      };
+    }
+    return {
+      title: "Lift Progression",
+      text: `**Which client's progression would you like to see?**\n\n- Sarah Chen — Squat up 25 lbs\n- Marcus Johnson — All lifts progressing\n- David Park — Meet prep, all PRs\n- Lisa Martinez — Olympic lifts improving`
+    };
+  }
+
+  // WHO NEEDS ATTENTION / PRIORITY QUEUE
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
     return { 
       title: "Priority Queue", 
-      text: `**Here's who needs your attention today:**\n\n- **Sarah Chen** (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n- **Emily Rodriguez** (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n- **David Park** (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+      text: `**Here's who needs your attention today:**\n\n- **Marcus Johnson** (Week 10) — Assessment overdue. It's been 8 weeks since his InBody. Schedule a reassessment to update training maxes.\n\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Needs a check-in and fresh programming.\n\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Needs re-engagement.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown`
     };
   }
 
-  // WHO IS DOING WELL
-  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
+  // WHO IS DOING WELL / WINS
+  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate") || lower.includes("crushing")) {
     return {
       title: "Client Wins",
-      text: `**Great news to share:**\n\n- **Marcus Johnson** — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n- **David Park** — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n- **Rachel Kim** — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+      text: `**Great news to share:**\n\n- **Sarah Chen** — Squat up 25 lbs since assessment! Down 5 lbs while gaining lean mass.\n\n- **Rachel Kim** — Perfect attendance, 6 of 6 sessions. Core stability improving after pregnancy.\n\n- **David Park** — PRs on all three lifts. 295 squat, 205 bench, 365 deadlift. On track for his meet.\n\n- **Jennifer Lee** — 12 sessions in a row. Stage-ready physique developing.\n\nWant me to help you celebrate any of these wins with the client?`
     };
   }
 
-  // WHAT SHOULD I DO NEXT
-  if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
+  // ASSESSMENT DUE
+  if (lower.includes("assessment") || lower.includes("reassess") || lower.includes("inbody")) {
     return {
-      title: "Recommended Next Action",
-      text: `**Your highest-impact action right now:** reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+      title: "Assessments",
+      text: `**Assessment status:**\n\n- **Marcus Johnson** — OVERDUE. 8 weeks since last InBody. Gained 7 lbs, lifts are up. Schedule scan this week.\n\n**Everyone else** is within their assessment window.\n\nWant me to add an assessment reminder for Marcus?`
     };
   }
 
-  // WRITE A MESSAGE TO [CLIENT]
-  if ((lower.includes("write") || lower.includes("draft") || lower.includes("send") || lower.includes("message")) && client) {
-    const first = client.name.split(" ")[0];
-    if (client.status === "at-risk") {
+  // LOG SESSION
+  if (lower.includes("log") && (lower.includes("session") || lower.includes("workout"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
       return {
-        title: `Message for ${first}`,
-        text: `**Here's a draft check-in for ${first}:**\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
-      };
-    } else if (client.status === "highly-engaged") {
-      return {
-        title: `Message for ${first}`,
-        text: `**Here's a celebration message for ${first}:**\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
-      };
-    } else {
-      return {
-        title: `Message for ${first}`,
-        text: `**Here's a supportive message for ${first}:**\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
+        title: `Log Session for ${first}`,
+        text: `**Ready to log a session for ${first}!**\n\nI'll open the session logging canvas. You can:\n- Start with their prescribed workout\n- Edit weights, reps, and RPE as they complete each set\n- Add notes about form, energy, or anything notable\n\nWant me to open the session logger?`
       };
     }
+    return {
+      title: "Log Session",
+      text: `**Which client's session would you like to log?**\n\n**Sessions today:**\n- Sarah Chen — Lower Body\n- David Park — Bench Day\n- Lisa Martinez — Olympic Technique\n- Michael Brown — Power`
+    };
   }
 
   // CLIENT-SPECIFIC QUERIES
   if (client) {
     const first = client.name.split(" ")[0];
     
-    // Nutrition/protein questions
-    if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
-      return {
-        title: `${first}'s Nutrition`,
-        text: `**${first}'s current nutrition** (Week ${client.week}):\n\n- **Protein:** ${client.protein}\n- **Weight trend:** ${client.weight}\n- **Logging streak:** ${client.loggingStreak} days\n\n${client.insight}\n\n**Recommended action:** ${client.action}`
-      };
-    }
-
     // Progress/status questions  
-    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
+    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update") || lower.includes("how is")) {
       return {
         title: `${first}'s Status`,
-        text: `**${first}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n- **Weight:** ${client.weight}\n- **Protein:** ${client.protein}\n- **Logging:** ${client.loggingStreak} day streak\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
+        text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n**Training:**\n- ${client.sessionsThisWeek}\n- Last: ${client.lastSession}\n- Next: ${client.nextSession}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
       };
     }
 
     // Default client info
     return {
       title: `About ${first}`,
-      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n- **Protein:** ${client.protein}\n- **Weight:** ${client.weight}\n\n**Recommended action:** ${client.action}`
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n**Training:**\n- ${client.sessionsThisWeek}\n- Last: ${client.lastSession}\n- Next: ${client.nextSession}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n**Recommended action:** ${client.action}`
     };
   }
 
@@ -473,14 +1527,14 @@ function generateAIResponse(msg) {
   if (lower.includes("help") || lower.includes("what can")) {
     return {
       title: "How I Can Help",
-      text: `**I'm Milton, your coaching copilot.** Try asking me:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is Marcus doing?"\n- "Who is doing well?"\n- "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+      text: `**I'm Milton, your training copilot.** Try asking me:\n\n- "Pull up Sarah's program"\n- "What did Marcus do last session?"\n- "Build a workout for Emily"\n- "Who needs programming this week?"\n- "Show me Sarah's squat progression"\n- "Log a session for David"\n\nI know all your clients and can help with programming, session logging, and tracking progress.`
     };
   }
 
   // DEFAULT
   return { 
     title: "Milton", 
-    text: `**I'm here to help!** Try asking:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is David doing?"\n- "Who is doing well?"`
+    text: `**I'm here to help!** Try asking:\n\n- "Pull up Sarah's program"\n- "Who needs attention today?"\n- "Build a workout for Emily"\n- "What did Marcus do last session?"\n- "Show me lift progression"`
   };
 }
 
@@ -2125,25 +3179,47 @@ function DataCardPeriods({ periods, color, isMobile }) {
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [viewMode, setViewMode] = useState("coach"); // "coach" | "client"
   const [selectedDay, setSelectedDay] = useState(16);
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const maxMeals = 3;
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
   const wMax = Math.max(...wData) + 1;
   const wRange = wMax - wMin || 1;
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
-  // Consistency scores
-  const mealsScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-  const exerciseScore = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-  const movementScore = Math.min(100, Math.round((client.steps / 8000) * 100));
+  // Training-focused calculations
+  const totalSessions = client.totalSessions || 0;
+  const sessionsThisWeek = client.sessionsThisWeek || 0;
+  const sessionsPerWeek = client.sessionsPerWeek || 3;
+  const currentStreak = client.streak?.current || 0;
+  const bestStreak = client.streak?.best || 0;
+  
+  // Calculate days since assessment
+  const assessmentDate = client.assessment?.date ? new Date(client.assessment.date) : null;
+  const daysSinceAssessment = assessmentDate ? Math.floor((new Date() - assessmentDate) / (1000 * 60 * 60 * 24)) : 0;
+  
+  // Body comp changes
+  const weightChange = client.assessment && client.current ? (client.current.bodyweight - client.assessment.bodyweight).toFixed(1) : 0;
+  const bodyFatChange = client.assessment && client.current ? (client.current.bodyFat - client.assessment.bodyFat).toFixed(1) : 0;
+  const leanMassChange = client.assessment && client.current ? (client.current.leanMass - client.assessment.leanMass).toFixed(1) : 0;
+  
+  // Get last session
+  const lastSession = client.sessions?.[0] || null;
+  
+  // Engagement score based on session attendance
+  const engagementScore = client.engagementScore || 75;
+  const scoreColor = engagementScore >= 80 ? MINT : engagementScore >= 60 ? SAGE : "#ef6c3e";
+  
+  // Backward compatibility for old nutrition-based scores
+  const mealsScore = Math.min(100, Math.round(((client.nutrition?.proteinAvg || 0) / (client.nutrition?.proteinTarget || 100)) * 100)) || 50;
+  const exerciseScore = Math.min(100, (totalSessions / Math.max(1, daysSinceAssessment / 7) / sessionsPerWeek) * 100) || 50;
+  const movementScore = 70;
   const sleepScore = 78;
-  const consistencyScore = Math.round(mealsScore * 0.4 + exerciseScore * 0.25 + movementScore * 0.2 + sleepScore * 0.15);
-  const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+  const consistencyScore = engagementScore;
 
   const ovPillars = [
     { key: "exercise", label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
@@ -2259,40 +3335,60 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 14, marginTop: 6, alignItems: "center" }}>
               <AlertBadge type={client.alertType} label={client.alert} />
-              <StreakBadge streak={client.streaks} />
+              {currentStreak > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 4,
+                  padding: "4px 10px", borderRadius: 12,
+                  background: `${MINT}15`, color: MINT, fontSize: 12, fontWeight: 600
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  {currentStreak} session streak
+                </div>
+              )}
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Program: <strong style={{ color: TEXT }}>{client.program}</strong></span>
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{client.startDate}</strong></span>
             </div>
           </div>
         </div>
-        {/* Connections */}
+        {/* Session indicators */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          {client.connectors.map((c, j) => {
-            const conn = dataConnectors[c];
-            if (!conn) return null;
-            return (
-              <div key={j} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{
-                  width: 26, height: 26, borderRadius: "50%", background: conn.bg,
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>{conn.icon(13)}</div>
-                <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>{conn.name}</span>
-              </div>
-            );
-          })}
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek} this week</span>
+          </div>
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{totalSessions} total sessions</span>
+          </div>
+          {lastSession && (
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+              borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+            }}>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>Last: <strong style={{ color: TEXT }}>{lastSession.type}</strong> ({lastSession.date})</span>
+            </div>
+          )}
         </div>
         {/* Action buttons */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <ActionBtn label="Generate Report" primary onClick={() => { setShowReport(true); onReportOpen?.(client); }} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          <ActionBtn label="Log Session" primary onClick={() => {}} icon={
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           } />
-          <div style={{ position: "relative", display: "inline-flex" }} title="Coming Soon">
-            <ActionBtn label="Send Message" icon={
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            } disabled />
-          </div>
-          <ActionBtn label="Add Device" onClick={() => setShowAddDevice(v => !v)} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <ActionBtn label="Build Workout" onClick={() => {}} icon={
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          } />
+          <ActionBtn label="Generate Report" onClick={() => { setShowReport(true); onReportOpen?.(client); }} icon={
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
           } />
         </div>
         {showAddDevice && (
