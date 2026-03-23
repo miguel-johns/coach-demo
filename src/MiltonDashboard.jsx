@@ -3538,27 +3538,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           ))}
         </div>
       </div>
-        </div>
-        {/* Pillar breakdown rows */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, justifyContent: "center", position: "relative" }}>
-          {[
-            { label: "Meals", pct: mealsScore, color: "#ef6c3e" },
-            { label: "Exercise", pct: exerciseScore, color: TEAL },
-            { label: "Steps", pct: movementScore, color: "#3aafa9" },
-            { label: "Sleep", pct: sleepScore, color: "#8e7cc3" },
-          ].map((w, i) => (
-            <div key={i}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{w.label}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: w.color }}>{w.pct}</span>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 3, background: w.color, width: `${w.pct}%`, transition: "width 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ─── Last Session Summary ─── */}
       {(() => {
