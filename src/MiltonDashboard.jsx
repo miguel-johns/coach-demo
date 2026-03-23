@@ -388,7 +388,7 @@ const initialClients = [
     insight: "Sarah's squat has progressed from 95 to 120 lbs in 6 weeks. Bench is stalling — may need to adjust volume. Next session: Upper Body Pull.",
     coachAngle: "Test 1RM on squat next week to update training max. Consider adding an extra pressing accessory.",
     narrative: "Squat up 25 lbs since assessment. Body comp improving — down 5 lbs, gained 1.5 lbs lean mass.",
-    engagementScore: 85,
+    attendanceRate: 85,
     weightData: [158, 157, 156, 155, 154, 153.5, 153],
   },
   {
@@ -481,7 +481,7 @@ const initialClients = [
     insight: "Marcus has been training for 8 weeks since his last assessment. Strength is up across all lifts. Time to reassess and update training maxes.",
     coachAngle: "Schedule InBody scan this week. Current lifts suggest he's ready for a new training block.",
     narrative: "Bench up 20 lbs, deadlift up 50 lbs since assessment. Gained 7 lbs bodyweight with minimal fat gain.",
-    engagementScore: 96,
+    attendanceRate: 96,
     weightData: [175, 176, 177, 178, 179, 180, 181, 182],
   },
   {
@@ -548,7 +548,7 @@ const initialClients = [
     insight: "Emily missed the last 2 sessions. She was making good progress but attendance has dropped. Her current program ends this week.",
     coachAngle: "Check in with Emily. She may be overwhelmed. Design a simpler 2x/week program to restart momentum.",
     narrative: "Down 2 lbs but missed last 2 weeks. Needs a check-in and fresh programming.",
-    engagementScore: 45,
+    attendanceRate: 45,
     weightData: [145, 144.5, 144, 143.5, 143, 143, 143],
   },
   {
@@ -636,7 +636,7 @@ const initialClients = [
     insight: "David is 12 weeks out from his first meet. All lifts are progressing well. Squat close to 315, deadlift to 405, bench to 225.",
     coachAngle: "Start peaking protocol in 4 weeks. Consider a mock meet to practice commands.",
     narrative: "All three lifts trending toward meet goals. Down 3 lbs while getting stronger.",
-    engagementScore: 95,
+    attendanceRate: 95,
     weightData: [198, 197.5, 197, 196, 195.5, 195, 195],
   },
   {
@@ -715,7 +715,7 @@ const initialClients = [
     insight: "Rachel has completed all 6 scheduled sessions since starting. Core stability improving. Ready to add light resistance.",
     coachAngle: "Progress to goblet squats with 25 lbs. Continue core focus. Celebrate the consistency win!",
     narrative: "Perfect attendance for 3 weeks! Down 3 lbs, core strength returning.",
-    engagementScore: 92,
+    attendanceRate: 92,
     weightData: [165, 164.5, 164, 163, 162.5, 162, 162],
   },
   {
@@ -804,7 +804,7 @@ const initialClients = [
     insight: "Aaron is making steady progress. Squat up 20 lbs, bench up 20 lbs since starting. Body comp improving.",
     coachAngle: "Continue current programming. Add one session of direct core work per week.",
     narrative: "Consistent gains across all lifts. Down 2 lbs while getting stronger.",
-    engagementScore: 88,
+    attendanceRate: 88,
     weightData: [185, 184.5, 184, 183.5, 183.5, 183, 183],
   },
   {
@@ -893,7 +893,7 @@ const initialClients = [
     insight: "Lisa is a natural! Clean at 85 lbs and climbing. Her volleyball background gives her great explosive power.",
     coachAngle: "Focus on pull timing for the clean. Ready to start full lifts from the floor.",
     narrative: "Clean up 30 lbs since learning. Squat up 30 lbs. Added 3 lbs of muscle.",
-    engagementScore: 94,
+    attendanceRate: 94,
     weightData: [142, 143, 143.5, 144, 144.5, 145, 145],
   },
   {
@@ -971,7 +971,7 @@ const initialClients = [
     insight: "Jason is maintaining beautifully. Strength stable, body comp slightly improved. Training supports his active lifestyle.",
     coachAngle: "Continue current approach. No changes needed. Check in monthly.",
     narrative: "Maintaining strength on 2x/week while staying active. Goal achieved.",
-    engagementScore: 85,
+    attendanceRate: 85,
     weightData: [175, 175, 176, 175.5, 176, 176, 176],
   },
   {
@@ -1045,10 +1045,10 @@ const initialClients = [
     totalSessions: 9,
     streak: { current: 0, best: 5, unit: "sessions" },
     nutrition: { tracking: true, proteinAvg: 140, proteinTarget: 180, calorieAvg: 2200, calorieTarget: 2000 },
-    insight: "Daniel made great progress initially but hasn't trained in a week. Down 7 lbs which is excellent. Needs re-engagement.",
+    insight: "Daniel made great progress initially but hasn't trained in a week. Down 7 lbs which is excellent. Needs re-activation.",
     coachAngle: "Reach out with encouragement. Suggest a quick 20-minute session to restart momentum. His health goals are important.",
     narrative: "Down 7 lbs in 4 weeks but missed last week. Work stress cited. Needs support.",
-    engagementScore: 55,
+    attendanceRate: 55,
     weightData: [245, 243, 241, 240, 239, 238, 238],
   },
   {
@@ -1138,7 +1138,7 @@ const initialClients = [
     insight: "Amanda's shoulder is recovering beautifully. Landmine and incline press are now pain-free. Ready to test light overhead work.",
     coachAngle: "Introduce light dumbbell overhead press next session. Continue external rotation work. Swimming trial in 2 weeks.",
     narrative: "Shoulder ROM improved 40%. Pain-free on most pressing. On track for full recovery.",
-    engagementScore: 90,
+    attendanceRate: 90,
     weightData: [155, 154.5, 154, 153.5, 153.5, 153, 153],
   },
   {
@@ -1226,7 +1226,7 @@ const initialClients = [
     insight: "Michael's vertical has improved 2 inches. Power output is up. Body comp is improving while maintaining strength.",
     coachAngle: "Add reactive agility drills. Test vertical jump next week to measure progress.",
     narrative: "Vertical up 2 inches. Down 2 lbs while getting more explosive.",
-    engagementScore: 88,
+    attendanceRate: 88,
     weightData: [195, 194.5, 194, 193.5, 193.5, 193, 193],
   },
   {
@@ -1318,7 +1318,7 @@ const initialClients = [
     insight: "Jennifer is 16 weeks out from her show. Physique is developing well. Glutes and shoulders are priority areas.",
     coachAngle: "Begin posing practice. Add one extra glute session per week. Start cardio protocol next week.",
     narrative: "Perfect attendance. Down 2 lbs while maintaining muscle. On track for stage.",
-    engagementScore: 98,
+    attendanceRate: 98,
     weightData: [138, 137.5, 137, 136.5, 136.5, 136, 136],
   },
 ];
@@ -1469,7 +1469,7 @@ function generateAIResponse(msg) {
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
     return { 
       title: "Priority Queue", 
-      text: `**Here's who needs your attention today:**\n\n- **Marcus Johnson** (Week 10) — Assessment overdue. It's been 8 weeks since his InBody. Schedule a reassessment to update training maxes.\n\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Needs a check-in and fresh programming.\n\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Needs re-engagement.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown`
+      text: `**Here's who needs your attention today:**\n\n- **Marcus Johnson** (Week 10) — Assessment overdue. It's been 8 weeks since his InBody. Schedule a reassessment to update training maxes.\n\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Needs a check-in and fresh programming.\n\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Needs re-activation.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown`
     };
   }
 
@@ -3210,16 +3210,16 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   // Get last session
   const lastSession = client.sessions?.[0] || null;
   
-  // Engagement score based on session attendance
-  const engagementScore = client.engagementScore || 75;
-  const scoreColor = engagementScore >= 80 ? MINT : engagementScore >= 60 ? SAGE : "#ef6c3e";
+  // Attendance rate based on session attendance
+  const attendanceRate = client.attendanceRate || 75;
+  const scoreColor = attendanceRate >= 80 ? MINT : attendanceRate >= 60 ? SAGE : "#ef6c3e";
   
   // Backward compatibility for old nutrition-based scores
   const mealsScore = Math.min(100, Math.round(((client.nutrition?.proteinAvg || 0) / (client.nutrition?.proteinTarget || 100)) * 100)) || 50;
   const exerciseScore = Math.min(100, (totalSessions / Math.max(1, daysSinceAssessment / 7) / sessionsPerWeek) * 100) || 50;
   const movementScore = 70;
   const sleepScore = 78;
-  const consistencyScore = engagementScore;
+  const consistencyScore = attendanceRate;
 
   const ovPillars = [
     { key: "exercise", label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
@@ -3485,7 +3485,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         gap: isMobile ? 16 : 16, alignItems: "stretch"
       }}>
 
-      {/* ─── Engagement Score ─── */}
+      {/* ─── Attendance Rate ─── */}
       <div style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "20px" : "22px 22px",
@@ -3500,7 +3500,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             const sz = isMobile ? 100 : 96;
             const r = sz / 2 - 9;
             const circ = 2 * Math.PI * r;
-            const offset = circ * (1 - engagementScore / 100);
+            const offset = circ * (1 - attendanceRate / 100);
             return (
               <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
                 <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="8"/>
@@ -3510,13 +3510,13 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                 />
                 <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
-                  style={{ fontSize: 30, fontWeight: 800, fill: TEXT, fontFamily: font }}>{engagementScore}</text>
+                  style={{ fontSize: 30, fontWeight: 800, fill: TEXT, fontFamily: font }}>{attendanceRate}</text>
               </svg>
             );
           })()}
-          <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Engagement Score</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Attendance Rate</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, marginTop: 2 }}>
-            {engagementScore >= 85 ? "Exceptional" : engagementScore >= 70 ? "Strong" : engagementScore >= 55 ? "Building" : "Getting Started"}
+            {attendanceRate >= 85 ? "Exceptional" : attendanceRate >= 70 ? "Strong" : attendanceRate >= 55 ? "Building" : "Getting Started"}
           </div>
         </div>
         {/* Training stats breakdown */}
@@ -4399,7 +4399,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
                 { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
                 { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
-                { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Engagement score: ${engagementScore}%.`, color: MINT },
+                { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Engagement score: ${attendanceRate}%.`, color: MINT },
                 { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
               ].map((ev, i, arr) => (
                 <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
@@ -8745,7 +8745,7 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           </div>
 
-          {/* ── Card 2: Engagement Rate - Dot Grid ── */}
+          {/* ── Card 2: Attendance Rate - Dot Grid ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
@@ -8753,7 +8753,7 @@ Remember: Be specific, be brief, be helpful.`;
             transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
             minWidth: 0, overflow: "hidden"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Engagement Rate</div>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Attendance Rate</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
               <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>83%</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
