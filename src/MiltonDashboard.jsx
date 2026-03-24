@@ -2032,10 +2032,10 @@ function MobileCanvasSheet({
   setChatTyping,
   onChatSend
 }) {
-  const [sheetHeight, setSheetHeight] = useState(85);
+  const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
   const startY = useRef(0);
-  const startH = useRef(85);
+  const startH = useRef(96);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
   const onDragStart = useCallback((e) => {
@@ -2047,7 +2047,7 @@ function MobileCanvasSheet({
       ev.preventDefault();
       const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
       const deltaVh = ((startY.current - cy) / window.innerHeight) * 100;
-      setSheetHeight(Math.min(94, Math.max(30, startH.current + deltaVh)));
+      setSheetHeight(Math.min(96, Math.max(30, startH.current + deltaVh)));
     };
     const onEnd = () => {
       document.removeEventListener("mousemove", onMove);
@@ -2057,7 +2057,7 @@ function MobileCanvasSheet({
       setSheetHeight(h => {
         if (h < 45) { 
           onClose(); 
-          return 85; 
+          return 96; 
         }
         return h;
       });
