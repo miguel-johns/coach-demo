@@ -7207,24 +7207,6 @@ function WorkoutCanvas({ data, onClose }) {
               </div>
             </div>
             
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button
-                style={{
-                  padding: "8px 16px", borderRadius: 8, border: "none",
-                  background: MINT, color: WHITE,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  display: "flex", alignItems: "center", gap: 6,
-                  transition: "all 0.15s ease"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = SAGE; }}
-                onMouseLeave={e => { e.currentTarget.style.background = MINT; }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add Exercise
-              </button>
-            </div>
           </div>
           
           {/* Expanded Content - Spreadsheet Style */}
@@ -7373,33 +7355,6 @@ function WorkoutCanvas({ data, onClose }) {
                     );
                   })}
                   
-                  {/* Add Row */}
-                  <tr>
-                    <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
-                      <div 
-                        style={{ 
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                          padding: "10px", borderRadius: 8, border: `1px dashed ${BORDER}`,
-                          color: TEXT_SEC, cursor: "pointer", transition: "all 0.15s ease"
-                        }}
-                        onMouseEnter={e => { 
-                          e.currentTarget.style.background = TEAL_LIGHT; 
-                          e.currentTarget.style.borderColor = TEAL; 
-                          e.currentTarget.style.color = TEAL; 
-                        }}
-                        onMouseLeave={e => { 
-                          e.currentTarget.style.background = "transparent"; 
-                          e.currentTarget.style.borderColor = BORDER; 
-                          e.currentTarget.style.color = TEXT_SEC; 
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        <span style={{ fontSize: 13, fontWeight: 500 }}>Add exercise</span>
-                      </div>
-                    </td>
-                  </tr>
                 </tbody>
               </table>
             </div>
