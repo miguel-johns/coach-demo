@@ -6853,21 +6853,25 @@ function MealPlanCanvas({ data, onClose }) {
   );
 }
 
-function WorkoutCanvas({ data, onClose }) {
+function WorkoutCanvas({ data, onClose, onSave }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
   const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
   const [exercises, setExercises] = useState([]); // Local copy of exercises for editing
   const [isAddingRow, setIsAddingRow] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" });
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
   
   // When expandedDay changes, copy exercises to local state
   useEffect(() => {
     if (expandedDay?.workout?.exercises) {
       setExercises(expandedDay.workout.exercises.map((ex, idx) => ({
         ...ex,
-        rest: idx < 2 ? "90-120s" : idx < 4 ? "60-90s" : "45-60s"
+        rest: ex.rest || (idx < 2 ? "90-120s" : idx < 4 ? "60-90s" : "45-60s")
       })));
+      setHasChanges(false);
+      setSaveStatus(null);
     }
   }, [expandedDay]);
   
@@ -6876,6 +6880,51 @@ function WorkoutCanvas({ data, onClose }) {
     setExercises(prev => prev.map((ex, idx) => 
       idx === rowIdx ? { ...ex, [field]: value } : ex
     ));
+    setHasChanges(true);
+    setSaveStatus(null);
+  };
+  
+  // Handle save
+  const handleSave = () => {
+    if (!expandedDay || !hasChanges) return;
+    
+    setSaveStatus('saving');
+    
+    // Simulate save delay for UX feedback
+    setTimeout(() => {
+      // Update the expandedDay's workout with new exercises
+      const updatedWorkout = {
+        ...expandedDay.workout,
+        exercises: exercises.map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          weight: ex.weight,
+          rest: ex.rest
+        }))
+      };
+      
+      // Call onSave if provided (to update parent state)
+      if (onSave) {
+        onSave({
+          weekNum: expandedDay.weekNum,
+          dayIdx: expandedDay.dayIdx,
+          workout: updatedWorkout
+        });
+      }
+      
+      // Update local expandedDay state
+      setExpandedDay(prev => ({
+        ...prev,
+        workout: updatedWorkout
+      }));
+      
+      setHasChanges(false);
+      setSaveStatus('saved');
+      
+      // Clear saved status after 2 seconds
+      setTimeout(() => setSaveStatus(null), 2000);
+    }, 500);
   };
   
   // Handle adding new exercise
@@ -6890,12 +6939,16 @@ function WorkoutCanvas({ data, onClose }) {
       }]);
       setNewExercise({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" });
       setIsAddingRow(false);
+      setHasChanges(true);
+      setSaveStatus(null);
     }
   };
   
   // Handle delete exercise
   const handleDeleteExercise = (rowIdx) => {
     setExercises(prev => prev.filter((_, idx) => idx !== rowIdx));
+    setHasChanges(true);
+    setSaveStatus(null);
   };
   
   if (!data) return null;
@@ -7778,16 +7831,32 @@ function WorkoutCanvas({ data, onClose }) {
                 Back to Calendar
               </button>
               <button
+                onClick={handleSave}
+                disabled={!hasChanges || saveStatus === 'saving'}
                 style={{
                   padding: "10px 20px", borderRadius: 8,
-                  border: "none", background: TEAL,
+                  border: "none", 
+                  background: saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5",
                   fontSize: 13, fontWeight: 600, color: WHITE,
-                  cursor: "pointer", transition: "all 0.15s ease"
+                  cursor: hasChanges && saveStatus !== 'saving' ? "pointer" : "default", 
+                  transition: "all 0.15s ease",
+                  display: "flex", alignItems: "center", gap: 6,
+                  opacity: hasChanges || saveStatus === 'saved' ? 1 : 0.7
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#236b69"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = TEAL; }}
+                onMouseEnter={e => { if (hasChanges && saveStatus !== 'saving') e.currentTarget.style.background = "#236b69"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5"; }}
               >
-                Save Changes
+                {saveStatus === 'saving' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                )}
+                {saveStatus === 'saved' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                )}
+                {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -9994,10 +10063,14 @@ Remember: Be specific, be brief, be helpful.`;
   )}
 
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
         @keyframes scaleIn {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
