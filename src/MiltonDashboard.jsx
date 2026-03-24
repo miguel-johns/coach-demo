@@ -4137,49 +4137,65 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   </div>
                 </div>
 
-                {/* Current Streak Card */}
-                <div style={{
-                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "20px" : "24px",
-                  display: "flex", alignItems: "center", gap: 14
-                }}>
-                  <div style={{
-                    width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: 14,
-                    background: `linear-gradient(135deg, ${TEAL}15, ${TEAL}08)`,
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Current Streak</div>
-                    <div style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions in a row</div>
-                  </div>
-                </div>
-
-                {/* Best Streak Card */}
-                <div style={{
-                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "20px" : "24px",
-                  display: "flex", alignItems: "center", gap: 14
-                }}>
-                  <div style={{
-                    width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: 14,
-                    background: `linear-gradient(135deg, ${MINT}20, ${MINT}08)`,
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={MINT} strokeWidth="2" strokeLinecap="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Best Streak</div>
-                    <div style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: MINT }}>{bestStreak}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC }}>personal record</div>
-                  </div>
-                </div>
+                {/* Current Goal Card */}
+                {(() => {
+                  const goals = client.goals || {};
+                  const current = client.current || {};
+                  const assessment = client.assessment || {};
+                  const goalType = client.program?.includes("Gain") ? "gain" : "loss";
+                  const targetWeight = goals.targetWeight || (goalType === "gain" ? 180 : 160);
+                  const startWeight = assessment.bodyweight || 175;
+                  const currentWeight = current.bodyweight || 170;
+                  const totalChange = Math.abs(targetWeight - startWeight);
+                  const progressChange = Math.abs(currentWeight - startWeight);
+                  const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
+                  const remaining = Math.abs(targetWeight - currentWeight);
+                  
+                  return (
+                    <div style={{
+                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                      padding: isMobile ? "20px" : "24px",
+                      gridColumn: isMobile ? "auto" : "span 2"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Current Goal</div>
+                          <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>
+                            {goalType === "gain" ? "Build to" : "Get to"} {targetWeight} lbs
+                          </div>
+                        </div>
+                        <div style={{
+                          padding: "6px 12px", borderRadius: 12,
+                          background: `${TEAL}12`, color: TEAL,
+                          fontSize: 13, fontWeight: 700
+                        }}>
+                          {remaining} lbs to go
+                        </div>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{
+                          height: 10, borderRadius: 5,
+                          background: "#e8f0ee", overflow: "hidden"
+                        }}>
+                          <div style={{
+                            height: "100%", borderRadius: 5,
+                            background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                            width: `${progressPct}%`,
+                            transition: "width 0.8s ease"
+                          }} />
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                        <span style={{ color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{startWeight} lbs</strong></span>
+                        <span style={{ color: TEAL, fontWeight: 700 }}>{progressPct}% complete</span>
+                        <span style={{ color: TEXT_SEC }}>Now: <strong style={{ color: TEXT }}>{currentWeight} lbs</strong></span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}
