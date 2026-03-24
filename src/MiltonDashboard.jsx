@@ -3710,8 +3710,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       }}>
         {[
           { id: "overview", label: "Overview" },
-          { id: "profile", label: "Profile" },
           { id: "journey", label: "Progress" },
+          { id: "profile", label: "Profile" },
           { id: "chats", label: "Chats" },
         ].map(tab => (
           <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
