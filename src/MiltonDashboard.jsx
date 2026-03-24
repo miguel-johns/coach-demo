@@ -4680,6 +4680,26 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${TEAL}08 0%, transparent 70%)`, pointerEvents: "none" }} />
             <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${MINT}10 0%, transparent 70%)`, pointerEvents: "none" }} />
             
+            {/* Send/Share Icon - Top Right */}
+            <button
+              onClick={() => setShowReport(true)}
+              style={{
+                position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16,
+                width: 40, height: 40, borderRadius: 12,
+                background: "transparent", border: `1px solid ${TEAL}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", transition: "all 0.2s ease"
+              }}
+              onMouseOver={e => { e.currentTarget.style.background = `${TEAL}10`; e.currentTarget.style.borderColor = `${TEAL}50`; }}
+              onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${TEAL}30`; }}
+              title="Share Report"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+            
             <div style={{ position: "relative" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 8 }}>
                 {client.program || "Training Program"}
@@ -5010,9 +5030,31 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, marginBottom: 8 }}>
               Keep showing up. The results will follow.
             </div>
-            <div style={{ fontSize: 14, opacity: 0.9 }}>
+            <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 20 }}>
               Every session is a step closer to your goal.
             </div>
+            
+            {/* Share/Export Button */}
+            <button
+              onClick={() => setShowReport(true)}
+              style={{
+                padding: isMobile ? "12px 24px" : "14px 32px",
+                borderRadius: 12, border: "2px solid rgba(255,255,255,0.3)",
+                background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)",
+                color: WHITE, fontSize: 14, fontWeight: 600,
+                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 10,
+                transition: "all 0.2s ease"
+              }}
+              onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"; }}
+              onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+              Share or Export Report
+            </button>
           </div>
         </div>
       )}
