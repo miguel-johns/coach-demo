@@ -2744,49 +2744,195 @@ function ReportView({ client, onBack, isMobile }) {
         });
       })()}
 
-      {/* ─── STRENGTH PROGRESS (1RM) ─── */}
-      <SectionCard style={{ background: `linear-gradient(155deg, #f8f7fc, #f4f6fa, #f7f9fc)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Strength Progress</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Estimated 1RM for core lifts</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {lifts.map((lift, i) => {
-            const improvement = lift.current - lift.baseline;
-            const pct = Math.min(100, (lift.current / (lift.baseline * 1.3)) * 100);
-            return (
-              <div key={i} style={{
-                background: WHITE, borderRadius: 14, padding: isMobile ? "14px 16px" : "18px 20px",
-                border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 16
-              }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
-                    <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
-                    <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
-                    <line x1="8" y1="12" x2="16" y2="12"/>
-                  </svg>
+      {/* ─── STRENGTH PROGRESS (BAR CHARTS) ─── */}
+      {(() => {
+        // Generate session history for each lift with progressive overload
+        const generateLiftHistory = (baseline, liftIdx) => {
+          const sessions = [];
+          const sessionCount = 8 + (liftIdx % 3); // 8-10 sessions per lift
+          const seed = client.name.charCodeAt(0) + liftIdx * 7;
+          
+          for (let i = 0; i < sessionCount; i++) {
+            const progress = i / (sessionCount - 1);
+            // Progressive increase with some variation
+            const baseIncrease = progress * (baseline * 0.12); // ~12% total gain
+            const variation = Math.sin(i * 1.7 + seed) * 3;
+            const weight = Math.round(baseline + baseIncrease + variation);
+            const reps = 5 + Math.floor(Math.random() * 3) - 1; // 4-7 reps
+            const date = new Date();
+            date.setDate(date.getDate() - (sessionCount - 1 - i) * 4); // Every ~4 days
+            sessions.push({
+              date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              weight,
+              reps,
+              e1rm: Math.round(weight * (36 / (37 - reps)))
+            });
+          }
+          return sessions;
+        };
+
+        const liftData = [
+          { name: "Squat", baseline: strengthBaselines.squat?.weight || 135, color: TEAL },
+          { name: "Bench Press", baseline: strengthBaselines.benchPress?.weight || 95, color: MINT },
+          { name: "Deadlift", baseline: strengthBaselines.deadlift?.weight || 185, color: "#3aafa9" },
+        ].map((lift, idx) => ({
+          ...lift,
+          sessions: generateLiftHistory(lift.baseline, idx)
+        }));
+
+        return liftData.map((lift, liftIdx) => {
+          const sessions = lift.sessions;
+          const maxE1RM = Math.max(...sessions.map(s => s.e1rm));
+          const minE1RM = Math.min(...sessions.map(s => s.e1rm));
+          const firstE1RM = sessions[0].e1rm;
+          const lastE1RM = sessions[sessions.length - 1].e1rm;
+          const totalGain = lastE1RM - firstE1RM;
+          const gainPct = Math.round((totalGain / firstE1RM) * 100);
+
+          const cw = 380, ch = 160, pL = 40, pR = 16, pT = 16, pB = 36;
+          const plotW = cw - pL - pR, plotH = ch - pT - pB;
+          const barWidth = Math.min(28, (plotW / sessions.length) - 6);
+          const barGap = (plotW - barWidth * sessions.length) / (sessions.length - 1);
+
+          const yMin = minE1RM - 10;
+          const yMax = maxE1RM + 15;
+          const toY = (v) => pT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+          const toX = (i) => pL + i * (barWidth + barGap);
+
+          return (
+            <SectionCard key={liftIdx} style={{ background: `linear-gradient(155deg, ${lift.color}04, ${lift.color}02, #fafcfb)` }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
+                      <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                      <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                      <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{lift.name}</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>{sessions.length} sessions logged</div>
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{lift.name}</span>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                      <span style={{ fontSize: 12, color: TEXT_SEC, textDecoration: "line-through" }}>{lift.baseline}</span>
-                      <span style={{ fontSize: 11, color: TEXT_SEC }}>→</span>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: lift.color }}>{lift.current}</span>
-                      <span style={{ fontSize: 12, color: TEXT_SEC }}>lbs</span>
-                    </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: `${ALERT_GREEN}12`, color: ALERT_GREEN, fontSize: 12, fontWeight: 700
+                  }}>
+                    +{totalGain} lbs
                   </div>
-                  <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: 3, background: lift.color, width: `${pct}%`, transition: "width 1s ease" }} />
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: `${lift.color}12`, color: lift.color, fontSize: 12, fontWeight: 700
+                  }}>
+                    +{gainPct}%
                   </div>
-                  <div style={{ fontSize: 11, color: ALERT_GREEN, fontWeight: 600, marginTop: 4 }}>+{improvement} lbs ({Math.round((improvement/lift.baseline)*100)}% increase)</div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </SectionCard>
+
+              {/* Current vs Starting */}
+              <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${TEXT_SEC}08`, border: `1px solid ${BORDER}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Starting 1RM</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: TEXT_SEC }}>{firstE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                </div>
+                <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${lift.color}08`, border: `1px solid ${lift.color}15` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: lift.color, textTransform: "uppercase", marginBottom: 4 }}>Current 1RM</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: lift.color }}>{lastE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                </div>
+              </div>
+
+              {/* Bar Chart */}
+              <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px" }}>
+                <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                  <defs>
+                    <linearGradient id={`barGrad${liftIdx}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={lift.color} stopOpacity="1"/>
+                      <stop offset="100%" stopColor={lift.color} stopOpacity="0.7"/>
+                    </linearGradient>
+                  </defs>
+
+                  {/* Y-axis grid lines */}
+                  {[0, 0.5, 1].map((t, i) => {
+                    const v = yMin + t * (yMax - yMin);
+                    const y = toY(v);
+                    return (
+                      <g key={i}>
+                        <line x1={pL - 4} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
+                        <text x={pL - 8} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
+                          {Math.round(v)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Bars */}
+                  {sessions.map((s, i) => {
+                    const barH = toY(yMin) - toY(s.e1rm);
+                    const x = toX(i);
+                    const y = toY(s.e1rm);
+                    const isLast = i === sessions.length - 1;
+                    const isFirst = i === 0;
+                    
+                    return (
+                      <g key={i}>
+                        {/* Bar */}
+                        <rect
+                          x={x} y={y} width={barWidth} height={barH}
+                          rx={4} ry={4}
+                          fill={isLast ? lift.color : isFirst ? `${lift.color}50` : `${lift.color}${Math.round(50 + (i / sessions.length) * 50).toString(16).padStart(2, '0')}`}
+                        />
+                        {/* Value label on last bar */}
+                        {isLast && (
+                          <g>
+                            <rect x={x + barWidth/2 - 18} y={y - 20} width="36" height="16" rx="8" fill={lift.color}/>
+                            <text x={x + barWidth/2} y={y - 9} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{s.e1rm}</text>
+                          </g>
+                        )}
+                        {/* Date label */}
+                        <text x={x + barWidth/2} y={ch - 8} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="500" fontFamily="DM Sans">
+                          {i === 0 || i === sessions.length - 1 || i === Math.floor(sessions.length / 2) ? s.date.split(' ')[0] : ''}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Trend line */}
+                  {(() => {
+                    const pts = sessions.map((s, i) => ({ x: toX(i) + barWidth / 2, y: toY(s.e1rm) }));
+                    const smooth = (points) => {
+                      if (points.length < 2) return "";
+                      let d = `M ${points[0].x},${points[0].y}`;
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const cp = (points[i+1].x - points[i].x) / 2.5;
+                        d += ` C ${points[i].x+cp},${points[i].y} ${points[i+1].x-cp},${points[i+1].y} ${points[i+1].x},${points[i+1].y}`;
+                      }
+                      return d;
+                    };
+                    return <path d={smooth(pts)} fill="none" stroke={lift.color} strokeWidth="2" strokeLinecap="round" opacity="0.4" strokeDasharray="4,3"/>;
+                  })()}
+                </svg>
+              </div>
+
+              {/* Session Details Row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600 }}>Best Set:</span> {sessions[sessions.length - 1].weight} lbs x {sessions[sessions.length - 1].reps}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, borderRadius: 2, background: lift.color, opacity: 0.4 }} />
+                  <span style={{ fontSize: 11, color: TEXT_SEC }}>Est. 1RM trend</span>
+                </div>
+              </div>
+            </SectionCard>
+          );
+        });
+      })()}
 
       {/* ─── NUTRITION PATTERNS ─── */}
       <SectionCard style={{ background: `linear-gradient(150deg, #faf8f5, #f8f6f2, #faf9f6)` }}>
