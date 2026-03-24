@@ -3379,18 +3379,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
           )}
         </div>
-        {/* Action buttons */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <ActionBtn label="Log Session" primary onClick={() => {}} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          } />
-          <ActionBtn label="Build Workout" onClick={() => {}} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          } />
-          <ActionBtn label="Generate Report" onClick={() => { setShowReport(true); onReportOpen?.(client); }} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-          } />
-        </div>
+
         {showAddDevice && (
           <div style={{
             padding: "14px 16px", borderRadius: 14,
