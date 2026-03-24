@@ -2294,7 +2294,7 @@ function MobileCanvasSheet({
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
-  const [expandedDetail, setExpandedDetail] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(null);
   const [showShare, setShowShare] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const reportRef = useRef(null);
@@ -2308,144 +2308,129 @@ function ReportView({ client, onBack, isMobile }) {
     setTimeout(() => setLinkCopied(false), 2500);
   };
 
+  // Data calculations
+  const totalSessions = (client.sessions || []).length || client.workoutDays * 4 + 2;
+  const scheduledSessions = Math.max(totalSessions, 20);
+  const attendanceRate = Math.min(100, Math.round((totalSessions / scheduledSessions) * 100));
+  
+  // Body composition data
+  const assessment = client.assessment || {};
+  const current = client.current || {};
+  const bodyweightStart = assessment.bodyweight || 185;
+  const bodyweightCurrent = current.bodyweight || client.weightData?.[client.weightData?.length - 1] || 180;
+  const bodyFatStart = assessment.bodyFat || 24;
+  const bodyFatCurrent = current.bodyFat || 20;
+  const leanMassStart = assessment.leanMass || Math.round(bodyweightStart * (1 - bodyFatStart / 100));
+  const leanMassCurrent = current.leanMass || Math.round(bodyweightCurrent * (1 - bodyFatCurrent / 100));
+  
+  // Strength baselines and current
+  const strengthBaselines = assessment.strengthBaselines || {
+    squat: { weight: 135, reps: 5 },
+    benchPress: { weight: 95, reps: 5 },
+    deadlift: { weight: 185, reps: 5 }
+  };
+  const liftNames = { squat: "Squat", benchPress: "Bench Press", deadlift: "Deadlift", overheadPress: "OHP" };
+  const liftColors = { squat: TEAL, benchPress: MINT, deadlift: "#3aafa9", overheadPress: "#8e7cc3" };
+  
+  // Calculate 1RMs
+  const calc1RM = (weight, reps) => Math.round(weight * (36 / (37 - reps)));
+  const lifts = Object.entries(strengthBaselines).slice(0, 3).map(([key, val]) => {
+    const baseline1RM = calc1RM(val.weight, val.reps);
+    const currentEst = Math.round(baseline1RM * (1.08 + (client.name.charCodeAt(0) % 10) / 100));
+    return { key, name: liftNames[key], baseline: baseline1RM, current: currentEst, color: liftColors[key] || TEAL };
+  });
+  
+  // Nutrition data
+  const nutritionScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
+  const proteinAvg = client.proteinAvg || 120;
+  const proteinTarget = client.proteinTarget || 140;
+  const caloriesAvg = 1650;
+  const caloriesTarget = 1800;
+  
+  // Wearable/Exercise data
+  const steps = client.steps || 7500;
+  const stepsGoal = 10000;
+  const activeMinutes = 42;
+  const activeMinutesGoal = 45;
+  const workoutDays = client.workoutDays || 4;
+  
+  // Sleep data
+  const sleepHours = 6.8;
+  const sleepGoal = 8;
+  const sleepQuality = "Good";
+  const sleepConsistency = 72;
+  
+  // Goal progress
+  const goals = client.goals || {};
+  const goalWeight = goals.targetWeight || bodyweightStart - 15;
+  const totalWeightGoal = Math.abs(goalWeight - bodyweightStart);
+  const weightProgress = Math.abs(bodyweightCurrent - bodyweightStart);
+  const goalProgressPct = Math.min(100, Math.round((weightProgress / totalWeightGoal) * 100));
+  
+  // Achievements & Streaks
+  const currentStreak = Math.min(totalSessions, 8);
+  const bestStreak = Math.max(currentStreak, 12);
+  const achievements = [
+    { id: 1, name: "First Session", icon: "check", earned: totalSessions >= 1, date: assessment.date },
+    { id: 2, name: "5 Session Streak", icon: "fire", earned: bestStreak >= 5, date: "Week 2" },
+    { id: 3, name: "10 Sessions Complete", icon: "trophy", earned: totalSessions >= 10, date: "Week 3" },
+    { id: 4, name: "Body Comp Warrior", icon: "muscle", earned: Math.abs(bodyFatCurrent - bodyFatStart) >= 2, date: "Week 4" },
+    { id: 5, name: "PR Crusher", icon: "star", earned: lifts.some(l => l.current > l.baseline * 1.1), date: "Week 3" },
+    { id: 6, name: "Nutrition Champion", icon: "apple", earned: nutritionScore >= 80, date: "This week" },
+  ];
+  
   const handleExportPDF = () => {
     const printWin = window.open("", "_blank");
     if (!printWin) return;
-    const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-    const startW = client.weightData?.[0] || 185;
-    const currW = client.weightData?.[client.weightData.length-1] || 183;
-    const goalW = startW - 10;
-    const ms = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-    const es = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-    const mvs = Math.min(100, Math.round((client.steps / 8000) * 100));
-    const ss = 78;
-    const cs = Math.round(ms * 0.4 + es * 0.25 + mvs * 0.2 + ss * 0.15);
-    const pils = [
-      { label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: "#2B7A78" },
-      { label: "Steps", days: Math.min(30, Math.round(client.steps / 350)), color: "#3aafa9" },
-      { label: "Meals", days: Math.min(30, client.mealsLogged + 5), color: "#ef6c3e" },
-      { label: "Sleep", days: 21, color: "#8e7cc3" },
-    ];
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${client.name} - Milton Report</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'DM Sans', sans-serif; color: #1a2e2a; background: #fff; padding: 40px; max-width: 700px; margin: 0 auto; }
       .card { border-radius: 16px; border: 1px solid #e0ebe8; padding: 24px; margin-bottom: 20px; }
-      .score-card { background: linear-gradient(135deg, #f7faf9, #eef6f3); text-align: center; padding: 36px 24px; }
-      .score-num { font-size: 56px; font-weight: 800; color: #1a2e2a; }
-      .score-label { font-size: 16px; font-weight: 700; color: ${cs >= 80 ? "#5CDB95" : cs >= 60 ? "#3aafa9" : "#ef6c3e"}; margin-top: 4px; }
-      .sub { font-size: 13px; color: #5f7a76; }
-      .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
-      .pillar { text-align: center; padding: 14px 8px; border-radius: 12px; background: #fafcfb; border: 1px solid #e0ebe8; }
-      .pillar-days { font-size: 22px; font-weight: 800; }
-      .pillar-label { font-size: 12px; font-weight: 700; color: #1a2e2a; margin-bottom: 6px; }
-      .bar-bg { height: 4px; border-radius: 2px; background: #e8f0ee; margin-top: 8px; }
-      .bar-fill { height: 4px; border-radius: 2px; }
       .section-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-      .insight-card { background: linear-gradient(135deg, rgba(43,122,120,0.06), rgba(92,219,149,0.06)); border: 1px solid rgba(43,122,120,0.15); }
-      .focus-card { background: linear-gradient(140deg, #f2faf8, #eaf6f2); border: 1px solid rgba(43,122,120,0.12); }
-      .weights { display: flex; justify-content: center; gap: 24px; margin-top: 14px; }
-      .weight-item { text-align: center; }
-      .weight-num { font-size: 18px; font-weight: 700; }
-      .weight-label { font-size: 11px; color: #5f7a76; font-weight: 600; }
-      .goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+      .sub { font-size: 13px; color: #5f7a76; }
       .header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e0ebe8; }
-      .logo { width: 32px; height: 32px; border-radius: 8px; background: #2B7A78; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; }
-      .client-name { font-size: 20px; font-weight: 700; }
-      .date { font-size: 12px; color: #5f7a76; }
+      .logo { width: 32px; height: 32px; border-radius: 8px; background: #2B7A78; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+      .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .stat-box { text-align: center; padding: 16px; background: #f7faf9; border-radius: 12px; }
+      .stat-value { font-size: 24px; font-weight: 800; color: #2B7A78; }
+      .stat-label { font-size: 12px; color: #5f7a76; margin-top: 4px; }
       @media print { body { padding: 20px; } .no-print { display: none !important; } }
     </style></head><body>
     <div class="header">
       <div class="logo">M</div>
-      <div><div class="client-name">${client.name}</div><div class="date">Report generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div></div>
+      <div><div style="font-size:20px;font-weight:700">${client.name}</div><div class="sub">Report: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div></div>
     </div>
-    <div class="card score-card">
-      <div class="sub" style="text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Consistency Score</div>
-      <div class="score-num">${cs}</div>
-      <div style="font-size:13px;color:#5f7a76;">out of 100</div>
-      <div class="score-label">${cs >= 85 ? "Exceptional Consistency" : cs >= 70 ? "Strong Consistency" : cs >= 55 ? "Building Momentum" : "Getting Started"}</div>
-      <div style="font-size:13px;color:#5f7a76;margin-top:8px;">Slow & steady wins the race</div>
-      <div class="weights">
-        <div class="weight-item"><div class="weight-num" style="color:#ef6c3e">${ms}</div><div class="weight-label">Meals (40%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#2B7A78">${es}</div><div class="weight-label">Exercise (25%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#3aafa9">${mvs}</div><div class="weight-label">Movement (20%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#8e7cc3">${ss}</div><div class="weight-label">Sleep (15%)</div></div>
+    <div class="card" style="background:linear-gradient(135deg,#f7faf9,#eef6f3);text-align:center">
+      <div class="sub" style="text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Attendance Rate</div>
+      <div style="font-size:56px;font-weight:800;color:#2B7A78">${attendanceRate}%</div>
+      <div style="font-size:14px;color:#5f7a76;margin-top:4px">${totalSessions} sessions completed</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Body Composition</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-value">${bodyweightCurrent}</div><div class="stat-label">Weight (lbs)</div></div>
+        <div class="stat-box"><div class="stat-value">${bodyFatCurrent}%</div><div class="stat-label">Body Fat</div></div>
+        <div class="stat-box"><div class="stat-value">${leanMassCurrent}</div><div class="stat-label">Lean Mass (lbs)</div></div>
       </div>
     </div>
-    <div class="card" style="background:linear-gradient(160deg,#f7fcfb,#eef8f5)">
-      <div class="section-title">Primary Goal</div>
-      <div class="goal-row"><span class="sub">Target</span><span style="font-size:20px;font-weight:800;color:#2B7A78">${isFatLoss ? goalW + " lbs" : (client.proteinTarget+20) + "g protein"}</span></div>
-      <div class="goal-row"><span class="sub">Current</span><span style="font-size:16px;font-weight:700">${isFatLoss ? currW + " lbs" : client.proteinAvg + "g"}</span></div>
-      <div class="bar-bg"><div class="bar-fill" style="width:${isFatLoss ? Math.min(100,(Math.abs(client.weightTrend)/10)*100) : Math.min(100,(client.proteinAvg/(client.proteinTarget+20))*100)}%;background:linear-gradient(90deg,#2B7A78,#5CDB95)"></div></div>
+    <div class="card">
+      <div class="section-title">Strength (Est. 1RM)</div>
+      <div class="stat-grid">${lifts.map(l => `<div class="stat-box"><div class="stat-value">${l.current}</div><div class="stat-label">${l.name}</div></div>`).join('')}</div>
     </div>
-    <div class="card" style="background:linear-gradient(145deg,#faf9f7,#f5f8f4)">
-      <div class="section-title">Rule of 30</div>
-      <div class="sub" style="margin-bottom:14px">Every 30 days you unlock a new learning about yourself</div>
-      <div class="pillars">
-        ${pils.map(p => `<div class="pillar"><div class="pillar-label">${p.label}</div><div class="pillar-days" style="color:${p.color}">${p.days}<span style="font-size:12px;font-weight:500;color:#5f7a76"> / 30</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(p.days/30*100)}%;background:${p.color}"></div></div></div>`).join("")}
-      </div>
+    <div class="card">
+      <div class="section-title">Goal Progress</div>
+      <div style="font-size:24px;font-weight:700;color:#2B7A78;margin-bottom:8px">${goalProgressPct}% to goal</div>
+      <div class="sub">${bodyweightStart} lbs → ${bodyweightCurrent} lbs → ${goalWeight} lbs target</div>
     </div>
-    <div class="card focus-card">
-      <div style="font-size:11px;font-weight:700;color:#2B7A78;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">This Week's Focus</div>
-      <div style="font-size:18px;font-weight:700;line-height:1.4">${client.coachAngle}</div>
-    </div>
-    <div style="text-align:center;margin-top:24px;color:#5f7a76;font-size:11px">
-      Generated by Milton AI &bull; miltonai.com
-    </div>
+    <div style="text-align:center;margin-top:24px;color:#5f7a76;font-size:11px">Generated by Milton AI</div>
     <div class="no-print" style="text-align:center;margin-top:24px;">
-      <button onclick="window.print()" style="padding:12px 28px;border-radius:10px;background:#2B7A78;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:DM Sans,sans-serif">Save as PDF</button>
+      <button onclick="window.print()" style="padding:12px 28px;border-radius:10px;background:#2B7A78;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer">Save as PDF</button>
     </div>
     </body></html>`;
     printWin.document.write(html);
     printWin.document.close();
-  };
-
-  // Consistency score calculation (Meals 40%, Exercise 25%, Movement 20%, Sleep 15%)
-  const mealsScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-  const exerciseScore = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-  const movementScore = Math.min(100, Math.round((client.steps / 8000) * 100));
-  const sleepScore = 78; // simulated
-  const consistencyScore = Math.round(mealsScore * 0.4 + exerciseScore * 0.25 + movementScore * 0.2 + sleepScore * 0.15);
-
-  // Rule of 30 data (days logged out of 30)
-  const pillars = [
-    { key: "exercise", label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
-    { key: "steps", label: "Steps", days: Math.min(30, Math.round(client.steps / 350)), color: "#3aafa9", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18 Q3 12 6 9 Q8 7 9 8 L11 11 Q12 12.5 14 12.5 L18 12.5 Q21 13 21 16 L21 17 Q21 19 19 19 L5 19 Q3 19 3 18Z"/><line x1="8" y1="19" x2="8" y2="16"/><line x1="12" y1="19" x2="12" y2="16"/><line x1="16" y1="19" x2="16" y2="16"/></svg> },
-    { key: "meals", label: "Meals", days: Math.min(30, client.mealsLogged + 5), color: "#ef6c3e", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg> },
-    { key: "sleep", label: "Sleep", days: Math.min(30, 21), color: "#8e7cc3", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> },
-  ];
-
-  // Calendar data (28 days, 4 weeks)
-  const calDays = Array.from({ length: 28 }).map((_, i) => {
-    const seed = (i * 7 + client.name.charCodeAt(0)) % 100;
-    return {
-      exercise: seed < exerciseScore,
-      steps: seed < movementScore + 5,
-      meals: seed < mealsScore - 5,
-      sleep: seed < sleepScore + 3,
-    };
-  });
-
-  // Circular progress ring with icon
-  const PillarRing = ({ days, color, icon, size = 110 }) => {
-    const pct = Math.min(100, (days / 30) * 100);
-    const r = size / 2 - 12;
-    const circ = 2 * Math.PI * r;
-    const offset = circ * (1 - pct / 100);
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="10"/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="10"
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`}
-          style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
-        />
-        <g transform={`translate(${size/2 - 9}, ${size/2 - 9})`} style={{ color }}>
-          {icon}
-        </g>
-      </svg>
-    );
   };
 
   const SectionCard = ({ children, style: s }) => (
@@ -2455,72 +2440,26 @@ function ReportView({ client, onBack, isMobile }) {
     }}>{children}</div>
   );
 
-  const DetailCard = ({ pillar, expanded, onToggle }) => {
-    const detailData = {
-      exercise: { items: [{ l: "Workouts", v: `${client.workoutDays}/week`, g: "5/week" }, { l: "Avg Duration", v: "48 min", g: "45 min" }, { l: "Top Type", v: "Strength" }, { l: "Intensity", v: "Moderate-High" }] },
-      steps: { items: [{ l: "Daily Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Active Minutes", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" }, { l: "Floors", v: "8", g: "10" }] },
-      meals: { items: [{ l: "Calories Avg", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` }, { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` }, { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" }] },
-      sleep: { items: [{ l: "Avg Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" }, { l: "Consistency", v: "72%", g: "85%" }, { l: "Quality", v: "Good" }] },
-    };
-    const d = detailData[pillar.key];
-    return (
-      <div onClick={onToggle} style={{
-        background: WHITE, borderRadius: 16, border: `1px solid ${expanded ? pillar.color : BORDER}`,
-        padding: "16px 18px", cursor: "pointer",
-        boxShadow: expanded ? `0 2px 12px ${pillar.color}20` : "0 1px 4px rgba(0,0,0,0.03)",
-        transition: "all 0.2s ease"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10, background: `${pillar.color}15`,
-              display: "flex", alignItems: "center", justifyContent: "center", color: pillar.color
-            }}>{pillar.icon}</div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{pillar.label}</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{pillar.days}/30 days logged</div>
-            </div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
-            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
-            <polyline points="6,9 12,15 18,9"/>
-          </svg>
+  const MetricCard = ({ label, value, unit, change, changeDir, color = TEAL }) => (
+    <div style={{
+      flex: 1, minWidth: isMobile ? "45%" : 120, padding: isMobile ? "16px 14px" : "20px 18px",
+      background: `linear-gradient(135deg, ${color}06, ${color}03)`,
+      borderRadius: 16, border: `1px solid ${color}15`, textAlign: "center"
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: isMobile ? 26 : 32, fontWeight: 800, color }}>{value}<span style={{ fontSize: 14, fontWeight: 600 }}>{unit}</span></div>
+      {change !== undefined && (
+        <div style={{
+          marginTop: 6, fontSize: 12, fontWeight: 600,
+          color: changeDir === "good" ? ALERT_GREEN : changeDir === "bad" ? "#ef6c3e" : TEXT_SEC
+        }}>
+          {change > 0 ? "+" : ""}{change}{unit} from start
         </div>
-        {expanded && d && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BORDER}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {d.items.map((item, j) => {
-              const hasGoal = item.g !== undefined;
-              const numVal = parseFloat(String(item.v).replace(/[^0-9.]/g, ""));
-              const numGoal = hasGoal ? parseFloat(String(item.g).replace(/[^0-9.]/g, "")) : 0;
-              const pct = hasGoal && numGoal > 0 ? Math.min(100, (numVal / numGoal) * 100) : 0;
-              const met = hasGoal && pct >= 95;
-              const close = hasGoal && pct >= 80 && pct < 95;
-              return (
-                <div key={j} style={{ padding: "8px 10px", borderRadius: 10, background: "#f8faf9" }}>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{item.l}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginTop: 2 }}>{item.v}</div>
-                  {hasGoal && (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
-                        <span style={{ fontSize: 10, color: met ? ALERT_GREEN : close ? "#d4a63c" : TEXT_SEC, fontWeight: 600 }}>Goal: {item.g}</span>
-                        {met && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>}
-                      </div>
-                      <div style={{ width: "100%", height: 3, borderRadius: 2, background: "#e8f0ee", marginTop: 3 }}>
-                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: met ? ALERT_GREEN : close ? "#d4a63c" : pillar.color, transition: "width 0.6s ease" }} />
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
 
-  // Score ring color
-  const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+  const scoreColor = attendanceRate >= 85 ? ALERT_GREEN : attendanceRate >= 70 ? TEAL : "#ef6c3e";
 
   return (
     <div style={{
@@ -2537,13 +2476,12 @@ function ReportView({ client, onBack, isMobile }) {
         Back to {client.name}
       </div>}
 
-      {/* ─── HERO: CONSISTENCY SCORE ─── */}
+      {/* ─── HERO: ATTENDANCE RATE ─── */}
       <SectionCard style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         textAlign: "center", padding: isMobile ? "28px 20px" : "36px 32px",
         position: "relative", overflow: "hidden"
       }}>
-        {/* Subtle radial glow */}
         <div style={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
           width: 300, height: 300, borderRadius: "50%",
@@ -2551,14 +2489,14 @@ function ReportView({ client, onBack, isMobile }) {
           pointerEvents: "none"
         }} />
         <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6, position: "relative" }}>
-          {client.name}'s Consistency Score
+          {client.name}'s Attendance Rate
         </div>
         <div style={{ position: "relative", display: "inline-block", margin: "12px 0" }}>
           {(() => {
             const sz = isMobile ? 180 : 220;
             const r = sz / 2 - 16;
             const circ = 2 * Math.PI * r;
-            const offset = circ * (1 - consistencyScore / 100);
+            const offset = circ * (1 - attendanceRate / 100);
             return (
               <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
                 <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="12"/>
@@ -2567,15 +2505,14 @@ function ReportView({ client, onBack, isMobile }) {
                   strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
                   style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                 />
-                {/* Inner subtle ring */}
                 <circle cx={sz/2} cy={sz/2} r={r - 18} fill="none" stroke={`${scoreColor}15`} strokeWidth="1"/>
                 <text x={sz/2} y={sz/2 - 8} textAnchor="middle" dominantBaseline="central"
                   style={{ fontSize: isMobile ? 52 : 64, fontWeight: 800, fill: TEXT, fontFamily: font }}>
-                  {consistencyScore}
+                  {attendanceRate}%
                 </text>
                 <text x={sz/2} y={sz/2 + (isMobile ? 28 : 34)} textAnchor="middle" dominantBaseline="central"
-                  style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  out of 100
+                  style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: font }}>
+                  {totalSessions} sessions
                 </text>
               </svg>
             );
@@ -2583,413 +2520,263 @@ function ReportView({ client, onBack, isMobile }) {
         </div>
         <div style={{ position: "relative" }}>
           <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: scoreColor, marginBottom: 6 }}>
-            {consistencyScore >= 85 ? "Exceptional Consistency" : consistencyScore >= 70 ? "Strong Consistency" : consistencyScore >= 55 ? "Building Momentum" : "Getting Started"}
+            {attendanceRate >= 90 ? "Exceptional Commitment" : attendanceRate >= 75 ? "Strong Attendance" : attendanceRate >= 60 ? "Building Consistency" : "Getting Started"}
           </div>
           <div style={{ fontSize: 13, color: TEXT_SEC, maxWidth: 400, margin: "0 auto", lineHeight: 1.55 }}>
-            Slow & steady wins the race. This score reflects daily commitment across meals, exercise, movement, and sleep.
+            Showing up is the foundation of results. Keep the momentum going.
           </div>
         </div>
-        {/* Weight breakdown */}
-        <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 12 : 20, marginTop: 18, position: "relative" }}>
-          {[
-            { label: "Meals", pct: mealsScore, weight: "40%", color: "#ef6c3e" },
-            { label: "Exercise", pct: exerciseScore, weight: "25%", color: TEAL },
-            { label: "Movement", pct: movementScore, weight: "20%", color: "#3aafa9" },
-            { label: "Sleep", pct: sleepScore, weight: "15%", color: "#8e7cc3" },
-          ].map((w, i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: w.color }}>{w.pct}</div>
-              <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600 }}>{w.label}</div>
-              <div style={{ fontSize: 10, color: TEXT_SEC }}>{w.weight}</div>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-
-
-      {/* ─── TRANSFORMATION ─── */}
-      <SectionCard style={{ background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)` }}>
-        {(() => {
-          const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-          const startW = (client.weightData?.[0] || 185) + 4;
-          const currW = client.weightData?.[client.weightData.length-1] || 183;
-          const goalLabel = isFatLoss ? "Weight" : "Protein";
-          const goalUnit = isFatLoss ? " lbs" : "g";
-          const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
-          const w1c = Math.max(15, consistencyScore - 32 - (client.name.charCodeAt(0) % 8));
-          const consistencyData = [w1c, w1c + 12, w1c + 22, consistencyScore];
-          const goalData = isFatLoss
-            ? [startW, startW - 1.2, startW - 2.5, currW]
-            : [client.proteinAvg - 28, client.proteinAvg - 16, client.proteinAvg - 6, client.proteinAvg];
-          const cw2 = 420, ch2 = 200, pL = 44, pR = 44, pT = 16, pB = 32;
-          const pW = cw2 - pL - pR, pH = ch2 - pT - pB;
-          const toYc = (v) => pT + (1 - v / 100) * pH;
-          const toX = (i) => pL + (i / (weeks.length - 1)) * pW;
-          const gVals = goalData;
-          const gMin = Math.min(...gVals) - 3, gMax = Math.max(...gVals) + 3;
-          const toYg = (v) => pT + (1 - (v - gMin) / (gMax - gMin)) * pH;
-          const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
-          const cPts = consistencyData.map((v, i) => ({ x: toX(i), y: toYc(v) }));
-          const gPts = goalData.map((v, i) => ({ x: toX(i), y: toYg(v) }));
-          const cPath = smooth(cPts);
-          const gPath = smooth(gPts);
-          const cArea = `${cPath} L ${cPts[cPts.length-1].x},${pT + pH} L ${cPts[0].x},${pT + pH} Z`;
-          const cLast = cPts[cPts.length - 1];
-          const gLast = gPts[gPts.length - 1];
-          const scoreChange = consistencyScore - w1c;
-          const totalChange = isFatLoss ? `${(startW - currW).toFixed(1)} lbs lost` : `+${client.proteinAvg - (client.proteinAvg - 28)}g protein`;
-
-          return (<>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-              <div>
-                <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Your Transformation</div>
-                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Consistency drives results — 4 weeks of progress</div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>+{scoreChange} pts</div>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
-              </div>
-            </div>
-            <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "10px 6px" : "14px 10px" }}>
-              <svg width="100%" height={ch2} viewBox={`0 0 ${cw2} ${ch2}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                <defs>
-                  <linearGradient id="rcAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
-                    <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
-                  </linearGradient>
-                </defs>
-                {[0, 25, 50, 75, 100].map((v, i) => (
-                  <line key={i} x1={pL} y1={toYc(v)} x2={cw2 - pR} y2={toYc(v)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
-                ))}
-                {[0, 50, 100].map((v, i) => (
-                  <text key={i} x={pL - 6} y={toYc(v) + 3} textAnchor="end" fill={TEAL} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{v}</text>
-                ))}
-                {[gMin + 1, (gMin + gMax) / 2, gMax - 1].map((v, i) => (
-                  <text key={i} x={cw2 - pR + 6} y={toYg(v) + 3} textAnchor="start" fill={ALERT_GREEN} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{Math.round(v)}</text>
-                ))}
-                {weeks.map((w, i) => (
-                  <text key={i} x={toX(i)} y={ch2 - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{w}</text>
-                ))}
-                <path d={cArea} fill="url(#rcAreaGrad)" />
-                <path d={cPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
-                <path d={gPath} fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
-                {cPts.map((p, i) => (
-                  <g key={`rc${i}`}>
-                    {i === cPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={TEAL} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === cPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={TEAL} strokeWidth="2"/>
-                  </g>
-                ))}
-                {gPts.map((p, i) => (
-                  <g key={`rg${i}`}>
-                    {i === gPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={ALERT_GREEN} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === gPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={ALERT_GREEN} strokeWidth="2"/>
-                  </g>
-                ))}
-                <g>
-                  <rect x={cLast.x - 16} y={cLast.y - 22} width="32" height="16" rx="8" fill={TEAL}/>
-                  <text x={cLast.x} y={cLast.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{consistencyScore}</text>
-                </g>
-                <g>
-                  <rect x={gLast.x - 22} y={gLast.y + 8} width="44" height="16" rx="8" fill={ALERT_GREEN}/>
-                  <text x={gLast.x} y={gLast.y + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{isFatLoss ? `${currW}` : `${client.proteinAvg}g`}</text>
-                </g>
-              </svg>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, marginTop: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 3, borderRadius: 2, background: TEAL }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Consistency Score</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${ALERT_GREEN}` }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{goalLabel}</span>
-              </div>
-            </div>
-          </>);
-        })()}
       </SectionCard>
 
       {/* ─── GOAL PROGRESS ─── */}
       <SectionCard style={{ background: `linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)` }}>
         <div style={{ marginBottom: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em" }}>We predict you'll reach</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em" }}>Progress Toward Goal</div>
         </div>
-        {(() => {
-          const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-          const startVal = isFatLoss ? (client.weightData?.[0] || 185) : client.proteinAvg;
-          const currentVal = isFatLoss ? (client.weightData?.[client.weightData.length-1] || 183) : client.proteinAvg;
-          // Use client.goalWeight if set (via chat command), otherwise default calculation
-          const goalVal = isFatLoss 
-            ? (client.goalWeight || startVal - 10) 
-            : (client.proteinTarget + 20);
-          const unit = isFatLoss ? "lbs" : "g protein/day";
-          const goalLabel = isFatLoss ? "Weight Goal" : "Protein Goal";
-          const weeksTotal = 12;
-          const weeksCurrent = 4;
-          const projectedWeeks = Math.round(weeksTotal * 0.9);
-          const goalDown = isFatLoss;
-
-          // Chart dimensions
-          const cw = 380, ch = 180, padL = 44, padR = 20, padT = 20, padB = 36;
-          const plotW = cw - padL - padR, plotH = ch - padT - padB;
-
-          // Value range
-          const valMin = goalDown ? goalVal - 2 : startVal - 5;
-          const valMax = goalDown ? startVal + 2 : goalVal + 5;
-          const valRange = valMax - valMin;
-
-          const toY = (v) => padT + (1 - (v - valMin) / valRange) * plotH;
-          const toX = (w) => padL + (w / weeksTotal) * plotW;
-
-          // Actual data points (weeks 0 to current)
-          const actualPts = [];
-          for (let w = 0; w <= weeksCurrent; w++) {
-            const t = w / weeksCurrent;
-            const v = startVal + (currentVal - startVal) * t + (Math.sin(t * 4) * 0.5);
-            actualPts.push({ x: toX(w), y: toY(v) });
-          }
-
-          // Projected path (current to goal)
-          const projPts = [];
-          for (let w = weeksCurrent; w <= weeksTotal; w++) {
-            const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent);
-            const v = currentVal + (goalVal - currentVal) * (t * t * 0.3 + t * 0.7);
-            projPts.push({ x: toX(w), y: toY(v) });
-          }
-
-          // Smooth curve builder
-          const smooth = (pts) => {
-            if (pts.length < 2) return "";
-            let d = `M ${pts[0].x},${pts[0].y}`;
-            for (let i = 0; i < pts.length - 1; i++) {
-              const cp = (pts[i+1].x - pts[i].x) / 2.5;
-              d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
-            }
-            return d;
-          };
-
-          const actualPath = smooth(actualPts);
-          const projPath = smooth(projPts);
-          const lastActual = actualPts[actualPts.length - 1];
-          const goalY = toY(goalVal);
-          const goalX = toX(weeksTotal);
-
-          // Area under actual path
-          const actualArea = `${actualPath} L ${lastActual.x},${padT + plotH} L ${actualPts[0].x},${padT + plotH} Z`;
-
-          return (
-            <>
-              <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: TEXT, marginBottom: 2 }}>
-                <span style={{ color: TEAL }}>{goalDown ? goalVal : goalVal + "g"}</span> {unit.replace("g protein/day","").replace("lbs","")} by <span style={{ color: TEAL }}>Week {weeksTotal}</span>
-              </div>
-              <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>
-                {goalLabel}: {startVal}{isFatLoss ? " lbs" : "g"} → {goalVal}{isFatLoss ? " lbs" : "g"} • Currently at <strong style={{ color: TEXT }}>{currentVal}{isFatLoss ? " lbs" : "g"}</strong>
-              </div>
-
-              {/* Chart */}
-              <div style={{
-                borderRadius: 16, background: "#f7faf9", border: `1px solid ${BORDER}`,
-                padding: isMobile ? "12px 8px" : "16px 12px", marginBottom: 16
-              }}>
-                <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                  <defs>
-                    <linearGradient id="goalAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={TEAL} stopOpacity="0.15"/>
-                      <stop offset="100%" stopColor={TEAL} stopOpacity="0.02"/>
-                    </linearGradient>
-                  </defs>
-
-                  {/* Y-axis grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
-                    const v = valMin + t * valRange;
-                    const y = toY(v);
-                    return (
-                      <g key={i}>
-                        <line x1={padL} y1={y} x2={cw - padR} y2={y} stroke={BORDER} strokeWidth="1" />
-                        <text x={padL - 6} y={y + 4} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans, sans-serif">
-                          {Math.round(v)}
-                        </text>
-                      </g>
-                    );
-                  })}
-
-                  {/* Goal line (horizontal dashed) */}
-                  <line x1={padL} y1={goalY} x2={cw - padR} y2={goalY}
-                    stroke={TEAL} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5"/>
-
-                  {/* Area under actual */}
-                  <path d={actualArea} fill="url(#goalAreaGrad)" />
-
-                  {/* Actual line (solid, thick) */}
-                  <path d={actualPath} fill="none" stroke={TEAL} strokeWidth="3" strokeLinecap="round" />
-
-                  {/* Projected line (dashed, thinner) */}
-                  <path d={projPath} fill="none" stroke={MINT} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="8,5" />
-
-                  {/* Start label pill */}
-                  <g>
-                    <rect x={actualPts[0].x - 24} y={actualPts[0].y - 24} width="48" height="20" rx="10" fill={TEAL}/>
-                    <text x={actualPts[0].x} y={actualPts[0].y - 11} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{startVal}{isFatLoss ? "" : "g"}</text>
-                  </g>
-
-                  {/* Current position dot + label */}
-                  <circle cx={lastActual.x} cy={lastActual.y} r="10" fill={TEAL} opacity="0.12"/>
-                  <circle cx={lastActual.x} cy={lastActual.y} r="6" fill={WHITE} stroke={TEAL} strokeWidth="3"/>
-                  <g>
-                    <rect x={lastActual.x - 28} y={lastActual.y - 28} width="56" height="20" rx="10" fill={TEAL}/>
-                    <text x={lastActual.x} y={lastActual.y - 15} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{currentVal}{isFatLoss ? " lbs" : "g"}</text>
-                  </g>
-
-                  {/* Goal endpoint */}
-                  <circle cx={goalX} cy={goalY} r="8" fill={MINT} opacity="0.2"/>
-                  <circle cx={goalX} cy={goalY} r="5" fill={MINT}/>
-                  <rect x={goalX - 22} y={goalY + 10} width="44" height="18" rx="9" fill={MINT}/>
-                  <text x={goalX} y={goalY + 22} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{goalVal}{isFatLoss ? "" : "g"}</text>
-
-                  {/* "Now" marker line */}
-                  <line x1={lastActual.x} y1={padT} x2={lastActual.x} y2={padT + plotH}
-                    stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="3,3" opacity="0.3"/>
-                  <text x={lastActual.x} y={ch - 6} textAnchor="middle" fill={TEXT} fontSize="10" fontWeight="700" fontFamily="DM Sans">Now</text>
-
-                  {/* Week labels */}
-                  <text x={toX(0)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans">W1</text>
-                  <text x={toX(weeksTotal)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans">W{weeksTotal}</text>
-                </svg>
-              </div>
-
-              {/* Callouts */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { text: `${goalDown ? "Down" : "Up"} ${Math.abs(Math.round((currentVal - startVal) * 10) / 10)} ${isFatLoss ? "lbs" : "g"} from starting point`, check: true },
-                  { text: `On track to reach goal by Week ${projectedWeeks}`, check: true },
-                  { text: "Consistency score supports this projection", check: consistencyScore >= 65 },
-                ].map((c, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                      background: c.check ? "#e8f5e9" : "#fff3e0",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {c.check ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{c.text}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          );
-        })()}
-      </SectionCard>
-
-      {/* ─── RULE OF 30: PROGRESS RINGS ─── */}
-      <SectionCard style={{ background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)` }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <div>
-            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Rule of 30</div>
-            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Every 30 days you unlock a new learning about yourself</div>
-          </div>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: TEXT, marginBottom: 4 }}>
+          <span style={{ color: TEAL }}>{goalProgressPct}%</span> Complete
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
-          {pillars.map((p) => {
-            const fillPct = (p.days / 30) * 100;
-            return (
-            <div key={p.key} style={{
-              borderRadius: 16, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "18px 14px",
-              background: "#fafcfb", textAlign: "center",
-              display: "flex", flexDirection: "column", alignItems: "center"
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 10 }}>{p.label}</div>
-              <PillarRing days={p.days} color={p.color} icon={p.icon} size={isMobile ? 90 : 110} />
-              <div style={{ marginTop: 10 }}>
-                <span style={{ fontSize: 24, fontWeight: 800, color: p.color }}>{p.days}</span>
-                <span style={{ fontSize: 13, color: TEXT_SEC, fontWeight: 500 }}> / 30</span>
-              </div>
-              <div style={{ fontSize: 11, color: fillPct >= 90 ? ALERT_GREEN : TEXT_SEC, fontWeight: 600, marginTop: 2 }}>
-                {fillPct >= 90 ? "Almost there!" : fillPct >= 60 ? "Keep going!" : "Building..."}
-              </div>
-            </div>
-            );
-          })}
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>
+          {bodyweightStart} lbs → {bodyweightCurrent} lbs → <strong style={{ color: TEAL }}>{goalWeight} lbs goal</strong>
+        </div>
+        <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e8f0ee", marginBottom: 16, overflow: "hidden" }}>
+          <div style={{
+            position: "absolute", left: 0, top: 0, bottom: 0,
+            width: `${goalProgressPct}%`, borderRadius: 7,
+            background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+            transition: "width 1.5s cubic-bezier(0.16, 1, 0.3, 1)"
+          }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+          <span>Start: {bodyweightStart} lbs</span>
+          <span style={{ fontWeight: 700, color: TEAL }}>Now: {bodyweightCurrent} lbs</span>
+          <span>Goal: {goalWeight} lbs</span>
         </div>
       </SectionCard>
 
-      {/* ─── DETAIL BREAKOUTS ─── */}
-      <SectionCard style={{ background: `linear-gradient(150deg, #faf8f5, #f8f6f2, #faf9f6)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Detail Breakouts</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>Tap to expand each category</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {pillars.map(p => (
-            <DetailCard
-              key={p.key} pillar={p}
-              expanded={expandedDetail === p.key}
-              onToggle={() => setExpandedDetail(expandedDetail === p.key ? null : p.key)}
-            />
-          ))}
+      {/* ─── BODY COMPOSITION ─── */}
+      <SectionCard style={{ background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Body Composition</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Before vs Now comparison</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 10 : 14 }}>
+          <MetricCard 
+            label="Bodyweight" value={bodyweightCurrent} unit=" lbs" 
+            change={bodyweightCurrent - bodyweightStart} 
+            changeDir={bodyweightCurrent < bodyweightStart ? "good" : "neutral"} 
+            color={TEAL} 
+          />
+          <MetricCard 
+            label="Body Fat" value={bodyFatCurrent} unit="%" 
+            change={bodyFatCurrent - bodyFatStart} 
+            changeDir={bodyFatCurrent < bodyFatStart ? "good" : "bad"} 
+            color="#3aafa9" 
+          />
+          <MetricCard 
+            label="Lean Mass" value={leanMassCurrent} unit=" lbs" 
+            change={leanMassCurrent - leanMassStart} 
+            changeDir={leanMassCurrent > leanMassStart ? "good" : "neutral"} 
+            color={MINT} 
+          />
         </div>
       </SectionCard>
 
-      {/* ─── CALENDAR HEATMAP ─── */}
+      {/* ─── STRENGTH PROGRESS (1RM) ─── */}
       <SectionCard style={{ background: `linear-gradient(155deg, #f8f7fc, #f4f6fa, #f7f9fc)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Daily Activity Calendar</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>Last 28 days — each dot is a tracked category</div>
-
-        {/* Day headers */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
-          {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
-            <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{d}</div>
-          ))}
-        </div>
-
-        {/* Calendar grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6 }}>
-          {calDays.map((day, i) => {
-            const dots = [
-              day.exercise && TEAL,
-              day.steps && "#3aafa9",
-              day.meals && "#ef6c3e",
-              day.sleep && "#8e7cc3",
-            ].filter(Boolean);
-            const count = dots.length;
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Strength Progress</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Estimated 1RM for core lifts</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {lifts.map((lift, i) => {
+            const improvement = lift.current - lift.baseline;
+            const pct = Math.min(100, (lift.current / (lift.baseline * 1.3)) * 100);
             return (
               <div key={i} style={{
-                aspectRatio: "1", borderRadius: isMobile ? 8 : 10,
-                background: count === 4 ? "#eef6f3" : count >= 2 ? "#f5f8f7" : "#fafcfb",
-                border: `1px solid ${count === 4 ? "#c8e6c9" : BORDER}`,
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 2, position: "relative"
+                background: WHITE, borderRadius: 14, padding: isMobile ? "14px 16px" : "18px 20px",
+                border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 16
               }}>
-                <div style={{ display: "flex", gap: 3, flexWrap: "wrap", justifyContent: "center" }}>
-                  {dots.map((c, j) => (
-                    <div key={j} style={{ width: isMobile ? 5 : 7, height: isMobile ? 5 : 7, borderRadius: "50%", background: c }} />
-                  ))}
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
+                    <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                    <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
                 </div>
-                {count === 0 && <div style={{ width: isMobile ? 5 : 7, height: isMobile ? 5 : 7, borderRadius: "50%", border: "1.5px dashed #d0dbd7" }} />}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{lift.name}</span>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span style={{ fontSize: 12, color: TEXT_SEC, textDecoration: "line-through" }}>{lift.baseline}</span>
+                      <span style={{ fontSize: 11, color: TEXT_SEC }}>→</span>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: lift.color }}>{lift.current}</span>
+                      <span style={{ fontSize: 12, color: TEXT_SEC }}>lbs</span>
+                    </div>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: 3, background: lift.color, width: `${pct}%`, transition: "width 1s ease" }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: ALERT_GREEN, fontWeight: 600, marginTop: 4 }}>+{improvement} lbs ({Math.round((improvement/lift.baseline)*100)}% increase)</div>
+                </div>
               </div>
             );
           })}
         </div>
+      </SectionCard>
 
-        {/* Legend */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 10 : 16, marginTop: 14, justifyContent: "center" }}>
+      {/* ─── NUTRITION PATTERNS ─── */}
+      <SectionCard style={{ background: `linear-gradient(150deg, #faf8f5, #f8f6f2, #faf9f6)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Nutrition Patterns</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Average daily intake</div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
           {[
-            { label: "Exercise", color: TEAL },
-            { label: "Steps", color: "#3aafa9" },
-            { label: "Meals", color: "#ef6c3e" },
-            { label: "Sleep", color: "#8e7cc3" },
-          ].map((l, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TEXT_SEC }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
-              {l.label}
+            { label: "Calories", value: caloriesAvg, goal: caloriesTarget, unit: "", color: "#ef6c3e" },
+            { label: "Protein", value: proteinAvg, goal: proteinTarget, unit: "g", color: TEAL },
+            { label: "Meals Logged", value: client.mealsLogged || 18, goal: 21, unit: "/wk", color: "#3aafa9" },
+            { label: "Nutrition Score", value: nutritionScore, goal: 100, unit: "%", color: MINT },
+          ].map((n, i) => {
+            const pct = Math.min(100, (n.value / n.goal) * 100);
+            return (
+              <div key={i} style={{
+                padding: "16px 14px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 8 }}>{n.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: n.color }}>{n.value}{n.unit}</div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4 }}>Goal: {n.goal}{n.unit}</div>
+                <div style={{ height: 4, borderRadius: 2, background: "#e8f0ee", marginTop: 8 }}>
+                  <div style={{ height: "100%", borderRadius: 2, background: n.color, width: `${pct}%`, transition: "width 0.6s ease" }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* ─── EXERCISE & WEARABLE DATA ─── */}
+      <SectionCard style={{ background: `linear-gradient(145deg, #f5f8f7, #f0f4f3, #f7faf9)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Activity & Movement</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Wearable data summary</div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
+          {[
+            { label: "Daily Steps", value: steps.toLocaleString(), goal: stepsGoal.toLocaleString(), pct: Math.min(100, (steps/stepsGoal)*100), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4v16M7 4v16M19 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg> },
+            { label: "Active Minutes", value: activeMinutes, goal: activeMinutesGoal, pct: Math.min(100, (activeMinutes/activeMinutesGoal)*100), color: "#3aafa9", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> },
+            { label: "Workout Days", value: `${workoutDays}/wk`, goal: "5/wk", pct: Math.min(100, (workoutDays/5)*100), color: MINT, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+            { label: "Avg Intensity", value: "Mod-High", goal: "High", pct: 75, color: "#8e7cc3", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> },
+          ].map((a, i) => (
+            <div key={i} style={{
+              padding: "16px 14px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center"
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${a.color}12`, margin: "0 auto 10px", display: "flex", alignItems: "center", justifyContent: "center", color: a.color }}>{a.icon}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>{a.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: a.color }}>{a.value}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>Goal: {a.goal}</div>
+              <div style={{ height: 4, borderRadius: 2, background: "#e8f0ee", marginTop: 8 }}>
+                <div style={{ height: "100%", borderRadius: 2, background: a.color, width: `${a.pct}%`, transition: "width 0.6s ease" }} />
+              </div>
             </div>
           ))}
         </div>
       </SectionCard>
 
-      {/* ─── ONE RECOMMENDATION ─── */}
+      {/* ─── SLEEP ─── */}
+      <SectionCard style={{ background: `linear-gradient(155deg, #f6f5fa, #f2f0f8, #f7f6fc)` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Sleep</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Rest & recovery tracking</div>
+          </div>
+          <div style={{ 
+            padding: "6px 12px", borderRadius: 16, 
+            background: sleepQuality === "Good" ? `${ALERT_GREEN}15` : `#f59e0b15`,
+            color: sleepQuality === "Good" ? ALERT_GREEN : "#f59e0b",
+            fontSize: 12, fontWeight: 700
+          }}>
+            {sleepQuality} Quality
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
+          {[
+            { label: "Avg Duration", value: sleepHours, unit: " hrs", goal: sleepGoal, pct: Math.min(100, (sleepHours/sleepGoal)*100) },
+            { label: "Consistency", value: sleepConsistency, unit: "%", goal: 85, pct: Math.min(100, (sleepConsistency/85)*100) },
+            { label: "Bedtime", value: "11:15", unit: " PM", goal: "10:30 PM", pct: 70 },
+            { label: "Wake Time", value: "6:45", unit: " AM", goal: "6:30 AM", pct: 85 },
+          ].map((s, i) => (
+            <div key={i} style={{
+              padding: "16px 14px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center"
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 8 }}>{s.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#8e7cc3" }}>{s.value}{s.unit}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4 }}>Goal: {s.goal}</div>
+              <div style={{ height: 4, borderRadius: 2, background: "#e8f0ee", marginTop: 8 }}>
+                <div style={{ height: "100%", borderRadius: 2, background: "#8e7cc3", width: `${s.pct}%`, transition: "width 0.6s ease" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+      <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
+        
+        {/* Streaks */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
+            border: `1px solid ${TEAL}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
+            border: `1px solid ${MINT}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+        </div>
+
+        {/* Achievements */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
+          {achievements.map((a, i) => {
+            const icons = {
+              check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
+              fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
+              trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
+              muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+              star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
+              apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+            };
+            return (
+              <div key={i} style={{
+                padding: "14px 12px", borderRadius: 14,
+                background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
+                border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
+                textAlign: "center", opacity: a.earned ? 1 : 0.5
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
+                  background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: a.earned ? ALERT_GREEN : TEXT_SEC
+                }}>
+                  {icons[a.icon]}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? a.date : "Locked"}</div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* ─── THIS WEEK'S FOCUS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
           This Week's Focus
