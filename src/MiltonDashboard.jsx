@@ -2935,6 +2935,67 @@ function ReportView({ client, onBack, isMobile }) {
         });
       })()}
 
+      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+      <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
+        
+        {/* Streaks */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
+            border: `1px solid ${TEAL}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
+            border: `1px solid ${MINT}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+        </div>
+
+        {/* Achievements */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
+          {achievements.map((a, i) => {
+            const icons = {
+              check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
+              fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
+              trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
+              muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+              star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
+              apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+            };
+            return (
+              <div key={i} style={{
+                padding: "14px 12px", borderRadius: 14,
+                background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
+                border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
+                textAlign: "center", opacity: a.earned ? 1 : 0.5
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
+                  background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: a.earned ? ALERT_GREEN : TEXT_SEC
+                }}>
+                  {icons[a.icon]}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? a.date : "Locked"}</div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
       {/* ─── 30 DAY ACTIVITY HEATMAP ─── */}
       {(() => {
         const [selectedDay, setSelectedDay] = useState(null);
@@ -3211,67 +3272,6 @@ function ReportView({ client, onBack, isMobile }) {
           </SectionCard>
         );
       })()}
-
-      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
-      <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
-        
-        {/* Streaks */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-          <div style={{
-            flex: 1, padding: "18px 16px", borderRadius: 16,
-            background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
-            border: `1px solid ${TEAL}15`, textAlign: "center"
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
-          </div>
-          <div style={{
-            flex: 1, padding: "18px 16px", borderRadius: 16,
-            background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
-            border: `1px solid ${MINT}15`, textAlign: "center"
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
-          </div>
-        </div>
-
-        {/* Achievements */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
-          {achievements.map((a, i) => {
-            const icons = {
-              check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
-              fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
-              trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
-              muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
-              star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
-              apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
-            };
-            return (
-              <div key={i} style={{
-                padding: "14px 12px", borderRadius: 14,
-                background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
-                border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
-                textAlign: "center", opacity: a.earned ? 1 : 0.5
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
-                  background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: a.earned ? ALERT_GREEN : TEXT_SEC
-                }}>
-                  {icons[a.icon]}
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
-                <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? a.date : "Locked"}</div>
-              </div>
-            );
-          })}
-        </div>
-      </SectionCard>
 
       {/* ─── THIS WEEK'S FOCUS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
