@@ -2293,9 +2293,9 @@ function MobileCanvasSheet({
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
-function ReportView({ client, onBack, isMobile }) {
+function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
-  const [showShare, setShowShare] = useState(false);
+  const [showShare, setShowShare] = useState(autoOpenShare);
   const [linkCopied, setLinkCopied] = useState(false);
   const reportRef = useRef(null);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
@@ -3313,7 +3313,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const hiddenBlocks = availableBlocks.filter(b => !reportBlocks.includes(b.id));
 
   if (showReport) {
-    return <ReportView client={client} onBack={() => setShowReport(false)} isMobile={isMobile} />;
+    return <ReportView client={client} onBack={() => setShowReport(false)} isMobile={isMobile} autoOpenShare={true} />;
   }
 
   return (
@@ -4087,9 +4087,9 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       {/* ═══ TAB: PROGRESS (Client-Facing View) ═══ */}
       {activeTab === "journey" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 20 }}>
           
-          {/* ─── HERO: ATTENDANCE RATE ─── */}
+          {/* ─── COMPACT ATTENDANCE + STREAKS ROW ─── */}
           {(() => {
             const attendedSessions = (client.sessions || []).length || client.totalSessions || client.workoutDays * 4 + 2;
             const scheduledSessions = client.scheduledSessions || attendedSessions;
@@ -4098,91 +4098,104 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             
             return (
               <div style={{
-                background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
-                borderRadius: 20, border: `1px solid ${BORDER}`,
-                padding: isMobile ? "28px 20px" : "36px 32px",
-                textAlign: "center", position: "relative", overflow: "hidden"
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
+                gap: isMobile ? 12 : 14
               }}>
-                {/* Send Icon - Top Right */}
-                <button
-                  onClick={async () => {
-                    const shareData = {
-                      title: `${client.name}'s Progress Report`,
-                      text: `Check out ${client.name.split(' ')[0]}'s fitness progress! ${attendanceRate}% attendance rate with ${currentStreak} session streak.`,
-                      url: window.location.href
-                    };
-                    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                      try { await navigator.share(shareData); } catch (e) { /* User cancelled */ }
-                    } else {
-                      await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
-                      alert('Report link copied to clipboard!');
-                    }
-                  }}
-                  style={{
-                    position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16,
-                    width: 40, height: 40, borderRadius: 12, zIndex: 2,
-                    background: "transparent", border: `1px solid ${TEAL}30`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", transition: "all 0.2s ease"
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.background = `${TEAL}10`; e.currentTarget.style.borderColor = `${TEAL}50`; }}
-                  onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${TEAL}30`; }}
-                  title="Share Report"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"/>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                </button>
-                
+                {/* Attendance Rate Card */}
                 <div style={{
-                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                  width: 300, height: 300, borderRadius: "50%",
-                  background: `radial-gradient(circle, ${scoreColor}18 0%, transparent 70%)`,
-                  pointerEvents: "none"
-                }} />
-                <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6, position: "relative" }}>Attendance Rate</div>
-                
-                {/* Attendance Ring */}
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8, position: "relative" }}>
+                  background: `linear-gradient(135deg, #f7faf9, #eef6f3)`,
+                  borderRadius: 16, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "20px" : "24px",
+                  display: "flex", alignItems: "center", gap: 16
+                }}>
+                  {/* Compact Ring */}
                   {(() => {
-                    const sz = isMobile ? 180 : 200;
-                    const r = sz / 2 - 16;
+                    const sz = isMobile ? 72 : 80;
+                    const r = sz / 2 - 8;
                     const circ = 2 * Math.PI * r;
                     const offset = circ * (1 - attendanceRate / 100);
                     return (
-                      <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="14"/>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="14"
+                      <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ flexShrink: 0 }}>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="7"/>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="7"
                           strokeDasharray={circ} strokeDashoffset={offset}
                           strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
-                          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                          style={{ transition: "stroke-dashoffset 1s ease" }}
                         />
-                        <text x={sz/2} y={sz/2 - (isMobile ? 6 : 10)} textAnchor="middle" dominantBaseline="central"
-                          style={{ fontSize: isMobile ? 52 : 64, fontWeight: 800, fill: scoreColor, fontFamily: `'DM Sans', sans-serif` }}>
+                        <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
+                          style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, fill: scoreColor }}>
                           {attendanceRate}%
-                        </text>
-                        <text x={sz/2} y={sz/2 + (isMobile ? 28 : 34)} textAnchor="middle" dominantBaseline="central"
-                          style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: `'DM Sans', sans-serif` }}>
-                          {attendedSessions}/{scheduledSessions} sessions
                         </text>
                       </svg>
                     );
                   })()}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Attendance</div>
+                    <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: TEXT }}>{attendedSessions}/{scheduledSessions}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions completed</div>
+                  </div>
                 </div>
-                
-                {/* Quick Stats */}
-                <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 32, marginTop: 12, position: "relative" }}>
-                  {[
-                    { label: "Current Streak", value: currentStreak, suffix: " sessions" },
-                    { label: "Best Streak", value: bestStreak, suffix: " sessions" },
-                  ].map((stat, i) => (
-                    <div key={i} style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{stat.value}{!isMobile && stat.suffix}</div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+
+                {/* Current Goal Card */}
+                {(() => {
+                  const goals = client.goals || {};
+                  const current = client.current || {};
+                  const assessment = client.assessment || {};
+                  const goalType = client.program?.includes("Gain") ? "gain" : "loss";
+                  const targetWeight = goals.targetWeight || (goalType === "gain" ? 180 : 160);
+                  const startWeight = assessment.bodyweight || 175;
+                  const currentWeight = current.bodyweight || 170;
+                  const totalChange = Math.abs(targetWeight - startWeight);
+                  const progressChange = Math.abs(currentWeight - startWeight);
+                  const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
+                  const remaining = Math.abs(targetWeight - currentWeight);
+                  
+                  return (
+                    <div style={{
+                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                      padding: isMobile ? "20px" : "24px",
+                      gridColumn: isMobile ? "auto" : "span 2"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Current Goal</div>
+                          <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>
+                            {goalType === "gain" ? "Build to" : "Get to"} {targetWeight} lbs
+                          </div>
+                        </div>
+                        <div style={{
+                          padding: "6px 12px", borderRadius: 12,
+                          background: `${TEAL}12`, color: TEAL,
+                          fontSize: 13, fontWeight: 700
+                        }}>
+                          {remaining} lbs to go
+                        </div>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{
+                          height: 10, borderRadius: 5,
+                          background: "#e8f0ee", overflow: "hidden"
+                        }}>
+                          <div style={{
+                            height: "100%", borderRadius: 5,
+                            background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                            width: `${progressPct}%`,
+                            transition: "width 0.8s ease"
+                          }} />
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                        <span style={{ color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{startWeight} lbs</strong></span>
+                        <span style={{ color: TEAL, fontWeight: 700 }}>{progressPct}% complete</span>
+                        <span style={{ color: TEXT_SEC }}>Now: <strong style={{ color: TEXT }}>{currentWeight} lbs</strong></span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
             );
           })()}
@@ -4213,7 +4226,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             };
 
             return bodyCompMetrics.map((m, idx) => {
-              const cw = 380, ch = 160, pL = 44, pR = 20, pT = 24, pB = 32;
+              const cw = 380, ch = 140, pL = 44, pR = 20, pT = 20, pB = 28;
               const plotW = cw - pL - pR, plotH = ch - pT - pB;
 
               const actual = [];
@@ -4249,35 +4262,35 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
               return (
                 <div key={idx} style={{
-                  background: `linear-gradient(145deg, ${m.color}04, ${m.color}02, #fafcfb)`,
-                  borderRadius: 20, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "20px" : "24px 28px"
+                  background: WHITE,
+                  borderRadius: 16, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "16px" : "20px 24px"
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>{m.label}</div>
-                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
-                        {m.start}{m.unit} → {m.current}{m.unit} → <strong style={{ color: m.color }}>{m.goal}{m.unit} goal</strong>
+                      <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>{m.label}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+                        {m.start}{m.unit} → {m.current}{m.unit} → <span style={{ color: m.color, fontWeight: 600 }}>{m.goal}{m.unit}</span>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                       <div style={{
-                        padding: "5px 12px", borderRadius: 14,
+                        padding: "4px 10px", borderRadius: 12,
                         background: isGood ? `${ALERT_GREEN}12` : `${TEXT_SEC}10`,
-                        color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 12, fontWeight: 700
+                        color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 11, fontWeight: 700
                       }}>
                         {change > 0 ? "+" : ""}{change.toFixed(1)}{m.unit}
                       </div>
                       <div style={{
-                        padding: "5px 12px", borderRadius: 14,
-                        background: `${m.color}12`, color: m.color, fontSize: 12, fontWeight: 700
+                        padding: "4px 10px", borderRadius: 12,
+                        background: `${m.color}12`, color: m.color, fontSize: 11, fontWeight: 700
                       }}>
                         {progressPct}% to goal
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px", marginBottom: 14 }}>
+                  <div style={{ borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}`, padding: isMobile ? "10px 6px" : "12px 10px" }}>
                     <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
                       <defs>
                         <linearGradient id={`pAreaGrad${idx}`} x1="0" y1="0" x2="0" y2="1">
@@ -4626,19 +4639,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
             
             <button
-              onClick={async () => {
-                const shareData = {
-                  title: `${client.name}'s Progress Report`,
-                  text: `Check out ${client.name.split(' ')[0]}'s fitness progress! ${totalSessions} sessions completed with ${currentStreak} session streak.`,
-                  url: window.location.href
-                };
-                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                  try { await navigator.share(shareData); } catch (e) { /* User cancelled */ }
-                } else {
-                  await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
-                  alert('Report link copied to clipboard!');
-                }
-              }}
+              onClick={() => setShowReport(true)}
               style={{
                 padding: isMobile ? "12px 24px" : "14px 32px",
                 borderRadius: 12, border: "2px solid rgba(255,255,255,0.3)",
