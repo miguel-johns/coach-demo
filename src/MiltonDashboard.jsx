@@ -6855,6 +6855,7 @@ function MealPlanCanvas({ data, onClose }) {
 
 function WorkoutCanvas({ data, onClose }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
+  const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
   
   if (!data) return null;
   
@@ -7018,6 +7019,7 @@ function WorkoutCanvas({ data, onClose }) {
                   return (
                     <div
                       key={`${weekNum}-${day}`}
+                      onClick={() => !isRest && setExpandedDay({ weekNum, dayIdx, workout, dayLabel: day })}
                       style={{
                         minWidth: 160, width: 160,
                         background: WHITE, borderRadius: 12,
@@ -7025,8 +7027,12 @@ function WorkoutCanvas({ data, onClose }) {
                         overflow: "hidden",
                         opacity: 0, transform: "scale(0.95)",
                         animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
-                        display: "flex", flexDirection: "column"
+                        display: "flex", flexDirection: "column",
+                        cursor: isRest ? "default" : "pointer",
+                        transition: "box-shadow 0.2s ease, transform 0.2s ease"
                       }}
+                      onMouseEnter={e => { if (!isRest) { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "scale(1.02)"; }}}
+                      onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "scale(1)"; }}
                     >
                       {/* Day header */}
                       <div style={{ 
@@ -7155,8 +7161,270 @@ function WorkoutCanvas({ data, onClose }) {
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
         </div>
-        <span>Click any exercise to edit or ask Milton to modify the program</span>
+        <span>Click any workout day to expand it</span>
       </div>
+      
+      {/* Expanded Day Overlay */}
+      {expandedDay && (
+        <div 
+          style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            background: WHITE, zIndex: 100,
+            display: "flex", flexDirection: "column",
+            animation: "fadeUp 0.3s ease-out forwards"
+          }}
+        >
+          {/* Expanded Header */}
+          <div style={{ 
+            padding: "20px 24px", 
+            background: WHITE,
+            borderBottom: `1px solid ${BORDER}`,
+            display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={() => setExpandedDay(null)}
+                style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: "#f0f4f3", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
+                  Week {expandedDay.weekNum} - {expandedDay.dayLabel}
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  {expandedDay.workout?.title || "Workout Day"}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                style={{
+                  padding: "8px 16px", borderRadius: 8, border: "none",
+                  background: MINT, color: WHITE,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = SAGE; }}
+                onMouseLeave={e => { e.currentTarget.style.background = MINT; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Exercise
+              </button>
+            </div>
+          </div>
+          
+          {/* Expanded Content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+            {/* Workout Title Banner */}
+            <div style={{ 
+              padding: "16px 20px", 
+              background: TEAL_LIGHT,
+              borderRadius: 12,
+              marginBottom: 20,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, background: TEAL,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+                    <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                    <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
+                    {expandedDay.workout?.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {expandedDay.workout?.exercises?.length || 0} exercises
+                  </div>
+                </div>
+              </div>
+              <div style={{ 
+                padding: "6px 12px", borderRadius: 6, 
+                background: WHITE, fontSize: 12, fontWeight: 600, color: TEAL 
+              }}>
+                Day {expandedDay.dayIdx + 1}
+              </div>
+            </div>
+            
+            {/* Exercise List */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {expandedDay.workout?.exercises?.map((ex, exIdx) => (
+                <div
+                  key={exIdx}
+                  style={{
+                    background: WHITE, borderRadius: 12,
+                    border: `1px solid ${BORDER}`,
+                    overflow: "hidden",
+                    transition: "all 0.2s ease",
+                    opacity: 0, transform: "translateY(10px)",
+                    animation: `fadeUp 0.4s ease-out ${0.1 + exIdx * 0.08}s forwards`
+                  }}
+                >
+                  {/* Exercise Header */}
+                  <div style={{ 
+                    padding: "16px 20px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    borderBottom: `1px solid ${BORDER}`,
+                    background: "#fafcfb"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8,
+                        background: TEAL, color: WHITE,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, fontWeight: 700
+                      }}>
+                        {exIdx + 1}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+                          {ex.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+                          {ex.sets} sets
+                        </div>
+                      </div>
+                    </div>
+                    <div 
+                      style={{ 
+                        padding: "6px 8px", borderRadius: 6, cursor: "pointer",
+                        color: TEXT_SEC, transition: "all 0.15s ease"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {/* Set Details */}
+                  <div style={{ padding: "12px 20px" }}>
+                    <div style={{ 
+                      display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12,
+                      marginBottom: 12
+                    }}>
+                      <div style={{ 
+                        padding: "12px", borderRadius: 8, background: "#f8faf9",
+                        textAlign: "center"
+                      }}>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Sets</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
+                      </div>
+                      <div style={{ 
+                        padding: "12px", borderRadius: 8, background: "#f8faf9",
+                        textAlign: "center"
+                      }}>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Reps</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{ex.reps.split(",")[0]}</div>
+                      </div>
+                      <div style={{ 
+                        padding: "12px", borderRadius: 8, background: "#f8faf9",
+                        textAlign: "center"
+                      }}>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Weight</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{ex.weight}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Rep scheme breakdown */}
+                    <div style={{ 
+                      padding: "10px 12px", borderRadius: 8, 
+                      background: TEAL_LIGHT, 
+                      display: "flex", alignItems: "center", gap: 8
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                      <span style={{ fontSize: 12, color: TEXT }}>
+                        <strong>Rep scheme:</strong> {ex.reps}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Notes Section */}
+            <div style={{ 
+              marginTop: 20, padding: "16px", 
+              background: "#fffbf5", borderRadius: 12,
+              border: `1px solid #f5e6d3`
+            }}>
+              <div style={{ 
+                fontSize: 12, fontWeight: 600, color: "#b8860b", 
+                marginBottom: 8, display: "flex", alignItems: "center", gap: 6
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                Coach Notes
+              </div>
+              <div style={{ fontSize: 13, color: "#5c4a32", lineHeight: 1.5 }}>
+                Focus on controlled tempo. 2 seconds down, 1 second pause, explosive up. 
+                Rest 90-120 seconds between sets for strength movements.
+              </div>
+            </div>
+          </div>
+          
+          {/* Footer Actions */}
+          <div style={{
+            padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
+            background: WHITE, display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>
+              Tap any exercise card to edit details
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => setExpandedDay(null)}
+                style={{
+                  padding: "10px 20px", borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  fontSize: 13, fontWeight: 600, color: TEXT,
+                  cursor: "pointer", transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = WHITE; }}
+              >
+                Back to Calendar
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px", borderRadius: 8,
+                  border: "none", background: TEAL,
+                  fontSize: 13, fontWeight: 600, color: WHITE,
+                  cursor: "pointer", transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#236b69"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = TEAL; }}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
