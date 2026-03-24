@@ -6500,20 +6500,22 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   
   const templates = [
     { 
+      id: "workout",
+      icon: "chart", 
+      title: "Workout Builder", 
+      desc: "Design structured training programs with exercises and progressions",
+      color: "#3aafa9",
+      available: true,
+      number: 1
+    },
+    { 
       id: "mealPlan",
       icon: "calendar", 
       title: "Meal Plan", 
       desc: "Build custom nutrition plans with daily meals, macros, and recipes",
       color: "#2B7A78",
-      available: true
-    },
-    { 
-      id: "workout",
-      icon: "chart", 
-      title: "Workout Program", 
-      desc: "Design structured training programs with exercises and progressions",
-      color: "#3aafa9",
-      available: true
+      available: false,
+      comingSoon: true
     },
     { 
       id: "messages",
@@ -6521,7 +6523,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       title: "Automated Messages", 
       desc: "Schedule check-ins, reminders, and motivational messages",
       color: "#5CDB95",
-      available: true
+      available: false,
+      comingSoon: true
     },
     { 
       id: "reports",
@@ -6529,7 +6532,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       title: "Progress Reports", 
       desc: "Generate comprehensive client progress summaries",
       color: "#45818e",
-      available: true
+      available: false,
+      comingSoon: true
     }
   ];
   
@@ -6635,17 +6639,25 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
               
               {/* Title + Badge */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                {template.number && (
+                  <span style={{
+                    width: 22, height: 22, borderRadius: "50%",
+                    background: template.color, color: WHITE,
+                    fontSize: 12, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>{template.number}</span>
+                )}
                 <h3 style={{ 
-                  fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 
+                  fontSize: 16, fontWeight: 600, color: template.available ? TEXT : TEXT_SEC, margin: 0 
                 }}>
                   {template.title}
                 </h3>
-                {!template.available && (
+                {template.comingSoon && (
                   <span style={{
                     fontSize: 10, fontWeight: 600, color: TEXT_SEC,
-                    background: "#eee", padding: "3px 8px", borderRadius: 10,
+                    background: "#e8e8e8", padding: "4px 10px", borderRadius: 10,
                     textTransform: "uppercase", letterSpacing: "0.03em"
-                  }}>Soon</span>
+                  }}>Coming Soon</span>
                 )}
               </div>
               
