@@ -7842,6 +7842,7 @@ function WorkoutCanvas({ data, onClose, onSave }) {
               {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
               </button>
           </div>
+        </div>
       )}
     </div>
   );
