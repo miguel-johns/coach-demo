@@ -7811,26 +7811,9 @@ function WorkoutCanvas({ data, onClose, onSave }) {
           {/* Footer Actions */}
           <div style={{
             padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
-            background: WHITE, display: "flex", alignItems: "center", justifyContent: "space-between"
+            background: WHITE, display: "flex", alignItems: "center", justifyContent: "flex-end"
           }}>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>
-              Tap any exercise card to edit details
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => setExpandedDay(null)}
-                style={{
-                  padding: "10px 20px", borderRadius: 8,
-                  border: `1px solid ${BORDER}`, background: WHITE,
-                  fontSize: 13, fontWeight: 600, color: TEXT,
-                  cursor: "pointer", transition: "all 0.15s ease"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = WHITE; }}
-              >
-                Back to Calendar
-              </button>
-              <button
+            <button
                 onClick={handleSave}
                 disabled={!hasChanges || saveStatus === 'saving'}
                 style={{
@@ -7856,11 +7839,9 @@ function WorkoutCanvas({ data, onClose, onSave }) {
                     <polyline points="20,6 9,17 4,12"/>
                   </svg>
                 )}
-                {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+              {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
               </button>
-            </div>
           </div>
-        </div>
       )}
     </div>
   );
