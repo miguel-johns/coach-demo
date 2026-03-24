@@ -4101,83 +4101,118 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      {/* ─── LAST SESSION ─── */}
+      {/* ─── DAILY BREAKDOWN CARDS ─── */}
       {(() => {
-        const session = lastSession;
-        if (!session) {
-          return (
-            <div style={{
-              background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)`,
-              borderRadius: 20, border: `1px solid ${BORDER}`,
-              padding: isMobile ? "20px" : "24px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <div style={{ textAlign: "center", color: TEXT_SEC }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 8 }}>
-                  <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
-                  <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
-                  <line x1="8" y1="12" x2="16" y2="12"/>
-                </svg>
-                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No sessions yet</div>
-                <div style={{ fontSize: 12 }}>Log the first session to see details</div>
-              </div>
-            </div>
-          );
-        }
-        
-        const totalVolume = session.exercises.reduce((sum, ex) => 
-          sum + ex.sets.reduce((setSum, s) => setSum + (s.weight * s.reps), 0), 0
-        );
+        const cards = [
+          {
+            title: "Nutrition", color: "#ef6c3e",
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
+              ]},
+            ],
+          },
+          {
+            title: "Activity", color: TEAL,
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Steps", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: "1", g: "1" },
+                { l: "Active Min", v: "48 min", g: "45 min" }, { l: "Distance", v: "4.1 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "420", g: "500" }, { l: "Floors", v: "10", g: "10" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Steps Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: `${client.workoutDays}`, g: "5" },
+                { l: "Active Min", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "385", g: "500" }, { l: "Floors", v: "8", g: "10" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Steps Avg", v: `${(client.steps - 400).toLocaleString()}`, g: "10,000" }, { l: "Workouts", v: `${client.workoutDays * 4}`, g: "20" },
+                { l: "Active Min", v: "38 min", g: "45 min" }, { l: "Distance", v: "3.4 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "350", g: "500" }, { l: "Floors", v: "7", g: "10" },
+              ]},
+            ],
+          },
+          {
+            title: "Sleep", color: "#8e7cc3",
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Duration", v: "7.2 hrs", g: "8 hrs" }, { l: "Bedtime", v: "10:45 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "5:57 AM" }, { l: "Quality", v: "Good" },
+                { l: "Deep Sleep", v: "1.8 hrs", g: "2 hrs" }, { l: "REM", v: "2.1 hrs", g: "2 hrs" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "6:05 AM" }, { l: "Quality", v: "Good" },
+                { l: "Deep Sleep", v: "1.5 hrs", g: "2 hrs" }, { l: "REM", v: "1.9 hrs", g: "2 hrs" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Duration", v: "6.5 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:30 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "6:10 AM" }, { l: "Quality", v: "Fair" },
+                { l: "Deep Sleep", v: "1.3 hrs", g: "2 hrs" }, { l: "REM", v: "1.7 hrs", g: "2 hrs" },
+              ]},
+            ],
+          },
+        ];
 
         return (
           <div style={{
             background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "20px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            padding: isMobile ? "18px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12, background: `${TEAL}12`,
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                  <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
-                  <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
-                  <line x1="8" y1="12" x2="16" y2="12"/>
-                </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Last Session: {session.type}</div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.date} - {session.duration} min</div>
-              </div>
-              <div style={{ padding: "6px 12px", borderRadius: 12, background: `${TEAL}10`, fontSize: 12, fontWeight: 700, color: TEAL }}>
-                {Math.round(totalVolume).toLocaleString()} lbs
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
-              {session.exercises.slice(0, 4).map((ex, i) => (
-                <div key={i} style={{ padding: "14px 16px", borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 8 }}>{ex.name}</div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {ex.sets.map((set, j) => (
-                      <div key={j} style={{
-                        padding: "4px 8px", borderRadius: 6, background: WHITE,
-                        fontSize: 11, fontWeight: 500, color: TEXT_SEC, border: `1px solid ${BORDER}`
-                      }}>
-                        {set.weight > 0 ? `${set.weight}x${set.reps}` : `BW x${set.reps}`}
-                        {set.rpe && <span style={{ color: TEAL, marginLeft: 4 }}>@{set.rpe}</span>}
-                      </div>
-                    ))}
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Daily Breakdown</div>
+            <div style={{
+              display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory",
+              paddingBottom: 8, WebkitOverflowScrolling: "touch",
+              msOverflowStyle: "none", scrollbarWidth: "none"
+            }}>
+              {cards.map((card, ci) => (
+                <div key={ci} style={{
+                  flex: "none", width: isMobile ? "85vw" : 300,
+                  scrollSnapAlign: "start",
+                  background: "#fafcfb", borderRadius: 16, border: `1px solid ${BORDER}`,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
+                }}>
+                  {/* Card header */}
+                  <div style={{
+                    padding: "14px 16px 10px", display: "flex", alignItems: "center", gap: 8,
+                    borderBottom: `1px solid ${BORDER}`,
+                    background: `linear-gradient(135deg, ${card.color}08, ${card.color}04)`
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: `${card.color}15`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: card.color
+                    }}>{card.icon}</div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{card.title}</span>
                   </div>
+
+                  {/* Period tabs + data */}
+                  <DataCardPeriods periods={card.periods} color={card.color} isMobile={isMobile} />
                 </div>
               ))}
             </div>
-            {session.exercises.length > 4 && (
-              <div style={{ fontSize: 12, color: TEXT_SEC, paddingTop: 12, textAlign: "center" }}>
-                +{session.exercises.length - 4} more exercises
-              </div>
-            )}
+            {/* Scroll hint */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
+              {cards.map((_, i) => (
+                <div key={i} style={{ width: i === 0 ? 16 : 6, height: 6, borderRadius: 3, background: i === 0 ? TEAL : "#d4ddd9", transition: "all 0.3s ease" }} />
+              ))}
+            </div>
           </div>
         );
       })()}
