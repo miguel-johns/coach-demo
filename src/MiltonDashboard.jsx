@@ -4668,360 +4668,520 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       {/* ═══ TAB: PROGRESS (Client-Facing View) ═══ */}
       {activeTab === "journey" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 20 : 28 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
           
-          {/* Hero Section */}
-          <div style={{
-            background: `linear-gradient(135deg, ${TEAL}08, ${MINT}06, ${SAGE}04)`,
-            borderRadius: 24, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "28px 20px" : "40px 48px",
-            textAlign: "center", position: "relative", overflow: "hidden"
-          }}>
-            <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${TEAL}08 0%, transparent 70%)`, pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${MINT}10 0%, transparent 70%)`, pointerEvents: "none" }} />
+          {/* ─── HERO: ATTENDANCE RATE ─── */}
+          {(() => {
+            const attendedSessions = (client.sessions || []).length || client.totalSessions || client.workoutDays * 4 + 2;
+            const scheduledSessions = client.scheduledSessions || attendedSessions;
+            const attendanceRate = scheduledSessions > 0 ? Math.min(100, Math.round((attendedSessions / scheduledSessions) * 100)) : 100;
+            const scoreColor = attendanceRate >= 85 ? ALERT_GREEN : attendanceRate >= 70 ? TEAL : "#ef6c3e";
             
-            {/* Send/Share Icon - Top Right */}
-            <button
-              onClick={() => setShowReport(true)}
-              style={{
-                position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16,
-                width: 40, height: 40, borderRadius: 12,
-                background: "transparent", border: `1px solid ${TEAL}30`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "all 0.2s ease"
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = `${TEAL}10`; e.currentTarget.style.borderColor = `${TEAL}50`; }}
-              onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${TEAL}30`; }}
-              title="Share Report"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-            
-            <div style={{ position: "relative" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 8 }}>
-                {client.program || "Training Program"}
-              </div>
-              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: TEXT, marginBottom: 6, letterSpacing: "-0.02em" }}>
-                {client.name}
-              </div>
-              <div style={{ fontSize: 16, color: TEXT_SEC, marginBottom: 24 }}>
-                Training since {client.assessment?.date || client.startDate}
-              </div>
-              
-              {/* Sessions Completed Ring */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                {(() => {
-                  const sz = isMobile ? 140 : 160;
-                  const r = sz / 2 - 14;
-                  const circ = 2 * Math.PI * r;
-                  const targetSessions = Math.max(20, Math.ceil(totalSessions / 10) * 10 + 10);
-                  const progress = Math.min(100, (totalSessions / targetSessions) * 100);
-                  const offset = circ * (1 - progress / 100);
-                  return (
-                    <div style={{ position: "relative" }}>
+            return (
+              <div style={{
+                background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
+                borderRadius: 20, border: `1px solid ${BORDER}`,
+                padding: isMobile ? "28px 20px" : "36px 32px",
+                textAlign: "center", position: "relative", overflow: "hidden"
+              }}>
+                {/* Send Icon - Top Right */}
+                <button
+                  onClick={() => setShowReport(true)}
+                  style={{
+                    position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16,
+                    width: 40, height: 40, borderRadius: 12, zIndex: 2,
+                    background: "transparent", border: `1px solid ${TEAL}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", transition: "all 0.2s ease"
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.background = `${TEAL}10`; e.currentTarget.style.borderColor = `${TEAL}50`; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${TEAL}30`; }}
+                  title="Share Report"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+                
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                  width: 300, height: 300, borderRadius: "50%",
+                  background: `radial-gradient(circle, ${scoreColor}18 0%, transparent 70%)`,
+                  pointerEvents: "none"
+                }} />
+                <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6, position: "relative" }}>Attendance Rate</div>
+                
+                {/* Attendance Ring */}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8, position: "relative" }}>
+                  {(() => {
+                    const sz = isMobile ? 180 : 200;
+                    const r = sz / 2 - 16;
+                    const circ = 2 * Math.PI * r;
+                    const offset = circ * (1 - attendanceRate / 100);
+                    return (
                       <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="12"/>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={TEAL} strokeWidth="12"
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="14"/>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="14"
                           strokeDasharray={circ} strokeDashoffset={offset}
                           strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
                           style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                         />
+                        <text x={sz/2} y={sz/2 - (isMobile ? 6 : 10)} textAnchor="middle" dominantBaseline="central"
+                          style={{ fontSize: isMobile ? 52 : 64, fontWeight: 800, fill: scoreColor, fontFamily: `'DM Sans', sans-serif` }}>
+                          {attendanceRate}%
+                        </text>
+                        <text x={sz/2} y={sz/2 + (isMobile ? 28 : 34)} textAnchor="middle" dominantBaseline="central"
+                          style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: `'DM Sans', sans-serif` }}>
+                          {attendedSessions}/{scheduledSessions} sessions
+                        </text>
                       </svg>
-                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
-                        <div style={{ fontSize: isMobile ? 36 : 44, fontWeight: 800, color: TEAL, lineHeight: 1 }}>{totalSessions}</div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginTop: 4 }}>sessions</div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              
-              {/* Quick Stats */}
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(3, auto)",
-                gap: isMobile ? 12 : 40,
-                justifyContent: isMobile ? "stretch" : "center",
-                maxWidth: isMobile ? "100%" : "none"
-              }}>
-                {[
-                  { label: "Current Streak", value: currentStreak, suffix: isMobile ? "" : " sessions" },
-                  { label: "Best Streak", value: bestStreak, suffix: isMobile ? "" : " sessions" },
-                  { label: "This Week", value: `${sessionsThisWeek}/${sessionsPerWeek}`, suffix: "" },
-                ].map((stat, i) => (
-                  <div key={i} style={{ 
-                    textAlign: "center",
-                    padding: isMobile ? "12px 8px" : "0",
-                    background: isMobile ? `${WHITE}80` : "transparent",
-                    borderRadius: isMobile ? 12 : 0,
-                    border: isMobile ? `1px solid ${BORDER}` : "none"
-                  }}>
-                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{stat.value}{stat.suffix}</div>
-                    <div style={{ fontSize: isMobile ? 9 : 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Before → After Comparison */}
-          <div style={{
-            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "24px 20px" : "32px 40px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Transformation</div>
-              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>{daysSinceAssessment} Days of Progress</div>
-            </div>
-            
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
-              {(() => {
-                const assessment = client.assessment || {};
-                const current = client.current || {};
-                const metrics = [
-                  { 
-                    label: "Bodyweight", 
-                    before: assessment.bodyweight || 185, 
-                    after: current.bodyweight || 180,
-                    unit: "lbs",
-                    goodDirection: client.program?.includes("Gain") ? "up" : "down"
-                  },
-                  { 
-                    label: "Body Fat", 
-                    before: assessment.bodyFat || 24, 
-                    after: current.bodyFat || 20,
-                    unit: "%",
-                    goodDirection: "down"
-                  },
-                  { 
-                    label: "Lean Mass", 
-                    before: assessment.leanMass || 140, 
-                    after: current.leanMass || 144,
-                    unit: "lbs",
-                    goodDirection: "up"
-                  },
-                ];
+                    );
+                  })()}
+                </div>
                 
-                return metrics.map((m, i) => {
-                  const change = m.after - m.before;
-                  const isPositive = (m.goodDirection === "up" && change > 0) || (m.goodDirection === "down" && change < 0);
-                  const changeColor = isPositive ? ALERT_GREEN : change === 0 ? TEXT_SEC : "#ef6c3e";
-                  const arrow = change > 0 ? "↑" : change < 0 ? "↓" : "→";
-                  
-                  return (
-                    <div key={i} style={{
-                      background: `linear-gradient(135deg, #f8faf9, #f5f8f6)`,
-                      borderRadius: 20, padding: isMobile ? "20px" : "28px",
-                      textAlign: "center", border: `1px solid ${BORDER}`
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>{m.label}</div>
-                      
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 8 : 12, marginBottom: 12 }}>
-                        <div>
-                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
-                          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
-                        </div>
-                        <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M5 12h14M14 7l5 5-5 5"/>
-                        </svg>
-                        <div>
-                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, marginBottom: 2 }}>Now</div>
-                          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
-                        </div>
-                      </div>
-                      
-                      <div style={{
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                        padding: "6px 14px", borderRadius: 20,
-                        background: `${changeColor}12`, color: changeColor,
-                        fontSize: 14, fontWeight: 700
-                      }}>
-                        <span style={{ fontSize: 16 }}>{arrow}</span>
-                        {Math.abs(change).toFixed(1)} {m.unit}
-                      </div>
+                {/* Quick Stats */}
+                <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 32, marginTop: 12, position: "relative" }}>
+                  {[
+                    { label: "Current Streak", value: currentStreak, suffix: " sessions" },
+                    { label: "Best Streak", value: bestStreak, suffix: " sessions" },
+                  ].map((stat, i) => (
+                    <div key={i} style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{stat.value}{!isMobile && stat.suffix}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
                     </div>
-                  );
-                });
-              })()}
-            </div>
-          </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
-          {/* Strength Progress */}
-          <div style={{
-            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "24px 20px" : "32px 40px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Getting Stronger</div>
-              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Your Strength Progress</div>
-            </div>
+          {/* ─── BODY COMPOSITION WITH LINE CHARTS ─── */}
+          {(() => {
+            const assessment = client.assessment || {};
+            const current = client.current || {};
+            const goals = client.goals || {};
             
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
-              {(() => {
-                const baselines = client.assessment?.strengthBaselines || {
-                  squat: { weight: 135, reps: 5 },
-                  benchPress: { weight: 95, reps: 5 },
-                  deadlift: { weight: 185, reps: 5 }
-                };
-                const liftNames = { squat: "Squat", benchPress: "Bench Press", deadlift: "Deadlift", overheadPress: "OHP" };
-                const liftColors = { squat: TEAL, benchPress: MINT, deadlift: "#3aafa9", overheadPress: "#8e7cc3" };
-                
-                return Object.entries(baselines).slice(0, 3).map(([key, val], i) => {
-                  const baseline1RM = Math.round(val.weight * (36 / (37 - val.reps)));
-                  const currentEst = Math.round(baseline1RM * (1.05 + Math.random() * 0.15));
-                  const improvement = currentEst - baseline1RM;
-                  const color = liftColors[key] || TEAL;
-                  
-                  return (
-                    <div key={i} style={{
-                      background: `linear-gradient(135deg, ${color}06, ${color}03)`,
-                      borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 28px",
-                      textAlign: "center", border: `1px solid ${color}20`,
-                      position: "relative", overflow: "hidden"
-                    }}>
-                      <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`, pointerEvents: "none" }} />
-                      
-                      <div style={{ fontSize: 14, fontWeight: 700, color: color, marginBottom: 16 }}>{liftNames[key]}</div>
-                      
-                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: isMobile ? 6 : 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, textDecoration: "line-through" }}>{baseline1RM}</span>
-                        <svg width={isMobile ? 16 : 20} height={isMobile ? 10 : 12} viewBox="0 0 24 12" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
-                        <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: color }}>{currentEst}</span>
-                        <span style={{ fontSize: isMobile ? 12 : 14, color: TEXT_SEC }}>lbs</span>
-                      </div>
-                      
-                      <div style={{ fontSize: 12, color: TEXT_SEC }}>Estimated 1RM</div>
-                      
-                      <div style={{
-                        marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4,
-                        padding: "4px 12px", borderRadius: 16,
-                        background: `${ALERT_GREEN}12`, color: ALERT_GREEN,
-                        fontSize: 13, fontWeight: 700
-                      }}>
-                        +{improvement} lbs
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-          </div>
+            const bodyCompMetrics = [
+              { label: "Bodyweight", start: assessment.bodyweight || 185, current: current.bodyweight || 180, goal: goals.targetWeight || 170, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
+              { label: "Body Fat", start: assessment.bodyFat || 24, current: current.bodyFat || 20, goal: Math.max(12, (assessment.bodyFat || 24) - 8), unit: "%", color: "#3aafa9", goodDir: "down", eta: "Week 11-13" },
+              { label: "Lean Mass", start: assessment.leanMass || 140, current: current.leanMass || 144, goal: (assessment.leanMass || 140) + 8, unit: "lbs", color: MINT, goodDir: "up", eta: "Week 14-16" },
+            ];
 
-          {/* Goal Trajectory */}
-          <div style={{
-            background: `linear-gradient(135deg, ${TEAL}04, ${MINT}03)`,
-            borderRadius: 24, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "24px 20px" : "32px 40px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Journey</div>
-              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Progress Toward Your Goal</div>
-            </div>
-            
-            {(() => {
-              const assessment = client.assessment || {};
-              const current = client.current || {};
-              const goals = client.goals || {};
-              
-              const startWeight = assessment.bodyweight || 185;
-              const currentWeight = current.bodyweight || 180;
-              const goalWeight = goals.targetWeight || 170;
-              
-              const totalChange = Math.abs(goalWeight - startWeight);
-              const progressMade = Math.abs(currentWeight - startWeight);
-              const progressPct = Math.min(100, Math.round((progressMade / totalChange) * 100));
-              const remaining = Math.abs(goalWeight - currentWeight);
-              
+            const weeksTotal = 12;
+            const weeksCurrent = Math.max(1, Math.floor(daysSinceAssessment / 7));
+
+            const smooth = (pts) => {
+              if (pts.length < 2) return "";
+              let d = `M ${pts[0].x},${pts[0].y}`;
+              for (let i = 0; i < pts.length - 1; i++) {
+                const cp = (pts[i+1].x - pts[i].x) / 2.5;
+                d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
+              }
+              return d;
+            };
+
+            return bodyCompMetrics.map((m, idx) => {
+              const cw = 380, ch = 160, pL = 44, pR = 20, pT = 24, pB = 32;
+              const plotW = cw - pL - pR, plotH = ch - pT - pB;
+
+              const actual = [];
+              for (let w = 0; w <= weeksCurrent; w++) {
+                const t = w / Math.max(1, weeksCurrent);
+                const noise = Math.sin(w * 2.3 + idx) * 0.4;
+                actual.push(m.start + (m.current - m.start) * t + noise);
+              }
+              const projected = [];
+              for (let w = weeksCurrent; w <= weeksTotal; w++) {
+                const t = (w - weeksCurrent) / Math.max(1, weeksTotal - weeksCurrent);
+                const eased = t * t * 0.3 + t * 0.7;
+                projected.push(m.current + (m.goal - m.current) * eased);
+              }
+
+              const allVals = [...actual, ...projected, m.goal];
+              const valMin = Math.min(...allVals) - Math.abs(m.goal - m.start) * 0.15;
+              const valMax = Math.max(...allVals) + Math.abs(m.goal - m.start) * 0.15;
+
+              const toY = (v) => pT + (1 - (v - valMin) / (valMax - valMin)) * plotH;
+              const toX = (w) => pL + (w / weeksTotal) * plotW;
+
+              const actualPts = actual.map((v, i) => ({ x: toX(i), y: toY(v) }));
+              const projPts = projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(v) }));
+              const lastPt = actualPts[actualPts.length - 1];
+              const goalPt = projPts[projPts.length - 1];
+              const startPt = actualPts[0];
+              const areaPath = `${smooth(actualPts)} L ${lastPt.x},${pT + plotH} L ${startPt.x},${pT + plotH} Z`;
+
+              const change = m.current - m.start;
+              const isGood = (m.goodDir === "down" && change < 0) || (m.goodDir === "up" && change > 0);
+              const progressPct = Math.min(100, Math.round((Math.abs(change) / Math.abs(m.goal - m.start)) * 100));
+
               return (
-                <div>
-                  {/* Progress Bar */}
-                  <div style={{ marginBottom: 32 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: isMobile ? 8 : 16 }}>
-                      <div style={{ textAlign: "left", flex: 1 }}>
-                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Started</div>
-                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: TEXT_SEC }}>{startWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
-                      </div>
-                      <div style={{ textAlign: "center", flex: 1 }}>
-                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current</div>
-                        <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: TEAL }}>{currentWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
-                      </div>
-                      <div style={{ textAlign: "right", flex: 1 }}>
-                        <div style={{ fontSize: isMobile ? 10 : 11, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
-                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: MINT }}>{goalWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
+                <div key={idx} style={{
+                  background: `linear-gradient(145deg, ${m.color}04, ${m.color}02, #fafcfb)`,
+                  borderRadius: 20, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "20px" : "24px 28px"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>{m.label}</div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
+                        {m.start}{m.unit} → {m.current}{m.unit} → <strong style={{ color: m.color }}>{m.goal}{m.unit} goal</strong>
                       </div>
                     </div>
-                    
-                    <div style={{ position: "relative", height: 16, borderRadius: 8, background: "#e8f0ee", overflow: "hidden" }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <div style={{
-                        position: "absolute", left: 0, top: 0, bottom: 0,
-                        width: `${progressPct}%`, borderRadius: 8,
-                        background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
-                        transition: "width 1.5s cubic-bezier(0.16, 1, 0.3, 1)"
-                      }} />
+                        padding: "5px 12px", borderRadius: 14,
+                        background: isGood ? `${ALERT_GREEN}12` : `${TEXT_SEC}10`,
+                        color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 12, fontWeight: 700
+                      }}>
+                        {change > 0 ? "+" : ""}{change.toFixed(1)}{m.unit}
+                      </div>
                       <div style={{
-                        position: "absolute", left: `${progressPct}%`, top: "50%", transform: "translate(-50%, -50%)",
-                        width: 24, height: 24, borderRadius: "50%",
-                        background: WHITE, border: `3px solid ${TEAL}`,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-                      }} />
-                    </div>
-                    
-                    <div style={{ textAlign: "center", marginTop: isMobile ? 12 : 16 }}>
-                      <span style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: TEAL }}>{progressPct}%</span>
-                      <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, marginLeft: 8 }}>to goal</span>
+                        padding: "5px 12px", borderRadius: 14,
+                        background: `${m.color}12`, color: m.color, fontSize: 12, fontWeight: 700
+                      }}>
+                        {progressPct}% to goal
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Milestones */}
-                  <div style={{ 
-                    display: "grid", 
-                    gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)",
-                    gap: isMobile ? 12 : 32,
-                    justifyContent: isMobile ? "stretch" : "center"
-                  }}>
-                    {[
-                      { icon: "check", label: "Started Program", done: true },
-                      { icon: "check", label: `Lost ${progressMade.toFixed(1)} lbs`, done: progressMade > 0 },
-                      { icon: progressPct >= 50 ? "check" : "circle", label: "Halfway Point", done: progressPct >= 50 },
-                      { icon: progressPct >= 100 ? "check" : "target", label: "Goal Reached", done: progressPct >= 100 },
-                    ].map((m, i) => (
-                      <div key={i} style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: 8,
-                        padding: isMobile ? "10px 12px" : "0",
-                        background: isMobile ? `${WHITE}60` : "transparent",
-                        borderRadius: isMobile ? 12 : 0,
-                        border: isMobile ? `1px solid ${BORDER}` : "none"
-                      }}>
-                        <div style={{
-                          width: isMobile ? 24 : 28, height: isMobile ? 24 : 28, borderRadius: "50%",
-                          background: m.done ? TEAL : "#e8f0ee",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0
-                        }}>
-                          {m.done ? (
-                            <svg width={isMobile ? 12 : 14} height={isMobile ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                          ) : (
-                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEXT_SEC }} />
-                          )}
-                        </div>
-                        <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 600, color: m.done ? TEXT : TEXT_SEC }}>{m.label}</span>
+
+                  <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px", marginBottom: 14 }}>
+                    <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                      <defs>
+                        <linearGradient id={`pAreaGrad${idx}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={m.color} stopOpacity="0.15"/>
+                          <stop offset="100%" stopColor={m.color} stopOpacity="0.02"/>
+                        </linearGradient>
+                      </defs>
+
+                      {[0, 0.5, 1].map((t, i) => {
+                        const v = valMin + t * (valMax - valMin);
+                        const y = toY(v);
+                        return (
+                          <g key={i}>
+                            <line x1={pL} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
+                            <text x={pL - 6} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
+                              {m.unit === "%" ? v.toFixed(0) : Math.round(v)}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      <line x1={pL} y1={toY(m.goal)} x2={cw - pR} y2={toY(m.goal)} stroke={m.color} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.4"/>
+
+                      {[0, weeksCurrent, weeksTotal].map((w, i) => (
+                        <text key={i} x={toX(w)} y={ch - 8} textAnchor="middle" fill={w === weeksCurrent ? TEXT : TEXT_SEC} fontSize="10" fontWeight={w === weeksCurrent ? 700 : 600} fontFamily="DM Sans">
+                          {w === 0 ? "Start" : w === weeksCurrent ? "Now" : `W${w}`}
+                        </text>
+                      ))}
+
+                      <line x1={toX(weeksCurrent)} y1={pT} x2={toX(weeksCurrent)} y2={pT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4,4" opacity="0.35"/>
+                      <path d={areaPath} fill={`url(#pAreaGrad${idx})`}/>
+                      <path d={smooth(actualPts)} fill="none" stroke={m.color} strokeWidth="3" strokeLinecap="round"/>
+                      <path d={smooth(projPts)} fill="none" stroke={m.color} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="8,5" opacity="0.55"/>
+
+                      {actualPts.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r={i === actualPts.length - 1 ? 6 : 3.5} fill={WHITE} stroke={m.color} strokeWidth={i === actualPts.length - 1 ? 3 : 2}/>
+                      ))}
+
+                      <circle cx={lastPt.x} cy={lastPt.y} r="12" fill={m.color} opacity="0.12"/>
+                      <circle cx={goalPt.x} cy={goalPt.y} r="8" fill={m.color} opacity="0.15"/>
+                      <circle cx={goalPt.x} cy={goalPt.y} r="5" fill={m.color}/>
+
+                      <g>
+                        <rect x={startPt.x - 18} y={startPt.y - 20} width="36" height="16" rx="8" fill={TEXT_SEC}/>
+                        <text x={startPt.x} y={startPt.y - 9.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{m.start}{m.unit === "%" ? "%" : ""}</text>
+                      </g>
+
+                      <g>
+                        <rect x={lastPt.x - 24} y={lastPt.y - 26} width="48" height="18" rx="9" fill={m.color}/>
+                        <text x={lastPt.x} y={lastPt.y - 14} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.current}{m.unit}</text>
+                      </g>
+
+                      <g>
+                        <rect x={goalPt.x - 24} y={goalPt.y + 10} width="48" height="18" rx="9" fill={m.color} opacity="0.85"/>
+                        <text x={goalPt.x} y={goalPt.y + 22} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.goal}{m.unit}</text>
+                      </g>
+                    </svg>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 16 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 16, height: 3, borderRadius: 2, background: m.color }} />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Actual</span>
                       </div>
-                    ))}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${m.color}`, opacity: 0.6 }} />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: "6px 14px", borderRadius: 12, background: `${m.color}08`, border: `1px solid ${m.color}12`,
+                      fontSize: 12, fontWeight: 700, color: TEXT
+                    }}>
+                      Est. Goal: <span style={{ color: m.color }}>{m.eta}</span>
+                    </div>
                   </div>
                 </div>
               );
-            })()}
+            });
+          })()}
+
+          {/* ─── STRENGTH PROGRESS BAR CHARTS ─── */}
+          {(() => {
+            const generateLiftHistory = (baseline, liftIdx) => {
+              const sessions = [];
+              const sessionCount = 8 + (liftIdx % 3);
+              const seed = client.name.charCodeAt(0) + liftIdx * 7;
+              
+              for (let i = 0; i < sessionCount; i++) {
+                const progress = i / (sessionCount - 1);
+                const baseIncrease = progress * (baseline * 0.12);
+                const variation = Math.sin(i * 1.7 + seed) * 3;
+                const weight = Math.round(baseline + baseIncrease + variation);
+                const reps = 5 + Math.floor((seed + i) % 3) - 1;
+                const date = new Date();
+                date.setDate(date.getDate() - (sessionCount - 1 - i) * 4);
+                sessions.push({
+                  date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                  weight,
+                  reps,
+                  e1rm: Math.round(weight * (36 / (37 - reps)))
+                });
+              }
+              return sessions;
+            };
+
+            const strengthBaselines = client.assessment?.strengthBaselines || {
+              squat: { weight: 135, reps: 5 },
+              benchPress: { weight: 95, reps: 5 },
+              deadlift: { weight: 185, reps: 5 }
+            };
+
+            const liftData = [
+              { name: "Squat", baseline: strengthBaselines.squat?.weight || 135, color: TEAL },
+              { name: "Bench Press", baseline: strengthBaselines.benchPress?.weight || 95, color: MINT },
+              { name: "Deadlift", baseline: strengthBaselines.deadlift?.weight || 185, color: "#3aafa9" },
+            ].map((lift, idx) => ({
+              ...lift,
+              sessions: generateLiftHistory(lift.baseline, idx)
+            }));
+
+            return liftData.map((lift, liftIdx) => {
+              const sessions = lift.sessions;
+              const maxE1RM = Math.max(...sessions.map(s => s.e1rm));
+              const minE1RM = Math.min(...sessions.map(s => s.e1rm));
+              const firstE1RM = sessions[0].e1rm;
+              const lastE1RM = sessions[sessions.length - 1].e1rm;
+              const totalGain = lastE1RM - firstE1RM;
+              const gainPct = Math.round((totalGain / firstE1RM) * 100);
+
+              const cw = 380, ch = 160, pL = 40, pR = 16, pT = 16, pB = 36;
+              const plotW = cw - pL - pR, plotH = ch - pT - pB;
+              const barWidth = Math.min(28, (plotW / sessions.length) - 6);
+              const barGap = (plotW - barWidth * sessions.length) / (sessions.length - 1);
+
+              const yMin = minE1RM - 10;
+              const yMax = maxE1RM + 15;
+              const toY = (v) => pT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+              const toX = (i) => pL + i * (barWidth + barGap);
+
+              return (
+                <div key={liftIdx} style={{
+                  background: `linear-gradient(155deg, ${lift.color}04, ${lift.color}02, #fafcfb)`,
+                  borderRadius: 20, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "20px" : "24px 28px"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
+                          <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                          <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                          <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>{lift.name}</div>
+                        <div style={{ fontSize: 13, color: TEXT_SEC }}>{sessions.length} sessions logged</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <div style={{ padding: "5px 12px", borderRadius: 14, background: `${ALERT_GREEN}12`, color: ALERT_GREEN, fontSize: 12, fontWeight: 700 }}>
+                        +{totalGain} lbs
+                      </div>
+                      <div style={{ padding: "5px 12px", borderRadius: 14, background: `${lift.color}12`, color: lift.color, fontSize: 12, fontWeight: 700 }}>
+                        +{gainPct}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                    <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${TEXT_SEC}08`, border: `1px solid ${BORDER}` }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Starting 1RM</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: TEXT_SEC }}>{firstE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                    </div>
+                    <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${lift.color}08`, border: `1px solid ${lift.color}15` }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: lift.color, textTransform: "uppercase", marginBottom: 4 }}>Current 1RM</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: lift.color }}>{lastE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                    </div>
+                  </div>
+
+                  <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px" }}>
+                    <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                      <defs>
+                        <linearGradient id={`pBarGrad${liftIdx}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={lift.color} stopOpacity="1"/>
+                          <stop offset="100%" stopColor={lift.color} stopOpacity="0.7"/>
+                        </linearGradient>
+                      </defs>
+
+                      {[0, 0.5, 1].map((t, i) => {
+                        const v = yMin + t * (yMax - yMin);
+                        const y = toY(v);
+                        return (
+                          <g key={i}>
+                            <line x1={pL - 4} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
+                            <text x={pL - 8} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
+                              {Math.round(v)}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      {sessions.map((s, i) => {
+                        const barH = toY(yMin) - toY(s.e1rm);
+                        const x = toX(i);
+                        const y = toY(s.e1rm);
+                        const isLast = i === sessions.length - 1;
+                        const isFirst = i === 0;
+                        
+                        return (
+                          <g key={i}>
+                            <rect
+                              x={x} y={y} width={barWidth} height={barH}
+                              rx={4} ry={4}
+                              fill={isLast ? lift.color : isFirst ? `${lift.color}50` : `${lift.color}${Math.round(50 + (i / sessions.length) * 50).toString(16).padStart(2, '0')}`}
+                            />
+                            {isLast && (
+                              <g>
+                                <rect x={x + barWidth/2 - 18} y={y - 20} width="36" height="16" rx="8" fill={lift.color}/>
+                                <text x={x + barWidth/2} y={y - 9} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{s.e1rm}</text>
+                              </g>
+                            )}
+                            <text x={x + barWidth/2} y={ch - 8} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="500" fontFamily="DM Sans">
+                              {i === 0 || i === sessions.length - 1 || i === Math.floor(sessions.length / 2) ? s.date.split(' ')[0] : ''}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      {(() => {
+                        const pts = sessions.map((s, i) => ({ x: toX(i) + barWidth / 2, y: toY(s.e1rm) }));
+                        const smooth = (points) => {
+                          if (points.length < 2) return "";
+                          let d = `M ${points[0].x},${points[0].y}`;
+                          for (let i = 0; i < points.length - 1; i++) {
+                            const cp = (points[i+1].x - points[i].x) / 2.5;
+                            d += ` C ${points[i].x+cp},${points[i].y} ${points[i+1].x-cp},${points[i+1].y} ${points[i+1].x},${points[i+1].y}`;
+                          }
+                          return d;
+                        };
+                        return <path d={smooth(pts)} fill="none" stroke={lift.color} strokeWidth="2" strokeLinecap="round" opacity="0.4" strokeDasharray="4,3"/>;
+                      })()}
+                    </svg>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                      <span style={{ fontWeight: 600 }}>Best Set:</span> {sessions[sessions.length - 1].weight} lbs x {sessions[sessions.length - 1].reps}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 12, height: 3, borderRadius: 2, background: lift.color, opacity: 0.4 }} />
+                      <span style={{ fontSize: 11, color: TEXT_SEC }}>Est. 1RM trend</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            });
+          })()}
+
+          {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+          <div style={{
+            background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)`,
+            borderRadius: 20, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "20px" : "28px 32px"
+          }}>
+            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
+            
+            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+              <div style={{
+                flex: 1, padding: "18px 16px", borderRadius: 16,
+                background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
+                border: `1px solid ${TEAL}15`, textAlign: "center"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+              </div>
+              <div style={{
+                flex: 1, padding: "18px 16px", borderRadius: 16,
+                background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
+                border: `1px solid ${MINT}15`, textAlign: "center"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
+              {[
+                { name: "First Session", icon: "check", earned: totalSessions >= 1 },
+                { name: "5 Session Streak", icon: "fire", earned: bestStreak >= 5 },
+                { name: "10 Sessions", icon: "trophy", earned: totalSessions >= 10 },
+                { name: "Body Comp Warrior", icon: "muscle", earned: true },
+                { name: "PR Crusher", icon: "star", earned: true },
+                { name: "Nutrition Champion", icon: "apple", earned: client.mealsLogged >= 15 },
+              ].map((a, i) => {
+                const icons = {
+                  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
+                  fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
+                  trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
+                  muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+                  star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
+                  apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+                };
+                return (
+                  <div key={i} style={{
+                    padding: "14px 12px", borderRadius: 14,
+                    background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
+                    border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
+                    textAlign: "center", opacity: a.earned ? 1 : 0.5
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
+                      background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: a.earned ? ALERT_GREEN : TEXT_SEC
+                    }}>
+                      {icons[a.icon]}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? "Earned" : "Locked"}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Motivational Footer */}
+          {/* ─── SHARE/EXPORT FOOTER ─── */}
           <div style={{
             background: `linear-gradient(135deg, ${TEAL}, ${MINT})`,
             borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 40px",
@@ -5034,7 +5194,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               Every session is a step closer to your goal.
             </div>
             
-            {/* Share/Export Button */}
             <button
               onClick={() => setShowReport(true)}
               style={{
