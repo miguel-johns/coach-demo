@@ -6861,21 +6861,29 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
   
   // Handler for adding an exercise via chat
   const handleAddExercise = () => {
+    console.log("[v0] handleAddExercise called", { expandedDay, onChatSend, setChatInput });
     if (expandedDay && onChatSend) {
       const prompt = `Add a new exercise to ${expandedDay.dayLabel} (${expandedDay.workout?.title || 'this workout'})`;
+      console.log("[v0] Sending prompt via onChatSend:", prompt);
       onChatSend(prompt);
     } else if (setChatInput) {
-      setChatInput(`Add a new exercise to ${expandedDay?.dayLabel || 'this workout'}`);
+      const text = `Add a new exercise to ${expandedDay?.dayLabel || 'this workout'}`;
+      console.log("[v0] Setting chat input:", text);
+      setChatInput(text);
     }
   };
   
   // Handler for editing an exercise via chat
   const handleEditExercise = (exercise) => {
+    console.log("[v0] handleEditExercise called", { exercise, onChatSend, setChatInput });
     if (onChatSend) {
       const prompt = `Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`;
+      console.log("[v0] Sending edit prompt via onChatSend:", prompt);
       onChatSend(prompt);
     } else if (setChatInput) {
-      setChatInput(`Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`);
+      const text = `Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`;
+      console.log("[v0] Setting chat input for edit:", text);
+      setChatInput(text);
     }
   };
   
