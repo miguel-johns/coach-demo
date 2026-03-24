@@ -7227,162 +7227,211 @@ function WorkoutCanvas({ data, onClose }) {
             </div>
           </div>
           
-          {/* Expanded Content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-            {/* Workout Title Banner */}
+          {/* Expanded Content - Spreadsheet Style */}
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            {/* Spreadsheet Table */}
+            <div style={{ flex: 1, overflow: "auto" }}>
+              <table style={{ 
+                width: "100%", borderCollapse: "collapse", 
+                fontSize: 13, tableLayout: "fixed"
+              }}>
+                {/* Header Row */}
+                <thead>
+                  <tr style={{ background: "#f8faf9", position: "sticky", top: 0, zIndex: 10 }}>
+                    <th style={{ 
+                      width: 40, padding: "12px 8px", 
+                      borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "center"
+                    }}>#</th>
+                    <th style={{ 
+                      width: "35%", padding: "12px 16px", 
+                      borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "left"
+                    }}>Exercise</th>
+                    <th style={{ 
+                      width: "10%", padding: "12px 12px", 
+                      borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "center"
+                    }}>Sets</th>
+                    <th style={{ 
+                      width: "15%", padding: "12px 12px", 
+                      borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "center"
+                    }}>Reps</th>
+                    <th style={{ 
+                      width: "15%", padding: "12px 12px", 
+                      borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "center"
+                    }}>Weight</th>
+                    <th style={{ 
+                      width: "15%", padding: "12px 12px", 
+                      borderBottom: `2px solid ${BORDER}`,
+                      fontWeight: 600, color: TEXT_SEC, fontSize: 11, 
+                      textTransform: "uppercase", letterSpacing: "0.03em",
+                      textAlign: "center"
+                    }}>Rest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expandedDay.workout?.exercises?.map((ex, exIdx) => {
+                    // Generate rest time based on exercise type/position
+                    const restTime = exIdx < 2 ? "90-120s" : exIdx < 4 ? "60-90s" : "45-60s";
+                    return (
+                      <tr 
+                        key={exIdx}
+                        style={{ 
+                          background: exIdx % 2 === 0 ? WHITE : "#fafcfb",
+                          transition: "background 0.15s ease",
+                          cursor: "pointer"
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = TEAL_LIGHT}
+                        onMouseLeave={e => e.currentTarget.style.background = exIdx % 2 === 0 ? WHITE : "#fafcfb"}
+                      >
+                        {/* Row Number */}
+                        <td style={{ 
+                          padding: "14px 8px", 
+                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                          textAlign: "center", fontWeight: 600, color: TEXT_SEC, fontSize: 12
+                        }}>{exIdx + 1}</td>
+                        
+                        {/* Exercise Name */}
+                        <td style={{ 
+                          padding: "14px 16px", 
+                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                          fontWeight: 600, color: TEXT
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{
+                              width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                              background: TEAL, color: WHITE,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 11, fontWeight: 700
+                            }}>
+                              {ex.name.charAt(0)}
+                            </div>
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {ex.name}
+                            </span>
+                          </div>
+                        </td>
+                        
+                        {/* Sets */}
+                        <td style={{ 
+                          padding: "14px 12px", 
+                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                          textAlign: "center", fontWeight: 700, color: TEXT, fontSize: 14
+                        }}>{ex.sets}</td>
+                        
+                        {/* Reps */}
+                        <td style={{ 
+                          padding: "14px 12px", 
+                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                          textAlign: "center", color: TEXT
+                        }}>
+                          <div style={{ 
+                            display: "inline-block", padding: "4px 10px", 
+                            background: "#f0f4f3", borderRadius: 4,
+                            fontWeight: 600, fontSize: 12
+                          }}>{ex.reps}</div>
+                        </td>
+                        
+                        {/* Weight */}
+                        <td style={{ 
+                          padding: "14px 12px", 
+                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                          textAlign: "center", fontWeight: 700, color: TEAL, fontSize: 14
+                        }}>{ex.weight}</td>
+                        
+                        {/* Rest Time */}
+                        <td style={{ 
+                          padding: "14px 12px", 
+                          borderBottom: `1px solid ${BORDER}`,
+                          textAlign: "center"
+                        }}>
+                          <div style={{ 
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "4px 10px", background: "#fff7ed", 
+                            borderRadius: 4, color: "#c2410c", fontWeight: 600, fontSize: 12
+                          }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                            {restTime}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  
+                  {/* Add Row */}
+                  <tr>
+                    <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+                      <div 
+                        style={{ 
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                          padding: "10px", borderRadius: 8, border: `1px dashed ${BORDER}`,
+                          color: TEXT_SEC, cursor: "pointer", transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={e => { 
+                          e.currentTarget.style.background = TEAL_LIGHT; 
+                          e.currentTarget.style.borderColor = TEAL; 
+                          e.currentTarget.style.color = TEAL; 
+                        }}
+                        onMouseLeave={e => { 
+                          e.currentTarget.style.background = "transparent"; 
+                          e.currentTarget.style.borderColor = BORDER; 
+                          e.currentTarget.style.color = TEXT_SEC; 
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span style={{ fontSize: 13, fontWeight: 500 }}>Add exercise</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Summary Bar */}
             <div style={{ 
-              padding: "16px 20px", 
-              background: TEAL_LIGHT,
-              borderRadius: 12,
-              marginBottom: 20,
+              padding: "12px 20px", background: "#f8faf9", 
+              borderTop: `1px solid ${BORDER}`,
               display: "flex", alignItems: "center", justifyContent: "space-between"
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10, background: TEAL,
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
-                    <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
-                    <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
-                  </svg>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600, color: TEXT }}>{expandedDay.workout?.exercises?.length || 0}</span> exercises
                 </div>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
-                    {expandedDay.workout?.title}
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                    {expandedDay.workout?.exercises?.length || 0} exercises
-                  </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600, color: TEXT }}>
+                    {expandedDay.workout?.exercises?.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
+                  </span> total sets
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  Est. duration: <span style={{ fontWeight: 600, color: TEXT }}>45-60 min</span>
                 </div>
               </div>
               <div style={{ 
                 padding: "6px 12px", borderRadius: 6, 
-                background: WHITE, fontSize: 12, fontWeight: 600, color: TEAL 
+                background: TEAL_LIGHT, fontSize: 11, fontWeight: 600, color: TEAL,
+                display: "flex", alignItems: "center", gap: 6
               }}>
-                Day {expandedDay.dayIdx + 1}
-              </div>
-            </div>
-            
-            {/* Exercise List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {expandedDay.workout?.exercises?.map((ex, exIdx) => (
-                <div
-                  key={exIdx}
-                  style={{
-                    background: WHITE, borderRadius: 12,
-                    border: `1px solid ${BORDER}`,
-                    overflow: "hidden",
-                    transition: "all 0.2s ease",
-                    opacity: 0, transform: "translateY(10px)",
-                    animation: `fadeUp 0.4s ease-out ${0.1 + exIdx * 0.08}s forwards`
-                  }}
-                >
-                  {/* Exercise Header */}
-                  <div style={{ 
-                    padding: "16px 20px",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    borderBottom: `1px solid ${BORDER}`,
-                    background: "#fafcfb"
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{
-                        width: 32, height: 32, borderRadius: 8,
-                        background: TEAL, color: WHITE,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 14, fontWeight: 700
-                      }}>
-                        {exIdx + 1}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
-                          {ex.name}
-                        </div>
-                        <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-                          {ex.sets} sets
-                        </div>
-                      </div>
-                    </div>
-                    <div 
-                      style={{ 
-                        padding: "6px 8px", borderRadius: 6, cursor: "pointer",
-                        color: TEXT_SEC, transition: "all 0.15s ease"
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  {/* Set Details */}
-                  <div style={{ padding: "12px 20px" }}>
-                    <div style={{ 
-                      display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12,
-                      marginBottom: 12
-                    }}>
-                      <div style={{ 
-                        padding: "12px", borderRadius: 8, background: "#f8faf9",
-                        textAlign: "center"
-                      }}>
-                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Sets</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
-                      </div>
-                      <div style={{ 
-                        padding: "12px", borderRadius: 8, background: "#f8faf9",
-                        textAlign: "center"
-                      }}>
-                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Reps</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{ex.reps.split(",")[0]}</div>
-                      </div>
-                      <div style={{ 
-                        padding: "12px", borderRadius: 8, background: "#f8faf9",
-                        textAlign: "center"
-                      }}>
-                        <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>Weight</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{ex.weight}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Rep scheme breakdown */}
-                    <div style={{ 
-                      padding: "10px 12px", borderRadius: 8, 
-                      background: TEAL_LIGHT, 
-                      display: "flex", alignItems: "center", gap: 8
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                      </svg>
-                      <span style={{ fontSize: 12, color: TEXT }}>
-                        <strong>Rep scheme:</strong> {ex.reps}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Notes Section */}
-            <div style={{ 
-              marginTop: 20, padding: "16px", 
-              background: "#fffbf5", borderRadius: 12,
-              border: `1px solid #f5e6d3`
-            }}>
-              <div style={{ 
-                fontSize: 12, fontWeight: 600, color: "#b8860b", 
-                marginBottom: 8, display: "flex", alignItems: "center", gap: 6
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
-                Coach Notes
-              </div>
-              <div style={{ fontSize: 13, color: "#5c4a32", lineHeight: 1.5 }}>
-                Focus on controlled tempo. 2 seconds down, 1 second pause, explosive up. 
-                Rest 90-120 seconds between sets for strength movements.
+                Click row to edit
               </div>
             </div>
           </div>
