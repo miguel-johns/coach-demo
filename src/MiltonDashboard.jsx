@@ -2205,8 +2205,6 @@ function MobileCanvasSheet({
             <WorkoutCanvas 
               data={canvasData}
               onClose={onClose}
-              onChatSend={onChatSend}
-              setChatInput={setLocalChatInput}
             />
           )}
           {canvasType === "messageSequence" && (
@@ -6855,36 +6853,49 @@ function MealPlanCanvas({ data, onClose }) {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
+function WorkoutCanvas({ data, onClose }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
+  const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
+  const [exercises, setExercises] = useState([]); // Local copy of exercises for editing
+  const [isAddingRow, setIsAddingRow] = useState(false);
+  const [newExercise, setNewExercise] = useState({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" });
   
-  // Handler for adding an exercise via chat
+  // When expandedDay changes, copy exercises to local state
+  useEffect(() => {
+    if (expandedDay?.workout?.exercises) {
+      setExercises(expandedDay.workout.exercises.map((ex, idx) => ({
+        ...ex,
+        rest: idx < 2 ? "90-120s" : idx < 4 ? "60-90s" : "45-60s"
+      })));
+    }
+  }, [expandedDay]);
+  
+  // Handle cell edit
+  const handleCellChange = (rowIdx, field, value) => {
+    setExercises(prev => prev.map((ex, idx) => 
+      idx === rowIdx ? { ...ex, [field]: value } : ex
+    ));
+  };
+  
+  // Handle adding new exercise
   const handleAddExercise = () => {
-    console.log("[v0] handleAddExercise called", { expandedDay, onChatSend, setChatInput });
-    if (expandedDay && onChatSend) {
-      const prompt = `Add a new exercise to ${expandedDay.dayLabel} (${expandedDay.workout?.title || 'this workout'})`;
-      console.log("[v0] Sending prompt via onChatSend:", prompt);
-      onChatSend(prompt);
-    } else if (setChatInput) {
-      const text = `Add a new exercise to ${expandedDay?.dayLabel || 'this workout'}`;
-      console.log("[v0] Setting chat input:", text);
-      setChatInput(text);
+    if (newExercise.name.trim()) {
+      setExercises(prev => [...prev, { 
+        ...newExercise, 
+        sets: newExercise.sets || "3",
+        reps: newExercise.reps || "10",
+        weight: newExercise.weight || "BW",
+        rest: newExercise.rest || "60-90s"
+      }]);
+      setNewExercise({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" });
+      setIsAddingRow(false);
     }
   };
   
-  // Handler for editing an exercise via chat
-  const handleEditExercise = (exercise) => {
-    console.log("[v0] handleEditExercise called", { exercise, onChatSend, setChatInput });
-    if (onChatSend) {
-      const prompt = `Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`;
-      console.log("[v0] Sending edit prompt via onChatSend:", prompt);
-      onChatSend(prompt);
-    } else if (setChatInput) {
-      const text = `Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`;
-      console.log("[v0] Setting chat input for edit:", text);
-      setChatInput(text);
-    }
+  // Handle delete exercise
+  const handleDeleteExercise = (rowIdx) => {
+    setExercises(prev => prev.filter((_, idx) => idx !== rowIdx));
   };
   
   if (!data) return null;
@@ -7295,19 +7306,56 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {expandedDay.workout?.exercises?.map((ex, exIdx) => {
-                    // Generate rest time based on exercise type/position
-                    const restTime = exIdx < 2 ? "90-120s" : exIdx < 4 ? "60-90s" : "45-60s";
+                  {exercises.map((ex, exIdx) => {
+                    const isEditing = (field) => editingCell?.rowIdx === exIdx && editingCell?.field === field;
+                    
+                    const EditableCell = ({ field, value, style, inputStyle }) => (
+                      <td 
+                        style={{ 
+                          ...style,
+                          cursor: "text",
+                          position: "relative"
+                        }}
+                        onClick={() => setEditingCell({ rowIdx: exIdx, field })}
+                      >
+                        {isEditing(field) ? (
+                          <input
+                            autoFocus
+                            value={value}
+                            onChange={(e) => handleCellChange(exIdx, field, e.target.value)}
+                            onBlur={() => setEditingCell(null)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") setEditingCell(null);
+                              if (e.key === "Tab") {
+                                e.preventDefault();
+                                const fields = ["name", "sets", "reps", "weight", "rest"];
+                                const currentIdx = fields.indexOf(field);
+                                const nextField = fields[(currentIdx + 1) % fields.length];
+                                setEditingCell({ rowIdx: exIdx, field: nextField });
+                              }
+                            }}
+                            style={{
+                              width: "100%", border: "none", outline: "none",
+                              background: "transparent", fontSize: "inherit",
+                              fontWeight: "inherit", color: "inherit",
+                              textAlign: "inherit", padding: 0,
+                              ...inputStyle
+                            }}
+                          />
+                        ) : (
+                          value
+                        )}
+                      </td>
+                    );
+                    
                     return (
                       <tr 
                         key={exIdx}
-                        onClick={() => handleEditExercise(ex)}
                         style={{ 
                           background: exIdx % 2 === 0 ? WHITE : "#fafcfb",
-                          transition: "background 0.15s ease",
-                          cursor: "pointer"
+                          transition: "background 0.15s ease"
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = TEAL_LIGHT}
+                        onMouseEnter={e => { if (!editingCell) e.currentTarget.style.background = TEAL_LIGHT; }}
                         onMouseLeave={e => e.currentTarget.style.background = exIdx % 2 === 0 ? WHITE : "#fafcfb"}
                       >
                         {/* Row Number */}
@@ -7315,14 +7363,36 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
                           padding: "14px 8px", 
                           borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
                           textAlign: "center", fontWeight: 600, color: TEXT_SEC, fontSize: 12
-                        }}>{exIdx + 1}</td>
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                            {exIdx + 1}
+                            <button
+                              onClick={() => handleDeleteExercise(exIdx)}
+                              style={{
+                                width: 18, height: 18, borderRadius: 4, border: "none",
+                                background: "transparent", cursor: "pointer", color: TEXT_SEC,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                opacity: 0.5, transition: "all 0.15s ease"
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = "#ef4444"; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = TEXT_SEC; }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
                         
                         {/* Exercise Name */}
-                        <td style={{ 
-                          padding: "14px 16px", 
-                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                          fontWeight: 600, color: TEXT
-                        }}>
+                        <td 
+                          style={{ 
+                            padding: "14px 16px", 
+                            borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                            fontWeight: 600, color: TEXT, cursor: "text"
+                          }}
+                          onClick={() => setEditingCell({ rowIdx: exIdx, field: "name" })}
+                        >
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <div style={{
                               width: 28, height: 28, borderRadius: 6, flexShrink: 0,
@@ -7330,90 +7400,325 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
                               display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: 11, fontWeight: 700
                             }}>
-                              {ex.name.charAt(0)}
+                              {ex.name.charAt(0) || "?"}
                             </div>
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {ex.name}
-                            </span>
+                            {isEditing("name") ? (
+                              <input
+                                autoFocus
+                                value={ex.name}
+                                onChange={(e) => handleCellChange(exIdx, "name", e.target.value)}
+                                onBlur={() => setEditingCell(null)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") setEditingCell(null);
+                                  if (e.key === "Tab") {
+                                    e.preventDefault();
+                                    setEditingCell({ rowIdx: exIdx, field: "sets" });
+                                  }
+                                }}
+                                style={{
+                                  flex: 1, border: "none", outline: "none",
+                                  background: "transparent", fontSize: 13,
+                                  fontWeight: 600, color: TEXT, padding: 0
+                                }}
+                              />
+                            ) : (
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {ex.name}
+                              </span>
+                            )}
                           </div>
                         </td>
                         
                         {/* Sets */}
-                        <td style={{ 
-                          padding: "14px 12px", 
-                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                          textAlign: "center", fontWeight: 700, color: TEXT, fontSize: 14
-                        }}>{ex.sets}</td>
+                        <EditableCell 
+                          field="sets" 
+                          value={ex.sets}
+                          style={{ 
+                            padding: "14px 12px", 
+                            borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                            textAlign: "center", fontWeight: 700, color: TEXT, fontSize: 14
+                          }}
+                          inputStyle={{ textAlign: "center" }}
+                        />
                         
                         {/* Reps */}
-                        <td style={{ 
-                          padding: "14px 12px", 
-                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                          textAlign: "center", color: TEXT
-                        }}>
-                          <div style={{ 
-                            display: "inline-block", padding: "4px 10px", 
-                            background: "#f0f4f3", borderRadius: 4,
-                            fontWeight: 600, fontSize: 12
-                          }}>{ex.reps}</div>
+                        <td 
+                          style={{ 
+                            padding: "14px 12px", 
+                            borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                            textAlign: "center", color: TEXT, cursor: "text"
+                          }}
+                          onClick={() => setEditingCell({ rowIdx: exIdx, field: "reps" })}
+                        >
+                          {isEditing("reps") ? (
+                            <input
+                              autoFocus
+                              value={ex.reps}
+                              onChange={(e) => handleCellChange(exIdx, "reps", e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") setEditingCell(null);
+                                if (e.key === "Tab") {
+                                  e.preventDefault();
+                                  setEditingCell({ rowIdx: exIdx, field: "weight" });
+                                }
+                              }}
+                              style={{
+                                width: "100%", border: "none", outline: "none",
+                                background: "transparent", fontSize: 12,
+                                fontWeight: 600, color: TEXT, textAlign: "center", padding: 0
+                              }}
+                            />
+                          ) : (
+                            <div style={{ 
+                              display: "inline-block", padding: "4px 10px", 
+                              background: "#f0f4f3", borderRadius: 4,
+                              fontWeight: 600, fontSize: 12
+                            }}>{ex.reps}</div>
+                          )}
                         </td>
                         
                         {/* Weight */}
-                        <td style={{ 
-                          padding: "14px 12px", 
-                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                          textAlign: "center", fontWeight: 700, color: TEAL, fontSize: 14
-                        }}>{ex.weight}</td>
+                        <td 
+                          style={{ 
+                            padding: "14px 12px", 
+                            borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                            textAlign: "center", fontWeight: 700, color: TEAL, fontSize: 14, cursor: "text"
+                          }}
+                          onClick={() => setEditingCell({ rowIdx: exIdx, field: "weight" })}
+                        >
+                          {isEditing("weight") ? (
+                            <input
+                              autoFocus
+                              value={ex.weight}
+                              onChange={(e) => handleCellChange(exIdx, "weight", e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") setEditingCell(null);
+                                if (e.key === "Tab") {
+                                  e.preventDefault();
+                                  setEditingCell({ rowIdx: exIdx, field: "rest" });
+                                }
+                              }}
+                              style={{
+                                width: "100%", border: "none", outline: "none",
+                                background: "transparent", fontSize: 14,
+                                fontWeight: 700, color: TEAL, textAlign: "center", padding: 0
+                              }}
+                            />
+                          ) : ex.weight}
+                        </td>
                         
                         {/* Rest Time */}
-                        <td style={{ 
-                          padding: "14px 12px", 
-                          borderBottom: `1px solid ${BORDER}`,
-                          textAlign: "center"
-                        }}>
-                          <div style={{ 
-                            display: "inline-flex", alignItems: "center", gap: 4,
-                            padding: "4px 10px", background: "#fff7ed", 
-                            borderRadius: 4, color: "#c2410c", fontWeight: 600, fontSize: 12
-                          }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                              <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-                            </svg>
-                            {restTime}
-                          </div>
+                        <td 
+                          style={{ 
+                            padding: "14px 12px", 
+                            borderBottom: `1px solid ${BORDER}`,
+                            textAlign: "center", cursor: "text"
+                          }}
+                          onClick={() => setEditingCell({ rowIdx: exIdx, field: "rest" })}
+                        >
+                          {isEditing("rest") ? (
+                            <input
+                              autoFocus
+                              value={ex.rest}
+                              onChange={(e) => handleCellChange(exIdx, "rest", e.target.value)}
+                              onBlur={() => setEditingCell(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") setEditingCell(null);
+                                if (e.key === "Tab") {
+                                  e.preventDefault();
+                                  // Move to next row's name or stay if last row
+                                  if (exIdx < exercises.length - 1) {
+                                    setEditingCell({ rowIdx: exIdx + 1, field: "name" });
+                                  } else {
+                                    setEditingCell(null);
+                                  }
+                                }
+                              }}
+                              style={{
+                                width: "100%", border: "none", outline: "none",
+                                background: "transparent", fontSize: 12,
+                                fontWeight: 600, color: "#c2410c", textAlign: "center", padding: 0
+                              }}
+                            />
+                          ) : (
+                            <div style={{ 
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              padding: "4px 10px", background: "#fff7ed", 
+                              borderRadius: 4, color: "#c2410c", fontWeight: 600, fontSize: 12
+                            }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                              </svg>
+                              {ex.rest}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
                   })}
                   
-                  {/* Add Row */}
-                  <tr>
-                    <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
-                      <div 
-                        onClick={handleAddExercise}
-                        style={{ 
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                          padding: "10px", borderRadius: 8, border: `1px dashed ${BORDER}`,
-                          color: TEXT_SEC, cursor: "pointer", transition: "all 0.15s ease"
-                        }}
-                        onMouseEnter={e => { 
-                          e.currentTarget.style.background = TEAL_LIGHT; 
-                          e.currentTarget.style.borderColor = TEAL; 
-                          e.currentTarget.style.color = TEAL; 
-                        }}
-                        onMouseLeave={e => { 
-                          e.currentTarget.style.background = "transparent"; 
-                          e.currentTarget.style.borderColor = BORDER; 
-                          e.currentTarget.style.color = TEXT_SEC; 
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        <span style={{ fontSize: 13, fontWeight: 500 }}>Add exercise</span>
-                      </div>
-                    </td>
-                  </tr>
+                  {/* Add Row - inline form or button */}
+                  {isAddingRow ? (
+                    <tr style={{ background: TEAL_LIGHT }}>
+                      <td style={{ 
+                        padding: "14px 8px", 
+                        borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                        textAlign: "center", fontWeight: 600, color: TEXT_SEC, fontSize: 12
+                      }}>
+                        {exercises.length + 1}
+                      </td>
+                      <td style={{ 
+                        padding: "14px 16px", 
+                        borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                            background: TEAL, color: WHITE,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 11, fontWeight: 700
+                          }}>
+                            {newExercise.name.charAt(0) || "+"}
+                          </div>
+                          <input
+                            autoFocus
+                            placeholder="Exercise name"
+                            value={newExercise.name}
+                            onChange={(e) => setNewExercise(prev => ({ ...prev, name: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleAddExercise();
+                              if (e.key === "Escape") { setIsAddingRow(false); setNewExercise({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" }); }
+                            }}
+                            style={{
+                              flex: 1, border: "none", outline: "none",
+                              background: "transparent", fontSize: 13,
+                              fontWeight: 600, color: TEXT, padding: 0
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td style={{ 
+                        padding: "14px 12px", 
+                        borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                        textAlign: "center"
+                      }}>
+                        <input
+                          placeholder="3"
+                          value={newExercise.sets}
+                          onChange={(e) => setNewExercise(prev => ({ ...prev, sets: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleAddExercise(); }}
+                          style={{
+                            width: "100%", border: "none", outline: "none",
+                            background: "transparent", fontSize: 14,
+                            fontWeight: 700, color: TEXT, textAlign: "center", padding: 0
+                          }}
+                        />
+                      </td>
+                      <td style={{ 
+                        padding: "14px 12px", 
+                        borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                        textAlign: "center"
+                      }}>
+                        <input
+                          placeholder="10"
+                          value={newExercise.reps}
+                          onChange={(e) => setNewExercise(prev => ({ ...prev, reps: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleAddExercise(); }}
+                          style={{
+                            width: "100%", border: "none", outline: "none",
+                            background: "transparent", fontSize: 12,
+                            fontWeight: 600, color: TEXT, textAlign: "center", padding: 0
+                          }}
+                        />
+                      </td>
+                      <td style={{ 
+                        padding: "14px 12px", 
+                        borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
+                        textAlign: "center"
+                      }}>
+                        <input
+                          placeholder="BW"
+                          value={newExercise.weight}
+                          onChange={(e) => setNewExercise(prev => ({ ...prev, weight: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleAddExercise(); }}
+                          style={{
+                            width: "100%", border: "none", outline: "none",
+                            background: "transparent", fontSize: 14,
+                            fontWeight: 700, color: TEAL, textAlign: "center", padding: 0
+                          }}
+                        />
+                      </td>
+                      <td style={{ 
+                        padding: "14px 12px", 
+                        borderBottom: `1px solid ${BORDER}`,
+                        textAlign: "center"
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                          <input
+                            placeholder="60-90s"
+                            value={newExercise.rest}
+                            onChange={(e) => setNewExercise(prev => ({ ...prev, rest: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleAddExercise(); }}
+                            style={{
+                              width: 60, border: "none", outline: "none",
+                              background: "transparent", fontSize: 12,
+                              fontWeight: 600, color: "#c2410c", textAlign: "center", padding: 0
+                            }}
+                          />
+                          <button
+                            onClick={handleAddExercise}
+                            style={{
+                              padding: "4px 8px", borderRadius: 4, border: "none",
+                              background: TEAL, color: WHITE, fontSize: 11, fontWeight: 600,
+                              cursor: "pointer"
+                            }}
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => { setIsAddingRow(false); setNewExercise({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" }); }}
+                            style={{
+                              padding: "4px 8px", borderRadius: 4, border: `1px solid ${BORDER}`,
+                              background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 600,
+                              cursor: "pointer"
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+                        <div 
+                          onClick={() => setIsAddingRow(true)}
+                          style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            padding: "10px", borderRadius: 8, border: `1px dashed ${BORDER}`,
+                            color: TEXT_SEC, cursor: "pointer", transition: "all 0.15s ease"
+                          }}
+                          onMouseEnter={e => { 
+                            e.currentTarget.style.background = TEAL_LIGHT; 
+                            e.currentTarget.style.borderColor = TEAL; 
+                            e.currentTarget.style.color = TEAL; 
+                          }}
+                          onMouseLeave={e => { 
+                            e.currentTarget.style.background = "transparent"; 
+                            e.currentTarget.style.borderColor = BORDER; 
+                            e.currentTarget.style.color = TEXT_SEC; 
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                          </svg>
+                          <span style={{ fontSize: 13, fontWeight: 500 }}>Add exercise</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -7426,11 +7731,11 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  <span style={{ fontWeight: 600, color: TEXT }}>{expandedDay.workout?.exercises?.length || 0}</span> exercises
+                  <span style={{ fontWeight: 600, color: TEXT }}>{exercises.length}</span> exercises
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
                   <span style={{ fontWeight: 600, color: TEXT }}>
-                    {expandedDay.workout?.exercises?.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
+                    {exercises.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
                   </span> total sets
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
@@ -7443,9 +7748,9 @@ function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
                 display: "flex", alignItems: "center", gap: 6
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                Click row to edit
+                Click any cell to edit
               </div>
             </div>
           </div>
@@ -9143,8 +9448,6 @@ Remember: Be specific, be brief, be helpful.`;
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-              onChatSend={handleChatSend}
-              setChatInput={setChatInput}
             />
           )}
           {canvasType === "messageSequence" && (
