@@ -4725,73 +4725,46 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
           </div>
         </div>
+        
+        {/* Training Timeline - moved to profile tab */}
+        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginTop: isMobile ? 14 : 18 }}>
+          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Training Timeline</div>
+          <div style={{ position: "relative", paddingLeft: 28 }}>
+            <div style={{ position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: `linear-gradient(180deg, ${TEAL}, ${MINT})`, borderRadius: 1 }} />
+            {[
+              { date: client.assessment?.date || client.startDate, type: "start", title: "Initial Assessment", desc: `Completed baseline testing. Set primary goal: ${client.goals?.primary || "Build strength"}.`, color: TEAL },
+              { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
+              { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
+              { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
+              { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Attendance rate: ${attendanceRate}%.`, color: MINT },
+              { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
+            ].map((ev, i, arr) => (
+              <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
+                <div style={{
+                  position: "absolute", left: -28, top: 2, width: 20, height: 20, borderRadius: "50%",
+                  background: ev.color, display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: `0 2px 6px ${ev.color}40`
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
+                </div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>{ev.date}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{ev.title}</div>
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.55 }}>{ev.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </>)}
 
       {/* ═══ TAB: PROGRESS ═══ */}
       {activeTab === "journey" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
-          {/* Training Timeline */}
-          <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Training Timeline</div>
-            <div style={{ position: "relative", paddingLeft: 28 }}>
-              <div style={{ position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: `linear-gradient(180deg, ${TEAL}, ${MINT})`, borderRadius: 1 }} />
-              {[
-                { date: client.assessment?.date || client.startDate, type: "start", title: "Initial Assessment", desc: `Completed baseline testing. Set primary goal: ${client.goals?.primary || "Build strength"}.`, color: TEAL },
-                { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
-                { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
-                { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
-                { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Engagement score: ${attendanceRate}%.`, color: MINT },
-                { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
-              ].map((ev, i, arr) => (
-                <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
-                  <div style={{
-                    position: "absolute", left: -28, top: 2, width: 20, height: 20, borderRadius: "50%",
-                    background: ev.color, display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: `0 2px 6px ${ev.color}40`
-                  }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>{ev.date}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{ev.title}</div>
-                  <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.55 }}>{ev.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Recent Session History */}
-          <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Recent Sessions</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {(client.sessions || []).slice(0, 5).map((session, i) => {
-                const totalVolume = session.exercises.reduce((sum, ex) => 
-                  sum + ex.sets.reduce((setSum, s) => setSum + (s.weight * s.reps), 0), 0
-                );
-                return (
-                  <div key={i} style={{ 
-                    padding: "14px 16px", borderRadius: 14, background: "#f7faf9", 
-                    border: `1px solid ${BORDER}`,
-                    display: "flex", justifyContent: "space-between", alignItems: "center"
-                  }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{session.type}</div>
-                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-                        {session.date} • {session.duration} min • {session.exercises.length} exercises
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{Math.round(totalVolume).toLocaleString()} lbs</div>
-                      <div style={{ fontSize: 11, color: TEXT_SEC }}>total volume</div>
-                    </div>
-                  </div>
-                );
-              })}
-              {(!client.sessions || client.sessions.length === 0) && (
-                <div style={{ textAlign: "center", padding: 24, color: TEXT_SEC }}>
-                  No sessions logged yet
-                </div>
-              )}
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18, alignItems: "center", justifyContent: "center", minHeight: 200 }}>
+          <div style={{ textAlign: "center", padding: 40, color: TEXT_SEC }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16, opacity: 0.5 }}>
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            </svg>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Progress tracking coming soon</div>
+            <div style={{ fontSize: 13 }}>Detailed progress charts and session history will appear here</div>
           </div>
         </div>
       )}
