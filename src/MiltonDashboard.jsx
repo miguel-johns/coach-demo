@@ -4747,7 +4747,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
           </div>
 
-          {/* Before → After Comparison with Graphs */}
+          {/* Before → After Comparison */}
           <div style={{
             background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
             padding: isMobile ? "24px 20px" : "32px 40px",
@@ -4758,7 +4758,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>{daysSinceAssessment} Days of Progress</div>
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
               {(() => {
                 const assessment = client.assessment || {};
                 const current = client.current || {};
@@ -4767,179 +4767,62 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                     label: "Bodyweight", 
                     before: assessment.bodyweight || 185, 
                     after: current.bodyweight || 180,
-                    goal: client.goalWeight || 175,
                     unit: "lbs",
-                    color: TEAL,
                     goodDirection: client.program?.includes("Gain") ? "up" : "down"
                   },
                   { 
                     label: "Body Fat", 
                     before: assessment.bodyFat || 24, 
                     after: current.bodyFat || 20,
-                    goal: 15,
                     unit: "%",
-                    color: "#3aafa9",
                     goodDirection: "down"
                   },
                   { 
                     label: "Lean Mass", 
                     before: assessment.leanMass || 140, 
                     after: current.leanMass || 144,
-                    goal: 150,
                     unit: "lbs",
-                    color: MINT,
                     goodDirection: "up"
                   },
                 ];
                 
-                // Smooth curve builder
-                const smooth = (pts) => {
-                  if (pts.length < 2) return "";
-                  let d = `M ${pts[0].x},${pts[0].y}`;
-                  for (let i = 0; i < pts.length - 1; i++) {
-                    const cp = (pts[i+1].x - pts[i].x) / 2.5;
-                    d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
-                  }
-                  return d;
-                };
-
-                return metrics.map((m, idx) => {
+                return metrics.map((m, i) => {
                   const change = m.after - m.before;
                   const isPositive = (m.goodDirection === "up" && change > 0) || (m.goodDirection === "down" && change < 0);
                   const changeColor = isPositive ? ALERT_GREEN : change === 0 ? TEXT_SEC : "#ef6c3e";
                   const arrow = change > 0 ? "↑" : change < 0 ? "↓" : "→";
-                  const progressPct = Math.min(100, Math.round((Math.abs(change) / Math.abs(m.goal - m.before)) * 100));
-
-                  // Generate data points
-                  const weeksTotal = 12;
-                  const weeksCurrent = Math.floor(daysSinceAssessment / 7);
-                  const actual = [];
-                  for (let w = 0; w <= weeksCurrent; w++) {
-                    const t = w / Math.max(1, weeksCurrent);
-                    const noise = Math.sin(w * 2.3 + idx) * 0.3;
-                    actual.push(m.before + (m.after - m.before) * t + noise);
-                  }
-                  const projected = [];
-                  for (let w = weeksCurrent; w <= weeksTotal; w++) {
-                    const t = (w - weeksCurrent) / Math.max(1, weeksTotal - weeksCurrent);
-                    const eased = t * t * 0.3 + t * 0.7;
-                    projected.push(m.after + (m.goal - m.after) * eased);
-                  }
-
-                  // Chart dimensions
-                  const cw = 320, ch = 100, pL = 36, pR = 16, pT = 12, pB = 24;
-                  const plotW = cw - pL - pR, plotH = ch - pT - pB;
-
-                  const allVals = [...actual, ...projected, m.goal, m.before];
-                  const valMin = Math.min(...allVals) - Math.abs(m.goal - m.before) * 0.1;
-                  const valMax = Math.max(...allVals) + Math.abs(m.goal - m.before) * 0.1;
-
-                  const toY = (v) => pT + (1 - (v - valMin) / (valMax - valMin)) * plotH;
-                  const toX = (w) => pL + (w / weeksTotal) * plotW;
-
-                  const actualPts = actual.map((v, i) => ({ x: toX(i), y: toY(v) }));
-                  const projPts = projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(v) }));
-                  const lastPt = actualPts[actualPts.length - 1];
-                  const goalPt = projPts[projPts.length - 1];
-                  const startPt = actualPts[0];
-                  const areaPath = `${smooth(actualPts)} L ${lastPt.x},${pT + plotH} L ${startPt.x},${pT + plotH} Z`;
-
+                  
                   return (
-                    <div key={idx} style={{
-                      background: `linear-gradient(135deg, ${m.color}06, ${m.color}03)`,
-                      borderRadius: 20, padding: isMobile ? "16px" : "20px",
-                      border: `1px solid ${m.color}15`
+                    <div key={i} style={{
+                      background: `linear-gradient(135deg, #f8faf9, #f5f8f6)`,
+                      borderRadius: 20, padding: isMobile ? "20px" : "28px",
+                      textAlign: "center", border: `1px solid ${BORDER}`
                     }}>
-                      {/* Header row */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>{m.label}</div>
+                      
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 8 : 12, marginBottom: 12 }}>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{m.label}</div>
-                          <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                            {m.before}{m.unit} → {m.after}{m.unit} → <span style={{ color: m.color, fontWeight: 600 }}>{m.goal}{m.unit} goal</span>
-                          </div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
+                          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
                         </div>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <div style={{
-                            padding: "4px 10px", borderRadius: 12,
-                            background: `${changeColor}12`, color: changeColor, fontSize: 12, fontWeight: 700
-                          }}>
-                            {arrow} {Math.abs(change).toFixed(1)}{m.unit}
-                          </div>
-                          <div style={{
-                            padding: "4px 10px", borderRadius: 12,
-                            background: `${m.color}12`, color: m.color, fontSize: 12, fontWeight: 700
-                          }}>
-                            {progressPct}%
-                          </div>
+                        <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                          <path d="M5 12h14M14 7l5 5-5 5"/>
+                        </svg>
+                        <div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, marginBottom: 2 }}>Now</div>
+                          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
                         </div>
                       </div>
-
-                      {/* Chart */}
-                      <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                        <defs>
-                          <linearGradient id={`txAreaGrad${idx}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={m.color} stopOpacity="0.2"/>
-                            <stop offset="100%" stopColor={m.color} stopOpacity="0.02"/>
-                          </linearGradient>
-                        </defs>
-
-                        {/* Y-axis labels */}
-                        {[0, 0.5, 1].map((t, i) => {
-                          const v = valMin + t * (valMax - valMin);
-                          const y = toY(v);
-                          return (
-                            <g key={i}>
-                              <line x1={pL} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.7"/>
-                              <text x={pL - 4} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="9" fontWeight="600" fontFamily="DM Sans">
-                                {m.unit === "%" ? v.toFixed(0) : Math.round(v)}
-                              </text>
-                            </g>
-                          );
-                        })}
-
-                        {/* Goal line */}
-                        <line x1={pL} y1={toY(m.goal)} x2={cw - pR} y2={toY(m.goal)} stroke={m.color} strokeWidth="1.5" strokeDasharray="5,4" opacity="0.4"/>
-
-                        {/* Week labels */}
-                        {[0, weeksCurrent, weeksTotal].map((w, i) => (
-                          <text key={i} x={toX(w)} y={ch - 6} textAnchor="middle" fill={w === weeksCurrent ? TEXT : TEXT_SEC} fontSize="9" fontWeight={w === weeksCurrent ? 700 : 500} fontFamily="DM Sans">
-                            {w === 0 ? "Start" : w === weeksCurrent ? "Now" : `W${w}`}
-                          </text>
-                        ))}
-
-                        {/* Now line */}
-                        <line x1={toX(weeksCurrent)} y1={pT} x2={toX(weeksCurrent)} y2={pT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="3,3" opacity="0.3"/>
-
-                        {/* Area fill */}
-                        <path d={areaPath} fill={`url(#txAreaGrad${idx})`}/>
-
-                        {/* Actual line */}
-                        <path d={smooth(actualPts)} fill="none" stroke={m.color} strokeWidth="2.5" strokeLinecap="round"/>
-
-                        {/* Projected line */}
-                        <path d={smooth(projPts)} fill="none" stroke={m.color} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.5"/>
-
-                        {/* Data points */}
-                        {actualPts.map((p, i) => (
-                          <circle key={i} cx={p.x} cy={p.y} r={i === actualPts.length - 1 ? 5 : 3} fill={WHITE} stroke={m.color} strokeWidth={i === actualPts.length - 1 ? 2.5 : 1.5}/>
-                        ))}
-
-                        {/* Current glow */}
-                        <circle cx={lastPt.x} cy={lastPt.y} r="10" fill={m.color} opacity="0.1"/>
-
-                        {/* Goal endpoint */}
-                        <circle cx={goalPt.x} cy={goalPt.y} r="6" fill={m.color} opacity="0.15"/>
-                        <circle cx={goalPt.x} cy={goalPt.y} r="4" fill={m.color}/>
-
-                        {/* Current value label */}
-                        <g>
-                          <rect x={lastPt.x - 20} y={lastPt.y - 20} width="40" height="14" rx="7" fill={m.color}/>
-                          <text x={lastPt.x} y={lastPt.y - 10.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{m.after}{m.unit}</text>
-                        </g>
-
-                        {/* Goal label */}
-                        <text x={goalPt.x + 6} y={goalPt.y + 3} textAnchor="start" fill={m.color} fontSize="9" fontWeight="700" fontFamily="DM Sans">{m.goal}</text>
-                      </svg>
+                      
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "6px 14px", borderRadius: 20,
+                        background: `${changeColor}12`, color: changeColor,
+                        fontSize: 14, fontWeight: 700
+                      }}>
+                        <span style={{ fontSize: 16 }}>{arrow}</span>
+                        {Math.abs(change).toFixed(1)} {m.unit}
+                      </div>
                     </div>
                   );
                 });
