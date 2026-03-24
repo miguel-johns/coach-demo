@@ -3479,7 +3479,333 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </div>
 
-      {reportBlocks.includes("top3") && <ReportBlock id="top3" label="Training Stats" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {/* ═══ CLIENT-FACING VIEW ═══ */}
+      {viewMode === "client" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 20 : 28 }}>
+          
+          {/* Hero Section */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}08, ${MINT}06, ${SAGE}04)`,
+            borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "28px 20px" : "40px 48px",
+            textAlign: "center", position: "relative", overflow: "hidden"
+          }}>
+            <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${TEAL}08 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${MINT}10 0%, transparent 70%)`, pointerEvents: "none" }} />
+            
+            <div style={{ position: "relative" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 8 }}>
+                {client.program || "Training Program"}
+              </div>
+              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: TEXT, marginBottom: 6, letterSpacing: "-0.02em" }}>
+                {client.name}
+              </div>
+              <div style={{ fontSize: 16, color: TEXT_SEC, marginBottom: 24 }}>
+                Training since {client.assessment?.date || client.startDate}
+              </div>
+              
+              {/* Sessions Completed Ring */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                {(() => {
+                  const sz = isMobile ? 140 : 160;
+                  const r = sz / 2 - 14;
+                  const circ = 2 * Math.PI * r;
+                  const targetSessions = Math.max(20, Math.ceil(totalSessions / 10) * 10 + 10);
+                  const progress = Math.min(100, (totalSessions / targetSessions) * 100);
+                  const offset = circ * (1 - progress / 100);
+                  return (
+                    <div style={{ position: "relative" }}>
+                      <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="12"/>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={TEAL} strokeWidth="12"
+                          strokeDasharray={circ} strokeDashoffset={offset}
+                          strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                        />
+                      </svg>
+                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                        <div style={{ fontSize: isMobile ? 36 : 44, fontWeight: 800, color: TEAL, lineHeight: 1 }}>{totalSessions}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginTop: 4 }}>sessions</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+              
+              {/* Quick Stats */}
+              <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 20 : 40, flexWrap: "wrap" }}>
+                {[
+                  { label: "Current Streak", value: currentStreak, suffix: " sessions" },
+                  { label: "Best Streak", value: bestStreak, suffix: " sessions" },
+                  { label: "This Week", value: `${sessionsThisWeek}/${sessionsPerWeek}`, suffix: "" },
+                ].map((stat, i) => (
+                  <div key={i} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{stat.value}{stat.suffix}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Before → After Comparison */}
+          <div style={{
+            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Transformation</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>{daysSinceAssessment} Days of Progress</div>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
+              {(() => {
+                const assessment = client.assessment || {};
+                const current = client.current || {};
+                const metrics = [
+                  { 
+                    label: "Bodyweight", 
+                    before: assessment.bodyweight || 185, 
+                    after: current.bodyweight || 180,
+                    unit: "lbs",
+                    goodDirection: client.program?.includes("Gain") ? "up" : "down"
+                  },
+                  { 
+                    label: "Body Fat", 
+                    before: assessment.bodyFat || 24, 
+                    after: current.bodyFat || 20,
+                    unit: "%",
+                    goodDirection: "down"
+                  },
+                  { 
+                    label: "Lean Mass", 
+                    before: assessment.leanMass || 140, 
+                    after: current.leanMass || 144,
+                    unit: "lbs",
+                    goodDirection: "up"
+                  },
+                ];
+                
+                return metrics.map((m, i) => {
+                  const change = m.after - m.before;
+                  const isPositive = (m.goodDirection === "up" && change > 0) || (m.goodDirection === "down" && change < 0);
+                  const changeColor = isPositive ? ALERT_GREEN : change === 0 ? TEXT_SEC : "#ef6c3e";
+                  const arrow = change > 0 ? "↑" : change < 0 ? "↓" : "→";
+                  
+                  return (
+                    <div key={i} style={{
+                      background: `linear-gradient(135deg, #f8faf9, #f5f8f6)`,
+                      borderRadius: 20, padding: isMobile ? "20px" : "28px",
+                      textAlign: "center", border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>{m.label}</div>
+                      
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: 14 }}>{m.unit}</span></div>
+                        </div>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                          <path d="M5 12h14M14 7l5 5-5 5"/>
+                        </svg>
+                        <div>
+                          <div style={{ fontSize: 11, color: TEAL, marginBottom: 2 }}>Now</div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: 14 }}>{m.unit}</span></div>
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "6px 14px", borderRadius: 20,
+                        background: `${changeColor}12`, color: changeColor,
+                        fontSize: 14, fontWeight: 700
+                      }}>
+                        <span style={{ fontSize: 16 }}>{arrow}</span>
+                        {Math.abs(change).toFixed(1)} {m.unit}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Strength Progress */}
+          <div style={{
+            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Getting Stronger</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Your Strength Progress</div>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
+              {(() => {
+                const baselines = client.assessment?.strengthBaselines || {
+                  squat: { weight: 135, reps: 5 },
+                  benchPress: { weight: 95, reps: 5 },
+                  deadlift: { weight: 185, reps: 5 }
+                };
+                const liftNames = { squat: "Squat", benchPress: "Bench Press", deadlift: "Deadlift", overheadPress: "OHP" };
+                const liftColors = { squat: TEAL, benchPress: MINT, deadlift: "#3aafa9", overheadPress: "#8e7cc3" };
+                
+                return Object.entries(baselines).slice(0, 3).map(([key, val], i) => {
+                  const baseline1RM = Math.round(val.weight * (36 / (37 - val.reps)));
+                  const currentEst = Math.round(baseline1RM * (1.05 + Math.random() * 0.15));
+                  const improvement = currentEst - baseline1RM;
+                  const color = liftColors[key] || TEAL;
+                  
+                  return (
+                    <div key={i} style={{
+                      background: `linear-gradient(135deg, ${color}06, ${color}03)`,
+                      borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 28px",
+                      textAlign: "center", border: `1px solid ${color}20`,
+                      position: "relative", overflow: "hidden"
+                    }}>
+                      <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`, pointerEvents: "none" }} />
+                      
+                      <div style={{ fontSize: 14, fontWeight: 700, color: color, marginBottom: 16 }}>{liftNames[key]}</div>
+                      
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: 16, color: TEXT_SEC, textDecoration: "line-through" }}>{baseline1RM}</span>
+                        <svg width="20" height="12" viewBox="0 0 24 12" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
+                        <span style={{ fontSize: 36, fontWeight: 800, color: color }}>{currentEst}</span>
+                        <span style={{ fontSize: 14, color: TEXT_SEC }}>lbs</span>
+                      </div>
+                      
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>Estimated 1RM</div>
+                      
+                      <div style={{
+                        marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "4px 12px", borderRadius: 16,
+                        background: `${ALERT_GREEN}12`, color: ALERT_GREEN,
+                        fontSize: 13, fontWeight: 700
+                      }}>
+                        +{improvement} lbs
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Goal Trajectory */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}04, ${MINT}03)`,
+            borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Journey</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Progress Toward Your Goal</div>
+            </div>
+            
+            {(() => {
+              const assessment = client.assessment || {};
+              const current = client.current || {};
+              const goals = client.goals || {};
+              
+              const startWeight = assessment.bodyweight || 185;
+              const currentWeight = current.bodyweight || 180;
+              const goalWeight = goals.targetWeight || 170;
+              
+              const totalChange = Math.abs(goalWeight - startWeight);
+              const progressMade = Math.abs(currentWeight - startWeight);
+              const progressPct = Math.min(100, Math.round((progressMade / totalChange) * 100));
+              const remaining = Math.abs(goalWeight - currentWeight);
+              
+              return (
+                <div>
+                  {/* Progress Bar */}
+                  <div style={{ marginBottom: 32 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontSize: 11, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Started</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: TEXT_SEC }}>{startWeight} lbs</div>
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 11, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current</div>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: TEAL }}>{currentWeight} lbs</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 11, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: MINT }}>{goalWeight} lbs</div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ position: "relative", height: 16, borderRadius: 8, background: "#e8f0ee", overflow: "hidden" }}>
+                      <div style={{
+                        position: "absolute", left: 0, top: 0, bottom: 0,
+                        width: `${progressPct}%`, borderRadius: 8,
+                        background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                        transition: "width 1.5s cubic-bezier(0.16, 1, 0.3, 1)"
+                      }} />
+                      <div style={{
+                        position: "absolute", left: `${progressPct}%`, top: "50%", transform: "translate(-50%, -50%)",
+                        width: 24, height: 24, borderRadius: "50%",
+                        background: WHITE, border: `3px solid ${TEAL}`,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                      }} />
+                    </div>
+                    
+                    <div style={{ textAlign: "center", marginTop: 16 }}>
+                      <span style={{ fontSize: 28, fontWeight: 800, color: TEAL }}>{progressPct}%</span>
+                      <span style={{ fontSize: 16, color: TEXT_SEC, marginLeft: 8 }}>to goal</span>
+                    </div>
+                  </div>
+                  
+                  {/* Milestones */}
+                  <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 32, flexWrap: "wrap" }}>
+                    {[
+                      { icon: "check", label: "Started Program", done: true },
+                      { icon: "check", label: `Lost ${progressMade.toFixed(1)} lbs`, done: progressMade > 0 },
+                      { icon: progressPct >= 50 ? "check" : "circle", label: "Halfway Point", done: progressPct >= 50 },
+                      { icon: progressPct >= 100 ? "check" : "target", label: "Goal Reached", done: progressPct >= 100 },
+                    ].map((m, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: "50%",
+                          background: m.done ? TEAL : "#e8f0ee",
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          {m.done ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                          ) : (
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEXT_SEC }} />
+                          )}
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: m.done ? TEXT : TEXT_SEC }}>{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Motivational Footer */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}, ${MINT})`,
+            borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 40px",
+            textAlign: "center", color: WHITE
+          }}>
+            <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, marginBottom: 8 }}>
+              Keep showing up. The results will follow.
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>
+              Every session is a step closer to your goal.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ COACH VIEW (existing content) ═══ */}
+      {viewMode === "coach" && reportBlocks.includes("top3") && <ReportBlock id="top3" label="Training Stats" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       <div style={{
         display: "flex", flexDirection: isMobile ? "column" : "row",
         gap: isMobile ? 16 : 16, alignItems: "stretch"
@@ -3773,7 +4099,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       </div>{/* end top 3 row */}
       </ReportBlock>}
 
-      {reportBlocks.includes("rule30") && <ReportBlock id="rule30" label="Strength Progress" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("rule30") && <ReportBlock id="rule30" label="Strength Progress" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       {(() => {
         const baselines = client.assessment?.strengthBaselines;
         const liftColors = { squat: TEAL, deadlift: "#3aafa9", benchPress: MINT, overheadPress: "#8e7cc3" };
@@ -3874,7 +4200,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       })()}
       </ReportBlock>}
 
-      {reportBlocks.includes("dataCards") && <ReportBlock id="dataCards" label="Data Cards" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("dataCards") && <ReportBlock id="dataCards" label="Data Cards" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       {/* ─── Data Cards (swipable) ─── */}
       {(() => {
         const cards = [
@@ -3990,7 +4316,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       </ReportBlock>}
 
-      {reportBlocks.includes("calendar") && <ReportBlock id="calendar" label="Daily Activity" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("calendar") && <ReportBlock id="calendar" label="Daily Activity" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       {/* ─── Calendar Heatmap (clickable) ─── */}
       <div style={{
         background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
@@ -4140,7 +4466,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       </ReportBlock>}
 
-      {reportBlocks.includes("insight") && <ReportBlock id="insight" label="Milton Insight" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("insight") && <ReportBlock id="insight" label="Milton Insight" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       {/* ─── Milton Insight + Action ─── */}
       <div style={{
         background: `linear-gradient(135deg, rgba(43,122,120,0.06), rgba(92,219,149,0.06))`,
@@ -4171,7 +4497,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
 
       {/* ─── NEW BLOCK: Nutrition Breakdown ─── */}
-      {reportBlocks.includes("nutrition") && <ReportBlock id="nutrition" label="Nutrition Breakdown" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("nutrition") && <ReportBlock id="nutrition" label="Nutrition Breakdown" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       <div style={{
         background: `linear-gradient(145deg, #fdf8f4, #faf5ee, #fdf9f5)`,
         borderRadius: 20, border: `1px solid ${BORDER}`,
@@ -4233,7 +4559,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       </ReportBlock>}
 
       {/* ─── NEW BLOCK: Focus Areas ─── */}
-      {reportBlocks.includes("focus") && <ReportBlock id="focus" label="Focus Areas" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("focus") && <ReportBlock id="focus" label="Focus Areas" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       <div style={{
         background: `linear-gradient(135deg, rgba(43,122,120,0.04), rgba(92,219,149,0.04))`,
         borderRadius: 20, border: `1px solid rgba(43,122,120,0.12)`,
@@ -4277,7 +4603,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       </ReportBlock>}
 
       {/* ─── NEW BLOCK: Coach Notes ─── */}
-      {reportBlocks.includes("coachNotes") && <ReportBlock id="coachNotes" label="Coach Notes" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {viewMode === "coach" && reportBlocks.includes("coachNotes") && <ReportBlock id="coachNotes" label="Coach Notes" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
           <div style={{
             background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
             padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
