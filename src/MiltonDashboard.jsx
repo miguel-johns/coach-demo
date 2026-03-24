@@ -2554,29 +2554,249 @@ function ReportView({ client, onBack, isMobile }) {
         </div>
       </SectionCard>
 
-      {/* ─── BODY COMPOSITION ─── */}
+      {/* ─── BODY COMPOSITION WITH PROGRESS CHART ─── */}
       <SectionCard style={{ background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Body Composition</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Before vs Now comparison</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 10 : 14 }}>
-          <MetricCard 
-            label="Bodyweight" value={bodyweightCurrent} unit=" lbs" 
-            change={bodyweightCurrent - bodyweightStart} 
-            changeDir={bodyweightCurrent < bodyweightStart ? "good" : "neutral"} 
-            color={TEAL} 
-          />
-          <MetricCard 
-            label="Body Fat" value={bodyFatCurrent} unit="%" 
-            change={bodyFatCurrent - bodyFatStart} 
-            changeDir={bodyFatCurrent < bodyFatStart ? "good" : "bad"} 
-            color="#3aafa9" 
-          />
-          <MetricCard 
-            label="Lean Mass" value={leanMassCurrent} unit=" lbs" 
-            change={leanMassCurrent - leanMassStart} 
-            changeDir={leanMassCurrent > leanMassStart ? "good" : "neutral"} 
-            color={MINT} 
-          />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Body Composition</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Progress over time with goal projections</div>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ padding: "4px 10px", borderRadius: 14, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>
+              {bodyweightCurrent - bodyweightStart > 0 ? "+" : ""}{(bodyweightCurrent - bodyweightStart).toFixed(1)} lbs
+            </div>
+            <div style={{ padding: "4px 10px", borderRadius: 14, background: `${ALERT_GREEN}12`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>
+              {bodyFatCurrent - bodyFatStart > 0 ? "+" : ""}{(bodyFatCurrent - bodyFatStart).toFixed(1)}% BF
+            </div>
+          </div>
+        </div>
+
+        {/* Before vs Now Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+          {[
+            { label: "Bodyweight", before: bodyweightStart, now: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down" },
+            { label: "Body Fat", before: bodyFatStart, now: bodyFatCurrent, goal: Math.max(12, bodyFatStart - 8), unit: "%", color: "#3aafa9", goodDir: "down" },
+            { label: "Lean Mass", before: leanMassStart, now: leanMassCurrent, goal: leanMassStart + 8, unit: "lbs", color: MINT, goodDir: "up" },
+          ].map((m, i) => {
+            const change = m.now - m.before;
+            const isGood = (m.goodDir === "down" && change < 0) || (m.goodDir === "up" && change > 0);
+            return (
+              <div key={i} style={{
+                padding: isMobile ? "16px" : "20px", borderRadius: 16, background: WHITE, border: `1px solid ${BORDER}`,
+                display: "flex", flexDirection: "column", gap: 10
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: m.color, textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.label}</div>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 2 }}>Start</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: TEXT_SEC }}>{m.before}</div>
+                  </div>
+                  <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke={m.color} strokeWidth="2" strokeLinecap="round">
+                    <path d="M2 7h20M17 2l5 5-5 5"/>
+                  </svg>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: m.color, marginBottom: 2 }}>Now</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: m.color }}>{m.now}</div>
+                  </div>
+                  <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke={TEXT_SEC} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4,3">
+                    <path d="M2 7h20M17 2l5 5-5 5"/>
+                  </svg>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 2 }}>Goal</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: TEXT_SEC }}>{m.goal}</div>
+                  </div>
+                </div>
+                <div style={{
+                  padding: "4px 10px", borderRadius: 12, alignSelf: "flex-start",
+                  background: isGood ? `${ALERT_GREEN}12` : `${TEXT_SEC}10`,
+                  color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 12, fontWeight: 700
+                }}>
+                  {change > 0 ? "+" : ""}{change.toFixed(1)} {m.unit}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Combined Progress & Projection Chart */}
+        <div style={{ borderRadius: 16, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "20px 16px" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Progress Timeline & Goal Projection</div>
+          {(() => {
+            const cw = 440, ch = 200, pL = 48, pR = 24, pT = 20, pB = 36;
+            const plotW = cw - pL - pR, plotH = ch - pT - pB;
+            const weeksTotal = 12;
+            const weeksCurrent = 4;
+
+            // Generate data points for each metric
+            const generatePoints = (start, current, goal, goodDir) => {
+              const actual = [];
+              for (let w = 0; w <= weeksCurrent; w++) {
+                const t = w / weeksCurrent;
+                const noise = (Math.sin(w * 2.3) * 0.3);
+                actual.push(start + (current - start) * t + noise);
+              }
+              const projected = [];
+              for (let w = weeksCurrent; w <= weeksTotal; w++) {
+                const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent);
+                const eased = t * t * 0.3 + t * 0.7;
+                projected.push(current + (goal - current) * eased);
+              }
+              return { actual, projected, goal };
+            };
+
+            const weightData = generatePoints(bodyweightStart, bodyweightCurrent, goalWeight, "down");
+            const bfData = generatePoints(bodyFatStart, bodyFatCurrent, Math.max(12, bodyFatStart - 8), "down");
+            const lmData = generatePoints(leanMassStart, leanMassCurrent, leanMassStart + 8, "up");
+
+            // Normalize to 0-100 range for combined chart
+            const normalize = (val, min, max) => ((val - min) / (max - min)) * 100;
+            
+            const weightMin = Math.min(goalWeight, bodyweightStart) - 5;
+            const weightMax = Math.max(goalWeight, bodyweightStart) + 5;
+            const bfMin = Math.min(bfData.goal, bodyFatStart) - 2;
+            const bfMax = Math.max(bfData.goal, bodyFatStart) + 2;
+            const lmMin = Math.min(leanMassStart, lmData.goal) - 2;
+            const lmMax = Math.max(leanMassStart, lmData.goal) + 5;
+
+            const toY = (pct) => pT + (1 - pct / 100) * plotH;
+            const toX = (w) => pL + (w / weeksTotal) * plotW;
+
+            // Create paths
+            const smooth = (pts) => {
+              if (pts.length < 2) return "";
+              let d = `M ${pts[0].x},${pts[0].y}`;
+              for (let i = 0; i < pts.length - 1; i++) {
+                const cp = (pts[i+1].x - pts[i].x) / 2.5;
+                d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
+              }
+              return d;
+            };
+
+            const weightActualPts = weightData.actual.map((v, i) => ({ x: toX(i), y: toY(normalize(v, weightMin, weightMax)) }));
+            const weightProjPts = weightData.projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(normalize(v, weightMin, weightMax)) }));
+            const bfActualPts = bfData.actual.map((v, i) => ({ x: toX(i), y: toY(normalize(v, bfMin, bfMax)) }));
+            const bfProjPts = bfData.projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(normalize(v, bfMin, bfMax)) }));
+            const lmActualPts = lmData.actual.map((v, i) => ({ x: toX(i), y: toY(normalize(v, lmMin, lmMax)) }));
+            const lmProjPts = lmData.projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(normalize(v, lmMin, lmMax)) }));
+
+            const lastWeight = weightActualPts[weightActualPts.length - 1];
+            const lastBF = bfActualPts[bfActualPts.length - 1];
+            const lastLM = lmActualPts[lmActualPts.length - 1];
+            const goalWeightPt = weightProjPts[weightProjPts.length - 1];
+            const goalBFPt = bfProjPts[bfProjPts.length - 1];
+            const goalLMPt = lmProjPts[lmProjPts.length - 1];
+
+            return (
+              <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                <defs>
+                  <linearGradient id="weightAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
+                    <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
+                  </linearGradient>
+                </defs>
+
+                {/* Grid lines */}
+                {[0, 25, 50, 75, 100].map((pct, i) => (
+                  <line key={i} x1={pL} y1={toY(pct)} x2={cw - pR} y2={toY(pct)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
+                ))}
+
+                {/* Week labels */}
+                {[0, 4, 8, 12].map((w, i) => (
+                  <text key={i} x={toX(w)} y={ch - 8} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
+                    {w === 0 ? "Start" : w === weeksCurrent ? "Now" : `W${w}`}
+                  </text>
+                ))}
+
+                {/* "Now" vertical line */}
+                <line x1={toX(weeksCurrent)} y1={pT} x2={toX(weeksCurrent)} y2={pT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4,4" opacity="0.4"/>
+
+                {/* Weight line (actual + projected) */}
+                <path d={smooth(weightActualPts)} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round"/>
+                <path d={smooth(weightProjPts)} fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.6"/>
+
+                {/* Body Fat line */}
+                <path d={smooth(bfActualPts)} fill="none" stroke="#3aafa9" strokeWidth="2.5" strokeLinecap="round"/>
+                <path d={smooth(bfProjPts)} fill="none" stroke="#3aafa9" strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.6"/>
+
+                {/* Lean Mass line */}
+                <path d={smooth(lmActualPts)} fill="none" stroke={MINT} strokeWidth="2.5" strokeLinecap="round"/>
+                <path d={smooth(lmProjPts)} fill="none" stroke={MINT} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" opacity="0.6"/>
+
+                {/* Current position dots */}
+                <circle cx={lastWeight.x} cy={lastWeight.y} r="8" fill={TEAL} opacity="0.15"/>
+                <circle cx={lastWeight.x} cy={lastWeight.y} r="5" fill={WHITE} stroke={TEAL} strokeWidth="2.5"/>
+                <circle cx={lastBF.x} cy={lastBF.y} r="8" fill="#3aafa9" opacity="0.15"/>
+                <circle cx={lastBF.x} cy={lastBF.y} r="5" fill={WHITE} stroke="#3aafa9" strokeWidth="2.5"/>
+                <circle cx={lastLM.x} cy={lastLM.y} r="8" fill={MINT} opacity="0.15"/>
+                <circle cx={lastLM.x} cy={lastLM.y} r="5" fill={WHITE} stroke={MINT} strokeWidth="2.5"/>
+
+                {/* Goal endpoint markers */}
+                <circle cx={goalWeightPt.x} cy={goalWeightPt.y} r="4" fill={TEAL} opacity="0.4"/>
+                <circle cx={goalBFPt.x} cy={goalBFPt.y} r="4" fill="#3aafa9" opacity="0.4"/>
+                <circle cx={goalLMPt.x} cy={goalLMPt.y} r="4" fill={MINT} opacity="0.4"/>
+
+                {/* Current value labels */}
+                <g>
+                  <rect x={lastWeight.x - 24} y={lastWeight.y - 22} width="48" height="16" rx="8" fill={TEAL}/>
+                  <text x={lastWeight.x} y={lastWeight.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{bodyweightCurrent} lbs</text>
+                </g>
+                <g>
+                  <rect x={lastBF.x + 8} y={lastBF.y - 8} width="36" height="16" rx="8" fill="#3aafa9"/>
+                  <text x={lastBF.x + 26} y={lastBF.y + 3} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{bodyFatCurrent}%</text>
+                </g>
+                <g>
+                  <rect x={lastLM.x - 48} y={lastLM.y - 8} width="42" height="16" rx="8" fill={MINT}/>
+                  <text x={lastLM.x - 27} y={lastLM.y + 3} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{leanMassCurrent} lbs</text>
+                </g>
+
+                {/* Goal labels at end */}
+                <text x={goalWeightPt.x + 4} y={goalWeightPt.y + 4} textAnchor="start" fill={TEAL} fontSize="9" fontWeight="700" fontFamily="DM Sans">{goalWeight}</text>
+                <text x={goalBFPt.x + 4} y={goalBFPt.y + 4} textAnchor="start" fill="#3aafa9" fontSize="9" fontWeight="700" fontFamily="DM Sans">{Math.max(12, bodyFatStart - 8)}%</text>
+                <text x={goalLMPt.x + 4} y={goalLMPt.y + 4} textAnchor="start" fill={MINT} fontSize="9" fontWeight="700" fontFamily="DM Sans">{leanMassStart + 8}</text>
+              </svg>
+            );
+          })()}
+
+          {/* Legend */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 12 : 20, marginTop: 14, justifyContent: "center" }}>
+            {[
+              { label: "Bodyweight", color: TEAL },
+              { label: "Body Fat %", color: "#3aafa9" },
+              { label: "Lean Mass", color: MINT },
+            ].map((l, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 16, height: 3, borderRadius: 2, background: l.color }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{l.label}</span>
+              </div>
+            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 16, height: 0, borderTop: `2px dashed ${TEXT_SEC}` }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Estimated Goal Dates */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 10, marginTop: 16 }}>
+          {[
+            { label: "Weight Goal", value: `${goalWeight} lbs`, eta: "Week 10-12", color: TEAL },
+            { label: "Body Fat Goal", value: `${Math.max(12, bodyFatStart - 8)}%`, eta: "Week 11-13", color: "#3aafa9" },
+            { label: "Lean Mass Goal", value: `${leanMassStart + 8} lbs`, eta: "Week 14-16", color: MINT },
+          ].map((g, i) => (
+            <div key={i} style={{
+              padding: "14px 16px", borderRadius: 14, background: `${g.color}08`, border: `1px solid ${g.color}15`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>{g.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: g.color }}>{g.value}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>Estimated</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{g.eta}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </SectionCard>
 
