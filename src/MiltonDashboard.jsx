@@ -2293,9 +2293,9 @@ function MobileCanvasSheet({
 /* ═══════════════════════════════════════════
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
-function ReportView({ client, onBack, isMobile }) {
+function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
-  const [showShare, setShowShare] = useState(false);
+  const [showShare, setShowShare] = useState(autoOpenShare);
   const [linkCopied, setLinkCopied] = useState(false);
   const reportRef = useRef(null);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
@@ -3313,7 +3313,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const hiddenBlocks = availableBlocks.filter(b => !reportBlocks.includes(b.id));
 
   if (showReport) {
-    return <ReportView client={client} onBack={() => setShowReport(false)} isMobile={isMobile} />;
+    return <ReportView client={client} onBack={() => setShowReport(false)} isMobile={isMobile} autoOpenShare={true} />;
   }
 
   return (
@@ -4639,19 +4639,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
             
             <button
-              onClick={async () => {
-                const shareData = {
-                  title: `${client.name}'s Progress Report`,
-                  text: `Check out ${client.name.split(' ')[0]}'s fitness progress! ${totalSessions} sessions completed with ${currentStreak} session streak.`,
-                  url: window.location.href
-                };
-                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                  try { await navigator.share(shareData); } catch (e) { /* User cancelled */ }
-                } else {
-                  await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
-                  alert('Report link copied to clipboard!');
-                }
-              }}
+              onClick={() => setShowReport(true)}
               style={{
                 padding: isMobile ? "12px 24px" : "14px 32px",
                 borderRadius: 12, border: "2px solid rgba(255,255,255,0.3)",
