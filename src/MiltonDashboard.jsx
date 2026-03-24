@@ -2308,10 +2308,11 @@ function ReportView({ client, onBack, isMobile }) {
     setTimeout(() => setLinkCopied(false), 2500);
   };
 
-  // Data calculations
-  const totalSessions = (client.sessions || []).length || client.workoutDays * 4 + 2;
-  const scheduledSessions = Math.max(totalSessions, 20);
-  const attendanceRate = Math.min(100, Math.round((totalSessions / scheduledSessions) * 100));
+  // Data calculations - attendance is based on scheduled vs attended, not total purchased
+  const attendedSessions = (client.sessions || []).length || client.totalSessions || client.workoutDays * 4 + 2;
+  const scheduledSessions = client.scheduledSessions || attendedSessions; // If they've attended all scheduled, 100%
+  const missedSessions = Math.max(0, scheduledSessions - attendedSessions);
+  const attendanceRate = scheduledSessions > 0 ? Math.min(100, Math.round((attendedSessions / scheduledSessions) * 100)) : 100;
   
   // Body composition data
   const assessment = client.assessment || {};
@@ -2368,12 +2369,12 @@ function ReportView({ client, onBack, isMobile }) {
   const goalProgressPct = Math.min(100, Math.round((weightProgress / totalWeightGoal) * 100));
   
   // Achievements & Streaks
-  const currentStreak = Math.min(totalSessions, 8);
+  const currentStreak = Math.min(attendedSessions, 8);
   const bestStreak = Math.max(currentStreak, 12);
   const achievements = [
-    { id: 1, name: "First Session", icon: "check", earned: totalSessions >= 1, date: assessment.date },
+    { id: 1, name: "First Session", icon: "check", earned: attendedSessions >= 1, date: assessment.date },
     { id: 2, name: "5 Session Streak", icon: "fire", earned: bestStreak >= 5, date: "Week 2" },
-    { id: 3, name: "10 Sessions Complete", icon: "trophy", earned: totalSessions >= 10, date: "Week 3" },
+    { id: 3, name: "10 Sessions Complete", icon: "trophy", earned: attendedSessions >= 10, date: "Week 3" },
     { id: 4, name: "Body Comp Warrior", icon: "muscle", earned: Math.abs(bodyFatCurrent - bodyFatStart) >= 2, date: "Week 4" },
     { id: 5, name: "PR Crusher", icon: "star", earned: lifts.some(l => l.current > l.baseline * 1.1), date: "Week 3" },
     { id: 6, name: "Nutrition Champion", icon: "apple", earned: nutritionScore >= 80, date: "This week" },
@@ -2405,7 +2406,7 @@ function ReportView({ client, onBack, isMobile }) {
     <div class="card" style="background:linear-gradient(135deg,#f7faf9,#eef6f3);text-align:center">
       <div class="sub" style="text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Attendance Rate</div>
       <div style="font-size:56px;font-weight:800;color:#2B7A78">${attendanceRate}%</div>
-      <div style="font-size:14px;color:#5f7a76;margin-top:4px">${totalSessions} sessions completed</div>
+      <div style="font-size:14px;color:#5f7a76;margin-top:4px">${attendedSessions}/${scheduledSessions} sessions attended</div>
     </div>
     <div class="card">
       <div class="section-title">Body Composition</div>
@@ -2512,7 +2513,7 @@ function ReportView({ client, onBack, isMobile }) {
                 </text>
                 <text x={sz/2} y={sz/2 + (isMobile ? 28 : 34)} textAnchor="middle" dominantBaseline="central"
                   style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: font }}>
-                  {totalSessions} sessions
+                  {attendedSessions}/{scheduledSessions} sessions
                 </text>
               </svg>
             );
