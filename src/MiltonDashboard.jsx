@@ -2205,6 +2205,8 @@ function MobileCanvasSheet({
             <WorkoutCanvas 
               data={canvasData}
               onClose={onClose}
+              onChatSend={onChatSend}
+              setChatInput={setLocalChatInput}
             />
           )}
           {canvasType === "messageSequence" && (
@@ -6853,9 +6855,29 @@ function MealPlanCanvas({ data, onClose }) {
   );
 }
 
-function WorkoutCanvas({ data, onClose }) {
+function WorkoutCanvas({ data, onClose, onChatSend, setChatInput }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
+  
+  // Handler for adding an exercise via chat
+  const handleAddExercise = () => {
+    if (expandedDay && onChatSend) {
+      const prompt = `Add a new exercise to ${expandedDay.dayLabel} (${expandedDay.workout?.title || 'this workout'})`;
+      onChatSend(prompt);
+    } else if (setChatInput) {
+      setChatInput(`Add a new exercise to ${expandedDay?.dayLabel || 'this workout'}`);
+    }
+  };
+  
+  // Handler for editing an exercise via chat
+  const handleEditExercise = (exercise) => {
+    if (onChatSend) {
+      const prompt = `Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`;
+      onChatSend(prompt);
+    } else if (setChatInput) {
+      setChatInput(`Edit ${exercise.name}: currently ${exercise.sets} sets of ${exercise.reps} at ${exercise.weight}`);
+    }
+  };
   
   if (!data) return null;
   
@@ -7271,6 +7293,7 @@ function WorkoutCanvas({ data, onClose }) {
                     return (
                       <tr 
                         key={exIdx}
+                        onClick={() => handleEditExercise(ex)}
                         style={{ 
                           background: exIdx % 2 === 0 ? WHITE : "#fafcfb",
                           transition: "background 0.15s ease",
@@ -7359,6 +7382,7 @@ function WorkoutCanvas({ data, onClose }) {
                   <tr>
                     <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
                       <div 
+                        onClick={handleAddExercise}
                         style={{ 
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                           padding: "10px", borderRadius: 8, border: `1px dashed ${BORDER}`,
@@ -9111,6 +9135,8 @@ Remember: Be specific, be brief, be helpful.`;
             <WorkoutCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onChatSend={handleChatSend}
+              setChatInput={setChatInput}
             />
           )}
           {canvasType === "messageSequence" && (
