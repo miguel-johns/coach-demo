@@ -3468,6 +3468,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
+  const [selectedCalDay, setSelectedCalDay] = useState(null);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -4821,8 +4822,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
           {/* ─── 30 DAY ACTIVITY CALENDAR ─── */}
           {(() => {
-            const [selectedCalDay, setSelectedCalDay] = useState(null);
-            
             const today = new Date();
             const calendarDays = Array.from({ length: 30 }).map((_, i) => {
               const date = new Date(today);
