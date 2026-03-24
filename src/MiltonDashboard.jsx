@@ -6855,6 +6855,12 @@ function MealPlanCanvas({ data, onClose }) {
 
 function WorkoutCanvas({ data, onClose }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
+  const [selectedDay, setSelectedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
+  const [completedExercises, setCompletedExercises] = useState({}); // { "week-day-exIdx": true }
+  const [editingExercise, setEditingExercise] = useState(null); // { weekNum, dayIdx, exIdx, field }
+  const [showMiltonInput, setShowMiltonInput] = useState(false);
+  const [miltonMessage, setMiltonMessage] = useState("");
+  const [exerciseOverrides, setExerciseOverrides] = useState({}); // { "week-day-exIdx": { weight, sets, reps, name } }
   
   if (!data) return null;
   
@@ -6868,6 +6874,8 @@ function WorkoutCanvas({ data, onClose }) {
         { name: "Barbell Bench Press", sets: 4, reps: "8, 8, 6, 6", weight: "155 lb" },
         { name: "Incline Dumbbell Press", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
         { name: "Barbell Shoulder Press", sets: 3, reps: "8, 8, 8", weight: "95 lb" },
+        { name: "Lateral Raises", sets: 3, reps: "12, 12, 12", weight: "20 lb" },
+        { name: "Tricep Pushdowns", sets: 3, reps: "12, 10, 10", weight: "40 lb" },
       ]
     },
     pull: {
@@ -6875,7 +6883,9 @@ function WorkoutCanvas({ data, onClose }) {
       exercises: [
         { name: "Barbell Deadlift", sets: 4, reps: "6, 6, 5, 5", weight: "225 lb" },
         { name: "Seated Cable Row", sets: 3, reps: "10, 10, 8", weight: "120 lb" },
+        { name: "Lat Pulldown", sets: 3, reps: "10, 10, 8", weight: "100 lb" },
         { name: "Barbell Curl", sets: 3, reps: "12, 10, 8", weight: "65 lb" },
+        { name: "Face Pulls", sets: 3, reps: "15, 15, 12", weight: "30 lb" },
       ]
     },
     legs: {
@@ -6884,6 +6894,8 @@ function WorkoutCanvas({ data, onClose }) {
         { name: "Barbell Full Squat", sets: 4, reps: "8, 8, 6, 6", weight: "185 lb" },
         { name: "Romanian Deadlift", sets: 3, reps: "10, 10, 8", weight: "135 lb" },
         { name: "Leg Press", sets: 3, reps: "12, 12, 10", weight: "270 lb" },
+        { name: "Walking Lunges", sets: 3, reps: "10, 10, 10", weight: "40 lb DBs" },
+        { name: "Leg Curl", sets: 3, reps: "12, 12, 10", weight: "80 lb" },
       ]
     },
     upper: {
@@ -6892,6 +6904,8 @@ function WorkoutCanvas({ data, onClose }) {
         { name: "Barbell Deadlift", sets: 3, reps: "10-12 reps", weight: "185 lb" },
         { name: "Bird Dog", sets: 3, reps: "8-10 reps", weight: "BW" },
         { name: "Dumbbell Front Raise", sets: 3, reps: "10-12 reps", weight: "15 lb" },
+        { name: "Plank Hold", sets: 3, reps: "30-45 sec", weight: "BW" },
+        { name: "Cable Woodchops", sets: 3, reps: "12, 12, 10", weight: "25 lb" },
       ]
     },
     rest: null
@@ -6906,6 +6920,31 @@ function WorkoutCanvas({ data, onClose }) {
   ];
   
   const weeks = Array.from({ length: weekView }, (_, i) => i + 1);
+  
+  const toggleExercise = (key) => {
+    setCompletedExercises(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+  
+  const getExerciseData = (weekNum, dayIdx, exIdx, baseExercise) => {
+    const key = `${weekNum}-${dayIdx}-${exIdx}`;
+    const override = exerciseOverrides[key];
+    return override ? { ...baseExercise, ...override } : baseExercise;
+  };
+  
+  const updateExerciseField = (weekNum, dayIdx, exIdx, field, value) => {
+    const key = `${weekNum}-${dayIdx}-${exIdx}`;
+    setExerciseOverrides(prev => ({
+      ...prev,
+      [key]: { ...(prev[key] || {}), [field]: value }
+    }));
+  };
+  
+  const sendToMilton = (message) => {
+    // In a real app, this would send to the AI
+    setMiltonMessage("");
+    setShowMiltonInput(false);
+    // Could trigger a response in chat
+  };
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
@@ -7014,18 +7053,28 @@ function WorkoutCanvas({ data, onClose }) {
                   const workout = workoutTemplates[workoutType];
                   const isRest = !workout;
                   const animDelay = 0.2 + weekIdx * 0.1 + dayIdx * 0.03;
+                  const isSelected = selectedDay?.weekNum === weekNum && selectedDay?.dayIdx === dayIdx;
+                  
+                  // Count completed exercises for this day
+                  const completedCount = workout ? workout.exercises.filter((_, exIdx) => 
+                    completedExercises[`${weekNum}-${dayIdx}-${exIdx}`]
+                  ).length : 0;
+                  const totalExercises = workout?.exercises?.length || 0;
                   
                   return (
                     <div
                       key={`${weekNum}-${day}`}
+                      onClick={() => !isRest && setSelectedDay({ weekNum, dayIdx, workout, dayLabel: day, workoutType })}
                       style={{
                         minWidth: 160, width: 160,
-                        background: WHITE, borderRadius: 12,
-                        border: `1px solid ${BORDER}`,
+                        background: isSelected ? `${TEAL}08` : WHITE, borderRadius: 12,
+                        border: isSelected ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
                         overflow: "hidden",
                         opacity: 0, transform: "scale(0.95)",
                         animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
-                        display: "flex", flexDirection: "column"
+                        display: "flex", flexDirection: "column",
+                        cursor: isRest ? "default" : "pointer",
+                        transition: "all 0.15s ease"
                       }}
                     >
                       {/* Day header */}
@@ -7034,11 +7083,22 @@ function WorkoutCanvas({ data, onClose }) {
                         borderBottom: isRest ? "none" : `1px solid ${BORDER}`,
                         background: isRest ? "#fafcfb" : WHITE
                       }}>
-                        <div style={{ 
-                          fontSize: 10, fontWeight: 600, color: TEXT_SEC,
-                          textTransform: "uppercase", letterSpacing: "0.04em"
-                        }}>
-                          {day}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ 
+                            fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                            textTransform: "uppercase", letterSpacing: "0.04em"
+                          }}>
+                            {day}
+                          </div>
+                          {!isRest && completedCount > 0 && (
+                            <div style={{
+                              fontSize: 9, fontWeight: 700, color: completedCount === totalExercises ? ALERT_GREEN : TEAL,
+                              background: completedCount === totalExercises ? `${ALERT_GREEN}15` : `${TEAL}15`,
+                              padding: "2px 6px", borderRadius: 6
+                            }}>
+                              {completedCount}/{totalExercises}
+                            </div>
+                          )}
                         </div>
                         <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
                           Day {dayIdx + 1}
@@ -7141,6 +7201,295 @@ function WorkoutCanvas({ data, onClose }) {
         })}
       </div>
       
+      {/* Expanded Day Detail View */}
+      {selectedDay && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.4)", zIndex: 100,
+          display: "flex", alignItems: "flex-end", justifyContent: "center",
+          animation: "fadeIn 0.2s ease"
+        }}
+        onClick={(e) => { if (e.target === e.currentTarget) setSelectedDay(null); }}
+        >
+          <div style={{
+            width: "100%", maxWidth: 500, maxHeight: "90%",
+            background: WHITE, borderRadius: "20px 20px 0 0",
+            display: "flex", flexDirection: "column",
+            animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: "20px 24px 16px", borderBottom: `1px solid ${BORDER}`,
+              display: "flex", justifyContent: "space-between", alignItems: "flex-start"
+            }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Week {selectedDay.weekNum} - {selectedDay.dayLabel}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginTop: 4 }}>
+                  {selectedDay.workout.title}
+                </div>
+                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+                  {selectedDay.workout.exercises.filter((_, i) => completedExercises[`${selectedDay.weekNum}-${selectedDay.dayIdx}-${i}`]).length} of {selectedDay.workout.exercises.length} exercises completed
+                </div>
+              </div>
+              <div 
+                onClick={() => setSelectedDay(null)}
+                style={{
+                  width: 36, height: 36, borderRadius: 10, background: "#f0f4f3",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer"
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Exercise List */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+              {selectedDay.workout.exercises.map((baseEx, exIdx) => {
+                const key = `${selectedDay.weekNum}-${selectedDay.dayIdx}-${exIdx}`;
+                const ex = getExerciseData(selectedDay.weekNum, selectedDay.dayIdx, exIdx, baseEx);
+                const isCompleted = completedExercises[key];
+                const isEditing = editingExercise?.weekNum === selectedDay.weekNum && 
+                                  editingExercise?.dayIdx === selectedDay.dayIdx && 
+                                  editingExercise?.exIdx === exIdx;
+                
+                return (
+                  <div
+                    key={exIdx}
+                    style={{
+                      padding: "16px 24px",
+                      borderBottom: `1px solid ${BORDER}`,
+                      background: isCompleted ? `${ALERT_GREEN}06` : WHITE,
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                      {/* Checkbox */}
+                      <div
+                        onClick={() => toggleExercise(key)}
+                        style={{
+                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                          border: isCompleted ? `2px solid ${ALERT_GREEN}` : `2px solid ${BORDER}`,
+                          background: isCompleted ? ALERT_GREEN : WHITE,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", transition: "all 0.15s ease",
+                          marginTop: 2
+                        }}
+                      >
+                        {isCompleted && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                      </div>
+                      
+                      {/* Exercise Details */}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontSize: 16, fontWeight: 600, color: isCompleted ? ALERT_GREEN : TEXT,
+                          textDecoration: isCompleted ? "line-through" : "none",
+                          marginBottom: 8
+                        }}>
+                          {ex.name}
+                        </div>
+                        
+                        {/* Editable fields */}
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {/* Sets */}
+                          <div 
+                            onClick={() => setEditingExercise({ ...selectedDay, exIdx, field: "sets" })}
+                            style={{
+                              padding: "6px 12px", borderRadius: 8,
+                              background: isEditing && editingExercise.field === "sets" ? `${TEAL}15` : "#f5f7f6",
+                              border: `1px solid ${isEditing && editingExercise.field === "sets" ? TEAL : "transparent"}`,
+                              cursor: "pointer", transition: "all 0.15s ease"
+                            }}
+                          >
+                            <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>Sets</div>
+                            {isEditing && editingExercise.field === "sets" ? (
+                              <input
+                                type="text"
+                                defaultValue={ex.sets}
+                                autoFocus
+                                onBlur={(e) => {
+                                  updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "sets", e.target.value);
+                                  setEditingExercise(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "sets", e.target.value);
+                                    setEditingExercise(null);
+                                  }
+                                }}
+                                style={{
+                                  width: 40, fontSize: 14, fontWeight: 700, color: TEXT,
+                                  border: "none", background: "transparent", outline: "none"
+                                }}
+                              />
+                            ) : (
+                              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
+                            )}
+                          </div>
+                          
+                          {/* Reps */}
+                          <div 
+                            onClick={() => setEditingExercise({ ...selectedDay, exIdx, field: "reps" })}
+                            style={{
+                              padding: "6px 12px", borderRadius: 8,
+                              background: isEditing && editingExercise.field === "reps" ? `${TEAL}15` : "#f5f7f6",
+                              border: `1px solid ${isEditing && editingExercise.field === "reps" ? TEAL : "transparent"}`,
+                              cursor: "pointer", transition: "all 0.15s ease"
+                            }}
+                          >
+                            <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>Reps</div>
+                            {isEditing && editingExercise.field === "reps" ? (
+                              <input
+                                type="text"
+                                defaultValue={ex.reps}
+                                autoFocus
+                                onBlur={(e) => {
+                                  updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "reps", e.target.value);
+                                  setEditingExercise(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "reps", e.target.value);
+                                    setEditingExercise(null);
+                                  }
+                                }}
+                                style={{
+                                  width: 80, fontSize: 14, fontWeight: 700, color: TEXT,
+                                  border: "none", background: "transparent", outline: "none"
+                                }}
+                              />
+                            ) : (
+                              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{ex.reps}</div>
+                            )}
+                          </div>
+                          
+                          {/* Weight */}
+                          <div 
+                            onClick={() => setEditingExercise({ ...selectedDay, exIdx, field: "weight" })}
+                            style={{
+                              padding: "6px 12px", borderRadius: 8,
+                              background: isEditing && editingExercise.field === "weight" ? `${TEAL}15` : "#f5f7f6",
+                              border: `1px solid ${isEditing && editingExercise.field === "weight" ? TEAL : "transparent"}`,
+                              cursor: "pointer", transition: "all 0.15s ease"
+                            }}
+                          >
+                            <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>Weight</div>
+                            {isEditing && editingExercise.field === "weight" ? (
+                              <input
+                                type="text"
+                                defaultValue={ex.weight}
+                                autoFocus
+                                onBlur={(e) => {
+                                  updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "weight", e.target.value);
+                                  setEditingExercise(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateExerciseField(selectedDay.weekNum, selectedDay.dayIdx, exIdx, "weight", e.target.value);
+                                    setEditingExercise(null);
+                                  }
+                                }}
+                                style={{
+                                  width: 60, fontSize: 14, fontWeight: 700, color: TEXT,
+                                  border: "none", background: "transparent", outline: "none"
+                                }}
+                              />
+                            ) : (
+                              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{ex.weight}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Milton Input / Actions */}
+            <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}`, background: "#fafcfb" }}>
+              {showMiltonInput ? (
+                <div style={{ display: "flex", gap: 10 }}>
+                  <input
+                    type="text"
+                    value={miltonMessage}
+                    onChange={(e) => setMiltonMessage(e.target.value)}
+                    placeholder="Tell Milton what changed..."
+                    autoFocus
+                    style={{
+                      flex: 1, padding: "12px 16px", borderRadius: 12,
+                      border: `1px solid ${BORDER}`, background: WHITE,
+                      fontSize: 14, outline: "none"
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && miltonMessage.trim()) {
+                        sendToMilton(miltonMessage);
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => miltonMessage.trim() && sendToMilton(miltonMessage)}
+                    style={{
+                      padding: "12px 20px", borderRadius: 12, border: "none",
+                      background: TEAL, color: WHITE, fontSize: 14, fontWeight: 600,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={() => setShowMiltonInput(true)}
+                    style={{
+                      flex: 1, padding: "14px 20px", borderRadius: 12,
+                      border: `1px solid ${BORDER}`, background: WHITE,
+                      fontSize: 14, fontWeight: 600, color: TEXT,
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Tell Milton
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Mark all as complete
+                      const updates = {};
+                      selectedDay.workout.exercises.forEach((_, i) => {
+                        updates[`${selectedDay.weekNum}-${selectedDay.dayIdx}-${i}`] = true;
+                      });
+                      setCompletedExercises(prev => ({ ...prev, ...updates }));
+                    }}
+                    style={{
+                      flex: 1, padding: "14px 20px", borderRadius: 12,
+                      border: "none", background: TEAL, color: WHITE,
+                      fontSize: 14, fontWeight: 600, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Complete All
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Hint bar */}
       <div style={{
         padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
@@ -7155,7 +7504,7 @@ function WorkoutCanvas({ data, onClose }) {
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
         </div>
-        <span>Click any exercise to edit or ask Milton to modify the program</span>
+        <span>Tap a day to view, check off exercises, and log changes</span>
       </div>
     </div>
   );
