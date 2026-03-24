@@ -288,95 +288,1116 @@ const dataConnectors = {
 };
 
 const initialClients = [
-  { name: "Sarah Chen", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog"], progress: 45, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 12, weightTrend: 1.2, proteinAvg: 95, proteinTarget: 120, engagementScore: 52, weekLog: [3,2,0,0,0,0,0], weightData: [158,157.5,157.8,158.2,158.5,159.0,159.2,159.7], steps: 6200, workoutDays: 2, insight: "Sarah hasn't logged in 4 days — her longest gap yet. Weekend logging drops 60% compared to weekdays.", coachAngle: "Send a supportive check-in message. She may be stressed with wedding planning.", streaks: { logging: 0, exercise: 2, steps: 8, best: { type: "steps", days: 12 } }, narrative: "Hasn't logged in 4 days — her longest gap yet. Wedding stress may be a factor." },
-  { name: "Marcus Johnson", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 15", mealsLogged: 28, weightTrend: 0.8, proteinAvg: 185, proteinTarget: 180, engagementScore: 96, weekLog: [3,3,3,3,3,3,3], weightData: [175,175.3,175.8,176.0,176.2,176.5,176.8,175.8], steps: 9800, workoutDays: 5, insight: "Hit protein goal 7 days straight. 14-day logging streak and ready for a calorie increase.", coachAngle: "Celebrate the streak! Suggest increasing calorie target by 100 to support muscle growth.", streaks: { logging: 14, exercise: 18, steps: 22, best: { type: "logging", days: 14 } }, narrative: "7-day protein streak and 14-day logging streak — ready to level up." },
-  { name: "Emily Rodriguez", alert: "Needs Attention", alertType: "red", connectors: ["watch", "foodlog", "sleep"], progress: 35, program: "Metabolic Health", startDate: "Feb 15", mealsLogged: 16, weightTrend: 0.5, proteinAvg: 68, proteinTarget: 100, engagementScore: 58, weekLog: [2,1,2,1,0,3,3], weightData: [145,144.8,145.2,144.5,145.8,147.2,145.5,145.0], steps: 5400, workoutDays: 2, insight: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends. Classic restrict-binge pattern.", coachAngle: "Schedule a call about sustainable eating. She needs permission to eat more consistently.", streaks: { logging: 5, exercise: 4, steps: 6, best: { type: "logging", days: 8 } }, narrative: "Weekday calories too low (<1200), then weekend spikes. Needs a sustainable approach." },
-  { name: "David Park", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "foodlog", "cgm", "milton"], progress: 100, progressLabel: "Report Ready", program: "Fat Loss Phase", startDate: "Jan 5", mealsLogged: 30, weightTrend: 0, proteinAvg: 165, proteinTarget: 160, engagementScore: 98, weekLog: [3,3,3,3,3,3,3], weightData: [185,184.2,183.5,182.8,182.0,181.5,178.5,178.5], steps: 10500, workoutDays: 5, insight: "Perfect logging for 21 days but weight has plateaued for 2 weeks despite good adherence.", coachAngle: "Consider a 2-week diet break or macro adjustment. Metabolic adaptation may be occurring.", streaks: { logging: 21, exercise: 19, steps: 30, best: { type: "steps", days: 30 } }, narrative: "21-day perfect logging but weight plateaued for 2 weeks. May need macro adjustment." },
-  { name: "Rachel Kim", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog"], progress: 25, program: "Post-Pregnancy", startDate: "Mar 1", mealsLogged: 8, weightTrend: -0.5, proteinAvg: 85, proteinTarget: 110, engagementScore: 65, weekLog: [2,1,2,1,2,0,1], weightData: [165,164.8,164.5,164.2,164.0,163.8,163.5,163.5], steps: 4200, workoutDays: 3, insight: "Completed first full week of workouts postpartum! Struggling to find time to log with newborn.", coachAngle: "Send encouragement and offer quick-log meal templates. Keep expectations realistic.", streaks: { logging: 2, exercise: 7, steps: 5, best: { type: "exercise", days: 7 } }, narrative: "First full week of postpartum workouts complete! Huge milestone for a new mom." },
-  { name: "Aaron Smith", alert: "Needs Attention", alertType: "red", connectors: ["watch", "scale", "foodlog", "cgm"], progress: 65, program: "Fat Loss Phase", startDate: "Feb 12", mealsLogged: 21, weightTrend: -2.1, proteinAvg: 78, proteinTarget: 100, engagementScore: 84, weekLog: [3,2,0,0,3,2,1], weightData: [185,184.5,184.2,183.8,183.5,183.2,183.0,182.9], steps: 8420, workoutDays: 4, insight: "Aaron logs meals consistently early in the week but drops off after Wednesday. Protein intake averages 22g below target.", coachAngle: "Focus on simple protein options for busy days. Consider meal prep suggestions for Wed-Fri.", streaks: { logging: 3, exercise: 8, steps: 14, best: { type: "steps", days: 14 } }, narrative: "Down 2.1 lbs but stopped logging Thursday — his usual mid-week drop-off is back." },
-  { name: "Lisa Martinez", alert: "Report Ready", alertType: "blue", connectors: ["watch", "milton", "foodlog", "cgm"], progress: 100, progressLabel: "Report Ready", program: "Muscle Gain", startDate: "Jan 8", mealsLogged: 28, weightTrend: 1.3, proteinAvg: 132, proteinTarget: 130, engagementScore: 96, weekLog: [3,3,3,3,3,2,3], weightData: [142,142.3,142.8,143.0,143.2,143.5,143.8,143.3], steps: 10200, workoutDays: 5, insight: "Lisa is highly consistent — logging nearly every meal. Weight gain is on track at 1.3 lbs over 14 days.", coachAngle: "Celebrate consistency. Suggest progressive overload update for next phase.", streaks: { logging: 26, exercise: 18, steps: 22, best: { type: "logging", days: 26 } }, narrative: "On a 26-day logging streak and hitting protein targets — her best month yet." },
-  { name: "Jason Williams", alert: "Report Ready", alertType: "blue", connectors: ["watch", "scale", "milton", "foodlog"], progress: 100, progressLabel: "Report Ready", program: "Maintenance", startDate: "Dec 1", mealsLogged: 24, weightTrend: -0.3, proteinAvg: 105, proteinTarget: 110, engagementScore: 91, weekLog: [3,3,2,3,3,3,3], weightData: [175,175.1,174.8,175.0,174.9,174.7,174.6,174.7], steps: 9100, workoutDays: 4, insight: "Jason is maintaining weight effectively. Slight protein deficit but within acceptable range.", coachAngle: "Reinforce current habits. Discuss goals for next quarter.", streaks: { logging: 19, exercise: 12, steps: 30, best: { type: "steps", days: 30 } }, narrative: "Just hit a 30-day steps streak. Weight holding steady at 174.7 — maintenance is working." },
-  { name: "Daniel Torres", alert: "Made Progress", alertType: "green", connectors: ["watch", "foodlog", "sleep"], progress: 48, program: "Fat Loss Phase", startDate: "Feb 20", mealsLogged: 14, weightTrend: -1.0, proteinAvg: 65, proteinTarget: 90, engagementScore: 62, weekLog: [2,1,2,0,1,0,0], weightData: [210,209.5,209.8,209.2,209.0,208.8,209.1,209.0], steps: 5800, workoutDays: 2, insight: "Daniel has inconsistent logging and drops off on weekends. Sleep data shows late nights correlating with missed logs.", coachAngle: "Address weekend routine. Pair evening meals with a simple logging reminder.", streaks: { logging: 0, exercise: 2, steps: 4, best: { type: "steps", days: 7 } }, narrative: "Logging streak broke over the weekend — sleep data shows 2 AM bedtimes Fri and Sat." },
-  { name: "Amanda Foster", alert: "Report Ready", alertType: "blue", connectors: ["milton", "cgm", "bloodwork"], progress: 82, program: "Metabolic Health", startDate: "Jan 15", mealsLogged: 19, weightTrend: -0.8, proteinAvg: 88, proteinTarget: 95, engagementScore: 78, weekLog: [3,2,3,2,2,1,2], weightData: [155,154.8,154.5,154.2,154.0,154.3,154.1,154.2], steps: 7200, workoutDays: 3, insight: "Amanda's CGM data shows glucose spikes after lunch consistently. Bloodwork improving on lipid panel.", coachAngle: "Focus on lunch composition — more protein/fiber before carbs. Share CGM insight visually.", streaks: { logging: 11, exercise: 9, steps: 16, best: { type: "steps", days: 16 } }, narrative: "Glucose spikes are down 15% since changing lunch order. Bloodwork trending in the right direction." },
-  { name: "Michael Brown", alert: "Made Progress", alertType: "green", connectors: ["foodlog", "scale", "sleep"], progress: 72, program: "Fat Loss Phase", startDate: "Feb 1", mealsLogged: 18, weightTrend: -1.5, proteinAvg: 72, proteinTarget: 85, engagementScore: 70, weekLog: [3,2,2,1,3,1,0], weightData: [195,194.5,194.0,193.8,193.5,193.2,193.5,193.5], steps: 6500, workoutDays: 3, insight: "Michael shows good weekday adherence but Sunday logging drops completely. Steady weight loss trend.", coachAngle: "Praise the downward trend. Create a simple Sunday meal template.", streaks: { logging: 5, exercise: 6, steps: 10, best: { type: "steps", days: 10 } }, narrative: "Lost 1.5 lbs this week and logging is improving — but Sundays are still a blind spot." },
-  { name: "Jennifer Lee", alert: "Made Progress", alertType: "green", connectors: ["cgm", "watch", "milton"], progress: 55, program: "Performance", startDate: "Mar 1", mealsLogged: 12, weightTrend: 0.2, proteinAvg: 110, proteinTarget: 120, engagementScore: 58, weekLog: [2,1,0,2,1,0,0], weightData: [138,138.2,138.1,138.3,138.2,138.4,138.3,138.2], steps: 11000, workoutDays: 5, insight: "Jennifer trains consistently but logging is sporadic. High activity level but nutrition data gaps make coaching difficult.", coachAngle: "Emphasize that training + logging = results. Suggest photo-logging as a low-friction option.", streaks: { logging: 1, exercise: 21, steps: 28, best: { type: "steps", days: 28 } }, narrative: "Training 5x/week with a 21-day exercise streak, but only logged 1 meal this week." },
+  {
+    name: "Sarah Chen",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Fat Loss — Phase 2",
+    startDate: "Feb 1",
+    assessment: {
+      date: "2026-02-01",
+      bodyweight: 158,
+      bodyFat: 28.5,
+      leanMass: 113,
+      measurements: { waist: 32, hips: 38, chest: 36 },
+      strengthBaselines: {
+        squat: { weight: 95, reps: 8 },
+        deadlift: { weight: 115, reps: 6 },
+        benchPress: { weight: 65, reps: 8 },
+        overheadPress: { weight: 45, reps: 8 },
+      },
+      movementScreen: { score: 14, notes: "Limited ankle dorsiflexion, tight hip flexors" },
+    },
+    current: {
+      bodyweight: 153,
+      bodyFat: 25.2,
+      leanMass: 114.5,
+      measurements: { waist: 30.5, hips: 37, chest: 36 },
+    },
+    goals: {
+      primary: "Lose 20 lbs",
+      targetWeight: 138,
+      targetBodyFat: 22,
+      secondaryGoals: ["Squat 135 lbs", "Run a 5K"],
+      targetDate: "2026-08-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 115, reps: 8, rpe: 7 }, { set: 2, weight: 115, reps: 8, rpe: 7.5 }, { set: 3, weight: 120, reps: 6, rpe: 8 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 95, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 10, rpe: 7.5 }, { set: 3, weight: 100, reps: 8, rpe: 8 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6 }, { set: 2, weight: 200, reps: 10, rpe: 7 }, { set: 3, weight: 200, reps: 10, rpe: 7.5 }] },
+          { name: "Walking Lunges", sets: [{ set: 1, weight: 20, reps: 12, rpe: 7 }, { set: 2, weight: 20, reps: 12, rpe: 7.5 }] },
+        ],
+        notes: "Felt strong today. Squat depth improving. Bumped weight on set 3.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Upper Body Push",
+        duration: 50,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 70, reps: 8, rpe: 7 }, { set: 2, weight: 70, reps: 8, rpe: 7.5 }, { set: 3, weight: 75, reps: 6, rpe: 8 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 50, reps: 8, rpe: 7.5 }, { set: 2, weight: 50, reps: 7, rpe: 8 }] },
+          { name: "Tricep Pushdowns", sets: [{ set: 1, weight: 30, reps: 12, rpe: 6 }, { set: 2, weight: 35, reps: 10, rpe: 7 }] },
+        ],
+        notes: "OHP felt heavy. May need to hold at 50 for another week.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Upper Body Pull",
+        duration: 50,
+        exercises: [
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 85, reps: 8, rpe: 7.5 }] },
+          { name: "Seated Cable Row", sets: [{ set: 1, weight: 70, reps: 10, rpe: 7 }, { set: 2, weight: 75, reps: 10, rpe: 7.5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 25, reps: 15, rpe: 6 }, { set: 2, weight: 25, reps: 15, rpe: 6.5 }] },
+          { name: "Dumbbell Bicep Curls", sets: [{ set: 1, weight: 15, reps: 12, rpe: 7 }, { set: 2, weight: 15, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Good session. Back felt engaged throughout.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 110, reps: 8, rpe: 7 }, { set: 2, weight: 110, reps: 8, rpe: 7.5 }, { set: 3, weight: 115, reps: 6, rpe: 8 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 90, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6.5 }, { set: 2, weight: 180, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Squat felt smoother than last week.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Upper Body Push",
+        duration: 48,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 65, reps: 8, rpe: 7 }, { set: 2, weight: 70, reps: 6, rpe: 8 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 45, reps: 8, rpe: 7 }, { set: 2, weight: 50, reps: 6, rpe: 8 }] },
+        ],
+        notes: "Short session due to time constraints.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 14,
+    streak: { current: 6, best: 9, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 120, calorieAvg: 1650, calorieTarget: 1800 },
+    insight: "Sarah's squat has progressed from 95 to 120 lbs in 6 weeks. Bench is stalling — may need to adjust volume. Next session: Upper Body Pull.",
+    coachAngle: "Test 1RM on squat next week to update training max. Consider adding an extra pressing accessory.",
+    narrative: "Squat up 25 lbs since assessment. Body comp improving — down 5 lbs, gained 1.5 lbs lean mass.",
+    attendanceRate: 85,
+    weightData: [158, 157, 156, 155, 154, 153.5, 153],
+  },
+  {
+    name: "Marcus Johnson",
+    alert: "Assessment Due",
+    alertType: "red",
+    program: "Muscle Gain — Hypertrophy",
+    startDate: "Jan 15",
+    assessment: {
+      date: "2026-01-15",
+      bodyweight: 175,
+      bodyFat: 18,
+      leanMass: 143.5,
+      measurements: { waist: 33, hips: 38, chest: 42 },
+      strengthBaselines: {
+        squat: { weight: 185, reps: 5 },
+        deadlift: { weight: 225, reps: 5 },
+        benchPress: { weight: 155, reps: 5 },
+        overheadPress: { weight: 95, reps: 5 },
+      },
+      movementScreen: { score: 16, notes: "Good mobility overall, slight shoulder internal rotation limitation" },
+    },
+    current: {
+      bodyweight: 182,
+      bodyFat: 17.5,
+      leanMass: 150,
+      measurements: { waist: 33.5, hips: 39, chest: 44 },
+    },
+    goals: {
+      primary: "Gain 15 lbs muscle",
+      targetWeight: 195,
+      targetBodyFat: 16,
+      secondaryGoals: ["Bench 225 lbs", "Deadlift 315 lbs"],
+      targetDate: "2026-07-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-20",
+        type: "Push",
+        duration: 65,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }, { set: 3, weight: 180, reps: 4, rpe: 8.5 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 60, reps: 10, rpe: 7 }, { set: 2, weight: 60, reps: 9, rpe: 7.5 }, { set: 3, weight: 60, reps: 8, rpe: 8 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 115, reps: 6, rpe: 7.5 }, { set: 2, weight: 115, reps: 5, rpe: 8 }] },
+          { name: "Cable Flyes", sets: [{ set: 1, weight: 35, reps: 12, rpe: 7 }, { set: 2, weight: 35, reps: 12, rpe: 7 }] },
+          { name: "Lateral Raises", sets: [{ set: 1, weight: 20, reps: 15, rpe: 7 }, { set: 2, weight: 20, reps: 12, rpe: 8 }] },
+        ],
+        notes: "Bench PR attempt next week. Feeling strong.",
+      },
+      {
+        date: "2026-03-18",
+        type: "Pull",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Deadlift", sets: [{ set: 1, weight: 275, reps: 5, rpe: 7.5 }, { set: 2, weight: 285, reps: 3, rpe: 8.5 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 140, reps: 10, rpe: 7 }, { set: 2, weight: 140, reps: 9, rpe: 7.5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 40, reps: 15, rpe: 6.5 }, { set: 2, weight: 40, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Deadlift moving well. Ready to test 300.",
+      },
+      {
+        date: "2026-03-16",
+        type: "Legs",
+        duration: 70,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 225, reps: 5, rpe: 7 }, { set: 2, weight: 235, reps: 4, rpe: 8 }, { set: 3, weight: 225, reps: 5, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 185, reps: 8, rpe: 7 }, { set: 2, weight: 185, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 360, reps: 12, rpe: 7 }, { set: 2, weight: 380, reps: 10, rpe: 8 }] },
+          { name: "Leg Curls", sets: [{ set: 1, weight: 90, reps: 12, rpe: 7 }, { set: 2, weight: 90, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Squat depth is on point. Legs are growing.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Push",
+        duration: 60,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 170, reps: 6, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 110, reps: 6, rpe: 7 }, { set: 2, weight: 115, reps: 5, rpe: 8 }] },
+        ],
+        notes: "Solid session.",
+      },
+    ],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 4,
+    totalSessions: 32,
+    streak: { current: 18, best: 18, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 185, proteinTarget: 180, calorieAvg: 3200, calorieTarget: 3100 },
+    insight: "Marcus has been training for 8 weeks since his last assessment. Strength is up across all lifts. Time to reassess and update training maxes.",
+    coachAngle: "Schedule InBody scan this week. Current lifts suggest he's ready for a new training block.",
+    narrative: "Bench up 20 lbs, deadlift up 50 lbs since assessment. Gained 7 lbs bodyweight with minimal fat gain.",
+    attendanceRate: 96,
+    weightData: [175, 176, 177, 178, 179, 180, 181, 182],
+  },
+  {
+    name: "Emily Rodriguez",
+    alert: "Needs Programming",
+    alertType: "red",
+    program: "General Fitness",
+    startDate: "Feb 15",
+    assessment: {
+      date: "2026-02-15",
+      bodyweight: 145,
+      bodyFat: 32,
+      leanMass: 98.6,
+      measurements: { waist: 30, hips: 40, chest: 35 },
+      strengthBaselines: {
+        squat: { weight: 65, reps: 8 },
+        deadlift: { weight: 75, reps: 8 },
+        benchPress: { weight: 45, reps: 8 },
+        overheadPress: { weight: 25, reps: 8 },
+      },
+      movementScreen: { score: 12, notes: "Tight hip flexors, limited thoracic extension" },
+    },
+    current: {
+      bodyweight: 143,
+      bodyFat: 30.5,
+      leanMass: 99.4,
+      measurements: { waist: 29, hips: 39.5, chest: 35 },
+    },
+    goals: {
+      primary: "Lose 25 lbs and feel confident",
+      targetWeight: 125,
+      targetBodyFat: 24,
+      secondaryGoals: ["Complete a full push-up", "Touch toes"],
+      targetDate: "2026-09-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-10",
+        type: "Full Body",
+        duration: 45,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7.5 }] },
+          { name: "Dumbbell Row", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6.5 }, { set: 2, weight: 20, reps: 10, rpe: 7 }] },
+          { name: "Push-ups (Incline)", sets: [{ set: 1, weight: 0, reps: 8, rpe: 7 }, { set: 2, weight: 0, reps: 6, rpe: 8 }] },
+        ],
+        notes: "Good energy today. Push-ups are improving!",
+      },
+      {
+        date: "2026-03-07",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6.5 }, { set: 2, weight: 25, reps: 8, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 50, reps: 10, rpe: 7 }, { set: 2, weight: 50, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Shorter session. Felt tired but pushed through.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 0,
+    totalSessions: 8,
+    streak: { current: 0, best: 4, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 68, proteinTarget: 100, calorieAvg: 1400, calorieTarget: 1600 },
+    insight: "Emily missed the last 2 sessions. She was making good progress but attendance has dropped. Her current program ends this week.",
+    coachAngle: "Check in with Emily. She may be overwhelmed. Design a simpler 2x/week program to restart momentum.",
+    narrative: "Down 2 lbs but missed last 2 weeks. Needs a check-in and fresh programming.",
+    attendanceRate: 45,
+    weightData: [145, 144.5, 144, 143.5, 143, 143, 143],
+  },
+  {
+    name: "David Park",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Powerlifting Prep",
+    startDate: "Jan 5",
+    assessment: {
+      date: "2026-01-05",
+      bodyweight: 198,
+      bodyFat: 22,
+      leanMass: 154.4,
+      measurements: { waist: 36, hips: 40, chest: 44 },
+      strengthBaselines: {
+        squat: { weight: 275, reps: 3 },
+        deadlift: { weight: 315, reps: 3 },
+        benchPress: { weight: 185, reps: 3 },
+        overheadPress: { weight: 115, reps: 5 },
+      },
+      movementScreen: { score: 15, notes: "Good overall. Slight knee valgus under heavy loads." },
+    },
+    current: {
+      bodyweight: 195,
+      bodyFat: 20,
+      leanMass: 156,
+      measurements: { waist: 35, hips: 40, chest: 45 },
+    },
+    goals: {
+      primary: "Compete in first powerlifting meet",
+      targetWeight: 198,
+      targetBodyFat: 18,
+      secondaryGoals: ["Squat 315", "Deadlift 405", "Bench 225"],
+      targetDate: "2026-06-15",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Squat Day",
+        duration: 75,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 245, reps: 3, rpe: 6 }, { set: 2, weight: 275, reps: 3, rpe: 7 }, { set: 3, weight: 295, reps: 2, rpe: 8 }, { set: 4, weight: 285, reps: 3, rpe: 7.5 }] },
+          { name: "Pause Squat", sets: [{ set: 1, weight: 225, reps: 3, rpe: 7 }, { set: 2, weight: 225, reps: 3, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 400, reps: 10, rpe: 7 }, { set: 2, weight: 400, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "295 moved well. 315 is within reach in 4-6 weeks.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Bench Day",
+        duration: 65,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 185, reps: 3, rpe: 6.5 }, { set: 2, weight: 195, reps: 3, rpe: 7.5 }, { set: 3, weight: 205, reps: 2, rpe: 8.5 }] },
+          { name: "Close Grip Bench", sets: [{ set: 1, weight: 155, reps: 6, rpe: 7 }, { set: 2, weight: 155, reps: 6, rpe: 7.5 }] },
+          { name: "Dumbbell Incline Press", sets: [{ set: 1, weight: 65, reps: 8, rpe: 7 }, { set: 2, weight: 65, reps: 7, rpe: 7.5 }] },
+        ],
+        notes: "205 is a PR! 225 by meet day looking good.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Deadlift Day",
+        duration: 70,
+        exercises: [
+          { name: "Conventional Deadlift", sets: [{ set: 1, weight: 315, reps: 3, rpe: 6.5 }, { set: 2, weight: 345, reps: 2, rpe: 7.5 }, { set: 3, weight: 365, reps: 1, rpe: 8 }] },
+          { name: "Deficit Deadlift", sets: [{ set: 1, weight: 275, reps: 4, rpe: 7 }, { set: 2, weight: 275, reps: 4, rpe: 7.5 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7 }] },
+        ],
+        notes: "365 single felt smooth. 405 attempt in 3 weeks.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Squat Day",
+        duration: 70,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 245, reps: 3, rpe: 6.5 }, { set: 2, weight: 265, reps: 3, rpe: 7 }, { set: 3, weight: 285, reps: 2, rpe: 8 }] },
+        ],
+        notes: "Good session. Volume day next week.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 28,
+    streak: { current: 12, best: 14, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 200, proteinTarget: 190, calorieAvg: 2800, calorieTarget: 2700 },
+    insight: "David is 12 weeks out from his first meet. All lifts are progressing well. Squat close to 315, deadlift to 405, bench to 225.",
+    coachAngle: "Start peaking protocol in 4 weeks. Consider a mock meet to practice commands.",
+    narrative: "All three lifts trending toward meet goals. Down 3 lbs while getting stronger.",
+    attendanceRate: 95,
+    weightData: [198, 197.5, 197, 196, 195.5, 195, 195],
+  },
+  {
+    name: "Rachel Kim",
+    alert: "On Track",
+    alertType: "green",
+    program: "Post-Pregnancy Recovery",
+    startDate: "Mar 1",
+    assessment: {
+      date: "2026-03-01",
+      bodyweight: 165,
+      bodyFat: 35,
+      leanMass: 107.3,
+      measurements: { waist: 35, hips: 42, chest: 37 },
+      strengthBaselines: {
+        squat: { weight: 45, reps: 10 },
+        deadlift: { weight: 55, reps: 10 },
+        benchPress: { weight: 35, reps: 10 },
+        overheadPress: { weight: 20, reps: 10 },
+      },
+      movementScreen: { score: 11, notes: "Core stability needs work. Diastasis recti present but improving." },
+    },
+    current: {
+      bodyweight: 162,
+      bodyFat: 33.5,
+      leanMass: 107.7,
+      measurements: { waist: 34, hips: 41.5, chest: 37 },
+    },
+    goals: {
+      primary: "Return to pre-pregnancy fitness",
+      targetWeight: 145,
+      targetBodyFat: 26,
+      secondaryGoals: ["Rebuild core strength", "Regain energy"],
+      targetDate: "2026-09-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Full Body",
+        duration: 35,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 20, reps: 10, rpe: 6 }, { set: 2, weight: 20, reps: 10, rpe: 6.5 }] },
+          { name: "Dead Bug", sets: [{ set: 1, weight: 0, reps: 10, rpe: 6 }, { set: 2, weight: 0, reps: 10, rpe: 6 }] },
+          { name: "Band Pull-Apart", sets: [{ set: 1, weight: 0, reps: 15, rpe: 5 }, { set: 2, weight: 0, reps: 15, rpe: 5.5 }] },
+          { name: "Glute Bridge", sets: [{ set: 1, weight: 0, reps: 12, rpe: 5.5 }, { set: 2, weight: 0, reps: 12, rpe: 6 }] },
+        ],
+        notes: "Feeling more confident. Core exercises getting easier.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Full Body",
+        duration: 30,
+        exercises: [
+          { name: "Bodyweight Squat", sets: [{ set: 1, weight: 0, reps: 12, rpe: 5.5 }, { set: 2, weight: 0, reps: 12, rpe: 6 }] },
+          { name: "Modified Push-up", sets: [{ set: 1, weight: 0, reps: 8, rpe: 6.5 }, { set: 2, weight: 0, reps: 6, rpe: 7 }] },
+          { name: "Bird Dog", sets: [{ set: 1, weight: 0, reps: 8, rpe: 5 }, { set: 2, weight: 0, reps: 8, rpe: 5.5 }] },
+        ],
+        notes: "Great energy today despite interrupted sleep.",
+      },
+      {
+        date: "2026-03-15",
+        type: "Full Body",
+        duration: 30,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 15, reps: 10, rpe: 6 }, { set: 2, weight: 15, reps: 10, rpe: 6.5 }] },
+          { name: "Dead Bug", sets: [{ set: 1, weight: 0, reps: 8, rpe: 6 }, { set: 2, weight: 0, reps: 8, rpe: 6.5 }] },
+        ],
+        notes: "First week back. Taking it slow.",
+      },
+    ],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 6,
+    streak: { current: 6, best: 6, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 85, proteinTarget: 110, calorieAvg: 1900, calorieTarget: 1800 },
+    insight: "Rachel has completed all 6 scheduled sessions since starting. Core stability improving. Ready to add light resistance.",
+    coachAngle: "Progress to goblet squats with 25 lbs. Continue core focus. Celebrate the consistency win!",
+    narrative: "Perfect attendance for 3 weeks! Down 3 lbs, core strength returning.",
+    attendanceRate: 92,
+    weightData: [165, 164.5, 164, 163, 162.5, 162, 162],
+  },
+  {
+    name: "Aaron Smith",
+    alert: "On Track",
+    alertType: "green",
+    program: "Strength Building",
+    startDate: "Feb 12",
+    assessment: {
+      date: "2026-02-12",
+      bodyweight: 185,
+      bodyFat: 24,
+      leanMass: 140.6,
+      measurements: { waist: 34, hips: 39, chest: 41 },
+      strengthBaselines: {
+        squat: { weight: 155, reps: 5 },
+        deadlift: { weight: 185, reps: 5 },
+        benchPress: { weight: 135, reps: 5 },
+        overheadPress: { weight: 75, reps: 5 },
+      },
+      movementScreen: { score: 14, notes: "Decent mobility. Hip hinge pattern needs reinforcement." },
+    },
+    current: {
+      bodyweight: 183,
+      bodyFat: 22.5,
+      leanMass: 141.8,
+      measurements: { waist: 33.5, hips: 39, chest: 41.5 },
+    },
+    goals: {
+      primary: "Get stronger and leaner",
+      targetWeight: 180,
+      targetBodyFat: 18,
+      secondaryGoals: ["Squat 225", "Visible abs"],
+      targetDate: "2026-07-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Upper Body",
+        duration: 55,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 155, reps: 5, rpe: 7.5 }, { set: 3, weight: 160, reps: 4, rpe: 8 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 135, reps: 8, rpe: 7 }, { set: 2, weight: 135, reps: 8, rpe: 7.5 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 85, reps: 6, rpe: 7 }, { set: 2, weight: 85, reps: 5, rpe: 8 }] },
+          { name: "Dumbbell Curl", sets: [{ set: 1, weight: 25, reps: 10, rpe: 7 }, { set: 2, weight: 25, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Bench is moving well. Ready to test 165 next week.",
+      },
+      {
+        date: "2026-03-18",
+        type: "Lower Body",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 185, reps: 4, rpe: 8 }, { set: 3, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 155, reps: 8, rpe: 7 }, { set: 2, weight: 155, reps: 8, rpe: 7.5 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 270, reps: 10, rpe: 7 }, { set: 2, weight: 270, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Squat depth is finally consistent. 185 felt solid.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Upper Body",
+        duration: 50,
+        exercises: [
+          { name: "Bench Press", sets: [{ set: 1, weight: 150, reps: 5, rpe: 7 }, { set: 2, weight: 155, reps: 4, rpe: 8 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 100, reps: 10, rpe: 7 }, { set: 2, weight: 100, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Good session. Focused on form.",
+      },
+      {
+        date: "2026-03-11",
+        type: "Lower Body",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 165, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 5, rpe: 7.5 }] },
+          { name: "Deadlift", sets: [{ set: 1, weight: 205, reps: 5, rpe: 7.5 }, { set: 2, weight: 205, reps: 5, rpe: 8 }] },
+        ],
+        notes: "Deadlift form is dialed in.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 15,
+    streak: { current: 8, best: 10, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 165, proteinTarget: 160, calorieAvg: 2400, calorieTarget: 2300 },
+    insight: "Aaron is making steady progress. Squat up 20 lbs, bench up 20 lbs since starting. Body comp improving.",
+    coachAngle: "Continue current programming. Add one session of direct core work per week.",
+    narrative: "Consistent gains across all lifts. Down 2 lbs while getting stronger.",
+    attendanceRate: 88,
+    weightData: [185, 184.5, 184, 183.5, 183.5, 183, 183],
+  },
+  {
+    name: "Lisa Martinez",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Olympic Lifting Intro",
+    startDate: "Jan 8",
+    assessment: {
+      date: "2026-01-08",
+      bodyweight: 142,
+      bodyFat: 25,
+      leanMass: 106.5,
+      measurements: { waist: 28, hips: 37, chest: 34 },
+      strengthBaselines: {
+        squat: { weight: 115, reps: 5 },
+        deadlift: { weight: 135, reps: 5 },
+        benchPress: { weight: 75, reps: 5 },
+        overheadPress: { weight: 55, reps: 5 },
+      },
+      movementScreen: { score: 17, notes: "Excellent mobility. Athletic background in volleyball." },
+    },
+    current: {
+      bodyweight: 145,
+      bodyFat: 23,
+      leanMass: 111.7,
+      measurements: { waist: 27.5, hips: 37.5, chest: 35 },
+    },
+    goals: {
+      primary: "Learn Olympic lifts",
+      targetWeight: 148,
+      targetBodyFat: 22,
+      secondaryGoals: ["Clean 100 lbs", "Snatch 75 lbs"],
+      targetDate: "2026-06-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Olympic Technique",
+        duration: 60,
+        exercises: [
+          { name: "Hang Clean", sets: [{ set: 1, weight: 75, reps: 3, rpe: 7 }, { set: 2, weight: 80, reps: 3, rpe: 7.5 }, { set: 3, weight: 85, reps: 2, rpe: 8 }] },
+          { name: "Front Squat", sets: [{ set: 1, weight: 95, reps: 5, rpe: 6.5 }, { set: 2, weight: 105, reps: 4, rpe: 7.5 }] },
+          { name: "Snatch Grip Deadlift", sets: [{ set: 1, weight: 95, reps: 5, rpe: 7 }, { set: 2, weight: 95, reps: 5, rpe: 7 }] },
+          { name: "Overhead Squat", sets: [{ set: 1, weight: 45, reps: 5, rpe: 6 }, { set: 2, weight: 55, reps: 5, rpe: 7 }] },
+        ],
+        notes: "Clean technique is improving. Third pull needs more speed.",
+      },
+      {
+        date: "2026-03-20",
+        type: "Strength",
+        duration: 55,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 135, reps: 5, rpe: 7 }, { set: 2, weight: 145, reps: 3, rpe: 8 }] },
+          { name: "Push Press", sets: [{ set: 1, weight: 65, reps: 5, rpe: 6.5 }, { set: 2, weight: 70, reps: 5, rpe: 7 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 115, reps: 8, rpe: 7 }, { set: 2, weight: 115, reps: 8, rpe: 7.5 }] },
+        ],
+        notes: "Squat PR! 145 for 3 is huge progress.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Olympic Technique",
+        duration: 55,
+        exercises: [
+          { name: "Power Snatch", sets: [{ set: 1, weight: 55, reps: 3, rpe: 7 }, { set: 2, weight: 60, reps: 2, rpe: 8 }] },
+          { name: "Hang Clean", sets: [{ set: 1, weight: 70, reps: 3, rpe: 7 }, { set: 2, weight: 75, reps: 3, rpe: 7.5 }] },
+        ],
+        notes: "Snatch is clicking. Keep drilling position.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Strength",
+        duration: 50,
+        exercises: [
+          { name: "Front Squat", sets: [{ set: 1, weight: 95, reps: 5, rpe: 7 }, { set: 2, weight: 100, reps: 4, rpe: 7.5 }] },
+          { name: "Deadlift", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 165, reps: 3, rpe: 8 }] },
+        ],
+        notes: "Deadlift PR! Posterior chain getting stronger.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 28,
+    streak: { current: 14, best: 16, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 132, proteinTarget: 130, calorieAvg: 2100, calorieTarget: 2000 },
+    insight: "Lisa is a natural! Clean at 85 lbs and climbing. Her volleyball background gives her great explosive power.",
+    coachAngle: "Focus on pull timing for the clean. Ready to start full lifts from the floor.",
+    narrative: "Clean up 30 lbs since learning. Squat up 30 lbs. Added 3 lbs of muscle.",
+    attendanceRate: 94,
+    weightData: [142, 143, 143.5, 144, 144.5, 145, 145],
+  },
+  {
+    name: "Jason Williams",
+    alert: "On Track",
+    alertType: "green",
+    program: "Maintenance — Active Lifestyle",
+    startDate: "Dec 1",
+    assessment: {
+      date: "2025-12-01",
+      bodyweight: 175,
+      bodyFat: 18,
+      leanMass: 143.5,
+      measurements: { waist: 32, hips: 38, chest: 42 },
+      strengthBaselines: {
+        squat: { weight: 225, reps: 5 },
+        deadlift: { weight: 275, reps: 5 },
+        benchPress: { weight: 185, reps: 5 },
+        overheadPress: { weight: 115, reps: 5 },
+      },
+      movementScreen: { score: 16, notes: "Well-balanced. Maintain current mobility." },
+    },
+    current: {
+      bodyweight: 176,
+      bodyFat: 17.5,
+      leanMass: 145.2,
+      measurements: { waist: 32, hips: 38, chest: 42.5 },
+    },
+    goals: {
+      primary: "Maintain strength while staying lean",
+      targetWeight: 175,
+      targetBodyFat: 17,
+      secondaryGoals: ["Train for hiking trip", "Stay injury-free"],
+      targetDate: "2026-12-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-20",
+        type: "Full Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 205, reps: 5, rpe: 6.5 }, { set: 2, weight: 205, reps: 5, rpe: 7 }] },
+          { name: "Bench Press", sets: [{ set: 1, weight: 165, reps: 5, rpe: 6.5 }, { set: 2, weight: 165, reps: 5, rpe: 7 }] },
+          { name: "Barbell Row", sets: [{ set: 1, weight: 135, reps: 8, rpe: 6.5 }, { set: 2, weight: 135, reps: 8, rpe: 7 }] },
+        ],
+        notes: "Maintenance session. Felt good, no need to push harder.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Full Body",
+        duration: 45,
+        exercises: [
+          { name: "Deadlift", sets: [{ set: 1, weight: 255, reps: 5, rpe: 6.5 }, { set: 2, weight: 255, reps: 5, rpe: 7 }] },
+          { name: "Overhead Press", sets: [{ set: 1, weight: 105, reps: 5, rpe: 6.5 }, { set: 2, weight: 105, reps: 5, rpe: 7 }] },
+          { name: "Pull-ups", sets: [{ set: 1, weight: 0, reps: 10, rpe: 6 }, { set: 2, weight: 0, reps: 10, rpe: 6.5 }] },
+        ],
+        notes: "Easy day. Prioritizing recovery for weekend hike.",
+      },
+      {
+        date: "2026-03-13",
+        type: "Full Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 215, reps: 5, rpe: 7 }, { set: 2, weight: 215, reps: 5, rpe: 7.5 }] },
+          { name: "Bench Press", sets: [{ set: 1, weight: 175, reps: 5, rpe: 7 }, { set: 2, weight: 175, reps: 4, rpe: 8 }] },
+        ],
+        notes: "Solid session. Strength is holding well.",
+      },
+    ],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 24,
+    streak: { current: 10, best: 14, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 155, proteinTarget: 150, calorieAvg: 2600, calorieTarget: 2500 },
+    insight: "Jason is maintaining beautifully. Strength stable, body comp slightly improved. Training supports his active lifestyle.",
+    coachAngle: "Continue current approach. No changes needed. Check in monthly.",
+    narrative: "Maintaining strength on 2x/week while staying active. Goal achieved.",
+    attendanceRate: 85,
+    weightData: [175, 175, 176, 175.5, 176, 176, 176],
+  },
+  {
+    name: "Daniel Torres",
+    alert: "Needs Programming",
+    alertType: "red",
+    program: "Fat Loss — Phase 1",
+    startDate: "Feb 20",
+    assessment: {
+      date: "2026-02-20",
+      bodyweight: 245,
+      bodyFat: 35,
+      leanMass: 159.3,
+      measurements: { waist: 42, hips: 44, chest: 46 },
+      strengthBaselines: {
+        squat: { weight: 135, reps: 8 },
+        deadlift: { weight: 155, reps: 8 },
+        benchPress: { weight: 135, reps: 8 },
+        overheadPress: { weight: 75, reps: 8 },
+      },
+      movementScreen: { score: 11, notes: "Limited hip mobility. Knee discomfort in deep squat." },
+    },
+    current: {
+      bodyweight: 238,
+      bodyFat: 33,
+      leanMass: 159.5,
+      measurements: { waist: 41, hips: 43.5, chest: 45.5 },
+    },
+    goals: {
+      primary: "Lose 50 lbs",
+      targetWeight: 195,
+      targetBodyFat: 22,
+      secondaryGoals: ["Get off blood pressure medication", "Play with kids without getting winded"],
+      targetDate: "2026-10-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-15",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat to Box", sets: [{ set: 1, weight: 35, reps: 10, rpe: 7 }, { set: 2, weight: 35, reps: 10, rpe: 7.5 }] },
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 100, reps: 10, rpe: 7 }, { set: 2, weight: 100, reps: 10, rpe: 7 }] },
+          { name: "Dumbbell Bench Press", sets: [{ set: 1, weight: 40, reps: 10, rpe: 7 }, { set: 2, weight: 40, reps: 10, rpe: 7.5 }] },
+        ],
+        notes: "Good session. Breathing better during sets.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Full Body",
+        duration: 35,
+        exercises: [
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 7 }, { set: 2, weight: 180, reps: 12, rpe: 7.5 }] },
+          { name: "Seated Row", sets: [{ set: 1, weight: 90, reps: 10, rpe: 7 }, { set: 2, weight: 90, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Shorter session. Work stress affecting energy.",
+      },
+      {
+        date: "2026-03-08",
+        type: "Full Body",
+        duration: 40,
+        exercises: [
+          { name: "Goblet Squat to Box", sets: [{ set: 1, weight: 30, reps: 10, rpe: 6.5 }, { set: 2, weight: 35, reps: 8, rpe: 7.5 }] },
+          { name: "Chest Press Machine", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 80, reps: 10, rpe: 7 }] },
+        ],
+        notes: "Progress on goblet squat! Hip feels better.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 0,
+    totalSessions: 9,
+    streak: { current: 0, best: 5, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 140, proteinTarget: 180, calorieAvg: 2200, calorieTarget: 2000 },
+    insight: "Daniel made great progress initially but hasn't trained in a week. Down 7 lbs which is excellent. Needs re-activation.",
+    coachAngle: "Reach out with encouragement. Suggest a quick 20-minute session to restart momentum. His health goals are important.",
+    narrative: "Down 7 lbs in 4 weeks but missed last week. Work stress cited. Needs support.",
+    attendanceRate: 55,
+    weightData: [245, 243, 241, 240, 239, 238, 238],
+  },
+  {
+    name: "Amanda Foster",
+    alert: "On Track",
+    alertType: "green",
+    program: "Rehab — Shoulder Recovery",
+    startDate: "Jan 15",
+    assessment: {
+      date: "2026-01-15",
+      bodyweight: 155,
+      bodyFat: 28,
+      leanMass: 111.6,
+      measurements: { waist: 30, hips: 38, chest: 36 },
+      strengthBaselines: {
+        squat: { weight: 95, reps: 8 },
+        deadlift: { weight: 115, reps: 8 },
+        benchPress: { weight: 45, reps: 8 },
+        overheadPress: { weight: 20, reps: 8 },
+      },
+      movementScreen: { score: 10, notes: "Right shoulder impingement. Limited overhead mobility. Post-surgery 6 months." },
+    },
+    current: {
+      bodyweight: 153,
+      bodyFat: 26.5,
+      leanMass: 112.5,
+      measurements: { waist: 29.5, hips: 37.5, chest: 36 },
+    },
+    goals: {
+      primary: "Full shoulder recovery",
+      targetWeight: 150,
+      targetBodyFat: 24,
+      secondaryGoals: ["Press overhead pain-free", "Return to swimming"],
+      targetDate: "2026-05-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Upper Body Rehab",
+        duration: 45,
+        exercises: [
+          { name: "Cable External Rotation", sets: [{ set: 1, weight: 10, reps: 15, rpe: 5 }, { set: 2, weight: 10, reps: 15, rpe: 5 }] },
+          { name: "Face Pulls", sets: [{ set: 1, weight: 20, reps: 15, rpe: 5.5 }, { set: 2, weight: 20, reps: 15, rpe: 5.5 }] },
+          { name: "Landmine Press", sets: [{ set: 1, weight: 25, reps: 10, rpe: 6 }, { set: 2, weight: 25, reps: 10, rpe: 6.5 }] },
+          { name: "Dumbbell Row", sets: [{ set: 1, weight: 25, reps: 10, rpe: 6 }, { set: 2, weight: 25, reps: 10, rpe: 6 }] },
+        ],
+        notes: "Shoulder feels great. Landmine press is pain-free now!",
+      },
+      {
+        date: "2026-03-18",
+        type: "Lower Body",
+        duration: 50,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 105, reps: 8, rpe: 6.5 }, { set: 2, weight: 115, reps: 6, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 95, reps: 10, rpe: 7 }, { set: 2, weight: 95, reps: 10, rpe: 7 }] },
+          { name: "Leg Press", sets: [{ set: 1, weight: 180, reps: 12, rpe: 6.5 }, { set: 2, weight: 180, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Lower body getting stronger. Compensating well for limited upper work.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Upper Body Rehab",
+        duration: 40,
+        exercises: [
+          { name: "Band Pull-Aparts", sets: [{ set: 1, weight: 0, reps: 20, rpe: 5 }, { set: 2, weight: 0, reps: 20, rpe: 5 }] },
+          { name: "Cable External Rotation", sets: [{ set: 1, weight: 7.5, reps: 15, rpe: 5 }, { set: 2, weight: 10, reps: 12, rpe: 5.5 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 15, reps: 12, rpe: 6 }, { set: 2, weight: 15, reps: 12, rpe: 6.5 }] },
+        ],
+        notes: "Incline press pain-free for first time!",
+      },
+      {
+        date: "2026-03-11",
+        type: "Lower Body",
+        duration: 45,
+        exercises: [
+          { name: "Goblet Squat", sets: [{ set: 1, weight: 35, reps: 10, rpe: 6 }, { set: 2, weight: 40, reps: 10, rpe: 7 }] },
+          { name: "Hip Thrust", sets: [{ set: 1, weight: 95, reps: 12, rpe: 6.5 }, { set: 2, weight: 95, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Good session. Ready to progress to barbell squat.",
+      },
+    ],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 22,
+    streak: { current: 11, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 115, proteinTarget: 120, calorieAvg: 1700, calorieTarget: 1650 },
+    insight: "Amanda's shoulder is recovering beautifully. Landmine and incline press are now pain-free. Ready to test light overhead work.",
+    coachAngle: "Introduce light dumbbell overhead press next session. Continue external rotation work. Swimming trial in 2 weeks.",
+    narrative: "Shoulder ROM improved 40%. Pain-free on most pressing. On track for full recovery.",
+    attendanceRate: 90,
+    weightData: [155, 154.5, 154, 153.5, 153.5, 153, 153],
+  },
+  {
+    name: "Michael Brown",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Athletic Performance",
+    startDate: "Feb 1",
+    assessment: {
+      date: "2026-02-01",
+      bodyweight: 195,
+      bodyFat: 20,
+      leanMass: 156,
+      measurements: { waist: 34, hips: 40, chest: 44 },
+      strengthBaselines: {
+        squat: { weight: 205, reps: 5 },
+        deadlift: { weight: 245, reps: 5 },
+        benchPress: { weight: 165, reps: 5 },
+        overheadPress: { weight: 95, reps: 5 },
+      },
+      movementScreen: { score: 15, notes: "Good overall. Former college basketball player. Some knee stiffness." },
+    },
+    current: {
+      bodyweight: 193,
+      bodyFat: 18.5,
+      leanMass: 157.3,
+      measurements: { waist: 33.5, hips: 40, chest: 44.5 },
+    },
+    goals: {
+      primary: "Improve vertical jump and court speed",
+      targetWeight: 190,
+      targetBodyFat: 16,
+      secondaryGoals: ["Add 4 inches to vertical", "Faster 40 time"],
+      targetDate: "2026-06-01",
+    },
+    sessions: [
+      {
+        date: "2026-03-22",
+        type: "Power",
+        duration: 55,
+        exercises: [
+          { name: "Box Jump", sets: [{ set: 1, weight: 0, reps: 5, rpe: 6 }, { set: 2, weight: 0, reps: 5, rpe: 6 }, { set: 3, weight: 0, reps: 5, rpe: 6.5 }] },
+          { name: "Trap Bar Deadlift", sets: [{ set: 1, weight: 245, reps: 3, rpe: 7 }, { set: 2, weight: 265, reps: 3, rpe: 7.5 }, { set: 3, weight: 275, reps: 2, rpe: 8 }] },
+          { name: "Split Squat Jump", sets: [{ set: 1, weight: 0, reps: 6, rpe: 7 }, { set: 2, weight: 0, reps: 6, rpe: 7 }] },
+        ],
+        notes: "Box jump height increased to 32 inches!",
+      },
+      {
+        date: "2026-03-19",
+        type: "Strength",
+        duration: 60,
+        exercises: [
+          { name: "Barbell Back Squat", sets: [{ set: 1, weight: 225, reps: 5, rpe: 7 }, { set: 2, weight: 235, reps: 4, rpe: 8 }] },
+          { name: "Bulgarian Split Squat", sets: [{ set: 1, weight: 40, reps: 8, rpe: 7 }, { set: 2, weight: 40, reps: 8, rpe: 7.5 }] },
+          { name: "Nordic Curl", sets: [{ set: 1, weight: 0, reps: 6, rpe: 8 }, { set: 2, weight: 0, reps: 5, rpe: 8.5 }] },
+        ],
+        notes: "Squat is moving well. Single leg work is paying off.",
+      },
+      {
+        date: "2026-03-15",
+        type: "Power",
+        duration: 50,
+        exercises: [
+          { name: "Depth Jump", sets: [{ set: 1, weight: 0, reps: 4, rpe: 7 }, { set: 2, weight: 0, reps: 4, rpe: 7 }] },
+          { name: "Hang Clean", sets: [{ set: 1, weight: 135, reps: 3, rpe: 7 }, { set: 2, weight: 145, reps: 2, rpe: 8 }] },
+        ],
+        notes: "Plyos feeling explosive. Clean technique improving.",
+      },
+      {
+        date: "2026-03-12",
+        type: "Strength",
+        duration: 55,
+        exercises: [
+          { name: "Trap Bar Deadlift", sets: [{ set: 1, weight: 255, reps: 5, rpe: 7 }, { set: 2, weight: 265, reps: 3, rpe: 8 }] },
+          { name: "Front Squat", sets: [{ set: 1, weight: 155, reps: 5, rpe: 7 }, { set: 2, weight: 165, reps: 4, rpe: 7.5 }] },
+        ],
+        notes: "Trap bar moving well. Legs feeling powerful.",
+      },
+    ],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 3,
+    totalSessions: 20,
+    streak: { current: 10, best: 12, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 175, proteinTarget: 170, calorieAvg: 2700, calorieTarget: 2600 },
+    insight: "Michael's vertical has improved 2 inches. Power output is up. Body comp is improving while maintaining strength.",
+    coachAngle: "Add reactive agility drills. Test vertical jump next week to measure progress.",
+    narrative: "Vertical up 2 inches. Down 2 lbs while getting more explosive.",
+    attendanceRate: 88,
+    weightData: [195, 194.5, 194, 193.5, 193.5, 193, 193],
+  },
+  {
+    name: "Jennifer Lee",
+    alert: "On Track",
+    alertType: "green",
+    program: "Bodybuilding — Prep",
+    startDate: "Mar 1",
+    assessment: {
+      date: "2026-03-01",
+      bodyweight: 138,
+      bodyFat: 22,
+      leanMass: 107.6,
+      measurements: { waist: 27, hips: 37, chest: 34 },
+      strengthBaselines: {
+        squat: { weight: 135, reps: 8 },
+        deadlift: { weight: 165, reps: 6 },
+        benchPress: { weight: 85, reps: 8 },
+        overheadPress: { weight: 55, reps: 8 },
+      },
+      movementScreen: { score: 16, notes: "Good mobility. Previous figure competition experience." },
+    },
+    current: {
+      bodyweight: 136,
+      bodyFat: 21,
+      leanMass: 107.4,
+      measurements: { waist: 26.5, hips: 36.5, chest: 34 },
+    },
+    goals: {
+      primary: "Compete in bikini division",
+      targetWeight: 125,
+      targetBodyFat: 14,
+      secondaryGoals: ["Build glutes", "Improve shoulder caps"],
+      targetDate: "2026-07-15",
+    },
+    sessions: [
+      {
+        date: "2026-03-21",
+        type: "Glutes & Hamstrings",
+        duration: 60,
+        exercises: [
+          { name: "Hip Thrust", sets: [{ set: 1, weight: 155, reps: 10, rpe: 7 }, { set: 2, weight: 165, reps: 8, rpe: 8 }, { set: 3, weight: 155, reps: 10, rpe: 7.5 }] },
+          { name: "Romanian Deadlift", sets: [{ set: 1, weight: 115, reps: 10, rpe: 7 }, { set: 2, weight: 115, reps: 10, rpe: 7.5 }] },
+          { name: "Cable Kickbacks", sets: [{ set: 1, weight: 20, reps: 15, rpe: 7 }, { set: 2, weight: 20, reps: 15, rpe: 7 }] },
+          { name: "Leg Curl", sets: [{ set: 1, weight: 50, reps: 12, rpe: 7 }, { set: 2, weight: 50, reps: 12, rpe: 7.5 }] },
+        ],
+        notes: "Hip thrust PR! Glute development is visible.",
+      },
+      {
+        date: "2026-03-19",
+        type: "Shoulders & Arms",
+        duration: 55,
+        exercises: [
+          { name: "Lateral Raises", sets: [{ set: 1, weight: 12, reps: 15, rpe: 7 }, { set: 2, weight: 12, reps: 15, rpe: 7.5 }, { set: 3, weight: 12, reps: 12, rpe: 8 }] },
+          { name: "Rear Delt Fly", sets: [{ set: 1, weight: 10, reps: 15, rpe: 6.5 }, { set: 2, weight: 10, reps: 15, rpe: 7 }] },
+          { name: "Cable Curl", sets: [{ set: 1, weight: 25, reps: 12, rpe: 7 }, { set: 2, weight: 25, reps: 12, rpe: 7 }] },
+          { name: "Tricep Pushdown", sets: [{ set: 1, weight: 30, reps: 15, rpe: 6.5 }, { set: 2, weight: 30, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Shoulder caps responding well. Good pump.",
+      },
+      {
+        date: "2026-03-17",
+        type: "Quads & Calves",
+        duration: 55,
+        exercises: [
+          { name: "Hack Squat", sets: [{ set: 1, weight: 140, reps: 10, rpe: 7 }, { set: 2, weight: 160, reps: 8, rpe: 8 }] },
+          { name: "Leg Extension", sets: [{ set: 1, weight: 60, reps: 15, rpe: 7 }, { set: 2, weight: 60, reps: 15, rpe: 7.5 }] },
+          { name: "Standing Calf Raise", sets: [{ set: 1, weight: 120, reps: 15, rpe: 7 }, { set: 2, weight: 120, reps: 15, rpe: 7 }] },
+        ],
+        notes: "Quad sweep improving. Hack squat feeling strong.",
+      },
+      {
+        date: "2026-03-14",
+        type: "Back & Chest",
+        duration: 50,
+        exercises: [
+          { name: "Lat Pulldown", sets: [{ set: 1, weight: 80, reps: 10, rpe: 7 }, { set: 2, weight: 85, reps: 8, rpe: 7.5 }] },
+          { name: "Seated Row", sets: [{ set: 1, weight: 70, reps: 10, rpe: 7 }, { set: 2, weight: 70, reps: 10, rpe: 7 }] },
+          { name: "Incline Dumbbell Press", sets: [{ set: 1, weight: 25, reps: 12, rpe: 7 }, { set: 2, weight: 25, reps: 12, rpe: 7 }] },
+        ],
+        notes: "Back width improving. Upper chest is lagging.",
+      },
+    ],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 4,
+    totalSessions: 12,
+    streak: { current: 12, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 145, proteinTarget: 140, calorieAvg: 1550, calorieTarget: 1500 },
+    insight: "Jennifer is 16 weeks out from her show. Physique is developing well. Glutes and shoulders are priority areas.",
+    coachAngle: "Begin posing practice. Add one extra glute session per week. Start cardio protocol next week.",
+    narrative: "Perfect attendance. Down 2 lbs while maintaining muscle. On track for stage.",
+    attendanceRate: 98,
+    weightData: [138, 137.5, 137, 136.5, 136.5, 136, 136],
+  },
 ];
 
 const chatSeedMessages = [
-  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 12 active clients today. Here's what needs your attention:\n\n- **Sarah Chen** hasn't logged in 4 days — her longest gap yet\n- **Emily Rodriguez** showing a restrict-binge pattern\n- **Aaron Smith** dropped off mid-week again\n\nI'd recommend reaching out to Sarah first before it becomes a pattern." },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — Lower body today. Squat hit 120x6 last session, ready to test progression\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
 ];
 
 const suggestedPrompts = [
-  "Start with Sarah",
-  "Start with Emily",
-  "Start with Aaron",
-  "Who is doing well?",
-  "Summarize my coaching queue",
+  "Pull up Sarah's program",
+  "What did Marcus do last session?",
+  "Build a workout for Emily",
+  "Who needs programming this week?",
+  "Show me Sarah's squat progression",
 ];
 
 // Demo client data for Milton AI responses
 const demoClients = {
   sarah: {
     name: "Sarah Chen",
-    goal: "Lose 15 lbs for wedding in 3 months",
-    status: "at-risk",
-    week: 6,
-    issue: "Missed logging for 4 days straight — her longest gap yet",
-    protein: "95g avg (target: 120g)",
-    weight: "Up 1.2 lbs this week",
-    loggingStreak: 0,
-    action: "Send a supportive check-in message",
-    insight: "Weekend logging drops 60% compared to weekdays. Monday weigh-ins suggest weekend calories are higher than logged."
+    goal: "Lose 20 lbs, squat 135",
+    status: "progressing",
+    week: 7,
+    win: "Squat up 25 lbs since assessment",
+    issue: "Bench press stalling at 70 lbs for 2 weeks",
+    sessionsThisWeek: "2 of 3 completed",
+    lastSession: "Lower Body — March 21",
+    nextSession: "Upper Body Pull — suggested",
+    action: "Test squat 1RM next week. Add extra pressing volume.",
+    insight: "Strong lower body gains. Upper body needs more frequency or volume to break plateau."
   },
   marcus: {
     name: "Marcus Johnson", 
-    goal: "Build muscle, gain 10 lbs lean mass",
+    goal: "Gain 15 lbs muscle, bench 225",
     status: "highly-engaged",
-    week: 8,
-    win: "Hit protein goal 7 days straight",
-    protein: "185g avg (target: 180g)",
-    weight: "Up 0.8 lbs (on track)",
-    loggingStreak: 14,
-    action: "Celebrate streak and suggest increasing calorie target by 100",
-    insight: "Ready for a progressive overload conversation. Strength is up 12% this month."
+    week: 10,
+    win: "Bench up 20 lbs, deadlift up 50 lbs since assessment",
+    issue: "Assessment overdue — 8 weeks since last InBody",
+    sessionsThisWeek: "4 of 5 completed",
+    lastSession: "Push — March 20",
+    nextSession: "Legs — scheduled",
+    action: "Schedule InBody scan. Update training maxes for new block.",
+    insight: "Gained 7 lbs bodyweight with minimal fat gain. Ready for reassessment."
   },
   emily: {
     name: "Emily Rodriguez",
-    goal: "Improve energy and relationship with food", 
-    status: "moderate-concern",
-    week: 4,
-    issue: "Calories under 1200 on weekdays, then spikes to 2400+ on weekends",
-    protein: "68g avg (target: 100g)",
-    weight: "Fluctuating +/- 2 lbs weekly",
-    loggingStreak: 5,
-    action: "Schedule a call about sustainable eating patterns",
-    insight: "Classic restrict-binge pattern. Needs permission to eat more consistently."
+    goal: "Lose 25 lbs, feel confident", 
+    status: "at-risk",
+    week: 5,
+    issue: "Missed last 2 sessions. Current program ends this week.",
+    sessionsThisWeek: "0 of 3 completed",
+    lastSession: "Full Body — March 10",
+    nextSession: "Needs new program",
+    action: "Check in with Emily. Design a simpler 2x/week program to restart momentum.",
+    insight: "Was making good progress but attendance dropped. May be overwhelmed."
   },
   david: {
     name: "David Park",
-    goal: "Drop from 22% to 15% body fat",
+    goal: "Compete in first powerlifting meet",
     status: "highly-engaged", 
-    week: 10,
-    win: "Perfect logging for 21 days straight",
-    issue: "Weight plateau for 2 weeks despite good adherence",
-    protein: "165g avg (target: 160g)",
-    weight: "Flat for 14 days at 178 lbs",
-    loggingStreak: 21,
-    action: "Consider a 2-week diet break or macro adjustment",
-    insight: "Metabolic adaptation likely. Good candidate for reverse diet discussion."
+    week: 11,
+    win: "All lifts progressing toward meet goals. 295 squat, 205 bench PR, 365 deadlift",
+    sessionsThisWeek: "3 of 4 completed",
+    lastSession: "Squat Day — March 21",
+    nextSession: "Bench Day — today",
+    action: "Start peaking protocol in 4 weeks. Consider mock meet for practice.",
+    insight: "12 weeks out from meet. Squat close to 315, deadlift to 405, bench to 225."
   },
   rachel: {
     name: "Rachel Kim",
-    goal: "Post-pregnancy fitness and strength",
+    goal: "Return to pre-pregnancy fitness",
     status: "new-client",
-    week: 2,
-    win: "Completed first full week of workouts postpartum",
-    issue: "Struggling to find time to log with newborn",
-    protein: "85g avg (target: 110g)", 
-    weight: "Down 0.5 lbs (healthy pace)",
-    loggingStreak: 2,
-    action: "Send encouragement and offer quick-log meal templates",
-    insight: "Sleep-deprived but motivated. Keep expectations realistic and celebrate small wins."
+    week: 3,
+    win: "Perfect attendance — 6 of 6 sessions completed",
+    sessionsThisWeek: "2 of 2 completed",
+    lastSession: "Full Body — March 22",
+    nextSession: "Full Body — scheduled",
+    action: "Progress to goblet squats with 25 lbs. Continue core focus.",
+    insight: "Core stability improving. Ready to add light resistance. Celebrate the consistency!"
   }
 };
 
@@ -388,84 +1409,117 @@ function generateAIResponse(msg) {
   const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
   const client = matchedKey ? demoClients[matchedKey] : null;
 
-  // START WITH [CLIENT] - prioritized handler for quick action prompts
-  if (lower.includes("start with") && client) {
+  // PULL UP PROGRAM / VIEW CLIENT
+  if ((lower.includes("pull up") || lower.includes("show me") || lower.includes("open")) && client) {
     const first = client.name.split(" ")[0];
     return {
-      title: `Starting with ${first}`,
-      text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n${client.issue || client.win}\n\n**Quick stats:**\n- Protein: ${client.protein}\n- Weight: ${client.weight}\n- Logging streak: ${client.loggingStreak} days\n\n**My recommendation:** ${client.action}\n\nWant me to draft a message for ${first}?`
+      title: `${first}'s Program`,
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Training Status:**\n- ${client.sessionsThisWeek}\n- Last session: ${client.lastSession}\n- Next session: ${client.nextSession}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n**My recommendation:** ${client.action}\n\nWant me to build their next workout or show their lift progression?`
     };
   }
 
-  // WHO NEEDS ATTENTION
+  // LAST SESSION / WHAT DID THEY DO
+  if ((lower.includes("last session") || lower.includes("last workout") || lower.includes("what did") || lower.includes("previous")) && client) {
+    const first = client.name.split(" ")[0];
+    return {
+      title: `${first}'s Last Session`,
+      text: `**${first}'s last session:** ${client.lastSession}\n\n${client.win ? `**Highlight:** ${client.win}` : ""}\n\n**Key lifts from recent sessions:**\n- Squat: progressing well\n- Bench: ${client.issue && client.issue.includes("Bench") ? "stalling — needs adjustment" : "on track"}\n- Deadlift: moving up\n\n**Session notes:** Good energy, form improvements noted.\n\nWant me to generate the next session based on this progression?`
+    };
+  }
+
+  // BUILD WORKOUT / GENERATE PROGRAM
+  if ((lower.includes("build") || lower.includes("create") || lower.includes("generate") || lower.includes("make")) && (lower.includes("workout") || lower.includes("program") || lower.includes("session"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
+      return {
+        title: `Building Workout for ${first}`,
+        text: `**I'll create a workout for ${first}!**\n\nBased on their recent sessions and progressive overload, here's what I recommend for ${client.nextSession}:\n\n**Primary focus:** Continue building on recent PRs\n**Suggested exercises:** Based on their program and last session performance\n\nWant me to open the workout canvas so you can review and adjust the full program?`
+      };
+    }
+    return {
+      title: "Build Workout",
+      text: `**I can build a workout!** Which client would you like me to program for?\n\n- Sarah Chen (Lower Body Pull next)\n- Marcus Johnson (Legs day)\n- Emily Rodriguez (Needs new program)\n- David Park (Bench Day today)\n- Rachel Kim (Full Body)`
+    };
+  }
+
+  // WHO NEEDS PROGRAMMING
+  if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
+    return { 
+      title: "Programming Needed", 
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** — Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+    };
+  }
+
+  // SQUAT / LIFT PROGRESSION
+  if ((lower.includes("progression") || lower.includes("progress")) && (lower.includes("squat") || lower.includes("bench") || lower.includes("deadlift") || lower.includes("lift"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
+      return {
+        title: `${first}'s Lift Progression`,
+        text: `**${first}'s strength progression:**\n\n${client.win || "Making steady progress across all lifts."}\n\n**My analysis:** ${client.insight}\n\n**Recommendation:** ${client.action}\n\nWant me to show you the full progression chart or update their training maxes?`
+      };
+    }
+    return {
+      title: "Lift Progression",
+      text: `**Which client's progression would you like to see?**\n\n- Sarah Chen — Squat up 25 lbs\n- Marcus Johnson — All lifts progressing\n- David Park — Meet prep, all PRs\n- Lisa Martinez — Olympic lifts improving`
+    };
+  }
+
+  // WHO NEEDS ATTENTION / PRIORITY QUEUE
   if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
     return { 
       title: "Priority Queue", 
-      text: `**Here's who needs your attention today:**\n\n- **Sarah Chen** (Week 6) — hasn't logged in 4 days. This is her longest gap. I'd recommend a supportive check-in before it becomes a pattern.\n\n- **Emily Rodriguez** (Week 4) — her weekday calories are too low (<1200), then she's spiking on weekends. Worth scheduling a call about sustainable eating.\n\n- **David Park** (Week 10) — weight has plateaued for 2 weeks despite perfect adherence. May need a macro adjustment or diet break.\n\nMarcus and Rachel are doing great — no action needed.`
+      text: `**Here's who needs your attention today:**\n\n- **Marcus Johnson** (Week 10) — Assessment overdue. It's been 8 weeks since his InBody. Schedule a reassessment to update training maxes.\n\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Needs a check-in and fresh programming.\n\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Needs re-activation.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown`
     };
   }
 
-  // WHO IS DOING WELL
-  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate")) {
+  // WHO IS DOING WELL / WINS
+  if (lower.includes("doing well") || lower.includes("going well") || lower.includes("good news") || lower.includes("wins") || lower.includes("celebrate") || lower.includes("crushing")) {
     return {
       title: "Client Wins",
-      text: `**Great news to share:**\n\n- **Marcus Johnson** — 7-day protein streak and 14-day logging streak. He's ready for a calorie increase.\n\n- **David Park** — 21 days of perfect logging. Incredible consistency even through a plateau.\n\n- **Rachel Kim** — just completed her first full week of postpartum workouts. Huge milestone for a new mom.\n\nWant me to draft congratulations messages for any of them?`
+      text: `**Great news to share:**\n\n- **Sarah Chen** — Squat up 25 lbs since assessment! Down 5 lbs while gaining lean mass.\n\n- **Rachel Kim** — Perfect attendance, 6 of 6 sessions. Core stability improving after pregnancy.\n\n- **David Park** — PRs on all three lifts. 295 squat, 205 bench, 365 deadlift. On track for his meet.\n\n- **Jennifer Lee** — 12 sessions in a row. Stage-ready physique developing.\n\nWant me to help you celebrate any of these wins with the client?`
     };
   }
 
-  // WHAT SHOULD I DO NEXT
-  if (lower.includes("what should i do") || lower.includes("next step") || lower.includes("what now") || lower.includes("recommend")) {
+  // ASSESSMENT DUE
+  if (lower.includes("assessment") || lower.includes("reassess") || lower.includes("inbody")) {
     return {
-      title: "Recommended Next Action",
-      text: `**Your highest-impact action right now:** reach out to Sarah Chen.\n\nShe hasn't logged in 4 days, which is unusual for her. A quick supportive message could prevent a longer spiral. Something like:\n\n"Hey Sarah! Just checking in — no pressure on the logging, just wanted to see how you're doing. Wedding planning getting intense? Let me know if you need to adjust anything."\n\nWant me to send this for you?`
+      title: "Assessments",
+      text: `**Assessment status:**\n\n- **Marcus Johnson** — OVERDUE. 8 weeks since last InBody. Gained 7 lbs, lifts are up. Schedule scan this week.\n\n**Everyone else** is within their assessment window.\n\nWant me to add an assessment reminder for Marcus?`
     };
   }
 
-  // WRITE A MESSAGE TO [CLIENT]
-  if ((lower.includes("write") || lower.includes("draft") || lower.includes("send") || lower.includes("message")) && client) {
-    const first = client.name.split(" ")[0];
-    if (client.status === "at-risk") {
+  // LOG SESSION
+  if (lower.includes("log") && (lower.includes("session") || lower.includes("workout"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
       return {
-        title: `Message for ${first}`,
-        text: `**Here's a draft check-in for ${first}:**\n\n"Hey ${first}! Just wanted to check in and see how you're doing. I noticed things have been quiet the last few days — totally okay, life happens! When you're ready, I'm here. No pressure, just support. Let me know if there's anything I can adjust to make things easier for you."\n\nWant me to send this?`
-      };
-    } else if (client.status === "highly-engaged") {
-      return {
-        title: `Message for ${first}`,
-        text: `**Here's a celebration message for ${first}:**\n\n"${first}! Just had to reach out — your consistency has been incredible. ${client.win}. This is exactly the kind of momentum that creates lasting results. Keep it up, and let me know when you're ready to level up!"\n\nWant me to send this?`
-      };
-    } else {
-      return {
-        title: `Message for ${first}`,
-        text: `**Here's a supportive message for ${first}:**\n\n"Hi ${first}! Checking in on Week ${client.week}. You're making progress — ${client.loggingStreak} day logging streak is solid! I noticed ${client.issue ? client.issue.toLowerCase() : "some areas we could optimize"}. Want to hop on a quick call to chat through it?"\n\nWant me to send this?`
+        title: `Log Session for ${first}`,
+        text: `**Ready to log a session for ${first}!**\n\nI'll open the session logging canvas. You can:\n- Start with their prescribed workout\n- Edit weights, reps, and RPE as they complete each set\n- Add notes about form, energy, or anything notable\n\nWant me to open the session logger?`
       };
     }
+    return {
+      title: "Log Session",
+      text: `**Which client's session would you like to log?**\n\n**Sessions today:**\n- Sarah Chen — Lower Body\n- David Park — Bench Day\n- Lisa Martinez — Olympic Technique\n- Michael Brown — Power`
+    };
   }
 
   // CLIENT-SPECIFIC QUERIES
   if (client) {
     const first = client.name.split(" ")[0];
     
-    // Nutrition/protein questions
-    if (lower.includes("protein") || lower.includes("nutrition") || lower.includes("macro") || lower.includes("eating")) {
-      return {
-        title: `${first}'s Nutrition`,
-        text: `**${first}'s current nutrition** (Week ${client.week}):\n\n- **Protein:** ${client.protein}\n- **Weight trend:** ${client.weight}\n- **Logging streak:** ${client.loggingStreak} days\n\n${client.insight}\n\n**Recommended action:** ${client.action}`
-      };
-    }
-
     // Progress/status questions  
-    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update")) {
+    if (lower.includes("progress") || lower.includes("doing") || lower.includes("status") || lower.includes("update") || lower.includes("how is")) {
       return {
         title: `${first}'s Status`,
-        text: `**${first}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n- **Weight:** ${client.weight}\n- **Protein:** ${client.protein}\n- **Logging:** ${client.loggingStreak} day streak\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
+        text: `**${client.name}** — Week ${client.week}, ${client.status.replace("-", " ")}\n\n**Goal:** ${client.goal}\n\n**Training:**\n- ${client.sessionsThisWeek}\n- Last: ${client.lastSession}\n- Next: ${client.nextSession}\n\n${client.win ? `**Recent win:** ${client.win}` : `**Current issue:** ${client.issue}`}\n\n**My take:** ${client.insight}\n\n**Recommended:** ${client.action}`
       };
     }
 
     // Default client info
     return {
       title: `About ${first}`,
-      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n- **Protein:** ${client.protein}\n- **Weight:** ${client.weight}\n\n**Recommended action:** ${client.action}`
+      text: `**${client.name}** — Week ${client.week}\n\n**Goal:** ${client.goal}\n\n**Status:** ${client.status.replace("-", " ")}\n\n**Training:**\n- ${client.sessionsThisWeek}\n- Last: ${client.lastSession}\n- Next: ${client.nextSession}\n\n${client.win ? `**Win:** ${client.win}` : `**Issue:** ${client.issue}`}\n\n**Recommended action:** ${client.action}`
     };
   }
 
@@ -473,14 +1527,14 @@ function generateAIResponse(msg) {
   if (lower.includes("help") || lower.includes("what can")) {
     return {
       title: "How I Can Help",
-      text: `**I'm Milton, your coaching copilot.** Try asking me:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is Marcus doing?"\n- "Who is doing well?"\n- "Summarize my coaching queue"\n\nI know all 5 of your current clients and can help you prioritize, draft messages, and spot patterns.`
+      text: `**I'm Milton, your training copilot.** Try asking me:\n\n- "Pull up Sarah's program"\n- "What did Marcus do last session?"\n- "Build a workout for Emily"\n- "Who needs programming this week?"\n- "Show me Sarah's squat progression"\n- "Log a session for David"\n\nI know all your clients and can help with programming, session logging, and tracking progress.`
     };
   }
 
   // DEFAULT
   return { 
     title: "Milton", 
-    text: `**I'm here to help!** Try asking:\n\n- "Who needs attention today?"\n- "What should I do next?"\n- "Write a message to Sarah"\n- "How is David doing?"\n- "Who is doing well?"`
+    text: `**I'm here to help!** Try asking:\n\n- "Pull up Sarah's program"\n- "Who needs attention today?"\n- "Build a workout for Emily"\n- "What did Marcus do last session?"\n- "Show me lift progression"`
   };
 }
 
@@ -1240,7 +2294,7 @@ function MobileCanvasSheet({
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile }) {
-  const [expandedDetail, setExpandedDetail] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(null);
   const [showShare, setShowShare] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const reportRef = useRef(null);
@@ -1254,144 +2308,130 @@ function ReportView({ client, onBack, isMobile }) {
     setTimeout(() => setLinkCopied(false), 2500);
   };
 
+  // Data calculations - attendance is based on scheduled vs attended, not total purchased
+  const attendedSessions = (client.sessions || []).length || client.totalSessions || client.workoutDays * 4 + 2;
+  const scheduledSessions = client.scheduledSessions || attendedSessions; // If they've attended all scheduled, 100%
+  const missedSessions = Math.max(0, scheduledSessions - attendedSessions);
+  const attendanceRate = scheduledSessions > 0 ? Math.min(100, Math.round((attendedSessions / scheduledSessions) * 100)) : 100;
+  
+  // Body composition data
+  const assessment = client.assessment || {};
+  const current = client.current || {};
+  const bodyweightStart = assessment.bodyweight || 185;
+  const bodyweightCurrent = current.bodyweight || client.weightData?.[client.weightData?.length - 1] || 180;
+  const bodyFatStart = assessment.bodyFat || 24;
+  const bodyFatCurrent = current.bodyFat || 20;
+  const leanMassStart = assessment.leanMass || Math.round(bodyweightStart * (1 - bodyFatStart / 100));
+  const leanMassCurrent = current.leanMass || Math.round(bodyweightCurrent * (1 - bodyFatCurrent / 100));
+  
+  // Strength baselines and current
+  const strengthBaselines = assessment.strengthBaselines || {
+    squat: { weight: 135, reps: 5 },
+    benchPress: { weight: 95, reps: 5 },
+    deadlift: { weight: 185, reps: 5 }
+  };
+  const liftNames = { squat: "Squat", benchPress: "Bench Press", deadlift: "Deadlift", overheadPress: "OHP" };
+  const liftColors = { squat: TEAL, benchPress: MINT, deadlift: "#3aafa9", overheadPress: "#8e7cc3" };
+  
+  // Calculate 1RMs
+  const calc1RM = (weight, reps) => Math.round(weight * (36 / (37 - reps)));
+  const lifts = Object.entries(strengthBaselines).slice(0, 3).map(([key, val]) => {
+    const baseline1RM = calc1RM(val.weight, val.reps);
+    const currentEst = Math.round(baseline1RM * (1.08 + (client.name.charCodeAt(0) % 10) / 100));
+    return { key, name: liftNames[key], baseline: baseline1RM, current: currentEst, color: liftColors[key] || TEAL };
+  });
+  
+  // Nutrition data
+  const nutritionScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
+  const proteinAvg = client.proteinAvg || 120;
+  const proteinTarget = client.proteinTarget || 140;
+  const caloriesAvg = 1650;
+  const caloriesTarget = 1800;
+  
+  // Wearable/Exercise data
+  const steps = client.steps || 7500;
+  const stepsGoal = 10000;
+  const activeMinutes = 42;
+  const activeMinutesGoal = 45;
+  const workoutDays = client.workoutDays || 4;
+  
+  // Sleep data
+  const sleepHours = 6.8;
+  const sleepGoal = 8;
+  const sleepQuality = "Good";
+  const sleepConsistency = 72;
+  
+  // Goal progress
+  const goals = client.goals || {};
+  const goalWeight = goals.targetWeight || bodyweightStart - 15;
+  const totalWeightGoal = Math.abs(goalWeight - bodyweightStart);
+  const weightProgress = Math.abs(bodyweightCurrent - bodyweightStart);
+  const goalProgressPct = Math.min(100, Math.round((weightProgress / totalWeightGoal) * 100));
+  
+  // Achievements & Streaks
+  const currentStreak = Math.min(attendedSessions, 8);
+  const bestStreak = Math.max(currentStreak, 12);
+  const achievements = [
+    { id: 1, name: "First Session", icon: "check", earned: attendedSessions >= 1, date: assessment.date },
+    { id: 2, name: "5 Session Streak", icon: "fire", earned: bestStreak >= 5, date: "Week 2" },
+    { id: 3, name: "10 Sessions Complete", icon: "trophy", earned: attendedSessions >= 10, date: "Week 3" },
+    { id: 4, name: "Body Comp Warrior", icon: "muscle", earned: Math.abs(bodyFatCurrent - bodyFatStart) >= 2, date: "Week 4" },
+    { id: 5, name: "PR Crusher", icon: "star", earned: lifts.some(l => l.current > l.baseline * 1.1), date: "Week 3" },
+    { id: 6, name: "Nutrition Champion", icon: "apple", earned: nutritionScore >= 80, date: "This week" },
+  ];
+  
   const handleExportPDF = () => {
     const printWin = window.open("", "_blank");
     if (!printWin) return;
-    const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-    const startW = client.weightData?.[0] || 185;
-    const currW = client.weightData?.[client.weightData.length-1] || 183;
-    const goalW = startW - 10;
-    const ms = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-    const es = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-    const mvs = Math.min(100, Math.round((client.steps / 8000) * 100));
-    const ss = 78;
-    const cs = Math.round(ms * 0.4 + es * 0.25 + mvs * 0.2 + ss * 0.15);
-    const pils = [
-      { label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: "#2B7A78" },
-      { label: "Steps", days: Math.min(30, Math.round(client.steps / 350)), color: "#3aafa9" },
-      { label: "Meals", days: Math.min(30, client.mealsLogged + 5), color: "#ef6c3e" },
-      { label: "Sleep", days: 21, color: "#8e7cc3" },
-    ];
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${client.name} - Milton Report</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'DM Sans', sans-serif; color: #1a2e2a; background: #fff; padding: 40px; max-width: 700px; margin: 0 auto; }
       .card { border-radius: 16px; border: 1px solid #e0ebe8; padding: 24px; margin-bottom: 20px; }
-      .score-card { background: linear-gradient(135deg, #f7faf9, #eef6f3); text-align: center; padding: 36px 24px; }
-      .score-num { font-size: 56px; font-weight: 800; color: #1a2e2a; }
-      .score-label { font-size: 16px; font-weight: 700; color: ${cs >= 80 ? "#5CDB95" : cs >= 60 ? "#3aafa9" : "#ef6c3e"}; margin-top: 4px; }
-      .sub { font-size: 13px; color: #5f7a76; }
-      .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
-      .pillar { text-align: center; padding: 14px 8px; border-radius: 12px; background: #fafcfb; border: 1px solid #e0ebe8; }
-      .pillar-days { font-size: 22px; font-weight: 800; }
-      .pillar-label { font-size: 12px; font-weight: 700; color: #1a2e2a; margin-bottom: 6px; }
-      .bar-bg { height: 4px; border-radius: 2px; background: #e8f0ee; margin-top: 8px; }
-      .bar-fill { height: 4px; border-radius: 2px; }
       .section-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-      .insight-card { background: linear-gradient(135deg, rgba(43,122,120,0.06), rgba(92,219,149,0.06)); border: 1px solid rgba(43,122,120,0.15); }
-      .focus-card { background: linear-gradient(140deg, #f2faf8, #eaf6f2); border: 1px solid rgba(43,122,120,0.12); }
-      .weights { display: flex; justify-content: center; gap: 24px; margin-top: 14px; }
-      .weight-item { text-align: center; }
-      .weight-num { font-size: 18px; font-weight: 700; }
-      .weight-label { font-size: 11px; color: #5f7a76; font-weight: 600; }
-      .goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+      .sub { font-size: 13px; color: #5f7a76; }
       .header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e0ebe8; }
-      .logo { width: 32px; height: 32px; border-radius: 8px; background: #2B7A78; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; }
-      .client-name { font-size: 20px; font-weight: 700; }
-      .date { font-size: 12px; color: #5f7a76; }
+      .logo { width: 32px; height: 32px; border-radius: 8px; background: #2B7A78; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+      .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .stat-box { text-align: center; padding: 16px; background: #f7faf9; border-radius: 12px; }
+      .stat-value { font-size: 24px; font-weight: 800; color: #2B7A78; }
+      .stat-label { font-size: 12px; color: #5f7a76; margin-top: 4px; }
       @media print { body { padding: 20px; } .no-print { display: none !important; } }
     </style></head><body>
     <div class="header">
       <div class="logo">M</div>
-      <div><div class="client-name">${client.name}</div><div class="date">Report generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div></div>
+      <div><div style="font-size:20px;font-weight:700">${client.name}</div><div class="sub">Report: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div></div>
     </div>
-    <div class="card score-card">
-      <div class="sub" style="text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Consistency Score</div>
-      <div class="score-num">${cs}</div>
-      <div style="font-size:13px;color:#5f7a76;">out of 100</div>
-      <div class="score-label">${cs >= 85 ? "Exceptional Consistency" : cs >= 70 ? "Strong Consistency" : cs >= 55 ? "Building Momentum" : "Getting Started"}</div>
-      <div style="font-size:13px;color:#5f7a76;margin-top:8px;">Slow & steady wins the race</div>
-      <div class="weights">
-        <div class="weight-item"><div class="weight-num" style="color:#ef6c3e">${ms}</div><div class="weight-label">Meals (40%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#2B7A78">${es}</div><div class="weight-label">Exercise (25%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#3aafa9">${mvs}</div><div class="weight-label">Movement (20%)</div></div>
-        <div class="weight-item"><div class="weight-num" style="color:#8e7cc3">${ss}</div><div class="weight-label">Sleep (15%)</div></div>
+    <div class="card" style="background:linear-gradient(135deg,#f7faf9,#eef6f3);text-align:center">
+      <div class="sub" style="text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Attendance Rate</div>
+      <div style="font-size:56px;font-weight:800;color:#2B7A78">${attendanceRate}%</div>
+      <div style="font-size:14px;color:#5f7a76;margin-top:4px">${attendedSessions}/${scheduledSessions} sessions attended</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Body Composition</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-value">${bodyweightCurrent}</div><div class="stat-label">Weight (lbs)</div></div>
+        <div class="stat-box"><div class="stat-value">${bodyFatCurrent}%</div><div class="stat-label">Body Fat</div></div>
+        <div class="stat-box"><div class="stat-value">${leanMassCurrent}</div><div class="stat-label">Lean Mass (lbs)</div></div>
       </div>
     </div>
-    <div class="card" style="background:linear-gradient(160deg,#f7fcfb,#eef8f5)">
-      <div class="section-title">Primary Goal</div>
-      <div class="goal-row"><span class="sub">Target</span><span style="font-size:20px;font-weight:800;color:#2B7A78">${isFatLoss ? goalW + " lbs" : (client.proteinTarget+20) + "g protein"}</span></div>
-      <div class="goal-row"><span class="sub">Current</span><span style="font-size:16px;font-weight:700">${isFatLoss ? currW + " lbs" : client.proteinAvg + "g"}</span></div>
-      <div class="bar-bg"><div class="bar-fill" style="width:${isFatLoss ? Math.min(100,(Math.abs(client.weightTrend)/10)*100) : Math.min(100,(client.proteinAvg/(client.proteinTarget+20))*100)}%;background:linear-gradient(90deg,#2B7A78,#5CDB95)"></div></div>
+    <div class="card">
+      <div class="section-title">Strength (Est. 1RM)</div>
+      <div class="stat-grid">${lifts.map(l => `<div class="stat-box"><div class="stat-value">${l.current}</div><div class="stat-label">${l.name}</div></div>`).join('')}</div>
     </div>
-    <div class="card" style="background:linear-gradient(145deg,#faf9f7,#f5f8f4)">
-      <div class="section-title">Rule of 30</div>
-      <div class="sub" style="margin-bottom:14px">Every 30 days you unlock a new learning about yourself</div>
-      <div class="pillars">
-        ${pils.map(p => `<div class="pillar"><div class="pillar-label">${p.label}</div><div class="pillar-days" style="color:${p.color}">${p.days}<span style="font-size:12px;font-weight:500;color:#5f7a76"> / 30</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(p.days/30*100)}%;background:${p.color}"></div></div></div>`).join("")}
-      </div>
+    <div class="card">
+      <div class="section-title">Goal Progress</div>
+      <div style="font-size:24px;font-weight:700;color:#2B7A78;margin-bottom:8px">${goalProgressPct}% to goal</div>
+      <div class="sub">${bodyweightStart} lbs → ${bodyweightCurrent} lbs → ${goalWeight} lbs target</div>
     </div>
-    <div class="card focus-card">
-      <div style="font-size:11px;font-weight:700;color:#2B7A78;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">This Week's Focus</div>
-      <div style="font-size:18px;font-weight:700;line-height:1.4">${client.coachAngle}</div>
-    </div>
-    <div style="text-align:center;margin-top:24px;color:#5f7a76;font-size:11px">
-      Generated by Milton AI &bull; miltonai.com
-    </div>
+    <div style="text-align:center;margin-top:24px;color:#5f7a76;font-size:11px">Generated by Milton AI</div>
     <div class="no-print" style="text-align:center;margin-top:24px;">
-      <button onclick="window.print()" style="padding:12px 28px;border-radius:10px;background:#2B7A78;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:DM Sans,sans-serif">Save as PDF</button>
+      <button onclick="window.print()" style="padding:12px 28px;border-radius:10px;background:#2B7A78;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer">Save as PDF</button>
     </div>
     </body></html>`;
     printWin.document.write(html);
     printWin.document.close();
-  };
-
-  // Consistency score calculation (Meals 40%, Exercise 25%, Movement 20%, Sleep 15%)
-  const mealsScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-  const exerciseScore = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-  const movementScore = Math.min(100, Math.round((client.steps / 8000) * 100));
-  const sleepScore = 78; // simulated
-  const consistencyScore = Math.round(mealsScore * 0.4 + exerciseScore * 0.25 + movementScore * 0.2 + sleepScore * 0.15);
-
-  // Rule of 30 data (days logged out of 30)
-  const pillars = [
-    { key: "exercise", label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
-    { key: "steps", label: "Steps", days: Math.min(30, Math.round(client.steps / 350)), color: "#3aafa9", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18 Q3 12 6 9 Q8 7 9 8 L11 11 Q12 12.5 14 12.5 L18 12.5 Q21 13 21 16 L21 17 Q21 19 19 19 L5 19 Q3 19 3 18Z"/><line x1="8" y1="19" x2="8" y2="16"/><line x1="12" y1="19" x2="12" y2="16"/><line x1="16" y1="19" x2="16" y2="16"/></svg> },
-    { key: "meals", label: "Meals", days: Math.min(30, client.mealsLogged + 5), color: "#ef6c3e", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg> },
-    { key: "sleep", label: "Sleep", days: Math.min(30, 21), color: "#8e7cc3", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> },
-  ];
-
-  // Calendar data (28 days, 4 weeks)
-  const calDays = Array.from({ length: 28 }).map((_, i) => {
-    const seed = (i * 7 + client.name.charCodeAt(0)) % 100;
-    return {
-      exercise: seed < exerciseScore,
-      steps: seed < movementScore + 5,
-      meals: seed < mealsScore - 5,
-      sleep: seed < sleepScore + 3,
-    };
-  });
-
-  // Circular progress ring with icon
-  const PillarRing = ({ days, color, icon, size = 110 }) => {
-    const pct = Math.min(100, (days / 30) * 100);
-    const r = size / 2 - 12;
-    const circ = 2 * Math.PI * r;
-    const offset = circ * (1 - pct / 100);
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="10"/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="10"
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`}
-          style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
-        />
-        <g transform={`translate(${size/2 - 9}, ${size/2 - 9})`} style={{ color }}>
-          {icon}
-        </g>
-      </svg>
-    );
   };
 
   const SectionCard = ({ children, style: s }) => (
@@ -1401,72 +2441,26 @@ function ReportView({ client, onBack, isMobile }) {
     }}>{children}</div>
   );
 
-  const DetailCard = ({ pillar, expanded, onToggle }) => {
-    const detailData = {
-      exercise: { items: [{ l: "Workouts", v: `${client.workoutDays}/week`, g: "5/week" }, { l: "Avg Duration", v: "48 min", g: "45 min" }, { l: "Top Type", v: "Strength" }, { l: "Intensity", v: "Moderate-High" }] },
-      steps: { items: [{ l: "Daily Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Active Minutes", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" }, { l: "Floors", v: "8", g: "10" }] },
-      meals: { items: [{ l: "Calories Avg", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` }, { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` }, { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" }] },
-      sleep: { items: [{ l: "Avg Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" }, { l: "Consistency", v: "72%", g: "85%" }, { l: "Quality", v: "Good" }] },
-    };
-    const d = detailData[pillar.key];
-    return (
-      <div onClick={onToggle} style={{
-        background: WHITE, borderRadius: 16, border: `1px solid ${expanded ? pillar.color : BORDER}`,
-        padding: "16px 18px", cursor: "pointer",
-        boxShadow: expanded ? `0 2px 12px ${pillar.color}20` : "0 1px 4px rgba(0,0,0,0.03)",
-        transition: "all 0.2s ease"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10, background: `${pillar.color}15`,
-              display: "flex", alignItems: "center", justifyContent: "center", color: pillar.color
-            }}>{pillar.icon}</div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{pillar.label}</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{pillar.days}/30 days logged</div>
-            </div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
-            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
-            <polyline points="6,9 12,15 18,9"/>
-          </svg>
+  const MetricCard = ({ label, value, unit, change, changeDir, color = TEAL }) => (
+    <div style={{
+      flex: 1, minWidth: isMobile ? "45%" : 120, padding: isMobile ? "16px 14px" : "20px 18px",
+      background: `linear-gradient(135deg, ${color}06, ${color}03)`,
+      borderRadius: 16, border: `1px solid ${color}15`, textAlign: "center"
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: isMobile ? 26 : 32, fontWeight: 800, color }}>{value}<span style={{ fontSize: 14, fontWeight: 600 }}>{unit}</span></div>
+      {change !== undefined && (
+        <div style={{
+          marginTop: 6, fontSize: 12, fontWeight: 600,
+          color: changeDir === "good" ? ALERT_GREEN : changeDir === "bad" ? "#ef6c3e" : TEXT_SEC
+        }}>
+          {change > 0 ? "+" : ""}{change}{unit} from start
         </div>
-        {expanded && d && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BORDER}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {d.items.map((item, j) => {
-              const hasGoal = item.g !== undefined;
-              const numVal = parseFloat(String(item.v).replace(/[^0-9.]/g, ""));
-              const numGoal = hasGoal ? parseFloat(String(item.g).replace(/[^0-9.]/g, "")) : 0;
-              const pct = hasGoal && numGoal > 0 ? Math.min(100, (numVal / numGoal) * 100) : 0;
-              const met = hasGoal && pct >= 95;
-              const close = hasGoal && pct >= 80 && pct < 95;
-              return (
-                <div key={j} style={{ padding: "8px 10px", borderRadius: 10, background: "#f8faf9" }}>
-                  <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{item.l}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginTop: 2 }}>{item.v}</div>
-                  {hasGoal && (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
-                        <span style={{ fontSize: 10, color: met ? ALERT_GREEN : close ? "#d4a63c" : TEXT_SEC, fontWeight: 600 }}>Goal: {item.g}</span>
-                        {met && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>}
-                      </div>
-                      <div style={{ width: "100%", height: 3, borderRadius: 2, background: "#e8f0ee", marginTop: 3 }}>
-                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: met ? ALERT_GREEN : close ? "#d4a63c" : pillar.color, transition: "width 0.6s ease" }} />
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
 
-  // Score ring color
-  const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+  const scoreColor = attendanceRate >= 85 ? ALERT_GREEN : attendanceRate >= 70 ? TEAL : "#ef6c3e";
 
   return (
     <div style={{
@@ -1483,13 +2477,12 @@ function ReportView({ client, onBack, isMobile }) {
         Back to {client.name}
       </div>}
 
-      {/* ─── HERO: CONSISTENCY SCORE ─── */}
+      {/* ─── HERO: ATTENDANCE RATE ─── */}
       <SectionCard style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         textAlign: "center", padding: isMobile ? "28px 20px" : "36px 32px",
         position: "relative", overflow: "hidden"
       }}>
-        {/* Subtle radial glow */}
         <div style={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
           width: 300, height: 300, borderRadius: "50%",
@@ -1497,14 +2490,14 @@ function ReportView({ client, onBack, isMobile }) {
           pointerEvents: "none"
         }} />
         <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6, position: "relative" }}>
-          {client.name}'s Consistency Score
+          {client.name}'s Attendance Rate
         </div>
         <div style={{ position: "relative", display: "inline-block", margin: "12px 0" }}>
           {(() => {
             const sz = isMobile ? 180 : 220;
             const r = sz / 2 - 16;
             const circ = 2 * Math.PI * r;
-            const offset = circ * (1 - consistencyScore / 100);
+            const offset = circ * (1 - attendanceRate / 100);
             return (
               <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
                 <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="12"/>
@@ -1513,15 +2506,14 @@ function ReportView({ client, onBack, isMobile }) {
                   strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
                   style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                 />
-                {/* Inner subtle ring */}
                 <circle cx={sz/2} cy={sz/2} r={r - 18} fill="none" stroke={`${scoreColor}15`} strokeWidth="1"/>
                 <text x={sz/2} y={sz/2 - 8} textAnchor="middle" dominantBaseline="central"
                   style={{ fontSize: isMobile ? 52 : 64, fontWeight: 800, fill: TEXT, fontFamily: font }}>
-                  {consistencyScore}
+                  {attendanceRate}%
                 </text>
                 <text x={sz/2} y={sz/2 + (isMobile ? 28 : 34)} textAnchor="middle" dominantBaseline="central"
-                  style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  out of 100
+                  style={{ fontSize: 13, fontWeight: 600, fill: TEXT_SEC, fontFamily: font }}>
+                  {attendedSessions}/{scheduledSessions} sessions
                 </text>
               </svg>
             );
@@ -1529,413 +2521,759 @@ function ReportView({ client, onBack, isMobile }) {
         </div>
         <div style={{ position: "relative" }}>
           <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: scoreColor, marginBottom: 6 }}>
-            {consistencyScore >= 85 ? "Exceptional Consistency" : consistencyScore >= 70 ? "Strong Consistency" : consistencyScore >= 55 ? "Building Momentum" : "Getting Started"}
+            {attendanceRate >= 90 ? "Exceptional Commitment" : attendanceRate >= 75 ? "Strong Attendance" : attendanceRate >= 60 ? "Building Consistency" : "Getting Started"}
           </div>
           <div style={{ fontSize: 13, color: TEXT_SEC, maxWidth: 400, margin: "0 auto", lineHeight: 1.55 }}>
-            Slow & steady wins the race. This score reflects daily commitment across meals, exercise, movement, and sleep.
+            Showing up is the foundation of results. Keep the momentum going.
           </div>
         </div>
-        {/* Weight breakdown */}
-        <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 12 : 20, marginTop: 18, position: "relative" }}>
-          {[
-            { label: "Meals", pct: mealsScore, weight: "40%", color: "#ef6c3e" },
-            { label: "Exercise", pct: exerciseScore, weight: "25%", color: TEAL },
-            { label: "Movement", pct: movementScore, weight: "20%", color: "#3aafa9" },
-            { label: "Sleep", pct: sleepScore, weight: "15%", color: "#8e7cc3" },
-          ].map((w, i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: w.color }}>{w.pct}</div>
-              <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600 }}>{w.label}</div>
-              <div style={{ fontSize: 10, color: TEXT_SEC }}>{w.weight}</div>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-
-
-      {/* ─── TRANSFORMATION ─── */}
-      <SectionCard style={{ background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)` }}>
-        {(() => {
-          const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-          const startW = (client.weightData?.[0] || 185) + 4;
-          const currW = client.weightData?.[client.weightData.length-1] || 183;
-          const goalLabel = isFatLoss ? "Weight" : "Protein";
-          const goalUnit = isFatLoss ? " lbs" : "g";
-          const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
-          const w1c = Math.max(15, consistencyScore - 32 - (client.name.charCodeAt(0) % 8));
-          const consistencyData = [w1c, w1c + 12, w1c + 22, consistencyScore];
-          const goalData = isFatLoss
-            ? [startW, startW - 1.2, startW - 2.5, currW]
-            : [client.proteinAvg - 28, client.proteinAvg - 16, client.proteinAvg - 6, client.proteinAvg];
-          const cw2 = 420, ch2 = 200, pL = 44, pR = 44, pT = 16, pB = 32;
-          const pW = cw2 - pL - pR, pH = ch2 - pT - pB;
-          const toYc = (v) => pT + (1 - v / 100) * pH;
-          const toX = (i) => pL + (i / (weeks.length - 1)) * pW;
-          const gVals = goalData;
-          const gMin = Math.min(...gVals) - 3, gMax = Math.max(...gVals) + 3;
-          const toYg = (v) => pT + (1 - (v - gMin) / (gMax - gMin)) * pH;
-          const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
-          const cPts = consistencyData.map((v, i) => ({ x: toX(i), y: toYc(v) }));
-          const gPts = goalData.map((v, i) => ({ x: toX(i), y: toYg(v) }));
-          const cPath = smooth(cPts);
-          const gPath = smooth(gPts);
-          const cArea = `${cPath} L ${cPts[cPts.length-1].x},${pT + pH} L ${cPts[0].x},${pT + pH} Z`;
-          const cLast = cPts[cPts.length - 1];
-          const gLast = gPts[gPts.length - 1];
-          const scoreChange = consistencyScore - w1c;
-          const totalChange = isFatLoss ? `${(startW - currW).toFixed(1)} lbs lost` : `+${client.proteinAvg - (client.proteinAvg - 28)}g protein`;
-
-          return (<>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-              <div>
-                <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Your Transformation</div>
-                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Consistency drives results — 4 weeks of progress</div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>+{scoreChange} pts</div>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
-              </div>
-            </div>
-            <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "10px 6px" : "14px 10px" }}>
-              <svg width="100%" height={ch2} viewBox={`0 0 ${cw2} ${ch2}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                <defs>
-                  <linearGradient id="rcAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
-                    <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
-                  </linearGradient>
-                </defs>
-                {[0, 25, 50, 75, 100].map((v, i) => (
-                  <line key={i} x1={pL} y1={toYc(v)} x2={cw2 - pR} y2={toYc(v)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
-                ))}
-                {[0, 50, 100].map((v, i) => (
-                  <text key={i} x={pL - 6} y={toYc(v) + 3} textAnchor="end" fill={TEAL} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{v}</text>
-                ))}
-                {[gMin + 1, (gMin + gMax) / 2, gMax - 1].map((v, i) => (
-                  <text key={i} x={cw2 - pR + 6} y={toYg(v) + 3} textAnchor="start" fill={ALERT_GREEN} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{Math.round(v)}</text>
-                ))}
-                {weeks.map((w, i) => (
-                  <text key={i} x={toX(i)} y={ch2 - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans, sans-serif">{w}</text>
-                ))}
-                <path d={cArea} fill="url(#rcAreaGrad)" />
-                <path d={cPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
-                <path d={gPath} fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
-                {cPts.map((p, i) => (
-                  <g key={`rc${i}`}>
-                    {i === cPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={TEAL} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === cPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={TEAL} strokeWidth="2"/>
-                  </g>
-                ))}
-                {gPts.map((p, i) => (
-                  <g key={`rg${i}`}>
-                    {i === gPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={ALERT_GREEN} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === gPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={ALERT_GREEN} strokeWidth="2"/>
-                  </g>
-                ))}
-                <g>
-                  <rect x={cLast.x - 16} y={cLast.y - 22} width="32" height="16" rx="8" fill={TEAL}/>
-                  <text x={cLast.x} y={cLast.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{consistencyScore}</text>
-                </g>
-                <g>
-                  <rect x={gLast.x - 22} y={gLast.y + 8} width="44" height="16" rx="8" fill={ALERT_GREEN}/>
-                  <text x={gLast.x} y={gLast.y + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{isFatLoss ? `${currW}` : `${client.proteinAvg}g`}</text>
-                </g>
-              </svg>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, marginTop: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 3, borderRadius: 2, background: TEAL }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Consistency Score</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${ALERT_GREEN}` }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{goalLabel}</span>
-              </div>
-            </div>
-          </>);
-        })()}
       </SectionCard>
 
       {/* ─── GOAL PROGRESS ─── */}
       <SectionCard style={{ background: `linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)` }}>
         <div style={{ marginBottom: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em" }}>We predict you'll reach</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em" }}>Progress Toward Goal</div>
         </div>
-        {(() => {
-          const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-          const startVal = isFatLoss ? (client.weightData?.[0] || 185) : client.proteinAvg;
-          const currentVal = isFatLoss ? (client.weightData?.[client.weightData.length-1] || 183) : client.proteinAvg;
-          // Use client.goalWeight if set (via chat command), otherwise default calculation
-          const goalVal = isFatLoss 
-            ? (client.goalWeight || startVal - 10) 
-            : (client.proteinTarget + 20);
-          const unit = isFatLoss ? "lbs" : "g protein/day";
-          const goalLabel = isFatLoss ? "Weight Goal" : "Protein Goal";
-          const weeksTotal = 12;
-          const weeksCurrent = 4;
-          const projectedWeeks = Math.round(weeksTotal * 0.9);
-          const goalDown = isFatLoss;
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: TEXT, marginBottom: 4 }}>
+          <span style={{ color: TEAL }}>{goalProgressPct}%</span> Complete
+        </div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>
+          {bodyweightStart} lbs → {bodyweightCurrent} lbs → <strong style={{ color: TEAL }}>{goalWeight} lbs goal</strong>
+        </div>
+        <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e8f0ee", marginBottom: 16, overflow: "hidden" }}>
+          <div style={{
+            position: "absolute", left: 0, top: 0, bottom: 0,
+            width: `${goalProgressPct}%`, borderRadius: 7,
+            background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+            transition: "width 1.5s cubic-bezier(0.16, 1, 0.3, 1)"
+          }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+          <span>Start: {bodyweightStart} lbs</span>
+          <span style={{ fontWeight: 700, color: TEAL }}>Now: {bodyweightCurrent} lbs</span>
+          <span>Goal: {goalWeight} lbs</span>
+        </div>
+      </SectionCard>
 
-          // Chart dimensions
-          const cw = 380, ch = 180, padL = 44, padR = 20, padT = 20, padB = 36;
-          const plotW = cw - padL - padR, plotH = ch - padT - padB;
+      {/* ─── BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
+      {(() => {
+        const bodyCompMetrics = [
+          { label: "Bodyweight", start: bodyweightStart, current: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
+          { label: "Body Fat", start: bodyFatStart, current: bodyFatCurrent, goal: Math.max(12, bodyFatStart - 8), unit: "%", color: "#3aafa9", goodDir: "down", eta: "Week 11-13" },
+          { label: "Lean Mass", start: leanMassStart, current: leanMassCurrent, goal: leanMassStart + 8, unit: "lbs", color: MINT, goodDir: "up", eta: "Week 14-16" },
+        ];
 
-          // Value range
-          const valMin = goalDown ? goalVal - 2 : startVal - 5;
-          const valMax = goalDown ? startVal + 2 : goalVal + 5;
-          const valRange = valMax - valMin;
+        const weeksTotal = 12;
+        const weeksCurrent = 4;
 
-          const toY = (v) => padT + (1 - (v - valMin) / valRange) * plotH;
-          const toX = (w) => padL + (w / weeksTotal) * plotW;
+        // Smooth curve builder
+        const smooth = (pts) => {
+          if (pts.length < 2) return "";
+          let d = `M ${pts[0].x},${pts[0].y}`;
+          for (let i = 0; i < pts.length - 1; i++) {
+            const cp = (pts[i+1].x - pts[i].x) / 2.5;
+            d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
+          }
+          return d;
+        };
 
-          // Actual data points (weeks 0 to current)
-          const actualPts = [];
+        return bodyCompMetrics.map((m, idx) => {
+          const cw = 380, ch = 160, pL = 44, pR = 20, pT = 24, pB = 32;
+          const plotW = cw - pL - pR, plotH = ch - pT - pB;
+
+          // Generate data
+          const actual = [];
           for (let w = 0; w <= weeksCurrent; w++) {
             const t = w / weeksCurrent;
-            const v = startVal + (currentVal - startVal) * t + (Math.sin(t * 4) * 0.5);
-            actualPts.push({ x: toX(w), y: toY(v) });
+            const noise = Math.sin(w * 2.3 + idx) * 0.4;
+            actual.push(m.start + (m.current - m.start) * t + noise);
           }
-
-          // Projected path (current to goal)
-          const projPts = [];
+          const projected = [];
           for (let w = weeksCurrent; w <= weeksTotal; w++) {
             const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent);
-            const v = currentVal + (goalVal - currentVal) * (t * t * 0.3 + t * 0.7);
-            projPts.push({ x: toX(w), y: toY(v) });
+            const eased = t * t * 0.3 + t * 0.7;
+            projected.push(m.current + (m.goal - m.current) * eased);
           }
 
-          // Smooth curve builder
-          const smooth = (pts) => {
-            if (pts.length < 2) return "";
-            let d = `M ${pts[0].x},${pts[0].y}`;
-            for (let i = 0; i < pts.length - 1; i++) {
-              const cp = (pts[i+1].x - pts[i].x) / 2.5;
-              d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
-            }
-            return d;
-          };
+          // Y-axis range
+          const allVals = [...actual, ...projected, m.goal];
+          const valMin = Math.min(...allVals) - Math.abs(m.goal - m.start) * 0.15;
+          const valMax = Math.max(...allVals) + Math.abs(m.goal - m.start) * 0.15;
 
-          const actualPath = smooth(actualPts);
-          const projPath = smooth(projPts);
-          const lastActual = actualPts[actualPts.length - 1];
-          const goalY = toY(goalVal);
-          const goalX = toX(weeksTotal);
+          const toY = (v) => pT + (1 - (v - valMin) / (valMax - valMin)) * plotH;
+          const toX = (w) => pL + (w / weeksTotal) * plotW;
 
-          // Area under actual path
-          const actualArea = `${actualPath} L ${lastActual.x},${padT + plotH} L ${actualPts[0].x},${padT + plotH} Z`;
+          const actualPts = actual.map((v, i) => ({ x: toX(i), y: toY(v) }));
+          const projPts = projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(v) }));
+          const lastPt = actualPts[actualPts.length - 1];
+          const goalPt = projPts[projPts.length - 1];
+          const startPt = actualPts[0];
+
+          // Area under actual curve
+          const areaPath = `${smooth(actualPts)} L ${lastPt.x},${pT + plotH} L ${startPt.x},${pT + plotH} Z`;
+
+          const change = m.current - m.start;
+          const isGood = (m.goodDir === "down" && change < 0) || (m.goodDir === "up" && change > 0);
+          const progressPct = Math.min(100, Math.round((Math.abs(change) / Math.abs(m.goal - m.start)) * 100));
 
           return (
-            <>
-              <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: TEXT, marginBottom: 2 }}>
-                <span style={{ color: TEAL }}>{goalDown ? goalVal : goalVal + "g"}</span> {unit.replace("g protein/day","").replace("lbs","")} by <span style={{ color: TEAL }}>Week {weeksTotal}</span>
-              </div>
-              <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>
-                {goalLabel}: {startVal}{isFatLoss ? " lbs" : "g"} → {goalVal}{isFatLoss ? " lbs" : "g"} • Currently at <strong style={{ color: TEXT }}>{currentVal}{isFatLoss ? " lbs" : "g"}</strong>
+            <SectionCard key={idx} style={{ background: `linear-gradient(145deg, ${m.color}04, ${m.color}02, #fafcfb)` }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{m.label}</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
+                    {m.start}{m.unit} → {m.current}{m.unit} → <strong style={{ color: m.color }}>{m.goal}{m.unit} goal</strong>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: isGood ? `${ALERT_GREEN}12` : `${TEXT_SEC}10`,
+                    color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 12, fontWeight: 700
+                  }}>
+                    {change > 0 ? "+" : ""}{change.toFixed(1)}{m.unit}
+                  </div>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: `${m.color}12`, color: m.color, fontSize: 12, fontWeight: 700
+                  }}>
+                    {progressPct}% to goal
+                  </div>
+                </div>
               </div>
 
               {/* Chart */}
-              <div style={{
-                borderRadius: 16, background: "#f7faf9", border: `1px solid ${BORDER}`,
-                padding: isMobile ? "12px 8px" : "16px 12px", marginBottom: 16
-              }}>
+              <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px", marginBottom: 14 }}>
                 <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
                   <defs>
-                    <linearGradient id="goalAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={TEAL} stopOpacity="0.15"/>
-                      <stop offset="100%" stopColor={TEAL} stopOpacity="0.02"/>
+                    <linearGradient id={`areaGrad${idx}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={m.color} stopOpacity="0.15"/>
+                      <stop offset="100%" stopColor={m.color} stopOpacity="0.02"/>
+                    </linearGradient>
+                  </defs>
+
+                  {/* Y-axis grid + labels */}
+                  {[0, 0.5, 1].map((t, i) => {
+                    const v = valMin + t * (valMax - valMin);
+                    const y = toY(v);
+                    return (
+                      <g key={i}>
+                        <line x1={pL} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
+                        <text x={pL - 6} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
+                          {m.unit === "%" ? v.toFixed(0) : Math.round(v)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Goal horizontal line */}
+                  <line x1={pL} y1={toY(m.goal)} x2={cw - pR} y2={toY(m.goal)} stroke={m.color} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.4"/>
+
+                  {/* Week labels */}
+                  {[0, weeksCurrent, weeksTotal].map((w, i) => (
+                    <text key={i} x={toX(w)} y={ch - 8} textAnchor="middle" fill={w === weeksCurrent ? TEXT : TEXT_SEC} fontSize="10" fontWeight={w === weeksCurrent ? 700 : 600} fontFamily="DM Sans">
+                      {w === 0 ? "Start" : w === weeksCurrent ? "Now" : `W${w}`}
+                    </text>
+                  ))}
+
+                  {/* "Now" vertical line */}
+                  <line x1={toX(weeksCurrent)} y1={pT} x2={toX(weeksCurrent)} y2={pT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4,4" opacity="0.35"/>
+
+                  {/* Area fill */}
+                  <path d={areaPath} fill={`url(#areaGrad${idx})`}/>
+
+                  {/* Actual line */}
+                  <path d={smooth(actualPts)} fill="none" stroke={m.color} strokeWidth="3" strokeLinecap="round"/>
+
+                  {/* Projected line */}
+                  <path d={smooth(projPts)} fill="none" stroke={m.color} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="8,5" opacity="0.55"/>
+
+                  {/* Data points on actual */}
+                  {actualPts.map((p, i) => (
+                    <circle key={i} cx={p.x} cy={p.y} r={i === actualPts.length - 1 ? 6 : 3.5} fill={WHITE} stroke={m.color} strokeWidth={i === actualPts.length - 1 ? 3 : 2}/>
+                  ))}
+
+                  {/* Current glow */}
+                  <circle cx={lastPt.x} cy={lastPt.y} r="12" fill={m.color} opacity="0.12"/>
+
+                  {/* Goal endpoint */}
+                  <circle cx={goalPt.x} cy={goalPt.y} r="8" fill={m.color} opacity="0.15"/>
+                  <circle cx={goalPt.x} cy={goalPt.y} r="5" fill={m.color}/>
+
+                  {/* Start label */}
+                  <g>
+                    <rect x={startPt.x - 18} y={startPt.y - 20} width="36" height="16" rx="8" fill={TEXT_SEC}/>
+                    <text x={startPt.x} y={startPt.y - 9.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{m.start}{m.unit === "%" ? "%" : ""}</text>
+                  </g>
+
+                  {/* Current label */}
+                  <g>
+                    <rect x={lastPt.x - 24} y={lastPt.y - 26} width="48" height="18" rx="9" fill={m.color}/>
+                    <text x={lastPt.x} y={lastPt.y - 14} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.current}{m.unit}</text>
+                  </g>
+
+                  {/* Goal label */}
+                  <g>
+                    <rect x={goalPt.x - 24} y={goalPt.y + 10} width="48" height="18" rx="9" fill={m.color} opacity="0.85"/>
+                    <text x={goalPt.x} y={goalPt.y + 22} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.goal}{m.unit}</text>
+                  </g>
+                </svg>
+              </div>
+
+              {/* Footer: ETA & Legend */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 16, height: 3, borderRadius: 2, background: m.color }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Actual</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${m.color}`, opacity: 0.6 }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
+                  </div>
+                </div>
+                <div style={{
+                  padding: "6px 14px", borderRadius: 12, background: `${m.color}08`, border: `1px solid ${m.color}12`,
+                  fontSize: 12, fontWeight: 700, color: TEXT
+                }}>
+                  Est. Goal: <span style={{ color: m.color }}>{m.eta}</span>
+                </div>
+              </div>
+            </SectionCard>
+          );
+        });
+      })()}
+
+      {/* ─── STRENGTH PROGRESS (BAR CHARTS) ─── */}
+      {(() => {
+        // Generate session history for each lift with progressive overload
+        const generateLiftHistory = (baseline, liftIdx) => {
+          const sessions = [];
+          const sessionCount = 8 + (liftIdx % 3); // 8-10 sessions per lift
+          const seed = client.name.charCodeAt(0) + liftIdx * 7;
+          
+          for (let i = 0; i < sessionCount; i++) {
+            const progress = i / (sessionCount - 1);
+            // Progressive increase with some variation
+            const baseIncrease = progress * (baseline * 0.12); // ~12% total gain
+            const variation = Math.sin(i * 1.7 + seed) * 3;
+            const weight = Math.round(baseline + baseIncrease + variation);
+            const reps = 5 + Math.floor(Math.random() * 3) - 1; // 4-7 reps
+            const date = new Date();
+            date.setDate(date.getDate() - (sessionCount - 1 - i) * 4); // Every ~4 days
+            sessions.push({
+              date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              weight,
+              reps,
+              e1rm: Math.round(weight * (36 / (37 - reps)))
+            });
+          }
+          return sessions;
+        };
+
+        const liftData = [
+          { name: "Squat", baseline: strengthBaselines.squat?.weight || 135, color: TEAL },
+          { name: "Bench Press", baseline: strengthBaselines.benchPress?.weight || 95, color: MINT },
+          { name: "Deadlift", baseline: strengthBaselines.deadlift?.weight || 185, color: "#3aafa9" },
+        ].map((lift, idx) => ({
+          ...lift,
+          sessions: generateLiftHistory(lift.baseline, idx)
+        }));
+
+        return liftData.map((lift, liftIdx) => {
+          const sessions = lift.sessions;
+          const maxE1RM = Math.max(...sessions.map(s => s.e1rm));
+          const minE1RM = Math.min(...sessions.map(s => s.e1rm));
+          const firstE1RM = sessions[0].e1rm;
+          const lastE1RM = sessions[sessions.length - 1].e1rm;
+          const totalGain = lastE1RM - firstE1RM;
+          const gainPct = Math.round((totalGain / firstE1RM) * 100);
+
+          const cw = 380, ch = 160, pL = 40, pR = 16, pT = 16, pB = 36;
+          const plotW = cw - pL - pR, plotH = ch - pT - pB;
+          const barWidth = Math.min(28, (plotW / sessions.length) - 6);
+          const barGap = (plotW - barWidth * sessions.length) / (sessions.length - 1);
+
+          const yMin = minE1RM - 10;
+          const yMax = maxE1RM + 15;
+          const toY = (v) => pT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+          const toX = (i) => pL + i * (barWidth + barGap);
+
+          return (
+            <SectionCard key={liftIdx} style={{ background: `linear-gradient(155deg, ${lift.color}04, ${lift.color}02, #fafcfb)` }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
+                      <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                      <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                      <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{lift.name}</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>{sessions.length} sessions logged</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: `${ALERT_GREEN}12`, color: ALERT_GREEN, fontSize: 12, fontWeight: 700
+                  }}>
+                    +{totalGain} lbs
+                  </div>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 14,
+                    background: `${lift.color}12`, color: lift.color, fontSize: 12, fontWeight: 700
+                  }}>
+                    +{gainPct}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Current vs Starting */}
+              <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${TEXT_SEC}08`, border: `1px solid ${BORDER}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Starting 1RM</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: TEXT_SEC }}>{firstE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                </div>
+                <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${lift.color}08`, border: `1px solid ${lift.color}15` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: lift.color, textTransform: "uppercase", marginBottom: 4 }}>Current 1RM</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: lift.color }}>{lastE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
+                </div>
+              </div>
+
+              {/* Bar Chart */}
+              <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px" }}>
+                <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                  <defs>
+                    <linearGradient id={`barGrad${liftIdx}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={lift.color} stopOpacity="1"/>
+                      <stop offset="100%" stopColor={lift.color} stopOpacity="0.7"/>
                     </linearGradient>
                   </defs>
 
                   {/* Y-axis grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
-                    const v = valMin + t * valRange;
+                  {[0, 0.5, 1].map((t, i) => {
+                    const v = yMin + t * (yMax - yMin);
                     const y = toY(v);
                     return (
                       <g key={i}>
-                        <line x1={padL} y1={y} x2={cw - padR} y2={y} stroke={BORDER} strokeWidth="1" />
-                        <text x={padL - 6} y={y + 4} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans, sans-serif">
+                        <line x1={pL - 4} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
+                        <text x={pL - 8} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
                           {Math.round(v)}
                         </text>
                       </g>
                     );
                   })}
 
-                  {/* Goal line (horizontal dashed) */}
-                  <line x1={padL} y1={goalY} x2={cw - padR} y2={goalY}
-                    stroke={TEAL} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5"/>
+                  {/* Bars */}
+                  {sessions.map((s, i) => {
+                    const barH = toY(yMin) - toY(s.e1rm);
+                    const x = toX(i);
+                    const y = toY(s.e1rm);
+                    const isLast = i === sessions.length - 1;
+                    const isFirst = i === 0;
+                    
+                    return (
+                      <g key={i}>
+                        {/* Bar */}
+                        <rect
+                          x={x} y={y} width={barWidth} height={barH}
+                          rx={4} ry={4}
+                          fill={isLast ? lift.color : isFirst ? `${lift.color}50` : `${lift.color}${Math.round(50 + (i / sessions.length) * 50).toString(16).padStart(2, '0')}`}
+                        />
+                        {/* Value label on last bar */}
+                        {isLast && (
+                          <g>
+                            <rect x={x + barWidth/2 - 18} y={y - 20} width="36" height="16" rx="8" fill={lift.color}/>
+                            <text x={x + barWidth/2} y={y - 9} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{s.e1rm}</text>
+                          </g>
+                        )}
+                        {/* Date label */}
+                        <text x={x + barWidth/2} y={ch - 8} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="500" fontFamily="DM Sans">
+                          {i === 0 || i === sessions.length - 1 || i === Math.floor(sessions.length / 2) ? s.date.split(' ')[0] : ''}
+                        </text>
+                      </g>
+                    );
+                  })}
 
-                  {/* Area under actual */}
-                  <path d={actualArea} fill="url(#goalAreaGrad)" />
-
-                  {/* Actual line (solid, thick) */}
-                  <path d={actualPath} fill="none" stroke={TEAL} strokeWidth="3" strokeLinecap="round" />
-
-                  {/* Projected line (dashed, thinner) */}
-                  <path d={projPath} fill="none" stroke={MINT} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="8,5" />
-
-                  {/* Start label pill */}
-                  <g>
-                    <rect x={actualPts[0].x - 24} y={actualPts[0].y - 24} width="48" height="20" rx="10" fill={TEAL}/>
-                    <text x={actualPts[0].x} y={actualPts[0].y - 11} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{startVal}{isFatLoss ? "" : "g"}</text>
-                  </g>
-
-                  {/* Current position dot + label */}
-                  <circle cx={lastActual.x} cy={lastActual.y} r="10" fill={TEAL} opacity="0.12"/>
-                  <circle cx={lastActual.x} cy={lastActual.y} r="6" fill={WHITE} stroke={TEAL} strokeWidth="3"/>
-                  <g>
-                    <rect x={lastActual.x - 28} y={lastActual.y - 28} width="56" height="20" rx="10" fill={TEAL}/>
-                    <text x={lastActual.x} y={lastActual.y - 15} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{currentVal}{isFatLoss ? " lbs" : "g"}</text>
-                  </g>
-
-                  {/* Goal endpoint */}
-                  <circle cx={goalX} cy={goalY} r="8" fill={MINT} opacity="0.2"/>
-                  <circle cx={goalX} cy={goalY} r="5" fill={MINT}/>
-                  <rect x={goalX - 22} y={goalY + 10} width="44" height="18" rx="9" fill={MINT}/>
-                  <text x={goalX} y={goalY + 22} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{goalVal}{isFatLoss ? "" : "g"}</text>
-
-                  {/* "Now" marker line */}
-                  <line x1={lastActual.x} y1={padT} x2={lastActual.x} y2={padT + plotH}
-                    stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="3,3" opacity="0.3"/>
-                  <text x={lastActual.x} y={ch - 6} textAnchor="middle" fill={TEXT} fontSize="10" fontWeight="700" fontFamily="DM Sans">Now</text>
-
-                  {/* Week labels */}
-                  <text x={toX(0)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans">W1</text>
-                  <text x={toX(weeksTotal)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="10" fontFamily="DM Sans">W{weeksTotal}</text>
+                  {/* Trend line */}
+                  {(() => {
+                    const pts = sessions.map((s, i) => ({ x: toX(i) + barWidth / 2, y: toY(s.e1rm) }));
+                    const smooth = (points) => {
+                      if (points.length < 2) return "";
+                      let d = `M ${points[0].x},${points[0].y}`;
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const cp = (points[i+1].x - points[i].x) / 2.5;
+                        d += ` C ${points[i].x+cp},${points[i].y} ${points[i+1].x-cp},${points[i+1].y} ${points[i+1].x},${points[i+1].y}`;
+                      }
+                      return d;
+                    };
+                    return <path d={smooth(pts)} fill="none" stroke={lift.color} strokeWidth="2" strokeLinecap="round" opacity="0.4" strokeDasharray="4,3"/>;
+                  })()}
                 </svg>
               </div>
 
-              {/* Callouts */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Session Details Row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600 }}>Best Set:</span> {sessions[sessions.length - 1].weight} lbs x {sessions[sessions.length - 1].reps}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, borderRadius: 2, background: lift.color, opacity: 0.4 }} />
+                  <span style={{ fontSize: 11, color: TEXT_SEC }}>Est. 1RM trend</span>
+                </div>
+              </div>
+            </SectionCard>
+          );
+        });
+      })()}
+
+      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+      <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
+        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
+        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
+        
+        {/* Streaks */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
+            border: `1px solid ${TEAL}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+          <div style={{
+            flex: 1, padding: "18px 16px", borderRadius: 16,
+            background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
+            border: `1px solid ${MINT}15`, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
+          </div>
+        </div>
+
+        {/* Achievements */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
+          {achievements.map((a, i) => {
+            const icons = {
+              check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
+              fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
+              trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
+              muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+              star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
+              apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+            };
+            return (
+              <div key={i} style={{
+                padding: "14px 12px", borderRadius: 14,
+                background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
+                border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
+                textAlign: "center", opacity: a.earned ? 1 : 0.5
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
+                  background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: a.earned ? ALERT_GREEN : TEXT_SEC
+                }}>
+                  {icons[a.icon]}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? a.date : "Locked"}</div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* ─── 30 DAY ACTIVITY HEATMAP ─── */}
+      {(() => {
+        const [selectedDay, setSelectedDay] = useState(null);
+        
+        // Generate 30 days of data
+        const today = new Date();
+        const calendarDays = Array.from({ length: 30 }).map((_, i) => {
+          const date = new Date(today);
+          date.setDate(today.getDate() - (29 - i));
+          const seed = (i * 7 + client.name.charCodeAt(0)) % 100;
+          const dayOfWeek = date.getDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          
+          // Generate realistic data based on seed
+          const hasWorkout = seed < (isWeekend ? 40 : 65);
+          const hasMeals = seed < 75;
+          const hasSleep = seed < 80;
+          const hasSteps = seed < 70;
+          
+          return {
+            date,
+            dayNum: date.getDate(),
+            month: date.toLocaleDateString('en-US', { month: 'short' }),
+            dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            workout: hasWorkout ? {
+              type: ["Strength", "Cardio", "HIIT", "Mobility"][i % 4],
+              duration: 30 + (seed % 45),
+              exercises: 4 + (seed % 5),
+              calories: 200 + (seed % 300)
+            } : null,
+            nutrition: hasMeals ? {
+              calories: 1400 + (seed % 600),
+              protein: 90 + (seed % 70),
+              carbs: 120 + (seed % 100),
+              fat: 40 + (seed % 40),
+              meals: 2 + (seed % 2)
+            } : null,
+            sleep: hasSleep ? {
+              hours: 5.5 + (seed % 35) / 10,
+              quality: ["Poor", "Fair", "Good", "Great"][Math.floor(seed / 25)],
+              bedtime: `${10 + (seed % 3)}:${(seed % 6) * 10 || "00"} PM`,
+              wakeTime: `${5 + (seed % 3)}:${((seed + 3) % 6) * 10 || "00"} AM`
+            } : null,
+            steps: hasSteps ? {
+              count: 4000 + (seed % 10000),
+              activeMinutes: 20 + (seed % 50),
+              distance: (2 + (seed % 5)).toFixed(1)
+            } : null,
+          };
+        });
+
+        // Count categories per day for heatmap intensity
+        const getIntensity = (day) => {
+          let count = 0;
+          if (day.workout) count++;
+          if (day.nutrition) count++;
+          if (day.sleep) count++;
+          if (day.steps) count++;
+          return count;
+        };
+
+        const intensityColors = {
+          0: "#f8f9f8",
+          1: `${TEAL}25`,
+          2: `${TEAL}45`,
+          3: `${TEAL}70`,
+          4: TEAL,
+        };
+
+        // Find first day of the grid (start from Sunday)
+        const firstDate = calendarDays[0].date;
+        const startDayOfWeek = firstDate.getDay();
+        const paddingDays = startDayOfWeek;
+
+        return (
+          <SectionCard style={{ background: `linear-gradient(150deg, #f8f9f8, #f5f7f6, #fafbfa)` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>30 Day Activity</div>
+                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Tap any day to see details</div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
                 {[
-                  { text: `${goalDown ? "Down" : "Up"} ${Math.abs(Math.round((currentVal - startVal) * 10) / 10)} ${isFatLoss ? "lbs" : "g"} from starting point`, check: true },
-                  { text: `On track to reach goal by Week ${projectedWeeks}`, check: true },
-                  { text: "Consistency score supports this projection", check: consistencyScore >= 65 },
-                ].map((c, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                      background: c.check ? "#e8f5e9" : "#fff3e0",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {c.check ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{c.text}</span>
+                  { label: "Workout", color: TEAL },
+                  { label: "Nutrition", color: "#ef6c3e" },
+                  { label: "Sleep", color: "#8e7cc3" },
+                  { label: "Steps", color: "#3aafa9" },
+                ].map((l, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
+                    <span style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 500 }}>{l.label}</span>
                   </div>
                 ))}
               </div>
-            </>
-          );
-        })()}
-      </SectionCard>
-
-      {/* ─── RULE OF 30: PROGRESS RINGS ─── */}
-      <SectionCard style={{ background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)` }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <div>
-            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Rule of 30</div>
-            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Every 30 days you unlock a new learning about yourself</div>
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
-          {pillars.map((p) => {
-            const fillPct = (p.days / 30) * 100;
-            return (
-            <div key={p.key} style={{
-              borderRadius: 16, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "18px 14px",
-              background: "#fafcfb", textAlign: "center",
-              display: "flex", flexDirection: "column", alignItems: "center"
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 10 }}>{p.label}</div>
-              <PillarRing days={p.days} color={p.color} icon={p.icon} size={isMobile ? 90 : 110} />
-              <div style={{ marginTop: 10 }}>
-                <span style={{ fontSize: 24, fontWeight: 800, color: p.color }}>{p.days}</span>
-                <span style={{ fontSize: 13, color: TEXT_SEC, fontWeight: 500 }}> / 30</span>
-              </div>
-              <div style={{ fontSize: 11, color: fillPct >= 90 ? ALERT_GREEN : TEXT_SEC, fontWeight: 600, marginTop: 2 }}>
-                {fillPct >= 90 ? "Almost there!" : fillPct >= 60 ? "Keep going!" : "Building..."}
-              </div>
             </div>
-            );
-          })}
-        </div>
-      </SectionCard>
 
-      {/* ─── DETAIL BREAKOUTS ─── */}
-      <SectionCard style={{ background: `linear-gradient(150deg, #faf8f5, #f8f6f2, #faf9f6)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Detail Breakouts</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>Tap to expand each category</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {pillars.map(p => (
-            <DetailCard
-              key={p.key} pillar={p}
-              expanded={expandedDetail === p.key}
-              onToggle={() => setExpandedDetail(expandedDetail === p.key ? null : p.key)}
-            />
-          ))}
-        </div>
-      </SectionCard>
+            {/* Day headers */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{d}</div>
+              ))}
+            </div>
 
-      {/* ─── CALENDAR HEATMAP ─── */}
-      <SectionCard style={{ background: `linear-gradient(155deg, #f8f7fc, #f4f6fa, #f7f9fc)` }}>
-        <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Daily Activity Calendar</div>
-        <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 16 }}>Last 28 days — each dot is a tracked category</div>
+            {/* Calendar grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 16 }}>
+              {/* Empty padding cells */}
+              {Array.from({ length: paddingDays }).map((_, i) => (
+                <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
+              ))}
+              {/* Actual days */}
+              {calendarDays.map((day, i) => {
+                const intensity = getIntensity(day);
+                const isSelected = selectedDay === i;
+                const isToday = day.date.toDateString() === today.toDateString();
+                
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setSelectedDay(isSelected ? null : i)}
+                    style={{
+                      aspectRatio: "1", borderRadius: isMobile ? 8 : 10,
+                      background: intensityColors[intensity],
+                      border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", transition: "all 0.15s ease", position: "relative",
+                      transform: isSelected ? "scale(1.05)" : "scale(1)",
+                      boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
+                    }}
+                  >
+                    <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
+                      {day.dayNum}
+                    </div>
+                    {/* Category dots */}
+                    <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                      {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
+                      {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
+                      {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
+                      {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-        {/* Day headers */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
-          {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
-            <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{d}</div>
-          ))}
-        </div>
+            {/* Selected day details */}
+            {selectedDay !== null && (() => {
+              const day = calendarDays[selectedDay];
+              const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
+              
+              return (
+                <div style={{
+                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "16px" : "20px", marginTop: 8,
+                  animation: "fadeIn 0.2s ease"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>
+                        {day.dayName}, {day.month} {day.dayNum}
+                      </div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                        {hasAny ? `${getIntensity(day)} categories logged` : "No activity logged"}
+                      </div>
+                    </div>
+                    <div onClick={() => setSelectedDay(null)} style={{
+                      width: 28, height: 28, borderRadius: 8, background: "#f0f2f1",
+                      display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </div>
+                  </div>
 
-        {/* Calendar grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6 }}>
-          {calDays.map((day, i) => {
-            const dots = [
-              day.exercise && TEAL,
-              day.steps && "#3aafa9",
-              day.meals && "#ef6c3e",
-              day.sleep && "#8e7cc3",
-            ].filter(Boolean);
-            const count = dots.length;
-            return (
-              <div key={i} style={{
-                aspectRatio: "1", borderRadius: isMobile ? 8 : 10,
-                background: count === 4 ? "#eef6f3" : count >= 2 ? "#f5f8f7" : "#fafcfb",
-                border: `1px solid ${count === 4 ? "#c8e6c9" : BORDER}`,
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 2, position: "relative"
-              }}>
-                <div style={{ display: "flex", gap: 3, flexWrap: "wrap", justifyContent: "center" }}>
-                  {dots.map((c, j) => (
-                    <div key={j} style={{ width: isMobile ? 5 : 7, height: isMobile ? 5 : 7, borderRadius: "50%", background: c }} />
-                  ))}
+                  {!hasAny ? (
+                    <div style={{ textAlign: "center", padding: "20px 0", color: TEXT_SEC }}>
+                      No data recorded for this day
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
+                      {/* Workout */}
+                      {day.workout && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2">
+                                <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                                <line x1="8" y1="12" x2="16" y2="12"/>
+                              </svg>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>Workout</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Type:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.type}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Duration:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.duration} min</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Exercises:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.exercises}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Burned:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.calories} cal</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Nutrition */}
+                      {day.nutrition && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2">
+                                <path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/>
+                              </svg>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Calories:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.calories}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Protein:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.protein}g</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Carbs:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.carbs}g</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Fat:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.fat}g</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sleep */}
+                      {day.sleep && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#8e7cc308`, border: `1px solid #8e7cc315` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#8e7cc315`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2">
+                                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                              </svg>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#8e7cc3" }}>Sleep</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Duration:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.hours.toFixed(1)} hrs</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Quality:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.quality}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Bedtime:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.bedtime}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Woke:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.wakeTime}</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Steps */}
+                      {day.steps && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#3aafa908`, border: `1px solid #3aafa915` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#3aafa915`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3aafa9" strokeWidth="2">
+                                <path d="M13 4v16M7 4v16M19 4v16"/>
+                              </svg>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#3aafa9" }}>Activity</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Steps:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.steps.count.toLocaleString()}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Active:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.steps.activeMinutes} min</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Distance:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.steps.distance} mi</span></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {count === 0 && <div style={{ width: isMobile ? 5 : 7, height: isMobile ? 5 : 7, borderRadius: "50%", border: "1.5px dashed #d0dbd7" }} />}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })()}
 
-        {/* Legend */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 10 : 16, marginTop: 14, justifyContent: "center" }}>
-          {[
-            { label: "Exercise", color: TEAL },
-            { label: "Steps", color: "#3aafa9" },
-            { label: "Meals", color: "#ef6c3e" },
-            { label: "Sleep", color: "#8e7cc3" },
-          ].map((l, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TEXT_SEC }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
-              {l.label}
+            {/* Intensity legend */}
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 12 }}>
+              <span style={{ fontSize: 11, color: TEXT_SEC }}>Less</span>
+              {[0, 1, 2, 3, 4].map(n => (
+                <div key={n} style={{ width: 14, height: 14, borderRadius: 4, background: intensityColors[n], border: n === 0 ? `1px solid ${BORDER}` : "none" }} />
+              ))}
+              <span style={{ fontSize: 11, color: TEXT_SEC }}>More</span>
             </div>
-          ))}
-        </div>
-      </SectionCard>
+          </SectionCard>
+        );
+      })()}
 
-      {/* ─── ONE RECOMMENDATION ─── */}
+      {/* ─── THIS WEEK'S FOCUS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
           This Week's Focus
@@ -2119,31 +3457,53 @@ function DataCardPeriods({ periods, color, isMobile }) {
   );
 }
 
-/* �����══════════════════════════════════════════
+/* ═════════════════════════════════════════════
    CLIENT PROFILE SCREEN
-   ════════════════════════���══════════════════ */
+   ═════════════════════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [viewMode, setViewMode] = useState("coach"); // "coach" | "client"
   const [selectedDay, setSelectedDay] = useState(16);
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const maxMeals = 3;
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
   const wMax = Math.max(...wData) + 1;
   const wRange = wMax - wMin || 1;
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
-  // Consistency scores
-  const mealsScore = Math.min(100, Math.round((client.mealsLogged / 21) * 100));
-  const exerciseScore = Math.min(100, Math.round((client.workoutDays / 5) * 100));
-  const movementScore = Math.min(100, Math.round((client.steps / 8000) * 100));
+  // Training-focused calculations
+  const totalSessions = client.totalSessions || 0;
+  const sessionsThisWeek = client.sessionsThisWeek || 0;
+  const sessionsPerWeek = client.sessionsPerWeek || 3;
+  const currentStreak = client.streak?.current || 0;
+  const bestStreak = client.streak?.best || 0;
+  
+  // Calculate days since assessment
+  const assessmentDate = client.assessment?.date ? new Date(client.assessment.date) : null;
+  const daysSinceAssessment = assessmentDate ? Math.floor((new Date() - assessmentDate) / (1000 * 60 * 60 * 24)) : 0;
+  
+  // Body comp changes
+  const weightChange = client.assessment && client.current ? (client.current.bodyweight - client.assessment.bodyweight).toFixed(1) : 0;
+  const bodyFatChange = client.assessment && client.current ? (client.current.bodyFat - client.assessment.bodyFat).toFixed(1) : 0;
+  const leanMassChange = client.assessment && client.current ? (client.current.leanMass - client.assessment.leanMass).toFixed(1) : 0;
+  
+  // Get last session
+  const lastSession = client.sessions?.[0] || null;
+  
+  // Attendance rate based on session attendance
+  const attendanceRate = client.attendanceRate || 75;
+  const scoreColor = attendanceRate >= 80 ? MINT : attendanceRate >= 60 ? SAGE : "#ef6c3e";
+  
+  // Backward compatibility for old nutrition-based scores
+  const mealsScore = Math.min(100, Math.round(((client.nutrition?.proteinAvg || 0) / (client.nutrition?.proteinTarget || 100)) * 100)) || 50;
+  const exerciseScore = Math.min(100, (totalSessions / Math.max(1, daysSinceAssessment / 7) / sessionsPerWeek) * 100) || 50;
+  const movementScore = 70;
   const sleepScore = 78;
-  const consistencyScore = Math.round(mealsScore * 0.4 + exerciseScore * 0.25 + movementScore * 0.2 + sleepScore * 0.15);
-  const scoreColor = consistencyScore >= 80 ? MINT : consistencyScore >= 60 ? SAGE : "#ef6c3e";
+  const consistencyScore = attendanceRate;
 
   const ovPillars = [
     { key: "exercise", label: "Exercise", days: Math.min(30, client.workoutDays * 4 + 2), color: TEAL, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
@@ -2259,42 +3619,51 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 14, marginTop: 6, alignItems: "center" }}>
               <AlertBadge type={client.alertType} label={client.alert} />
-              <StreakBadge streak={client.streaks} />
+              {currentStreak > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 4,
+                  padding: "4px 10px", borderRadius: 12,
+                  background: `${MINT}15`, color: MINT, fontSize: 12, fontWeight: 600
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  {currentStreak} session streak
+                </div>
+              )}
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Program: <strong style={{ color: TEXT }}>{client.program}</strong></span>
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{client.startDate}</strong></span>
             </div>
           </div>
         </div>
-        {/* Connections */}
+        {/* Session indicators */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          {client.connectors.map((c, j) => {
-            const conn = dataConnectors[c];
-            if (!conn) return null;
-            return (
-              <div key={j} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{
-                  width: 26, height: 26, borderRadius: "50%", background: conn.bg,
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>{conn.icon(13)}</div>
-                <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>{conn.name}</span>
-              </div>
-            );
-          })}
-        </div>
-        {/* Action buttons */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <ActionBtn label="Generate Report" primary onClick={() => { setShowReport(true); onReportOpen?.(client); }} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-          } />
-          <div style={{ position: "relative", display: "inline-flex" }} title="Coming Soon">
-            <ActionBtn label="Send Message" icon={
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            } disabled />
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek} this week</span>
           </div>
-          <ActionBtn label="Add Device" onClick={() => setShowAddDevice(v => !v)} icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          } />
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{totalSessions} total sessions</span>
+          </div>
+          {lastSession && (
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
+              borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
+            }}>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>Last: <strong style={{ color: TEXT }}>{lastSession.type}</strong> ({lastSession.date})</span>
+            </div>
+          )}
         </div>
+
         {showAddDevice && (
           <div style={{
             padding: "14px 16px", borderRadius: 14,
@@ -2341,8 +3710,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       }}>
         {[
           { id: "overview", label: "Overview" },
-          { id: "profile", label: "Health Profile" },
-          { id: "journey", label: "Journey" },
+          { id: "journey", label: "Progress" },
+          { id: "profile", label: "Profile" },
           { id: "chats", label: "Chats" },
         ].map(tab => (
           <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
@@ -2358,17 +3727,16 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         ))}
       </div>
 
-      {/* ═══ TAB: OVERVIEW ═══ */}
+{/* ═══ TAB: OVERVIEW ═══ */}
       {activeTab === "overview" && (<>
 
-
-      {reportBlocks.includes("top3") && <ReportBlock id="top3" label="Score & Charts" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {reportBlocks.includes("top3") && <ReportBlock id="top3" label="Training Stats" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
       <div style={{
         display: "flex", flexDirection: isMobile ? "column" : "row",
         gap: isMobile ? 16 : 16, alignItems: "stretch"
       }}>
 
-      {/* ��── Consistency Score (compact) ─── */}
+      {/* ─── Attendance Rate ─── */}
       <div style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "20px" : "22px 22px",
@@ -2383,7 +3751,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             const sz = isMobile ? 100 : 96;
             const r = sz / 2 - 9;
             const circ = 2 * Math.PI * r;
-            const offset = circ * (1 - consistencyScore / 100);
+            const offset = circ * (1 - attendanceRate / 100);
             return (
               <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
                 <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e0ebe8" strokeWidth="8"/>
@@ -2393,27 +3761,26 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                 />
                 <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
-                  style={{ fontSize: 30, fontWeight: 800, fill: TEXT, fontFamily: font }}>{consistencyScore}</text>
+                  style={{ fontSize: 30, fontWeight: 800, fill: TEXT, fontFamily: font }}>{attendanceRate}</text>
               </svg>
             );
           })()}
-          <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Consistency Score</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 10 }}>Attendance Rate</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, marginTop: 2 }}>
-            {consistencyScore >= 85 ? "Exceptional" : consistencyScore >= 70 ? "Strong" : consistencyScore >= 55 ? "Building" : "Getting Started"}
+            {attendanceRate >= 85 ? "Exceptional" : attendanceRate >= 70 ? "Strong" : attendanceRate >= 55 ? "Building" : "Getting Started"}
           </div>
         </div>
-        {/* Pillar breakdown rows */}
+        {/* Training stats breakdown */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, justifyContent: "center", position: "relative" }}>
           {[
-            { label: "Meals", pct: mealsScore, color: "#ef6c3e" },
-            { label: "Exercise", pct: exerciseScore, color: TEAL },
-            { label: "Steps", pct: movementScore, color: "#3aafa9" },
-            { label: "Sleep", pct: sleepScore, color: "#8e7cc3" },
+            { label: "Sessions", pct: Math.min(100, (sessionsThisWeek / sessionsPerWeek) * 100), color: TEAL, sub: `${sessionsThisWeek}/${sessionsPerWeek} this week` },
+            { label: "Streak", pct: Math.min(100, (currentStreak / 20) * 100), color: MINT, sub: `${currentStreak} sessions (best: ${bestStreak})` },
+            { label: "Attendance", pct: Math.min(100, (totalSessions / Math.max(1, daysSinceAssessment / 7 * sessionsPerWeek)) * 100) || 70, color: "#3aafa9", sub: `${totalSessions} total sessions` },
           ].map((w, i) => (
             <div key={i}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{w.label}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: w.color }}>{w.pct}</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>{w.sub}</span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: "#e8f0ee", overflow: "hidden" }}>
                 <div style={{ height: "100%", borderRadius: 3, background: w.color, width: `${w.pct}%`, transition: "width 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }} />
@@ -2423,61 +3790,38 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </div>
 
-      {/* ─── Transformation ─── */}
+      {/* ─── Last Session Summary ─── */}
       {(() => {
-        const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-        const startW = (client.weightData?.[0] || 185) + 4;
-        const currW = client.weightData?.[client.weightData.length-1] || 183;
-        const goalLabel = isFatLoss ? "Weight" : "Protein";
-        const goalUnit = isFatLoss ? " lbs" : "g";
-
-        // Weekly data points
-        const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
-        const w1c = Math.max(15, consistencyScore - 32 - (client.name.charCodeAt(0) % 8));
-        const consistencyData = [w1c, w1c + 12, w1c + 22, consistencyScore];
-        const goalData = isFatLoss
-          ? [startW, startW - 1.2, startW - 2.5, currW]
-          : [client.proteinAvg - 28, client.proteinAvg - 16, client.proteinAvg - 6, client.proteinAvg];
-        const goalGoingDown = isFatLoss;
-
-        // Chart layout
-        const cw = 380, ch = 180, padL = 42, padR = 42, padT = 14, padB = 30;
-        const plotW = cw - padL - padR, plotH = ch - padT - padB;
-
-        // Consistency axis (left, 0-100)
-        const cMin = 0, cMax = 100;
-        const toYc = (v) => padT + (1 - (v - cMin) / (cMax - cMin)) * plotH;
-        const toX = (i) => padL + (i / (weeks.length - 1)) * plotW;
-
-        // Goal axis (right)
-        const gVals = goalData;
-        const gMin = Math.min(...gVals) - 3;
-        const gMax = Math.max(...gVals) + 3;
-        const toYg = (v) => padT + (1 - (v - gMin) / (gMax - gMin)) * plotH;
-
-        // Build smooth paths
-        const smooth = (pts) => {
-          let d = `M ${pts[0].x},${pts[0].y}`;
-          for (let i = 0; i < pts.length - 1; i++) {
-            const cp = (pts[i+1].x - pts[i].x) / 2.5;
-            d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
-          }
-          return d;
-        };
-
-        const cPts = consistencyData.map((v, i) => ({ x: toX(i), y: toYc(v) }));
-        const gPts = goalData.map((v, i) => ({ x: toX(i), y: toYg(v) }));
-        const cPath = smooth(cPts);
-        const gPath = smooth(gPts);
-        const cArea = `${cPath} L ${cPts[cPts.length-1].x},${padT + plotH} L ${cPts[0].x},${padT + plotH} Z`;
-
-        const cLast = cPts[cPts.length - 1];
-        const gLast = gPts[gPts.length - 1];
-
-        const totalChange = isFatLoss
-          ? `${(startW - currW).toFixed(1)} lbs lost`
-          : `+${(client.proteinAvg - (client.proteinAvg - 28))}g protein`;
-        const scoreChange = consistencyScore - w1c;
+        const session = lastSession;
+        if (!session) {
+          return (
+            <div style={{
+              background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)`,
+              borderRadius: 20, border: `1px solid ${BORDER}`,
+              padding: isMobile ? "20px" : "20px 22px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <div style={{ textAlign: "center", color: TEXT_SEC }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 8 }}>
+                  <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                  <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No sessions yet</div>
+                <div style={{ fontSize: 12 }}>Log the first session to see details</div>
+              </div>
+            </div>
+          );
+        }
+        
+        const totalVolume = session.exercises.reduce((sum, ex) => 
+          sum + ex.sets.reduce((setSum, s) => setSum + (s.weight * s.reps), 0), 0
+        );
+        const avgRPE = session.exercises.reduce((sum, ex) => 
+          sum + ex.sets.reduce((setSum, s) => setSum + (s.rpe || 7), 0) / ex.sets.length, 0
+        ) / session.exercises.length;
 
         return (
           <div style={{
@@ -2488,128 +3832,109 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0
           }}>
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 700, color: TEXT }}>{client.name.split(" ")[0]}'s Transformation</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Consistency drives results — 4 weeks of progress</div>
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>+{scoreChange} pts</div>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 700, color: TEXT }}>Last Session: {session.type}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{session.date} • {session.duration} min</div>
+                </div>
+                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>
+                  {Math.round(totalVolume).toLocaleString()} lbs volume
+                </div>
               </div>
             </div>
 
-            {/* Dual-line chart */}
+            {/* Exercise list */}
             <div style={{
               borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`,
-              padding: isMobile ? "10px 6px" : "14px 10px"
+              padding: isMobile ? "12px" : "14px", maxHeight: 220, overflowY: "auto"
             }}>
-              <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                <defs>
-                  <linearGradient id="cAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={TEAL} stopOpacity="0.12"/>
-                    <stop offset="100%" stopColor={TEAL} stopOpacity="0.01"/>
-                  </linearGradient>
-                </defs>
-
-                {/* Horizontal grid */}
-                {[0, 25, 50, 75, 100].map((v, i) => (
-                  <line key={i} x1={padL} y1={toYc(v)} x2={cw - padR} y2={toYc(v)} stroke={BORDER} strokeWidth="0.7" opacity="0.5"/>
-                ))}
-
-                {/* Left Y-axis labels (Consistency) */}
-                {[0, 50, 100].map((v, i) => (
-                  <text key={i} x={padL - 6} y={toYc(v) + 3} textAnchor="end" fill={TEAL} fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">{v}</text>
-                ))}
-
-                {/* Right Y-axis labels (Goal) */}
-                {[gMin + 1, (gMin + gMax) / 2, gMax - 1].map((v, i) => (
-                  <text key={i} x={cw - padR + 6} y={toYg(v) + 3} textAnchor="start" fill={ALERT_GREEN} fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">{Math.round(v)}</text>
-                ))}
-
-                {/* Week labels */}
-                {weeks.map((w, i) => (
-                  <text key={i} x={toX(i)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">{isMobile ? `W${i+1}` : w}</text>
-                ))}
-
-                {/* Consistency area fill */}
-                <path d={cArea} fill="url(#cAreaGrad)" />
-
-                {/* Consistency line */}
-                <path d={cPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
-
-                {/* Goal line */}
-                <path d={gPath} fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
-
-                {/* Consistency dots */}
-                {cPts.map((p, i) => (
-                  <g key={`c${i}`}>
-                    {i === cPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={TEAL} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === cPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={TEAL} strokeWidth="2"/>
-                  </g>
-                ))}
-
-                {/* Goal dots */}
-                {gPts.map((p, i) => (
-                  <g key={`g${i}`}>
-                    {i === gPts.length - 1 && <circle cx={p.x} cy={p.y} r="8" fill={ALERT_GREEN} opacity="0.1"/>}
-                    <circle cx={p.x} cy={p.y} r={i === gPts.length - 1 ? 5 : 3.5} fill={WHITE} stroke={ALERT_GREEN} strokeWidth="2"/>
-                  </g>
-                ))}
-
-                {/* End labels */}
-                <g>
-                  <rect x={cLast.x - 16} y={cLast.y - 22} width="32" height="16" rx="8" fill={TEAL}/>
-                  <text x={cLast.x} y={cLast.y - 11.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{consistencyScore}</text>
-                </g>
-                <g>
-                  <rect x={gLast.x - 22} y={gLast.y + 8} width="44" height="16" rx="8" fill={ALERT_GREEN}/>
-                  <text x={gLast.x} y={gLast.y + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{isFatLoss ? `${currW}` : `${client.proteinAvg}g`}</text>
-                </g>
-              </svg>
+              {session.exercises.slice(0, 4).map((ex, i) => (
+                <div key={i} style={{ 
+                  padding: "10px 0", 
+                  borderBottom: i < session.exercises.length - 1 && i < 3 ? `1px solid ${BORDER}` : "none" 
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{ex.name}</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {ex.sets.map((set, j) => (
+                      <div key={j} style={{
+                        padding: "4px 8px", borderRadius: 6, background: "#f7faf9",
+                        fontSize: 11, fontWeight: 500, color: TEXT_SEC
+                      }}>
+                        {set.weight > 0 ? `${set.weight}x${set.reps}` : `BW x${set.reps}`}
+                        {set.rpe && <span style={{ color: TEAL, marginLeft: 4 }}>@{set.rpe}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {session.exercises.length > 4 && (
+                <div style={{ fontSize: 12, color: TEXT_SEC, paddingTop: 8 }}>
+                  +{session.exercises.length - 4} more exercises
+                </div>
+              )}
             </div>
 
-            {/* Legend */}
-            <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 24, marginTop: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 3, borderRadius: 2, background: TEAL }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>Consistency Score</span>
+            {/* Session notes */}
+            {session.notes && (
+              <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}20` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Session Notes</div>
+                <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.4 }}>{session.notes}</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${ALERT_GREEN}` }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{goalLabel}</span>
-              </div>
-            </div>
+            )}
           </div>
         );
       })()}
 
 
-      {/* ─── Goal Trajectory ─── */}
+      {/* ─── Assessment Comparison ─── */}
       {(() => {
-        const isFatLoss = client.program === "Fat Loss Phase" || client.program === "Metabolic Health";
-        const startVal = isFatLoss ? (client.weightData?.[0] || 185) : client.proteinAvg;
-        const currentVal = isFatLoss ? (client.weightData?.[client.weightData.length-1] || 183) : client.proteinAvg;
-        // Use client.goalWeight if set (via chat command), otherwise default calculation
-        const goalVal = isFatLoss 
-          ? (client.goalWeight || startVal - 10) 
-          : (client.proteinTarget + 20);
-        const unit = isFatLoss ? "lbs" : "g protein/day";
-        const goalLabel = isFatLoss ? "Weight Goal" : "Protein Goal";
-        const weeksTotal = 12, weeksCurrent = 4;
-        const projectedWeeks = Math.round(weeksTotal * 0.9);
-        const goalDown = isFatLoss;
-        const cw = 380, ch = 160, padL = 42, padR = 18, padT = 16, padB = 30;
-        const plotW = cw - padL - padR, plotH = ch - padT - padB;
-        const valMin = goalDown ? goalVal - 2 : startVal - 5;
-        const valMax = goalDown ? startVal + 2 : goalVal + 5;
-        const valRange = valMax - valMin;
-        const toY = (v) => padT + (1 - (v - valMin) / valRange) * plotH;
-        const toX = (w) => padL + (w / weeksTotal) * plotW;
-        const actualPts = []; for (let w = 0; w <= weeksCurrent; w++) { const t = w / weeksCurrent; actualPts.push({ x: toX(w), y: toY(startVal + (currentVal - startVal) * t + Math.sin(t * 4) * 0.5) }); }
-        const projPts = []; for (let w = weeksCurrent; w <= weeksTotal; w++) { const t = (w - weeksCurrent) / (weeksTotal - weeksCurrent); projPts.push({ x: toX(w), y: toY(currentVal + (goalVal - currentVal) * (t * t * 0.3 + t * 0.7)) }); }
-        const smooth = (pts) => { let d = `M ${pts[0].x},${pts[0].y}`; for (let i = 0; i < pts.length - 1; i++) { const cp = (pts[i+1].x - pts[i].x) / 2.5; d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`; } return d; };
-        const actualPath = smooth(actualPts), projPath = smooth(projPts);
-        const lastActual = actualPts[actualPts.length - 1];
-        const goalY = toY(goalVal), goalX = toX(weeksTotal);
-        const actualArea = `${actualPath} L ${lastActual.x},${padT + plotH} L ${actualPts[0].x},${padT + plotH} Z`;
+        const assessment = client.assessment;
+        const current = client.current;
+        const goals = client.goals;
+        
+        if (!assessment || !current) {
+          return (
+            <div style={{
+              background: `linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)`,
+              borderRadius: 20, border: `1px solid ${BORDER}`,
+              padding: isMobile ? "18px" : "20px 22px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <div style={{ textAlign: "center", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No assessment data</div>
+                <div style={{ fontSize: 12 }}>Complete an initial assessment to track progress</div>
+              </div>
+            </div>
+          );
+        }
+
+        const metrics = [
+          { 
+            label: "Bodyweight", 
+            baseline: assessment.bodyweight, 
+            current: current.bodyweight, 
+            target: goals?.targetWeight,
+            unit: "lbs",
+            goodDirection: client.program?.includes("Gain") ? "up" : "down"
+          },
+          { 
+            label: "Body Fat", 
+            baseline: assessment.bodyFat, 
+            current: current.bodyFat, 
+            target: goals?.targetBodyFat,
+            unit: "%",
+            goodDirection: "down"
+          },
+          { 
+            label: "Lean Mass", 
+            baseline: assessment.leanMass, 
+            current: current.leanMass, 
+            unit: "lbs",
+            goodDirection: "up"
+          },
+        ];
 
         return (
           <div style={{
@@ -2619,58 +3944,79 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>We predict you'll reach</div>
-            <div style={{ fontSize: isMobile ? 20 : 20, fontWeight: 800, color: TEXT, marginBottom: 2 }}>
-              <span style={{ color: TEAL }}>{goalDown ? goalVal : goalVal + "g"}</span> {unit.replace("g protein/day","").replace("lbs","")} by <span style={{ color: TEAL }}>Week {weeksTotal}</span>
-            </div>
-            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 14 }}>
-              {goalLabel}: {startVal}{isFatLoss ? " lbs" : "g"} → {goalVal}{isFatLoss ? " lbs" : "g"} • Currently at <strong style={{ color: TEXT }}>{currentVal}{isFatLoss ? " lbs" : "g"}</strong>
-            </div>
-            <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "8px 4px" : "12px 8px", marginBottom: 12 }}>
-              <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                <defs>
-                  <linearGradient id="ovGoalArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={TEAL} stopOpacity="0.15"/>
-                    <stop offset="100%" stopColor={TEAL} stopOpacity="0.02"/>
-                  </linearGradient>
-                </defs>
-                {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
-                  const v = valMin + t * valRange; const y = toY(v);
-                  return (<g key={i}><line x1={padL} y1={y} x2={cw - padR} y2={y} stroke={BORDER} strokeWidth="0.7"/><text x={padL - 5} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="9" fontFamily="DM Sans, sans-serif">{Math.round(v)}</text></g>);
-                })}
-                <line x1={padL} y1={goalY} x2={cw - padR} y2={goalY} stroke={TEAL} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5"/>
-                <path d={actualArea} fill="url(#ovGoalArea)" />
-                <path d={actualPath} fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" />
-                <path d={projPath} fill="none" stroke={MINT} strokeWidth="2" strokeLinecap="round" strokeDasharray="8,5" />
-                <g><rect x={actualPts[0].x - 22} y={actualPts[0].y - 22} width="44" height="18" rx="9" fill={TEAL}/><text x={actualPts[0].x} y={actualPts[0].y - 10} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{startVal}{isFatLoss ? "" : "g"}</text></g>
-                <circle cx={lastActual.x} cy={lastActual.y} r="9" fill={TEAL} opacity="0.1"/>
-                <circle cx={lastActual.x} cy={lastActual.y} r="5" fill={WHITE} stroke={TEAL} strokeWidth="2.5"/>
-                <g><rect x={lastActual.x - 26} y={lastActual.y - 24} width="52" height="18" rx="9" fill={TEAL}/><text x={lastActual.x} y={lastActual.y - 12.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{currentVal}{isFatLoss ? " lbs" : "g"}</text></g>
-                <circle cx={goalX} cy={goalY} r="7" fill={MINT} opacity="0.2"/>
-                <circle cx={goalX} cy={goalY} r="4" fill={MINT}/>
-                <rect x={goalX - 20} y={goalY + 8} width="40" height="16" rx="8" fill={MINT}/>
-                <text x={goalX} y={goalY + 18.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{goalVal}{isFatLoss ? "" : "g"}</text>
-                <line x1={lastActual.x} y1={padT} x2={lastActual.x} y2={padT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="3,3" opacity="0.25"/>
-                <text x={lastActual.x} y={ch - 6} textAnchor="middle" fill={TEXT} fontSize="9" fontWeight="700" fontFamily="DM Sans">Now</text>
-                <text x={toX(0)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontFamily="DM Sans">W1</text>
-                <text x={toX(weeksTotal)} y={ch - 6} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontFamily="DM Sans">W{weeksTotal}</text>
-              </svg>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { text: `${goalDown ? "Down" : "Up"} ${Math.abs(Math.round((currentVal - startVal) * 10) / 10)} ${isFatLoss ? "lbs" : "g"} from starting point`, check: true },
-                { text: `On track to reach goal by Week ${projectedWeeks}`, check: true },
-                { text: "Consistency score supports this projection", check: consistencyScore >= 65 },
-              ].map((c, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, background: c.check ? "#e8f5e9" : "#fff3e0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {c.check ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                    : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>}
-                  </div>
-                  <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>{c.text}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 700, color: TEXT }}>Assessment Comparison</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+                  Baseline: {assessment.date} �� {daysSinceAssessment} days ago
                 </div>
-              ))}
+              </div>
+              {daysSinceAssessment > 56 && (
+                <div style={{ padding: "4px 10px", borderRadius: 16, background: "#fff3e0", fontSize: 11, fontWeight: 700, color: "#ef6c3e" }}>
+                  Reassessment Due
+                </div>
+              )}
             </div>
+
+            {/* Metrics comparison */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {metrics.map((m, i) => {
+                const change = m.current - m.baseline;
+                const isGood = (m.goodDirection === "up" && change > 0) || (m.goodDirection === "down" && change < 0);
+                const changeColor = isGood ? ALERT_GREEN : change === 0 ? TEXT_SEC : "#ef6c3e";
+                
+                return (
+                  <div key={i} style={{ 
+                    padding: "12px 14px", borderRadius: 12, background: WHITE, 
+                    border: `1px solid ${BORDER}` 
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{m.label}</span>
+                      <div style={{ 
+                        display: "flex", alignItems: "center", gap: 4,
+                        padding: "2px 8px", borderRadius: 10,
+                        background: `${changeColor}15`, color: changeColor, fontSize: 11, fontWeight: 700
+                      }}>
+                        {change > 0 ? "+" : ""}{change.toFixed(1)} {m.unit}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+                      <div>
+                        <span style={{ fontSize: 11, color: TEXT_SEC }}>Baseline: </span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{m.baseline}{m.unit}</span>
+                      </div>
+                      <svg width="16" height="12" viewBox="0 0 24 12" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
+                      <div>
+                        <span style={{ fontSize: 11, color: TEXT_SEC }}>Current: </span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{m.current}{m.unit}</span>
+                      </div>
+                      {m.target && (
+                        <>
+                          <svg width="16" height="12" viewBox="0 0 24 12" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" strokeDasharray="4,3"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
+                          <div>
+                            <span style={{ fontSize: 11, color: TEXT_SEC }}>Goal: </span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: MINT }}>{m.target}{m.unit}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Goal summary */}
+            {goals && (
+              <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}20` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Primary Goal</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{goals.primary}</div>
+                {goals.secondaryGoals && goals.secondaryGoals.length > 0 && (
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                    Also: {goals.secondaryGoals.join(", ")}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })()}
@@ -2678,53 +4024,105 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       </div>{/* end top 3 row */}
       </ReportBlock>}
 
-      {reportBlocks.includes("rule30") && <ReportBlock id="rule30" label="Rule of 30" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      <div style={{
-        background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)`,
-        borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "20px" : "24px 28px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Rule of 30</div>
-          <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Every 30 days you unlock a new learning about yourself</div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
-          {ovPillars.map((p) => {
-            const fillPct = (p.days / 30) * 100;
-            const sz = isMobile ? 90 : 110;
-            const r = sz / 2 - 12;
-            const circ = 2 * Math.PI * r;
-            const offset = circ * (1 - Math.min(100, fillPct) / 100);
-            return (
-              <div key={p.key} style={{
-                borderRadius: 16, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "18px 14px",
-                background: "#fafcfb", textAlign: "center",
-                display: "flex", flexDirection: "column", alignItems: "center"
-              }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 10 }}>{p.label}</div>
-                <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-                  <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="10"/>
-                  <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={p.color} strokeWidth="10"
-                    strokeDasharray={circ} strokeDashoffset={offset}
-                    strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
-                    style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
-                  />
-                  <g transform={`translate(${sz/2 - 9}, ${sz/2 - 9})`} style={{ color: p.color }}>{p.icon}</g>
-                </svg>
-                <div style={{ marginTop: 10 }}>
-                  <span style={{ fontSize: 24, fontWeight: 800, color: p.color }}>{p.days}</span>
-                  <span style={{ fontSize: 13, color: TEXT_SEC, fontWeight: 500 }}> / 30</span>
-                </div>
-                <div style={{ fontSize: 11, color: fillPct >= 90 ? ALERT_GREEN : TEXT_SEC, fontWeight: 600, marginTop: 2 }}>
-                  {fillPct >= 90 ? "Almost there!" : fillPct >= 60 ? "Keep going!" : "Building..."}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {reportBlocks.includes("rule30") && <ReportBlock id="rule30" label="Strength Progress" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
+      {(() => {
+        const baselines = client.assessment?.strengthBaselines;
+        const liftColors = { squat: TEAL, deadlift: "#3aafa9", benchPress: MINT, overheadPress: "#8e7cc3" };
+        const liftNames = { squat: "Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
+        
+        // Calculate current estimated maxes from recent sessions
+        const getCurrentMax = (liftName) => {
+          const sessions = client.sessions || [];
+          for (const session of sessions) {
+            for (const ex of session.exercises || []) {
+              if (ex.name.toLowerCase().includes(liftName.toLowerCase().split(" ")[0])) {
+                const bestSet = ex.sets.reduce((best, set) => 
+                  (set.weight * set.reps) > (best.weight * best.reps) ? set : best, { weight: 0, reps: 0 });
+                // Estimate 1RM using Brzycki formula
+                if (bestSet.reps <= 10) {
+                  return Math.round(bestSet.weight * (36 / (37 - bestSet.reps)));
+                }
+                return Math.round(bestSet.weight * 1.3);
+              }
+            }
+          }
+          return null;
+        };
 
+        if (!baselines) {
+          return (
+            <div style={{
+              background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)`,
+              borderRadius: 20, border: `1px solid ${BORDER}`,
+              padding: isMobile ? "20px" : "24px 28px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              textAlign: "center", color: TEXT_SEC
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No strength baselines</div>
+              <div style={{ fontSize: 12 }}>Complete an assessment to track lift progression</div>
+            </div>
+          );
+        }
+
+        return (
+          <div style={{
+            background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)`,
+            borderRadius: 20, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "20px" : "24px 28px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Strength Progress</div>
+              <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Baseline vs estimated current 1RM</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
+              {Object.entries(baselines).map(([key, val]) => {
+                const baseline1RM = Math.round(val.weight * (36 / (37 - val.reps)));
+                const currentEst = getCurrentMax(liftNames[key]) || Math.round(baseline1RM * (1 + Math.random() * 0.15));
+                const improvement = currentEst - baseline1RM;
+                const improvementPct = Math.round((improvement / baseline1RM) * 100);
+                const color = liftColors[key] || TEAL;
+                
+                return (
+                  <div key={key} style={{
+                    borderRadius: 16, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "18px 14px",
+                    background: "#fafcfb", textAlign: "center",
+                    display: "flex", flexDirection: "column", alignItems: "center"
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 8 }}>{liftNames[key]}</div>
+                    <div style={{ 
+                      width: 60, height: 60, borderRadius: "50%", 
+                      background: `${color}15`, border: `3px solid ${color}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 8
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+                        <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                        <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>Est. 1RM</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: color }}>{currentEst}</div>
+                    <div style={{ fontSize: 11, color: TEXT_SEC }}>lbs</div>
+                    <div style={{ 
+                      marginTop: 6, padding: "2px 8px", borderRadius: 10,
+                      background: improvement > 0 ? `${ALERT_GREEN}15` : "#f5f5f5",
+                      color: improvement > 0 ? ALERT_GREEN : TEXT_SEC,
+                      fontSize: 10, fontWeight: 700
+                    }}>
+                      {improvement > 0 ? "+" : ""}{improvement} lbs ({improvementPct > 0 ? "+" : ""}{improvementPct}%)
+                    </div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4 }}>
+                      Baseline: {val.weight}x{val.reps}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
       </ReportBlock>}
 
       {reportBlocks.includes("dataCards") && <ReportBlock id="dataCards" label="Data Cards" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
@@ -3159,62 +4557,97 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       </>)}
 
-      {/* ═══ TAB: HEALTH PROFILE ═══ */}
+      {/* ═══ TAB: PROFILE ═══ */}
       {activeTab === "profile" && (<>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 18 }}>
-          <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Vitals & Body</div>
-            {[
-              ["Age", "34"], ["Gender", "Female"], ["Height", `5'6"`],
-              ["Current Weight", `${wData[wData.length-1]} lbs`],
-              ["Goal Weight", `${Math.round(wData[wData.length-1]-10)} lbs`],
-              ["Activity Level", client.steps > 9000 ? "Very Active" : client.steps > 6000 ? "Moderately Active" : "Lightly Active"],
-              ["Sleep Avg", "6.8 hrs"],
-            ].map(([l,v],i) => (
-              <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+          {/* Left Column - Stats & Body */}
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
+            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Body Composition</div>
+              {[
+                ["Current Weight", `${client.current?.bodyweight || wData[wData.length-1]} lbs`],
+                ["Goal Weight", `${client.goals?.targetWeight || Math.round(wData[wData.length-1]-10)} lbs`],
+                ["Body Fat", `${client.current?.bodyFat || 22}%`],
+                ["Goal Body Fat", `${client.goals?.targetBodyFat || 18}%`],
+                ["Lean Mass", `${client.current?.leanMass || 125} lbs`],
+                ["Height", client.profile?.height || `5'6"`],
+              ].map(([l,v],i) => (
+                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Strength Baselines */}
+            {client.assessment?.strengthBaselines && (
+              <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Strength Baselines</div>
+                {Object.entries(client.assessment.strengthBaselines).map(([key, val], i) => {
+                  const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
+                  return (
+                    <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{names[key] || key}</span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: TEAL, textAlign: "right" }}>{val.weight} x {val.reps}</span>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
-          <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Medical & Dietary</div>
-            {[
-              ["Conditions", "Pre-diabetic, Mild anxiety"],
-              ["Medications", "Metformin 500mg"],
-              ["Allergies", "Shellfish, Dairy (mild)"],
-              ["Diet Preference", "Mediterranean, High protein"],
-              ["Supplements", "Vitamin D, Omega-3, Magnesium"],
-              ["Stress Level", "Moderate"],
-            ].map(([l,v],i) => (
-              <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+          
+          {/* Right Column - Goals & Notes */}
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
+            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Goals & Program</div>
+              {[
+                ["Primary Goal", client.goals?.primary || "Build Strength"],
+                ["Secondary", client.goals?.secondaryGoals?.join(", ") || "Improve mobility"],
+                ["Program", client.program || "General Fitness"],
+                ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
+                ["Training Style", client.profile?.trainingStyle || "Barbell-focused"],
+                ["Experience", client.profile?.experience || "Intermediate"],
+              ].map(([l,v],i) => (
+                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Notes & Considerations</div>
+              {[
+                ["Injuries/Limitations", client.profile?.injuries || "None reported"],
+                ["Equipment Access", client.profile?.equipment || "Full gym"],
+                ["Preferred Time", client.profile?.preferredTime || "Morning"],
+                ["Communication", client.profile?.communication || "Text preferred"],
+              ].map(([l,v],i) => (
+                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+                </div>
+              ))}
+              <div style={{ padding: "11px 0" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>Coach Notes</span>
+                <p style={{ fontSize: 13, color: TEXT, margin: "6px 0 0", lineHeight: 1.55 }}>{client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming.`}</p>
               </div>
-            ))}
-            <div style={{ padding: "11px 0" }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>Coach Notes</span>
-              <p style={{ fontSize: 13, color: TEXT, margin: "6px 0 0", lineHeight: 1.55 }}>{client.name.split(" ")[0]} prefers morning workouts. Responds well to accountability check-ins.</p>
             </div>
           </div>
         </div>
-      </>)}
-
-      {/* ═��═ TAB: JOURNEY ═══ */}
-      {activeTab === "journey" && (
-        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Journey Timeline</div>
+        
+        {/* Training Timeline - moved to profile tab */}
+        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginTop: isMobile ? 14 : 18 }}>
+          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Training Timeline</div>
           <div style={{ position: "relative", paddingLeft: 28 }}>
             <div style={{ position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: `linear-gradient(180deg, ${TEAL}, ${MINT})`, borderRadius: 1 }} />
             {[
-              { date: client.startDate, type: "start", title: "Program Started", desc: `Began ${client.program} program. Initial assessment completed.`, color: TEAL },
-              { date: "Week 1", type: "milestone", title: "First Full Week Logged", desc: "Logged all meals for 7 consecutive days. Strong start.", color: MINT },
-              { date: "Week 2", type: "insight", title: "Milton Insight", desc: "Identified protein gap — intake averaging 20g below target.", color: "#8e7cc3" },
-              { date: "Week 2", type: "action", title: "Coach Check-in", desc: "Discussed protein sources. Sent meal prep guide.", color: "#ef6c3e" },
-              { date: "Week 3", type: "milestone", title: "Weight Milestone", desc: `Down ${Math.abs(client.weightTrend)} lbs from starting weight. On track.`, color: MINT },
-              { date: "Week 3", type: "insight", title: "Pattern Detected", desc: "Weekend logging drops significantly. Calorie intake +28% on weekends.", color: "#8e7cc3" },
-              { date: "Week 4", type: "action", title: "Plan Adjustment", desc: "Added weekend meal templates. Set reminder for Saturday logging.", color: "#ef6c3e" },
-              { date: "Today", type: "current", title: "Current Status", desc: `Engagement: ${client.engagementScore}%. ${client.alert}.`, color: ALERT_GREEN },
+              { date: client.assessment?.date || client.startDate, type: "start", title: "Initial Assessment", desc: `Completed baseline testing. Set primary goal: ${client.goals?.primary || "Build strength"}.`, color: TEAL },
+              { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
+              { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
+              { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
+              { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Attendance rate: ${attendanceRate}%.`, color: MINT },
+              { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
             ].map((ev, i, arr) => (
               <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
                 <div style={{
@@ -3231,21 +4664,372 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             ))}
           </div>
         </div>
+      </>)}
+
+      {/* ═══ TAB: PROGRESS (Client-Facing View) ═══ */}
+      {activeTab === "journey" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 20 : 28 }}>
+          
+          {/* Hero Section */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}08, ${MINT}06, ${SAGE}04)`,
+            borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "28px 20px" : "40px 48px",
+            textAlign: "center", position: "relative", overflow: "hidden"
+          }}>
+            <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${TEAL}08 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${MINT}10 0%, transparent 70%)`, pointerEvents: "none" }} />
+            
+            <div style={{ position: "relative" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 8 }}>
+                {client.program || "Training Program"}
+              </div>
+              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: TEXT, marginBottom: 6, letterSpacing: "-0.02em" }}>
+                {client.name}
+              </div>
+              <div style={{ fontSize: 16, color: TEXT_SEC, marginBottom: 24 }}>
+                Training since {client.assessment?.date || client.startDate}
+              </div>
+              
+              {/* Sessions Completed Ring */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                {(() => {
+                  const sz = isMobile ? 140 : 160;
+                  const r = sz / 2 - 14;
+                  const circ = 2 * Math.PI * r;
+                  const targetSessions = Math.max(20, Math.ceil(totalSessions / 10) * 10 + 10);
+                  const progress = Math.min(100, (totalSessions / targetSessions) * 100);
+                  const offset = circ * (1 - progress / 100);
+                  return (
+                    <div style={{ position: "relative" }}>
+                      <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="12"/>
+                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={TEAL} strokeWidth="12"
+                          strokeDasharray={circ} strokeDashoffset={offset}
+                          strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
+                          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                        />
+                      </svg>
+                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                        <div style={{ fontSize: isMobile ? 36 : 44, fontWeight: 800, color: TEAL, lineHeight: 1 }}>{totalSessions}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginTop: 4 }}>sessions</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+              
+              {/* Quick Stats */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(3, auto)",
+                gap: isMobile ? 12 : 40,
+                justifyContent: isMobile ? "stretch" : "center",
+                maxWidth: isMobile ? "100%" : "none"
+              }}>
+                {[
+                  { label: "Current Streak", value: currentStreak, suffix: isMobile ? "" : " sessions" },
+                  { label: "Best Streak", value: bestStreak, suffix: isMobile ? "" : " sessions" },
+                  { label: "This Week", value: `${sessionsThisWeek}/${sessionsPerWeek}`, suffix: "" },
+                ].map((stat, i) => (
+                  <div key={i} style={{ 
+                    textAlign: "center",
+                    padding: isMobile ? "12px 8px" : "0",
+                    background: isMobile ? `${WHITE}80` : "transparent",
+                    borderRadius: isMobile ? 12 : 0,
+                    border: isMobile ? `1px solid ${BORDER}` : "none"
+                  }}>
+                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{stat.value}{stat.suffix}</div>
+                    <div style={{ fontSize: isMobile ? 9 : 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Before → After Comparison */}
+          <div style={{
+            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Transformation</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>{daysSinceAssessment} Days of Progress</div>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
+              {(() => {
+                const assessment = client.assessment || {};
+                const current = client.current || {};
+                const metrics = [
+                  { 
+                    label: "Bodyweight", 
+                    before: assessment.bodyweight || 185, 
+                    after: current.bodyweight || 180,
+                    unit: "lbs",
+                    goodDirection: client.program?.includes("Gain") ? "up" : "down"
+                  },
+                  { 
+                    label: "Body Fat", 
+                    before: assessment.bodyFat || 24, 
+                    after: current.bodyFat || 20,
+                    unit: "%",
+                    goodDirection: "down"
+                  },
+                  { 
+                    label: "Lean Mass", 
+                    before: assessment.leanMass || 140, 
+                    after: current.leanMass || 144,
+                    unit: "lbs",
+                    goodDirection: "up"
+                  },
+                ];
+                
+                return metrics.map((m, i) => {
+                  const change = m.after - m.before;
+                  const isPositive = (m.goodDirection === "up" && change > 0) || (m.goodDirection === "down" && change < 0);
+                  const changeColor = isPositive ? ALERT_GREEN : change === 0 ? TEXT_SEC : "#ef6c3e";
+                  const arrow = change > 0 ? "↑" : change < 0 ? "↓" : "→";
+                  
+                  return (
+                    <div key={i} style={{
+                      background: `linear-gradient(135deg, #f8faf9, #f5f8f6)`,
+                      borderRadius: 20, padding: isMobile ? "20px" : "28px",
+                      textAlign: "center", border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>{m.label}</div>
+                      
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 8 : 12, marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
+                          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
+                        </div>
+                        <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                          <path d="M5 12h14M14 7l5 5-5 5"/>
+                        </svg>
+                        <div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, marginBottom: 2 }}>Now</div>
+                          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "6px 14px", borderRadius: 20,
+                        background: `${changeColor}12`, color: changeColor,
+                        fontSize: 14, fontWeight: 700
+                      }}>
+                        <span style={{ fontSize: 16 }}>{arrow}</span>
+                        {Math.abs(change).toFixed(1)} {m.unit}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Strength Progress */}
+          <div style={{
+            background: WHITE, borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Getting Stronger</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Your Strength Progress</div>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 16 : 24 }}>
+              {(() => {
+                const baselines = client.assessment?.strengthBaselines || {
+                  squat: { weight: 135, reps: 5 },
+                  benchPress: { weight: 95, reps: 5 },
+                  deadlift: { weight: 185, reps: 5 }
+                };
+                const liftNames = { squat: "Squat", benchPress: "Bench Press", deadlift: "Deadlift", overheadPress: "OHP" };
+                const liftColors = { squat: TEAL, benchPress: MINT, deadlift: "#3aafa9", overheadPress: "#8e7cc3" };
+                
+                return Object.entries(baselines).slice(0, 3).map(([key, val], i) => {
+                  const baseline1RM = Math.round(val.weight * (36 / (37 - val.reps)));
+                  const currentEst = Math.round(baseline1RM * (1.05 + Math.random() * 0.15));
+                  const improvement = currentEst - baseline1RM;
+                  const color = liftColors[key] || TEAL;
+                  
+                  return (
+                    <div key={i} style={{
+                      background: `linear-gradient(135deg, ${color}06, ${color}03)`,
+                      borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 28px",
+                      textAlign: "center", border: `1px solid ${color}20`,
+                      position: "relative", overflow: "hidden"
+                    }}>
+                      <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`, pointerEvents: "none" }} />
+                      
+                      <div style={{ fontSize: 14, fontWeight: 700, color: color, marginBottom: 16 }}>{liftNames[key]}</div>
+                      
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: isMobile ? 6 : 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, textDecoration: "line-through" }}>{baseline1RM}</span>
+                        <svg width={isMobile ? 16 : 20} height={isMobile ? 10 : 12} viewBox="0 0 24 12" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
+                        <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: color }}>{currentEst}</span>
+                        <span style={{ fontSize: isMobile ? 12 : 14, color: TEXT_SEC }}>lbs</span>
+                      </div>
+                      
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>Estimated 1RM</div>
+                      
+                      <div style={{
+                        marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "4px 12px", borderRadius: 16,
+                        background: `${ALERT_GREEN}12`, color: ALERT_GREEN,
+                        fontSize: 13, fontWeight: 700
+                      }}>
+                        +{improvement} lbs
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Goal Trajectory */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}04, ${MINT}03)`,
+            borderRadius: 24, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Your Journey</div>
+              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT }}>Progress Toward Your Goal</div>
+            </div>
+            
+            {(() => {
+              const assessment = client.assessment || {};
+              const current = client.current || {};
+              const goals = client.goals || {};
+              
+              const startWeight = assessment.bodyweight || 185;
+              const currentWeight = current.bodyweight || 180;
+              const goalWeight = goals.targetWeight || 170;
+              
+              const totalChange = Math.abs(goalWeight - startWeight);
+              const progressMade = Math.abs(currentWeight - startWeight);
+              const progressPct = Math.min(100, Math.round((progressMade / totalChange) * 100));
+              const remaining = Math.abs(goalWeight - currentWeight);
+              
+              return (
+                <div>
+                  {/* Progress Bar */}
+                  <div style={{ marginBottom: 32 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: isMobile ? 8 : 16 }}>
+                      <div style={{ textAlign: "left", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Started</div>
+                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: TEXT_SEC }}>{startWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
+                      </div>
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current</div>
+                        <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: TEAL }}>{currentWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
+                      </div>
+                      <div style={{ textAlign: "right", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
+                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: MINT }}>{goalWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ position: "relative", height: 16, borderRadius: 8, background: "#e8f0ee", overflow: "hidden" }}>
+                      <div style={{
+                        position: "absolute", left: 0, top: 0, bottom: 0,
+                        width: `${progressPct}%`, borderRadius: 8,
+                        background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                        transition: "width 1.5s cubic-bezier(0.16, 1, 0.3, 1)"
+                      }} />
+                      <div style={{
+                        position: "absolute", left: `${progressPct}%`, top: "50%", transform: "translate(-50%, -50%)",
+                        width: 24, height: 24, borderRadius: "50%",
+                        background: WHITE, border: `3px solid ${TEAL}`,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                      }} />
+                    </div>
+                    
+                    <div style={{ textAlign: "center", marginTop: isMobile ? 12 : 16 }}>
+                      <span style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: TEAL }}>{progressPct}%</span>
+                      <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, marginLeft: 8 }}>to goal</span>
+                    </div>
+                  </div>
+                  
+                  {/* Milestones */}
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)",
+                    gap: isMobile ? 12 : 32,
+                    justifyContent: isMobile ? "stretch" : "center"
+                  }}>
+                    {[
+                      { icon: "check", label: "Started Program", done: true },
+                      { icon: "check", label: `Lost ${progressMade.toFixed(1)} lbs`, done: progressMade > 0 },
+                      { icon: progressPct >= 50 ? "check" : "circle", label: "Halfway Point", done: progressPct >= 50 },
+                      { icon: progressPct >= 100 ? "check" : "target", label: "Goal Reached", done: progressPct >= 100 },
+                    ].map((m, i) => (
+                      <div key={i} style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 8,
+                        padding: isMobile ? "10px 12px" : "0",
+                        background: isMobile ? `${WHITE}60` : "transparent",
+                        borderRadius: isMobile ? 12 : 0,
+                        border: isMobile ? `1px solid ${BORDER}` : "none"
+                      }}>
+                        <div style={{
+                          width: isMobile ? 24 : 28, height: isMobile ? 24 : 28, borderRadius: "50%",
+                          background: m.done ? TEAL : "#e8f0ee",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          flexShrink: 0
+                        }}>
+                          {m.done ? (
+                            <svg width={isMobile ? 12 : 14} height={isMobile ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                          ) : (
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEXT_SEC }} />
+                          )}
+                        </div>
+                        <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 600, color: m.done ? TEXT : TEXT_SEC }}>{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Motivational Footer */}
+          <div style={{
+            background: `linear-gradient(135deg, ${TEAL}, ${MINT})`,
+            borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 40px",
+            textAlign: "center", color: WHITE
+          }}>
+            <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, marginBottom: 8 }}>
+              Keep showing up. The results will follow.
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>
+              Every session is a step closer to your goal.
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* ═══ TAB: CHATS ═══ */}
+      {/* ══�� TAB: CHATS ═══ */}
       {activeTab === "chats" && (
         <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
           <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{client.name.split(" ")[0]}'s Conversations</div>
           <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 18 }}>Chat history between {client.name.split(" ")[0]} and Milton AI</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              { role: "user", text: "I had a rough weekend — didn't track anything Saturday or Sunday.", time: "Mon 9:12 AM" },
-              { role: "ai", text: "That's okay! You tracked consistently Mon–Fri. Would you like me to suggest some quick weekend meal ideas?", time: "Mon 9:12 AM" },
-              { role: "user", text: "Yes please, especially for Saturday brunch.", time: "Mon 9:14 AM" },
-              { role: "ai", text: "Here are 3 high-protein brunch options under 15 min:\n\n1) Greek yogurt parfait (32g protein)\n2) Egg & veggie scramble with toast (28g)\n3) Protein smoothie bowl with PB (35g)\n\nWant me to add any to your meal plan?", time: "Mon 9:14 AM" },
-              { role: "user", text: "The smoothie bowl sounds great. Add that!", time: "Mon 9:16 AM" },
-              { role: "ai", text: `Done! Added Protein Smoothie Bowl to your Saturday plan. I'll send a reminder Saturday morning. Keep it up! 💪`, time: "Mon 9:16 AM" },
+              { role: "user", text: "My squat felt really heavy yesterday. Should I be worried?", time: "Mon 9:12 AM" },
+              { role: "ai", text: "Looking at your last few sessions, your squat volume has increased 15% over 2 weeks. That accumulated fatigue is normal! Consider a lighter session this week to let your body adapt.", time: "Mon 9:12 AM" },
+              { role: "user", text: "That makes sense. Should I just do lighter weights same reps?", time: "Mon 9:14 AM" },
+              { role: "ai", text: "I'd suggest dropping to 70-75% of your working weights and focusing on movement quality. Here's a deload protocol:\n\n1) Reduce weight by 25-30%\n2) Keep reps the same\n3) Focus on tempo and positioning\n\nThis will help you come back stronger next week!", time: "Mon 9:14 AM" },
+              { role: "user", text: "Perfect, I'll try that Wednesday. Thanks!", time: "Mon 9:16 AM" },
+              { role: "ai", text: "Great plan! I've noted this in your training log. Let me know how the session feels — I'll adjust next week's programming based on your recovery.", time: "Mon 9:16 AM" },
             ].map((msg, i) => (
               <div key={i} style={{ display: "flex", gap: 10 }}>
                 {msg.role === "user" ? (
@@ -3276,425 +5060,9 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   );
 }
 
-/* ═══════════════════════════════════════════
-   ADD CLIENT MODAL
-   ═══════════════════════════════════════════ */
-function AddClientModal({ onClose, isMobile }) {
-  const [mode, setMode] = useState("single"); // single | csv
-  const [form, setForm] = useState({ name: "", email: "", phone: "", program: "", notes: "" });
-  const [csvFile, setCsvFile] = useState(null);
-  const [csvPreview, setCsvPreview] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
-  const fileRef = useRef(null);
-  const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
-
-  const handleCsvSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCsvFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target.result;
-      const lines = text.split("\n").filter(l => l.trim());
-      const headers = lines[0].split(",").map(h => h.trim());
-      const rows = lines.slice(1, 6).map(l => l.split(",").map(c => c.trim()));
-      setCsvPreview({ headers, rows, total: lines.length - 1 });
-    };
-    reader.readAsText(file);
-  };
-
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 1800);
-  };
-
-  const InputField = ({ label, placeholder, field, type = "text" }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</label>
-      <input
-        type={type} value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
-        placeholder={placeholder}
-        style={{
-          padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`,
-          fontSize: 14, fontFamily: font, color: TEXT, outline: "none",
-          background: WHITE, transition: "border-color 0.15s ease"
-        }}
-        onFocus={e => e.target.style.borderColor = TEAL}
-        onBlur={e => e.target.style.borderColor = BORDER}
-      />
-    </div>
-  );
-
-  if (submitted) {
-    return (
-      <>
-        <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 200 }} />
-        <div style={{
-          position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          width: isMobile ? "90vw" : 480, background: WHITE, borderRadius: 24,
-          padding: "48px 32px", zIndex: 210, textAlign: "center",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.15)", border: `1px solid ${BORDER}`
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: "50%", margin: "0 auto 16px",
-            background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(43,122,120,0.3)"
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 6 }}>
-            {mode === "csv" ? `${csvPreview?.total || 0} Clients Added!` : "Client Added!"}
-          </div>
-          <div style={{ fontSize: 14, color: TEXT_SEC }}>
-            {mode === "csv" ? "Your client list has been imported successfully." : `${form.name || "New client"} has been added to your roster.`}
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 200 }} />
-      <div style={{
-        position: "fixed",
-        top: isMobile ? 0 : "50%", left: isMobile ? 0 : "50%",
-        transform: isMobile ? "none" : "translate(-50%, -50%)",
-        width: isMobile ? "100vw" : 520,
-        height: isMobile ? "100vh" : "auto",
-        maxHeight: isMobile ? "100vh" : "88vh",
-        background: WHITE, borderRadius: isMobile ? 0 : 24,
-        zIndex: 210, display: "flex", flexDirection: "column",
-        boxShadow: isMobile ? "none" : "0 20px 60px rgba(0,0,0,0.15)",
-        border: isMobile ? "none" : `1px solid ${BORDER}`,
-        overflow: "hidden"
-      }}>
-        {/* Header */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: isMobile ? "16px 18px" : "20px 28px",
-          borderBottom: `1px solid ${BORDER}`, flexShrink: 0
-        }}>
-          <div>
-            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Add Client</div>
-            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Add a single client or import a list</div>
-          </div>
-          <div onClick={onClose} style={{
-            width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC, background: "#f0f4f3"
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </div>
-        </div>
-
-        {/* Mode Toggle */}
-        <div style={{ padding: isMobile ? "14px 18px 0" : "18px 28px 0", flexShrink: 0 }}>
-          <div style={{
-            display: "flex", gap: 4, background: "#f0f4f3", borderRadius: 10, padding: 3
-          }}>
-            {[
-              { id: "single", label: "Single Client", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
-              { id: "csv", label: "Import CSV", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,12 15,15"/></svg> },
-            ].map(m => (
-              <div key={m.id} onClick={() => setMode(m.id)} style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "9px 12px", borderRadius: 8, cursor: "pointer",
-                background: mode === m.id ? WHITE : "transparent",
-                color: mode === m.id ? TEXT : TEXT_SEC,
-                fontWeight: mode === m.id ? 600 : 500, fontSize: 13,
-                boxShadow: mode === m.id ? "0 1px 4px rgba(0,0,0,0.06)" : "none",
-                transition: "all 0.2s ease"
-              }}>
-                {m.icon}{m.label}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "18px" : "20px 28px" }}>
-          {mode === "single" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <InputField label="Full Name" placeholder="Marie Rodriguez" field="name" />
-                <InputField label="Email" placeholder="marie@email.com" field="email" type="email" />
-              </div>
-              <InputField label="Phone" placeholder="(555) 123-4567" field="phone" type="tel" />
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Notes (optional)</label>
-                <textarea
-                  value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Any notes about this client..."
-                  rows={3}
-                  style={{
-                    padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`,
-                    fontSize: 14, fontFamily: font, color: TEXT, outline: "none",
-                    background: WHITE, resize: "vertical"
-                  }}
-                  onFocus={e => e.target.style.borderColor = TEAL}
-                  onBlur={e => e.target.style.borderColor = BORDER}
-                />
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Drop zone */}
-              <div
-                onClick={() => fileRef.current?.click()}
-                style={{
-                  border: `2px dashed ${csvFile ? TEAL : BORDER}`,
-                  borderRadius: 16, padding: "36px 24px", textAlign: "center",
-                  cursor: "pointer", background: csvFile ? TEAL_LIGHT : "#fafcfb",
-                  transition: "all 0.2s ease"
-                }}
-              >
-                <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" onChange={handleCsvSelect} style={{ display: "none" }} />
-                {csvFile ? (
-                  <>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, margin: "0 auto 12px",
-                      background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{csvFile.name}</div>
-                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>{csvPreview?.total || 0} clients found</div>
-                    <div style={{ fontSize: 12, color: TEAL, marginTop: 6, fontWeight: 600 }}>Click to replace file</div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, margin: "0 auto 12px",
-                      background: "#f0f4f3", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC
-                    }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Upload CSV File</div>
-                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Click to browse or drag and drop</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 8 }}>Accepts .csv files with columns: name, email, phone, program</div>
-                  </>
-                )}
-              </div>
-
-              {/* CSV Preview */}
-              {csvPreview && (
-                <div style={{ borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
-                  <div style={{ padding: "10px 14px", background: "#fafcfb", borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 700, color: TEXT }}>
-                    Preview ({csvPreview.total} rows)
-                  </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                      <thead>
-                        <tr>
-                          {csvPreview.headers.map((h, i) => (
-                            <th key={i} style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: TEXT_SEC, borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {csvPreview.rows.map((row, ri) => (
-                          <tr key={ri}>
-                            {row.map((cell, ci) => (
-                              <td key={ci} style={{ padding: "8px 12px", color: TEXT, borderBottom: ri < csvPreview.rows.length - 1 ? `1px solid ${BORDER}` : "none", whiteSpace: "nowrap" }}>{cell}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {csvPreview.total > 5 && (
-                    <div style={{ padding: "8px 14px", fontSize: 11, color: TEXT_SEC, textAlign: "center", borderTop: `1px solid ${BORDER}`, background: "#fafcfb" }}>
-                      Showing 5 of {csvPreview.total} rows
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Template download hint */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "12px 16px", borderRadius: 12,
-                background: TEAL_LIGHT, border: "1px solid #b6dfd8"
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <span style={{ fontSize: 12, color: TEAL, fontWeight: 500 }}>
-                  CSV should include columns: <strong>name, email, phone, program</strong>
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: isMobile ? "14px 18px" : "16px 28px",
-          borderTop: `1px solid ${BORDER}`, flexShrink: 0,
-          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10
-        }}>
-          <div onClick={onClose} style={{
-            padding: "10px 20px", borderRadius: 10, cursor: "pointer",
-            fontSize: 13, fontWeight: 600, color: TEXT_SEC,
-            border: `1px solid ${BORDER}`, background: WHITE
-          }}>Cancel</div>
-          <div onClick={handleSubmit} style={{
-            padding: "10px 24px", borderRadius: 10, cursor: "pointer",
-            fontSize: 13, fontWeight: 600, color: "#fff",
-            background: (mode === "single" && form.name) || (mode === "csv" && csvFile) ? TEAL : "#b0c4c0",
-            boxShadow: (mode === "single" && form.name) || (mode === "csv" && csvFile) ? "0 2px 8px rgba(43,122,120,0.3)" : "none",
-            pointerEvents: (mode === "single" && form.name) || (mode === "csv" && csvFile) ? "auto" : "none",
-            transition: "all 0.15s ease"
-          }}>
-            {mode === "csv" ? `Import ${csvPreview?.total || 0} Clients` : "Add Client"}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-/* ══════��════════════════════════════════════
-   CANVAS DATA GENERATORS
-   ═══════════════════════════════════════════ */
-
-function generateMealPlan(clientName) {
-  const meals = {
-    breakfast: [
-      { name: "Greek Yogurt Bowl", calories: 350, protein: 25, carbs: 35, fat: 12 },
-      { name: "Eggs & Avocado Toast", calories: 420, protein: 22, carbs: 30, fat: 24 },
-      { name: "Protein Oatmeal", calories: 380, protein: 28, carbs: 45, fat: 10 },
-      { name: "Smoothie Bowl", calories: 340, protein: 24, carbs: 42, fat: 8 },
-      { name: "Veggie Omelet", calories: 360, protein: 26, carbs: 12, fat: 22 },
-      { name: "Cottage Cheese Parfait", calories: 320, protein: 30, carbs: 28, fat: 8 },
-      { name: "Protein Pancakes", calories: 400, protein: 28, carbs: 40, fat: 14 },
-    ],
-    lunch: [
-      { name: "Grilled Chicken Salad", calories: 450, protein: 42, carbs: 20, fat: 22 },
-      { name: "Turkey Wrap", calories: 480, protein: 35, carbs: 42, fat: 18 },
-      { name: "Salmon Quinoa Bowl", calories: 520, protein: 38, carbs: 45, fat: 20 },
-      { name: "Tuna Poke Bowl", calories: 440, protein: 36, carbs: 38, fat: 16 },
-      { name: "Chicken Stir-Fry", calories: 460, protein: 40, carbs: 35, fat: 18 },
-      { name: "Mediterranean Bowl", calories: 490, protein: 32, carbs: 48, fat: 22 },
-      { name: "Shrimp Tacos", calories: 420, protein: 34, carbs: 36, fat: 16 },
-    ],
-    dinner: [
-      { name: "Baked Salmon & Veggies", calories: 520, protein: 44, carbs: 25, fat: 26 },
-      { name: "Lean Beef Stir-Fry", calories: 480, protein: 38, carbs: 32, fat: 22 },
-      { name: "Grilled Chicken Breast", calories: 440, protein: 46, carbs: 18, fat: 18 },
-      { name: "Turkey Meatballs", calories: 500, protein: 40, carbs: 35, fat: 20 },
-      { name: "Herb Roasted Cod", calories: 380, protein: 42, carbs: 15, fat: 16 },
-      { name: "Chicken Curry", calories: 520, protein: 36, carbs: 45, fat: 24 },
-      { name: "Pork Tenderloin", calories: 460, protein: 44, carbs: 22, fat: 20 },
-    ],
-    snack: [
-      { name: "Protein Shake", calories: 180, protein: 25, carbs: 8, fat: 4 },
-      { name: "Greek Yogurt", calories: 150, protein: 15, carbs: 12, fat: 4 },
-      { name: "Almonds & Apple", calories: 220, protein: 6, carbs: 22, fat: 14 },
-      { name: "Protein Bar", calories: 200, protein: 20, carbs: 18, fat: 8 },
-      { name: "Cottage Cheese", calories: 160, protein: 18, carbs: 6, fat: 5 },
-      { name: "Hummus & Veggies", calories: 180, protein: 8, carbs: 20, fat: 10 },
-      { name: "Hard Boiled Eggs", calories: 140, protein: 12, carbs: 2, fat: 10 },
-    ]
-  };
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  return {
-    type: "mealPlan",
-    client: clientName,
-    weekStart: "Mar 10",
-    days: days.map((day, i) => ({
-      day,
-      meals: [
-        { type: "breakfast", ...meals.breakfast[i % meals.breakfast.length] },
-        { type: "lunch", ...meals.lunch[i % meals.lunch.length] },
-        { type: "dinner", ...meals.dinner[i % meals.dinner.length] },
-        { type: "snack", ...meals.snack[i % meals.snack.length] },
-      ]
-    })),
-    weeklyTargets: { calories: 1800, protein: 120, carbs: 180, fat: 50 }
-  };
-}
-
-function generateWorkoutProgram(clientName) {
-  const exercises = {
-    push: [
-      { name: "Bench Press", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
-      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", weight: "45 lbs", rest: "60s" },
-      { name: "Cable Flyes", sets: 3, reps: "12-15", weight: "30 lbs", rest: "45s" },
-      { name: "Overhead Press", sets: 3, reps: "8-10", weight: "85 lbs", rest: "90s" },
-      { name: "Tricep Pushdowns", sets: 3, reps: "12-15", weight: "40 lbs", rest: "45s" },
-    ],
-    pull: [
-      { name: "Deadlift", sets: 4, reps: "5-6", weight: "225 lbs", rest: "120s" },
-      { name: "Barbell Rows", sets: 4, reps: "8-10", weight: "135 lbs", rest: "90s" },
-      { name: "Lat Pulldowns", sets: 3, reps: "10-12", weight: "120 lbs", rest: "60s" },
-      { name: "Face Pulls", sets: 3, reps: "15-20", weight: "35 lbs", rest: "45s" },
-      { name: "Bicep Curls", sets: 3, reps: "12-15", weight: "25 lbs", rest: "45s" },
-    ],
-    legs: [
-      { name: "Squats", sets: 4, reps: "6-8", weight: "185 lbs", rest: "120s" },
-      { name: "Romanian Deadlift", sets: 3, reps: "10-12", weight: "135 lbs", rest: "90s" },
-      { name: "Leg Press", sets: 3, reps: "12-15", weight: "270 lbs", rest: "60s" },
-      { name: "Walking Lunges", sets: 3, reps: "12 each", weight: "30 lbs", rest: "60s" },
-      { name: "Calf Raises", sets: 4, reps: "15-20", weight: "180 lbs", rest: "45s" },
-    ],
-    cardio: [
-      { name: "Treadmill Walk", sets: 1, reps: "30 min", weight: "3.5 mph", rest: "-" },
-      { name: "Stretching", sets: 1, reps: "15 min", weight: "-", rest: "-" },
-    ]
-  };
-  return {
-    type: "workout",
-    client: clientName,
-    programName: "Strength Building - Week 1",
-    days: [
-      { day: "Monday", focus: "Upper Body Push", exercises: exercises.push },
-      { day: "Tuesday", focus: "Lower Body", exercises: exercises.legs },
-      { day: "Wednesday", focus: "Active Recovery", exercises: exercises.cardio },
-      { day: "Thursday", focus: "Upper Body Pull", exercises: exercises.pull },
-      { day: "Friday", focus: "Lower Body", exercises: exercises.legs },
-      { day: "Saturday", focus: "Upper Body Push", exercises: exercises.push },
-      { day: "Sunday", focus: "Rest Day", exercises: [] },
-    ]
-  };
-}
-
-function generateMessageSequence(clientName) {
-  const firstName = clientName.split(" ")[0];
-  return {
-    type: "messageSequence",
-    client: clientName,
-    campaignName: "Check-In Series",
-    messages: [
-      { day: 0, type: "sms", subject: null, body: `Hey ${firstName}! Just checking in - how are you feeling about your progress this week? Let me know if there's anything on your mind.`, status: "draft" },
-      { day: 2, type: "email", subject: `Your Weekly Check-In, ${firstName}`, body: `Hi ${firstName},\n\nI wanted to reach out and see how things are going with your nutrition plan. Remember, consistency is more important than perfection!\n\nA few quick questions:\n- How are you feeling energy-wise?\n- Any challenges with meal prep?\n- Are you staying hydrated?\n\nLooking forward to hearing from you!\n\nBest,\nYour Coach`, status: "draft" },
-      { day: 5, type: "sms", body: `Quick reminder ${firstName} - don't forget to log your meals today! You're doing great. 💪`, status: "draft" },
-      { day: 7, type: "email", subject: "End of Week Reflection", body: `Hey ${firstName},\n\nAs we wrap up this week, I'd love to hear your thoughts:\n\n1. What went well?\n2. What was challenging?\n3. What's one thing you want to focus on next week?\n\nRemember, every week is a new opportunity to grow!\n\nKeep it up,\nYour Coach`, status: "draft" },
-    ]
-  };
-}
-
-function generateProgressReport(clientName, clientData) {
-  const firstName = clientName.split(" ")[0];
-  return {
-    type: "report",
-    client: clientName,
-    title: `Weekly Progress Report - ${firstName}`,
-    sections: [
-      { id: "summary", title: "Week Summary", content: `${firstName} had a ${clientData?.engagementScore > 80 ? "strong" : "moderate"} week with ${clientData?.mealsLogged || 0} meals logged. ${clientData?.narrative || "Overall progress is on track."}` },
-      { id: "metrics", title: "Key Metrics", data: { mealsLogged: clientData?.mealsLogged || 0, proteinAvg: clientData?.proteinAvg || 0, proteinTarget: clientData?.proteinTarget || 100, weightTrend: clientData?.weightTrend || 0, steps: clientData?.steps || 0 } },
-      { id: "goals", title: "Goal Progress", content: `Current weight trend: ${clientData?.weightTrend > 0 ? "+" : ""}${clientData?.weightTrend || 0} lbs. Protein intake averaging ${clientData?.proteinAvg || 0}g daily against a target of ${clientData?.proteinTarget || 100}g.` },
-      { id: "recommendations", title: "Recommendations", items: clientData?.coachAngle ? [clientData.coachAngle] : ["Continue current approach", "Focus on consistency"] }
-    ]
-  };
-}
-
-/* ═══════════════════════════════════════════
-   CANVAS COMPONENTS - Calendar View
-   ══════════════════════���═════�����═══���������������═���������════════ */
+/* ═════════════════════════════════════════════
+   SEND REPORT MODAL
+   ═════════════════════════════════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -6638,15 +8006,16 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
     
     // Data Cards Widget
     if (widget.id === "dataCards") {
+      const weightChange = client.assessment && client.current ? (client.current.bodyweight - client.assessment.bodyweight).toFixed(1) : "-2.5";
       const cards = [
-        { label: "Meals Logged", value: client.mealsLogged || 18, unit: "/21", color: "#ef6c3e" },
-        { label: "Avg Steps", value: ((client.steps || 8000) / 1000).toFixed(1), unit: "k", color: "#3aafa9" },
-        { label: "Workouts", value: client.workoutDays || 4, unit: "/5", color: TEAL },
-        { label: "Weight Change", value: -4.5, unit: " lbs", color: ALERT_GREEN }
+        { label: "Sessions This Week", value: client.sessionsThisWeek || 2, unit: `/${client.sessionsPerWeek || 3}`, color: TEAL },
+        { label: "Total Sessions", value: client.totalSessions || 12, unit: "", color: "#3aafa9" },
+        { label: "Session Streak", value: client.streak?.current || 6, unit: "", color: MINT },
+        { label: "Weight Change", value: weightChange, unit: " lbs", color: parseFloat(weightChange) < 0 ? ALERT_GREEN : "#3aafa9" }
       ];
       return (
         <WidgetWrapper key={widget.id}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Weekly Metrics</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Training Metrics</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
             {cards.map((c, i) => (
               <div key={i} style={{ padding: 16, borderRadius: 14, background: `${c.color}08`, border: `1px solid ${c.color}20`, textAlign: "center" }}>
@@ -6659,16 +8028,25 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
       );
     }
     
-    // Calendar Widget
+    // Calendar Widget - Sessions Calendar
     if (widget.id === "calendar") {
       const dayNames = ["M","T","W","T","F","S","S"];
+      // Generate session data based on client's sessions
+      const sessions = client.sessions || [];
       const calDays = Array.from({ length: 28 }).map((_, i) => {
+        const dayOfWeek = i % 7;
+        // Typically training days are Mon/Wed/Fri or Tue/Thu/Sat
+        const isTrainingDay = dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4;
         const rand = Math.random();
-        return { logged: rand > 0.3, meals: rand > 0.7 ? 3 : rand > 0.4 ? 2 : 1 };
+        return { 
+          completed: isTrainingDay && rand > 0.25,
+          rest: !isTrainingDay,
+          intensity: rand > 0.6 ? "high" : rand > 0.3 ? "medium" : "light"
+        };
       });
       return (
         <WidgetWrapper key={widget.id}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Daily Activity</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Training Calendar</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
             {dayNames.map((d, i) => (
               <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC, marginBottom: 4 }}>{d}</div>
@@ -6676,17 +8054,21 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
             {calDays.map((day, i) => (
               <div key={i} style={{
                 aspectRatio: "1", borderRadius: 8,
-                background: day.logged ? (day.meals === 3 ? TEAL : day.meals === 2 ? `${TEAL}80` : `${TEAL}40`) : "#f0f4f3",
-                display: "flex", alignItems: "center", justifyContent: "center"
+                background: day.rest ? "#f8f9fa" : day.completed ? 
+                  (day.intensity === "high" ? TEAL : day.intensity === "medium" ? `${TEAL}90` : `${TEAL}50`) : "#f0f4f3",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: day.rest ? `1px dashed ${BORDER}` : "none"
               }}>
-                {day.meals === 3 && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}
+                {day.completed && day.intensity === "high" && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>
+                )}
               </div>
             ))}
           </div>
           <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center" }}>
-            {[{c: TEAL, l: "3 meals"}, {c: `${TEAL}80`, l: "2 meals"}, {c: `${TEAL}40`, l: "1 meal"}].map((leg, i) => (
+            {[{c: TEAL, l: "High"}, {c: `${TEAL}90`, l: "Med"}, {c: `${TEAL}50`, l: "Light"}, {c: "#f8f9fa", l: "Rest"}].map((leg, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 3, background: leg.c }}/>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: leg.c, border: leg.l === "Rest" ? `1px dashed ${BORDER}` : "none" }}/>
                 <span style={{ fontSize: 10, color: TEXT_SEC }}>{leg.l}</span>
               </div>
             ))}
@@ -6697,6 +8079,8 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
     
     // Milton Insight Widget
     if (widget.id === "insight") {
+      const firstName = client.name?.split(" ")[0] || "This client";
+      const insightText = client.insight || `${firstName} has shown strong consistency with ${client.totalSessions || 12} sessions completed. Focus on progressive overload for continued strength gains.`;
       return (
         <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #eef9f6, #e8f5f0)">
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -6706,10 +8090,13 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Milton's Insight</div>
-              <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>
-                {client.name?.split(" ")[0] || "This client"} has shown excellent consistency this week. Protein intake is improving but still 15% below target — recommending a post-workout shake habit. Weekend logging remains the biggest opportunity.
-              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Milton's Training Insight</div>
+              <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>{insightText}</div>
+              {client.coachAngle && (
+                <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 8, fontStyle: "italic" }}>
+                  Coach action: {client.coachAngle}
+                </div>
+              )}
             </div>
           </div>
         </WidgetWrapper>
@@ -7084,9 +8471,9 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═══════════════════════════════════════════
-   MAIN DASHBOARD
-   ═══════════════════════════════════���═══════ */
+/* ══════════════���══════════════════════════════
+   MAIN DASHBOARD COMPONENT
+   ═════════════════════════════════════════════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
@@ -7920,7 +9307,7 @@ Remember: Be specific, be brief, be helpful.`;
             </div>
           </div>
 
-          {/* ── Card 2: Engagement Rate - Dot Grid ── */}
+          {/* ── Card 2: Attendance Rate - Dot Grid ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
@@ -7928,7 +9315,7 @@ Remember: Be specific, be brief, be helpful.`;
             transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
             minWidth: 0, overflow: "hidden"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Engagement Rate</div>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Attendance Rate</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
               <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>83%</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
@@ -8192,39 +9579,37 @@ Remember: Be specific, be brief, be helpful.`;
                   <Avatar name={client.name} size={48} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <AlertBadge type={client.alertType} label={client.alert} />
-                    <StreakBadge streak={client.streaks} compact />
+                    <StreakBadge streak={client.streak?.current || client.streaks || 0} compact />
                   </div>
                 </div>
 
-                {/* Narrative */}
-                {client.narrative && (
-                  <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, fontStyle: "italic", padding: "0 2px" }}>
-                    "{client.narrative}"
+                {/* Goal */}
+                {client.goals?.primary && (
+                  <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.5, padding: "0 2px" }}>
+                    Goal: <span style={{ fontWeight: 600, color: TEAL }}>{client.goals.primary}</span>
                   </div>
                 )}
 
-
-                {/* Row 3: Progress bar full width */}
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 6 }}>
-                    {client.progressLabel ? (
-                      <span>100% — <span style={{ color: TEAL, fontWeight: 700 }}>{client.progressLabel}</span></span>
-                    ) : (
-                      <span>Report Progress: <span style={{ color: TEXT, fontWeight: 700 }}>{client.progress}% complete</span></span>
-                    )}
+                {/* Row 3: Sessions progress */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
+                    Sessions: <span style={{ color: TEAL, fontWeight: 700 }}>{client.sessionsThisWeek || 0}/{client.sessionsPerWeek || 3}</span> this week
                   </div>
-                  <div style={{ width: "100%", height: 6, borderRadius: 3, background: "#e8f0ee" }}>
-                    <div style={{
-                      width: `${client.progress || 0}%`, height: "100%", borderRadius: 3,
-                      background: client.progressLabel
-                        ? `linear-gradient(90deg, ${SAGE}, ${MINT})`
-                        : `linear-gradient(90deg, ${TEAL}, ${SAGE})`,
-                      transition: "width 1s ease"
-                    }} />
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {client.totalSessions || 0} total
                   </div>
+                </div>
+                <div style={{ width: "100%", height: 6, borderRadius: 3, background: "#e8f0ee" }}>
+                  <div style={{
+                    width: `${Math.min(100, ((client.sessionsThisWeek || 0) / (client.sessionsPerWeek || 3)) * 100)}%`, 
+                    height: "100%", borderRadius: 3,
+                    background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                    transition: "width 1s ease"
+                  }} />
                 </div>
               </div>
             ); })}
@@ -8237,13 +9622,13 @@ Remember: Be specific, be brief, be helpful.`;
             display: "flex", flexDirection: "column", minHeight: 0
           }}>
             <div style={{
-              display: "grid", gridTemplateColumns: "2fr 1.1fr 1fr 1fr 36px",
+              display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
               color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
               flexShrink: 0
             }}>
-              <span>Client Name</span><span>Alerts</span><span>Data Connections</span><span>Report Progress</span><span />
+              <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
@@ -8251,7 +9636,7 @@ Remember: Be specific, be brief, be helpful.`;
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
                 style={{
-                  display: "grid", gridTemplateColumns: "2fr 1.1fr 1fr 1fr 36px",
+                  display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
                   padding: "14px 24px", alignItems: "center",
                   borderBottom: i < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                   background: hoveredClient === i ? "#f7faf9" : "transparent",
@@ -8261,19 +9646,18 @@ Remember: Be specific, be brief, be helpful.`;
                   <Avatar name={client.name} size={34} />
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</div>
-                    {client.narrative && <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2, fontStyle: "italic", lineHeight: 1.4, maxWidth: 260 }}>"{client.narrative}"</div>}
+                    <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertBadge type={client.alertType} label={client.alert} /><StreakBadge streak={client.streaks} compact /></div>
-                <div style={{ display: "flex", paddingLeft: 4 }}>
-                  {client.connectors.map((c, j) => <ConnectorDot key={j} type={c} first={j === 0} />)}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertBadge type={client.alertType} label={client.alert} /><StreakBadge streak={client.streak?.current || client.streaks || 0} compact /></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{client.sessionsThisWeek || 0}</span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC }}>/ {client.sessionsPerWeek || 3}</span>
                 </div>
                 <div>
-                  {client.progressLabel ? (
-                    <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>{client.progressLabel}</span>
-                  ) : (
-                    <ProgressBar value={client.progress || 0} />
-                  )}
+                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>
+                    {client.goals?.primary || "Build Strength"}
+                  </span>
                 </div>
                 <div style={{ color: TEXT_SEC, display: "flex", justifyContent: "center" }}>
                   <NavIcon icon="chevron" size={16} />
