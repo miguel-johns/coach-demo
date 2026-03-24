@@ -3533,15 +3533,27 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </div>
               
               {/* Quick Stats */}
-              <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 20 : 40, flexWrap: "wrap" }}>
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(3, auto)",
+                gap: isMobile ? 12 : 40,
+                justifyContent: isMobile ? "stretch" : "center",
+                maxWidth: isMobile ? "100%" : "none"
+              }}>
                 {[
-                  { label: "Current Streak", value: currentStreak, suffix: " sessions" },
-                  { label: "Best Streak", value: bestStreak, suffix: " sessions" },
+                  { label: "Current Streak", value: currentStreak, suffix: isMobile ? "" : " sessions" },
+                  { label: "Best Streak", value: bestStreak, suffix: isMobile ? "" : " sessions" },
                   { label: "This Week", value: `${sessionsThisWeek}/${sessionsPerWeek}`, suffix: "" },
                 ].map((stat, i) => (
-                  <div key={i} style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{stat.value}{stat.suffix}</div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+                  <div key={i} style={{ 
+                    textAlign: "center",
+                    padding: isMobile ? "12px 8px" : "0",
+                    background: isMobile ? `${WHITE}80` : "transparent",
+                    borderRadius: isMobile ? 12 : 0,
+                    border: isMobile ? `1px solid ${BORDER}` : "none"
+                  }}>
+                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{stat.value}{stat.suffix}</div>
+                    <div style={{ fontSize: isMobile ? 9 : 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -3601,17 +3613,17 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                     }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>{m.label}</div>
                       
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 8 : 12, marginBottom: 12 }}>
                         <div>
-                          <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
-                          <div style={{ fontSize: 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: 14 }}>{m.unit}</span></div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, marginBottom: 2 }}>Before</div>
+                          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT_SEC }}>{m.before}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
                         </div>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                        <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
                           <path d="M5 12h14M14 7l5 5-5 5"/>
                         </svg>
                         <div>
-                          <div style={{ fontSize: 11, color: TEAL, marginBottom: 2 }}>Now</div>
-                          <div style={{ fontSize: 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: 14 }}>{m.unit}</span></div>
+                          <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, marginBottom: 2 }}>Now</div>
+                          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: TEAL }}>{m.after}<span style={{ fontSize: isMobile ? 12 : 14 }}>{m.unit}</span></div>
                         </div>
                       </div>
                       
@@ -3669,11 +3681,11 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                       
                       <div style={{ fontSize: 14, fontWeight: 700, color: color, marginBottom: 16 }}>{liftNames[key]}</div>
                       
-                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 16, color: TEXT_SEC, textDecoration: "line-through" }}>{baseline1RM}</span>
-                        <svg width="20" height="12" viewBox="0 0 24 12" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
-                        <span style={{ fontSize: 36, fontWeight: 800, color: color }}>{currentEst}</span>
-                        <span style={{ fontSize: 14, color: TEXT_SEC }}>lbs</span>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: isMobile ? 6 : 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, textDecoration: "line-through" }}>{baseline1RM}</span>
+                        <svg width={isMobile ? 16 : 20} height={isMobile ? 10 : 12} viewBox="0 0 24 12" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"><path d="M5 6h14M14 1l5 5-5 5"/></svg>
+                        <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: color }}>{currentEst}</span>
+                        <span style={{ fontSize: isMobile ? 12 : 14, color: TEXT_SEC }}>lbs</span>
                       </div>
                       
                       <div style={{ fontSize: 12, color: TEXT_SEC }}>Estimated 1RM</div>
@@ -3723,18 +3735,18 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 <div>
                   {/* Progress Bar */}
                   <div style={{ marginBottom: 32 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-                      <div style={{ textAlign: "left" }}>
-                        <div style={{ fontSize: 11, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Started</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: TEXT_SEC }}>{startWeight} lbs</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: isMobile ? 8 : 16 }}>
+                      <div style={{ textAlign: "left", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Started</div>
+                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: TEXT_SEC }}>{startWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
                       </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 11, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: TEAL }}>{currentWeight} lbs</div>
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current</div>
+                        <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: TEAL }}>{currentWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: MINT }}>{goalWeight} lbs</div>
+                      <div style={{ textAlign: "right", flex: 1 }}>
+                        <div style={{ fontSize: isMobile ? 10 : 11, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
+                        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: MINT }}>{goalWeight} <span style={{ fontSize: isMobile ? 12 : 14 }}>lbs</span></div>
                       </div>
                     </div>
                     
@@ -3753,33 +3765,47 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                       }} />
                     </div>
                     
-                    <div style={{ textAlign: "center", marginTop: 16 }}>
-                      <span style={{ fontSize: 28, fontWeight: 800, color: TEAL }}>{progressPct}%</span>
-                      <span style={{ fontSize: 16, color: TEXT_SEC, marginLeft: 8 }}>to goal</span>
+                    <div style={{ textAlign: "center", marginTop: isMobile ? 12 : 16 }}>
+                      <span style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: TEAL }}>{progressPct}%</span>
+                      <span style={{ fontSize: isMobile ? 14 : 16, color: TEXT_SEC, marginLeft: 8 }}>to goal</span>
                     </div>
                   </div>
                   
                   {/* Milestones */}
-                  <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 16 : 32, flexWrap: "wrap" }}>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)",
+                    gap: isMobile ? 12 : 32,
+                    justifyContent: isMobile ? "stretch" : "center"
+                  }}>
                     {[
                       { icon: "check", label: "Started Program", done: true },
                       { icon: "check", label: `Lost ${progressMade.toFixed(1)} lbs`, done: progressMade > 0 },
                       { icon: progressPct >= 50 ? "check" : "circle", label: "Halfway Point", done: progressPct >= 50 },
                       { icon: progressPct >= 100 ? "check" : "target", label: "Goal Reached", done: progressPct >= 100 },
                     ].map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div key={i} style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 8,
+                        padding: isMobile ? "10px 12px" : "0",
+                        background: isMobile ? `${WHITE}60` : "transparent",
+                        borderRadius: isMobile ? 12 : 0,
+                        border: isMobile ? `1px solid ${BORDER}` : "none"
+                      }}>
                         <div style={{
-                          width: 28, height: 28, borderRadius: "50%",
+                          width: isMobile ? 24 : 28, height: isMobile ? 24 : 28, borderRadius: "50%",
                           background: m.done ? TEAL : "#e8f0ee",
-                          display: "flex", alignItems: "center", justifyContent: "center"
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          flexShrink: 0
                         }}>
                           {m.done ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                            <svg width={isMobile ? 12 : 14} height={isMobile ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
                           ) : (
                             <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEXT_SEC }} />
                           )}
                         </div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: m.done ? TEXT : TEXT_SEC }}>{m.label}</span>
+                        <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 600, color: m.done ? TEXT : TEXT_SEC }}>{m.label}</span>
                       </div>
                     ))}
                   </div>
@@ -4023,7 +4049,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               <div>
                 <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 700, color: TEXT }}>Assessment Comparison</div>
                 <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-                  Baseline: {assessment.date} • {daysSinceAssessment} days ago
+                  Baseline: {assessment.date} �� {daysSinceAssessment} days ago
                 </div>
               </div>
               {daysSinceAssessment > 56 && (
