@@ -4100,13 +4100,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      {reportBlocks.includes("top3") && <ReportBlock id="top3" label="Last Session" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      <div style={{
-        display: "flex", flexDirection: isMobile ? "column" : "row",
-        gap: isMobile ? 16 : 16, alignItems: "stretch"
-      }}>
-
-      {/* ─── Last Session Summary ─── */}
+      {/* ─── LAST SESSION ─── */}
       {(() => {
         const session = lastSession;
         if (!session) {
@@ -4114,9 +4108,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <div style={{
               background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)`,
               borderRadius: 20, border: `1px solid ${BORDER}`,
-              padding: isMobile ? "20px" : "20px 22px",
+              padding: isMobile ? "20px" : "24px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0,
               display: "flex", alignItems: "center", justifyContent: "center"
             }}>
               <div style={{ textAlign: "center", color: TEXT_SEC }}>
@@ -4135,46 +4128,41 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         const totalVolume = session.exercises.reduce((sum, ex) => 
           sum + ex.sets.reduce((setSum, s) => setSum + (s.weight * s.reps), 0), 0
         );
-        const avgRPE = session.exercises.reduce((sum, ex) => 
-          sum + ex.sets.reduce((setSum, s) => setSum + (s.rpe || 7), 0) / ex.sets.length, 0
-        ) / session.exercises.length;
 
         return (
           <div style={{
-            background: `linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)`,
-            borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "20px" : "20px 22px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            flex: isMobile ? "unset" : "1.2 1 0", minWidth: 0
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "20px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 700, color: TEXT }}>Last Session: {session.type}</div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{session.date} • {session.duration} min</div>
-                </div>
-                <div style={{ padding: "4px 10px", borderRadius: 16, background: `${TEAL}12`, fontSize: 11, fontWeight: 700, color: TEAL }}>
-                  {Math.round(totalVolume).toLocaleString()} lbs volume
-                </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12, background: `${TEAL}12`,
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                  <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
+                  <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Last Session: {session.type}</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.date} - {session.duration} min</div>
+              </div>
+              <div style={{ padding: "6px 12px", borderRadius: 12, background: `${TEAL}10`, fontSize: 12, fontWeight: 700, color: TEAL }}>
+                {Math.round(totalVolume).toLocaleString()} lbs
               </div>
             </div>
 
-            {/* Exercise list */}
-            <div style={{
-              borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`,
-              padding: isMobile ? "12px" : "14px", maxHeight: 220, overflowY: "auto"
-            }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
               {session.exercises.slice(0, 4).map((ex, i) => (
-                <div key={i} style={{ 
-                  padding: "10px 0", 
-                  borderBottom: i < session.exercises.length - 1 && i < 3 ? `1px solid ${BORDER}` : "none" 
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{ex.name}</div>
+                <div key={i} style={{ padding: "14px 16px", borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 8 }}>{ex.name}</div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {ex.sets.map((set, j) => (
                       <div key={j} style={{
-                        padding: "4px 8px", borderRadius: 6, background: "#f7faf9",
-                        fontSize: 11, fontWeight: 500, color: TEXT_SEC
+                        padding: "4px 8px", borderRadius: 6, background: WHITE,
+                        fontSize: 11, fontWeight: 500, color: TEXT_SEC, border: `1px solid ${BORDER}`
                       }}>
                         {set.weight > 0 ? `${set.weight}x${set.reps}` : `BW x${set.reps}`}
                         {set.rpe && <span style={{ color: TEAL, marginLeft: 4 }}>@{set.rpe}</span>}
@@ -4183,558 +4171,15 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   </div>
                 </div>
               ))}
-              {session.exercises.length > 4 && (
-                <div style={{ fontSize: 12, color: TEXT_SEC, paddingTop: 8 }}>
-                  +{session.exercises.length - 4} more exercises
-                </div>
-              )}
             </div>
-
-            {/* Session notes */}
-            {session.notes && (
-              <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}20` }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Session Notes</div>
-                <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.4 }}>{session.notes}</div>
+            {session.exercises.length > 4 && (
+              <div style={{ fontSize: 12, color: TEXT_SEC, paddingTop: 12, textAlign: "center" }}>
+                +{session.exercises.length - 4} more exercises
               </div>
             )}
           </div>
         );
       })()}
-
-
-      </div>{/* end last session row */}
-      </ReportBlock>}
-
-      {reportBlocks.includes("rule30") && <ReportBlock id="rule30" label="Strength Progress" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      {(() => {
-        const baselines = client.assessment?.strengthBaselines;
-        const liftColors = { squat: TEAL, deadlift: "#3aafa9", benchPress: MINT, overheadPress: "#8e7cc3" };
-        const liftNames = { squat: "Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
-        
-        // Calculate current estimated maxes from recent sessions
-        const getCurrentMax = (liftName) => {
-          const sessions = client.sessions || [];
-          for (const session of sessions) {
-            for (const ex of session.exercises || []) {
-              if (ex.name.toLowerCase().includes(liftName.toLowerCase().split(" ")[0])) {
-                const bestSet = ex.sets.reduce((best, set) => 
-                  (set.weight * set.reps) > (best.weight * best.reps) ? set : best, { weight: 0, reps: 0 });
-                // Estimate 1RM using Brzycki formula
-                if (bestSet.reps <= 10) {
-                  return Math.round(bestSet.weight * (36 / (37 - bestSet.reps)));
-                }
-                return Math.round(bestSet.weight * 1.3);
-              }
-            }
-          }
-          return null;
-        };
-
-        if (!baselines) {
-          return (
-            <div style={{
-              background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)`,
-              borderRadius: 20, border: `1px solid ${BORDER}`,
-              padding: isMobile ? "20px" : "24px 28px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              textAlign: "center", color: TEXT_SEC
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No strength baselines</div>
-              <div style={{ fontSize: 12 }}>Complete an assessment to track lift progression</div>
-            </div>
-          );
-        }
-
-        return (
-          <div style={{
-            background: `linear-gradient(145deg, #faf9f7, #f5f8f4, #f8faf7)`,
-            borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "20px" : "24px 28px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>Strength Progress</div>
-              <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Baseline vs estimated current 1RM</div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
-              {Object.entries(baselines).map(([key, val]) => {
-                const baseline1RM = Math.round(val.weight * (36 / (37 - val.reps)));
-                const currentEst = getCurrentMax(liftNames[key]) || Math.round(baseline1RM * (1 + Math.random() * 0.15));
-                const improvement = currentEst - baseline1RM;
-                const improvementPct = Math.round((improvement / baseline1RM) * 100);
-                const color = liftColors[key] || TEAL;
-                
-                return (
-                  <div key={key} style={{
-                    borderRadius: 16, border: `1px solid ${BORDER}`, padding: isMobile ? "14px 10px" : "18px 14px",
-                    background: "#fafcfb", textAlign: "center",
-                    display: "flex", flexDirection: "column", alignItems: "center"
-                  }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 8 }}>{liftNames[key]}</div>
-                    <div style={{ 
-                      width: 60, height: 60, borderRadius: "50%", 
-                      background: `${color}15`, border: `3px solid ${color}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      marginBottom: 8
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
-                        <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
-                        <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
-                        <line x1="8" y1="12" x2="16" y2="12"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>Est. 1RM</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: color }}>{currentEst}</div>
-                    <div style={{ fontSize: 11, color: TEXT_SEC }}>lbs</div>
-                    <div style={{ 
-                      marginTop: 6, padding: "2px 8px", borderRadius: 10,
-                      background: improvement > 0 ? `${ALERT_GREEN}15` : "#f5f5f5",
-                      color: improvement > 0 ? ALERT_GREEN : TEXT_SEC,
-                      fontSize: 10, fontWeight: 700
-                    }}>
-                      {improvement > 0 ? "+" : ""}{improvement} lbs ({improvementPct > 0 ? "+" : ""}{improvementPct}%)
-                    </div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4 }}>
-                      Baseline: {val.weight}x{val.reps}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
-      </ReportBlock>}
-
-      {reportBlocks.includes("dataCards") && <ReportBlock id="dataCards" label="Data Cards" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      {/* ─── Data Cards (swipable) ─── */}
-      {(() => {
-        const cards = [
-          {
-            title: "Nutrition", color: "#ef6c3e",
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
-              ]},
-            ],
-          },
-          {
-            title: "Activity", color: TEAL,
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Steps", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: "1", g: "1" },
-                { l: "Active Min", v: "48 min", g: "45 min" }, { l: "Distance", v: "4.1 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "420", g: "500" }, { l: "Floors", v: "10", g: "10" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Steps Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: `${client.workoutDays}`, g: "5" },
-                { l: "Active Min", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "385", g: "500" }, { l: "Floors", v: "8", g: "10" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Steps Avg", v: `${(client.steps - 400).toLocaleString()}`, g: "10,000" }, { l: "Workouts", v: `${client.workoutDays * 4}`, g: "20" },
-                { l: "Active Min", v: "38 min", g: "45 min" }, { l: "Distance", v: "3.4 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "350", g: "500" }, { l: "Floors", v: "7", g: "10" },
-              ]},
-            ],
-          },
-          {
-            title: "Sleep", color: "#8e7cc3",
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Duration", v: "7.2 hrs", g: "8 hrs" }, { l: "Bedtime", v: "10:45 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "5:57 AM" }, { l: "Quality", v: "Good" },
-                { l: "Deep Sleep", v: "1.8 hrs", g: "2 hrs" }, { l: "REM", v: "2.1 hrs", g: "2 hrs" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "6:05 AM" }, { l: "Quality", v: "Good" },
-                { l: "Deep Sleep", v: "1.5 hrs", g: "2 hrs" }, { l: "REM", v: "1.9 hrs", g: "2 hrs" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Duration", v: "6.5 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:30 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "6:10 AM" }, { l: "Quality", v: "Fair" },
-                { l: "Deep Sleep", v: "1.3 hrs", g: "2 hrs" }, { l: "REM", v: "1.7 hrs", g: "2 hrs" },
-              ]},
-            ],
-          },
-        ];
-
-        return (
-          <div>
-      <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 10 }}>Daily Breakdown</div>
-            <div style={{
-              display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory",
-              paddingBottom: 8, WebkitOverflowScrolling: "touch",
-              msOverflowStyle: "none", scrollbarWidth: "none"
-            }}>
-              {cards.map((card, ci) => (
-                <div key={ci} style={{
-                  flex: "none", width: isMobile ? "85vw" : 320,
-                  scrollSnapAlign: "start",
-                  background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden"
-                }}>
-                  {/* Card header */}
-                  <div style={{
-                    padding: "16px 18px 12px", display: "flex", alignItems: "center", gap: 8,
-                    borderBottom: `1px solid ${BORDER}`,
-                    background: `linear-gradient(135deg, ${card.color}08, ${card.color}04)`
-                  }}>
-                    <div style={{
-                      width: 30, height: 30, borderRadius: 8,
-                      background: `${card.color}15`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: card.color
-                    }}>{card.icon}</div>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{card.title}</span>
-                  </div>
-
-                  {/* Period tabs + data */}
-                  <DataCardPeriods periods={card.periods} color={card.color} isMobile={isMobile} />
-                </div>
-              ))}
-            </div>
-            {/* Scroll hint */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
-              {cards.map((_, i) => (
-                <div key={i} style={{ width: i === 0 ? 16 : 6, height: 6, borderRadius: 3, background: i === 0 ? TEAL : "#d4ddd9", transition: "all 0.3s ease" }} />
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      </ReportBlock>}
-
-      {reportBlocks.includes("calendar") && <ReportBlock id="calendar" label="Daily Activity" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      {/* ─── Calendar Heatmap (clickable) ─── */}
-      <div style={{
-        background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "16px" : "20px 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>Daily Activity</div>
-          <div style={{ display: "flex", gap: 10 }}>
-            {[{ label: "Exercise", color: TEAL },{ label: "Steps", color: "#3aafa9" },{ label: "Meals", color: "#ef6c3e" },{ label: "Sleep", color: "#8e7cc3" }].map((l,i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: TEXT_SEC }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: l.color }} />{!isMobile && l.label}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 0 : 16 }}>
-        <div style={{ flex: isMobile ? "unset" : (selectedDay !== null ? "0 0 55%" : "1 1 100%"), transition: "flex 0.25s ease" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 3 : 5, marginBottom: 4 }}>
-          {["M","T","W","T","F","S","S"].map((d,i) => (
-            <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>{d}</div>
-          ))}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 3 : 5 }}>
-          {calDays.map((day, i) => {
-            const dots = [day.exercise && TEAL, day.steps && "#3aafa9", day.meals && "#ef6c3e", day.sleep && "#8e7cc3"].filter(Boolean);
-            const count = dots.length;
-            const isSel = selectedDay === i;
-            return (
-              <div key={i} onClick={() => setSelectedDay(isSel ? null : i)} style={{
-                aspectRatio: "1", borderRadius: isMobile ? 6 : 8,
-                background: isSel ? `${TEAL}18` : count === 4 ? "#eef6f3" : count >= 2 ? "#f5f8f7" : "#fafcfb",
-                border: isSel ? `2px solid ${TEAL}` : `1px solid ${count === 4 ? "#c8e6c9" : BORDER}`,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 2,
-                cursor: "pointer", transition: "all 0.15s ease",
-                transform: isSel ? "scale(1.08)" : "scale(1)"
-              }}>
-                {dots.map((c, j) => (
-                  <div key={j} style={{ width: isMobile ? 4 : 6, height: isMobile ? 4 : 6, borderRadius: "50%", background: c }} />
-                ))}
-                {count === 0 && <div style={{ width: isMobile ? 4 : 6, height: isMobile ? 4 : 6, borderRadius: "50%", border: "1.5px dashed #d0dbd7" }} />}
-              </div>
-            );
-          })}
-        </div>
-        </div>{/* end calendar wrapper */}
-
-        {/* Day Detail Panel */}
-        {selectedDay !== null && (() => {
-          const day = calDays[selectedDay];
-          const d = day.details;
-          const anyData = d.exercise || d.steps || d.meals || d.sleep;
-          return (
-            <div style={{
-              flex: isMobile ? "unset" : "1 1 45%", minWidth: 0,
-              marginTop: isMobile ? 14 : 0, padding: "16px", borderRadius: 14,
-              background: `linear-gradient(135deg, #f7faf9, #f0f8f5)`,
-              border: `1px solid ${BORDER}`, animation: "fadeSlideIn 0.25s ease"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{day.label}</div>
-                <div onClick={() => setSelectedDay(null)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 2 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </div>
-              </div>
-              {!anyData ? (
-                <div style={{ textAlign: "center", padding: "12px 0", color: TEXT_SEC, fontSize: 13 }}>No data logged this day</div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 10 }}>
-                  {d.exercise && (
-                    <div style={{ padding: "12px 14px", borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center", color: TEAL }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Exercise</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, fontSize: 12, flexWrap: "wrap" }}>
-                        <div><span style={{ color: TEXT_SEC }}>Type: </span><strong style={{ color: TEXT }}>{d.exercise.type}</strong></div>
-                        <div><span style={{ color: TEXT_SEC }}>{d.exercise.duration}</span></div>
-                        <div><span style={{ color: TEXT_SEC }}>{d.exercise.intensity}</span></div>
-                      </div>
-                    </div>
-                  )}
-                  {d.steps && (
-                    <div style={{ padding: "12px 14px", borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: "#3aafa915", display: "flex", alignItems: "center", justifyContent: "center", color: "#3aafa9" }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18 Q3 12 6 9 Q8 7 9 8 L11 11 Q12 12.5 14 12.5 L18 12.5 Q21 13 21 16 L21 17 Q21 19 19 19 L5 19 Q3 19 3 18Z"/></svg>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Steps</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, fontSize: 12, flexWrap: "wrap" }}>
-                        <div><strong style={{ color: TEXT }}>{d.steps.count}</strong> <span style={{ color: TEXT_SEC }}>steps</span></div>
-                        <div><span style={{ color: TEXT_SEC }}>{d.steps.distance}</span></div>
-                        <div><span style={{ color: TEXT_SEC }}>{d.steps.active} active</span></div>
-                      </div>
-                    </div>
-                  )}
-                  {d.meals && (
-                    <div style={{ padding: "12px 14px", borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: "#ef6c3e15", display: "flex", alignItems: "center", justifyContent: "center", color: "#ef6c3e" }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Meals</span>
-                        <span style={{ fontSize: 11, color: TEXT_SEC, marginLeft: "auto" }}>{d.meals.logged}/3 logged</span>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5, fontSize: 11 }}>
-                        {[
-                          { l: "Cal", v: d.meals.calories },
-                          { l: "Protein", v: d.meals.protein },
-                          { l: "Carbs", v: d.meals.carbs },
-                          { l: "Fats", v: d.meals.fats },
-                          { l: "Water", v: d.meals.water },
-                        ].map((m,j) => (
-                          <div key={j} style={{ padding: "4px 6px", borderRadius: 6, background: "#faf8f6" }}>
-                            <div style={{ color: TEXT_SEC, fontSize: 9, textTransform: "uppercase" }}>{m.l}</div>
-                            <div style={{ fontWeight: 700, color: TEXT }}>{m.v}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {d.sleep && (
-                    <div style={{ padding: "12px 14px", borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: "#8e7cc315", display: "flex", alignItems: "center", justifyContent: "center", color: "#8e7cc3" }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Sleep</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, fontSize: 12, flexWrap: "wrap" }}>
-                        <div><strong style={{ color: TEXT }}>{d.sleep.duration}</strong></div>
-                        <div><span style={{ color: TEXT_SEC }}>Bed: </span><span style={{ color: TEXT }}>{d.sleep.bedtime}</span></div>
-                        <div><span style={{ color: TEXT_SEC }}>Quality: </span><strong style={{ color: d.sleep.quality === "Great" ? ALERT_GREEN : d.sleep.quality === "Fair" ? "#ef6c3e" : TEXT }}>{d.sleep.quality}</strong></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-        </div>{/* end flex row */}
-      </div>
-
-
-      </ReportBlock>}
-
-      {reportBlocks.includes("insight") && <ReportBlock id="insight" label="Milton Insight" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      {/* ─── Milton Insight + Action ─── */}
-      <div style={{
-        background: `linear-gradient(135deg, rgba(43,122,120,0.06), rgba(92,219,149,0.06))`,
-        borderRadius: 20, border: `1px solid rgba(43,122,120,0.15)`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <div style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Milton Insight</span>
-        </div>
-        <p style={{ fontSize: 14, lineHeight: 1.6, color: TEXT, margin: "0 0 12px" }}>{client.insight}</p>
-        <div style={{
-          padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.7)",
-          border: "1px solid rgba(43,122,120,0.1)", marginBottom: 14
-        }}>
-          <div style={{ fontSize: 11, color: TEAL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>This Week's Focus</div>
-          <p style={{ fontSize: 13, lineHeight: 1.55, color: TEXT, margin: 0, fontWeight: 600 }}>{client.coachAngle}</p>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <ActionBtn label="Generate Report" primary onClick={() => { setShowReport(true); onReportOpen?.(client); }} icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>} />
-          <ActionBtn label="Send Tip" icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 2L11 13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>} />
-          <ActionBtn label="Save Insight" icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>} />
-        </div>
-      </div>
-      </ReportBlock>}
-
-
-      {/* ─── NEW BLOCK: Nutrition Breakdown ─── */}
-      {reportBlocks.includes("nutrition") && <ReportBlock id="nutrition" label="Nutrition Breakdown" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      <div style={{
-        background: `linear-gradient(145deg, #fdf8f4, #faf5ee, #fdf9f5)`,
-        borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Nutrition Breakdown</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Average daily intake — past 7 days</div>
-          </div>
-          <div style={{ padding: "5px 12px", borderRadius: 16, background: "#ef6c3e15", fontSize: 11, fontWeight: 700, color: "#ef6c3e" }}>
-            {client.mealsLogged}/21 meals
-          </div>
-        </div>
-        {(() => {
-          const macros = [
-            { label: "Protein", value: client.proteinAvg || 95, target: client.proteinTarget || 120, unit: "g", color: TEAL },
-            { label: "Carbs", value: 145, target: 180, unit: "g", color: "#3aafa9" },
-            { label: "Fats", value: 52, target: 60, unit: "g", color: "#ef6c3e" },
-            { label: "Calories", value: 1586, target: 1800, unit: "", color: "#8e7cc3" },
-          ];
-          return (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
-              {macros.map((m, i) => {
-                const pct = Math.min(100, Math.round((m.value / m.target) * 100));
-                return (
-                  <div key={i} style={{ padding: "16px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
-                    <div style={{ position: "relative", width: 64, height: 64, margin: "0 auto 10px" }}>
-                      {(() => {
-                        const sz = 64, r = 24, circ = 2 * Math.PI * r;
-                        const off = circ * (1 - pct / 100);
-                        return (
-                          <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-                            <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="6"/>
-                            <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={m.color} strokeWidth="6"
-                              strokeDasharray={circ} strokeDashoffset={off}
-                              strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
-                              style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
-                            />
-                            <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
-                              style={{ fontSize: 13, fontWeight: 800, fill: TEXT }}>{pct}%</text>
-                          </svg>
-                        );
-                      })()}
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: m.color }}>{m.value}{m.unit}</div>
-                    <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{m.label}</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4 }}>Target: {m.target}{m.unit}</div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
-        <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "rgba(239,108,62,0.06)", border: "1px solid rgba(239,108,62,0.12)" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "#ef6c3e" }}>Protein is {Math.round(((client.proteinAvg || 95) / (client.proteinTarget || 120)) * 100)}% of target — encourage post-workout shakes</div>
-        </div>
-      </div>
-      </ReportBlock>}
-
-      {/* ─── NEW BLOCK: Focus Areas ─── */}
-      {reportBlocks.includes("focus") && <ReportBlock id="focus" label="Focus Areas" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-      <div style={{
-        background: `linear-gradient(135deg, rgba(43,122,120,0.04), rgba(92,219,149,0.04))`,
-        borderRadius: 20, border: `1px solid rgba(43,122,120,0.12)`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-          </div>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Focus Areas This Week</div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
-          {[
-            { num: "01", title: "Hit protein target 5/7 days", desc: `Currently averaging ${client.proteinAvg || 95}g — need ${client.proteinTarget || 120}g. Post-workout window is the biggest opportunity.`, color: TEAL, status: "In progress" },
-            { num: "02", title: "Sleep before 11pm 4 nights", desc: "Average bedtime is 11:30pm. Each 30min earlier correlates with +8% next-day consistency.", color: "#8e7cc3", status: "Needs attention" },
-            { num: "03", title: "Complete 3 strength sessions", desc: `${client.workoutDays} sessions done so far. Add one more upper-body day for balanced programming.`, color: "#3aafa9", status: "On track" },
-          ].map((f, i) => (
-            <div key={i} style={{
-              padding: "18px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`,
-              display: "flex", flexDirection: "column", gap: 10
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: `${f.color}25`, lineHeight: 1 }}>{f.num}</div>
-                <div style={{ padding: "3px 8px", borderRadius: 10, fontSize: 10, fontWeight: 600,
-                  background: f.status === "On track" ? "#3aaf6a15" : f.status === "In progress" ? `${TEAL}12` : "#ef6c3e12",
-                  color: f.status === "On track" ? "#3aaf6a" : f.status === "In progress" ? TEAL : "#ef6c3e"
-                }}>{f.status}</div>
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, lineHeight: 1.3 }}>{f.title}</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, flex: 1 }}>{f.desc}</div>
-              <div style={{ height: 4, borderRadius: 2, background: "#e8f0ee", overflow: "hidden", marginTop: 4 }}>
-                <div style={{ height: "100%", borderRadius: 2, background: f.color,
-                  width: f.status === "On track" ? "85%" : f.status === "In progress" ? "55%" : "25%",
-                  transition: "width 1s ease"
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      </ReportBlock>}
-
-      {/* ─── NEW BLOCK: Coach Notes ─── */}
-      {reportBlocks.includes("coachNotes") && <ReportBlock id="coachNotes" label="Coach Notes" customizeMode={customizeMode} onEditBlock={handleEditBlock} onRemoveBlock={handleRemoveBlock}>
-          <div style={{
-            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: "#f0e8ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              </div>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Coach Notes</div>
-              <div style={{ fontSize: 11, color: TEXT_SEC, marginLeft: "auto" }}>Editable — visible in shared report</div>
-            </div>
-            <textarea
-              value={coachNoteText || `Great week overall for ${client.name.split(" ")[0]}. Consistency score trending up and weight is moving in the right direction. Main opportunity is protein intake — let's discuss meal prep strategies in our next session.`}
-              onChange={e => setCoachNoteText(e.target.value)}
-              style={{
-                width: "100%", minHeight: 100, padding: "14px 16px", borderRadius: 12,
-                border: `1px solid ${BORDER}`, background: "#f8faf9", color: TEXT,
-                fontSize: 14, lineHeight: 1.65, fontFamily: "inherit", resize: "vertical",
-                outline: "none", transition: "border-color 0.15s ease",
-              }}
-              onFocus={e => e.target.style.borderColor = TEAL}
-              onBlur={e => e.target.style.borderColor = BORDER}
-            />
-          </div>
-      </ReportBlock>}
 
       </>)}
 
