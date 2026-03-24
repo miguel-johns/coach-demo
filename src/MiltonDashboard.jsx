@@ -7209,27 +7209,6 @@ function WorkoutCanvas({ data, onClose, onSave }) {
                               </div>
                             ))}
                           </div>
-                          
-                          {/* Add exercise button */}
-                          <div style={{ 
-                            padding: "8px", borderTop: `1px solid ${BORDER}`,
-                            display: "flex", justifyContent: "center"
-                          }}>
-                            <div 
-                              style={{ 
-                                width: 24, height: 24, borderRadius: 6,
-                                background: "#f0f4f3", 
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer", transition: "all 0.15s ease"
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
-                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                              </svg>
-                            </div>
-                          </div>
                         </div>
                       )}
                     </div>
