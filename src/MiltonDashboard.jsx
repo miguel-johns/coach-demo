@@ -3470,13 +3470,71 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           const hasSleep = seed < 80;
           const hasSteps = seed < 70;
           
+          // Generate detailed meals for the day
+          const generateMeals = () => {
+            const mealTypes = [
+              { type: "Breakfast", time: "7:30 AM", items: [
+                { name: "Greek Yogurt with Berries", calories: 180, protein: 15, carbs: 22, fat: 4 },
+                { name: "Scrambled Eggs (2)", calories: 180, protein: 14, carbs: 2, fat: 12 },
+                { name: "Oatmeal with Banana", calories: 280, protein: 8, carbs: 52, fat: 5 },
+                { name: "Protein Smoothie", calories: 320, protein: 28, carbs: 38, fat: 6 },
+                { name: "Avocado Toast", calories: 290, protein: 8, carbs: 28, fat: 18 },
+              ]},
+              { type: "Lunch", time: "12:30 PM", items: [
+                { name: "Grilled Chicken Salad", calories: 420, protein: 38, carbs: 18, fat: 22 },
+                { name: "Turkey Wrap", calories: 380, protein: 28, carbs: 35, fat: 14 },
+                { name: "Salmon Bowl", calories: 520, protein: 35, carbs: 45, fat: 20 },
+                { name: "Quinoa Buddha Bowl", calories: 450, protein: 18, carbs: 55, fat: 16 },
+                { name: "Chicken Burrito Bowl", calories: 580, protein: 42, carbs: 48, fat: 22 },
+              ]},
+              { type: "Dinner", time: "6:30 PM", items: [
+                { name: "Grilled Steak with Vegetables", calories: 520, protein: 45, carbs: 15, fat: 32 },
+                { name: "Baked Salmon with Rice", calories: 480, protein: 38, carbs: 35, fat: 18 },
+                { name: "Chicken Stir-Fry", calories: 420, protein: 35, carbs: 32, fat: 16 },
+                { name: "Pasta with Meat Sauce", calories: 620, protein: 32, carbs: 68, fat: 22 },
+                { name: "Shrimp Tacos", calories: 450, protein: 28, carbs: 38, fat: 20 },
+              ]},
+              { type: "Snacks", time: "Various", items: [
+                { name: "Protein Bar", calories: 220, protein: 20, carbs: 22, fat: 8 },
+                { name: "Mixed Nuts (1 oz)", calories: 170, protein: 5, carbs: 6, fat: 15 },
+                { name: "Apple with Almond Butter", calories: 195, protein: 4, carbs: 26, fat: 9 },
+                { name: "Cottage Cheese", calories: 110, protein: 14, carbs: 5, fat: 4 },
+                { name: "Hummus with Carrots", calories: 130, protein: 4, carbs: 14, fat: 7 },
+              ]},
+            ];
+            
+            const meals = [];
+            mealTypes.forEach((mealType, idx) => {
+              const mealSeed = (seed + idx * 17) % 100;
+              if (mealSeed < 85) { // 85% chance of having this meal
+                const itemIndex = (seed + idx * 7) % mealType.items.length;
+                meals.push({
+                  type: mealType.type,
+                  time: mealType.time,
+                  ...mealType.items[itemIndex]
+                });
+              }
+            });
+            
+            const totals = meals.reduce((acc, m) => ({
+              calories: acc.calories + m.calories,
+              protein: acc.protein + m.protein,
+              carbs: acc.carbs + m.carbs,
+              fat: acc.fat + m.fat
+            }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+            
+            return { meals, totals };
+          };
+          
+          const nutritionData = hasMeals ? generateMeals() : null;
+          
           return {
             date,
             dayNum: date.getDate(),
             month: date.toLocaleDateString('en-US', { month: 'short' }),
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
             workout: hasWorkout ? { type: ["Strength", "Cardio", "HIIT", "Mobility"][i % 4], duration: 30 + (seed % 45), exercises: 4 + (seed % 5), calories: 200 + (seed % 300) } : null,
-            nutrition: hasMeals ? { calories: 1400 + (seed % 600), protein: 90 + (seed % 70), carbs: 120 + (seed % 100), fat: 40 + (seed % 40) } : null,
+            nutrition: nutritionData,
             sleep: hasSleep ? { hours: 5.5 + (seed % 35) / 10, quality: ["Poor", "Fair", "Good", "Great"][Math.floor(seed / 25)] } : null,
             steps: hasSteps ? { count: 4000 + (seed % 10000), activeMinutes: 20 + (seed % 50) } : null,
           };
@@ -3614,16 +3672,82 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                         </div>
                       )}
                       {day.nutrition && (
-                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15` }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15`, gridColumn: isMobile ? "1" : "1 / -1" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
+                              </div>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
                             </div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
+                            {/* Daily totals */}
+                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.nutrition.totals.calories}</div>
+                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "#3b82f6" }}>{day.nutrition.totals.protein}g</div>
+                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Protein</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "#f59e0b" }}>{day.nutrition.totals.carbs}g</div>
+                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Carbs</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "#8b5cf6" }}>{day.nutrition.totals.fat}g</div>
+                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Fat</div>
+                              </div>
+                            </div>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Calories:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.calories}</span></div>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Protein:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.protein}g</span></div>
+                          
+                          {/* Individual meals */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            {day.nutrition.meals.map((meal, idx) => (
+                              <div key={idx} style={{
+                                display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                                background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
+                              }}>
+                                <div style={{
+                                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                                  background: meal.type === "Breakfast" ? "#fef3c7" : meal.type === "Lunch" ? "#dcfce7" : meal.type === "Dinner" ? "#fce7f3" : "#e0e7ff",
+                                  display: "flex", alignItems: "center", justifyContent: "center"
+                                }}>
+                                  {meal.type === "Breakfast" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>}
+                                  {meal.type === "Lunch" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M12 12m-9 0a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0"/><path d="M12 7v5l3 3"/></svg>}
+                                  {meal.type === "Dinner" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>}
+                                  {meal.type === "Snacks" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                    <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>{meal.type}</span>
+                                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{meal.time}</span>
+                                  </div>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meal.name}</div>
+                                </div>
+                                <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3f4f6", textAlign: "center", minWidth: 48 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{meal.calories}</div>
+                                    <div style={{ fontSize: 9, color: TEXT_SEC }}>cal</div>
+                                  </div>
+                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#dbeafe", textAlign: "center", minWidth: 40 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6" }}>{meal.protein}g</div>
+                                    <div style={{ fontSize: 9, color: "#3b82f6" }}>P</div>
+                                  </div>
+                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#fef3c7", textAlign: "center", minWidth: 40 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#d97706" }}>{meal.carbs}g</div>
+                                    <div style={{ fontSize: 9, color: "#d97706" }}>C</div>
+                                  </div>
+                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3e8ff", textAlign: "center", minWidth: 40 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#8b5cf6" }}>{meal.fat}g</div>
+                                    <div style={{ fontSize: 9, color: "#8b5cf6" }}>F</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {day.nutrition.meals.length === 0 && (
+                              <div style={{ textAlign: "center", padding: "16px", color: TEXT_SEC, fontSize: 13 }}>No meals logged</div>
+                            )}
                           </div>
                         </div>
                       )}
