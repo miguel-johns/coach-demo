@@ -3192,6 +3192,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [selectedCalDay, setSelectedCalDay] = useState(null);
+  const [profileExpanded, setProfileExpanded] = useState(false);
+  const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -3331,434 +3333,122 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         Back to Dashboard
       </div>}
 
-      {/* ─── CLIENT HEADER ─── */}
+      {/* ─── HEADER CARD ─── */}
       <div style={{
         background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        display: "flex", flexDirection: "column", gap: 16
+        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
       }}>
-        <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 14 : 18, flexWrap: "wrap" }}>
-          <Avatar name={client.name} size={isMobile ? 56 : 64} />
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 14, marginTop: 6, alignItems: "center" }}>
-              <AlertBadge type={client.alertType} label={client.alert} />
-              {currentStreak > 0 && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 4,
-                  padding: "4px 10px", borderRadius: 12,
-                  background: `${MINT}15`, color: MINT, fontSize: 12, fontWeight: 600
-                }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                  {currentStreak} session streak
-                </div>
-              )}
-              <span style={{ fontSize: 13, color: TEXT_SEC }}>Program: <strong style={{ color: TEXT }}>{client.program}</strong></span>
-              <span style={{ fontSize: 13, color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{client.startDate}</strong></span>
-            </div>
-          </div>
-        </div>
-        {/* Session indicators */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          <div style={{ 
-            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek} this week</span>
-          </div>
-          <div style={{ 
-            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{totalSessions} total sessions</span>
-          </div>
-          {lastSession && (
-            <div style={{ 
-              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-              borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-            }}>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>Last: <strong style={{ color: TEXT }}>{lastSession.type}</strong> ({lastSession.date})</span>
-            </div>
-          )}
-        </div>
-
-        {showAddDevice && (
-          <div style={{
-            padding: "14px 16px", borderRadius: 14,
-            background: "#f7faf9", border: `1px solid ${BORDER}`,
-            animation: "fadeSlideIn 0.2s ease"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Connect a Device</span>
-              <div onClick={() => setShowAddDevice(false)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 2 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {Object.entries(dataConnectors).filter(([key]) => !client.connectors.includes(key)).map(([key, conn]) => (
-                <div key={key} onClick={() => setShowAddDevice(false)} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "8px 14px", borderRadius: 22,
-                  background: WHITE, border: `1px solid ${BORDER}`,
-                  cursor: "pointer", fontSize: 12, fontWeight: 600, color: TEXT,
-                  transition: "all 0.15s ease"
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = conn.bg; e.currentTarget.style.boxShadow = `0 2px 8px ${conn.bg}25`; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  <div style={{
-                    width: 22, height: 22, borderRadius: "50%", background: conn.bg,
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>{conn.icon(11)}</div>
-                  {conn.name}
-                </div>
-              ))}
-              {Object.entries(dataConnectors).filter(([key]) => !client.connectors.includes(key)).length === 0 && (
-                <span style={{ fontSize: 12, color: TEXT_SEC }}>All devices connected</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── TAB BAR ─── */}
-      <div style={{
-        display: "flex", gap: 4, background: WHITE, borderRadius: 14, padding: 4,
-        border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflowX: "auto"
-      }}>
-        {[
-          { id: "overview", label: "Overview" },
-          { id: "journey", label: "Progress" },
-          { id: "profile", label: "Profile" },
-          { id: "chats", label: "Chats" },
-        ].map(tab => (
-          <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-            flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-            padding: isMobile ? "10px 8px" : "10px 16px", borderRadius: 10, cursor: "pointer",
-            background: activeTab === tab.id ? TEAL : "transparent",
-            color: activeTab === tab.id ? "#fff" : TEXT_SEC,
-            fontWeight: activeTab === tab.id ? 600 : 500,
-            fontSize: isMobile ? 12 : 13, whiteSpace: "nowrap",
-            transition: "all 0.2s ease",
-            boxShadow: activeTab === tab.id ? "0 2px 8px rgba(43,122,120,0.25)" : "none"
-          }}>{tab.label}</div>
-        ))}
-      </div>
-
-{/* ═══ TAB: OVERVIEW ═══ */}
-      {activeTab === "overview" && (<>
-
-      {/* ─── SCHEDULE & PLAN SECTION ─── */}
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 14 : 16 }}>
-        
-        {/* Schedule Card */}
-        <div style={{
-          flex: 1, background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-          padding: isMobile ? "20px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 12, background: `${TEAL}12`,
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
+        <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 16 }}>
+            <Avatar name={client.name} size={isMobile ? 48 : 56} />
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>This Week</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{sessionsPerWeek}x per week schedule</div>
-            </div>
-          </div>
-          
-          <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, background: `${TEAL}08`, border: `1px solid ${TEAL}15`, textAlign: "center" }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: TEAL }}>{sessionsThisWeek}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>Completed</div>
-            </div>
-            <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, background: `${MINT}08`, border: `1px solid ${MINT}15`, textAlign: "center" }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: MINT }}>{Math.max(0, sessionsPerWeek - sessionsThisWeek)}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>Remaining</div>
-            </div>
-          </div>
-          
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, height: 8, borderRadius: 4, background: "#e8f0ee", overflow: "hidden" }}>
-              <div style={{ height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${TEAL}, ${MINT})`, width: `${Math.min(100, (sessionsThisWeek / sessionsPerWeek) * 100)}%`, transition: "width 0.8s ease" }} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: TEAL }}>{Math.round((sessionsThisWeek / sessionsPerWeek) * 100)}%</span>
-          </div>
-          
-          <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: `#f7faf9`, border: `1px solid ${BORDER}` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>Current Streak</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{currentStreak} sessions</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>Total Sessions</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{totalSessions}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Current Plan Card */}
-        <div style={{
-          flex: 1, background: `linear-gradient(145deg, ${TEAL}06, ${MINT}04, #fafcfb)`,
-          borderRadius: 20, border: `1px solid ${BORDER}`,
-          padding: isMobile ? "20px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12, background: `${TEAL}15`,
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Current Plan</div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>{daysSinceAssessment} days in program</div>
-              </div>
-            </div>
-          </div>
-          
-          <button
-            onClick={() => { setCanvasTemplate("workout"); setActiveTab("canvas"); }}
-            style={{
-              width: "100%", padding: "16px", borderRadius: 14,
-              background: WHITE, border: `1px solid ${BORDER}`,
-              cursor: "pointer", textAlign: "left",
-              transition: "all 0.2s ease"
-            }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.boxShadow = `0 4px 12px ${TEAL}15`; }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{client.program || "General Fitness"}</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>Tap to open in Workout Builder</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: TEAL, fontSize: 12, fontWeight: 600 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
-              </svg>
-              Open in Canvas
-            </div>
-          </button>
-          
-          {/* Macros Status */}
-          <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: client.proteinTarget ? `${ALERT_GREEN}08` : `#fff3e0`, border: `1px solid ${client.proteinTarget ? `${ALERT_GREEN}20` : "#ef6c3e30"}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {client.proteinTarget ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="2.5" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              )}
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: client.proteinTarget ? ALERT_GREEN : "#ef6c3e" }}>
-                  {client.proteinTarget ? "Macros Set" : "Macros Not Set"}
-                </div>
-                {client.proteinTarget ? (
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
-                    {client.proteinTarget}g protein / {Math.round(client.proteinTarget * 10 + 800)} cal target
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
+                <div style={{ padding: "4px 10px", borderRadius: 10, background: `${TEAL}12`, color: TEAL, fontSize: 12, fontWeight: 600 }}>{client.program || "General Fitness"}</div>
+                {currentStreak > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 10, background: `${MINT}12`, color: MINT, fontSize: 12, fontWeight: 600 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    {currentStreak} streak
                   </div>
-                ) : (
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>Set up nutrition targets in Canvas</div>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ─── JOURNEY SYNOPSIS ─── */}
-      <div style={{
-        background: `linear-gradient(145deg, #f7faf9, #eef6f3, #f5faf8)`,
-        borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "20px" : "28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12, background: `${MINT}12`,
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={MINT} strokeWidth="2" strokeLinecap="round">
-              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          <button
+            onClick={() => setShowReport(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: isMobile ? "10px 16px" : "12px 20px", borderRadius: 12,
+              background: TEAL, color: WHITE, border: "none",
+              fontSize: 13, fontWeight: 600, cursor: "pointer",
+              boxShadow: `0 2px 8px ${TEAL}40`, transition: "all 0.2s ease"
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
+            Generate Report
+          </button>
+        </div>
+
+        {/* Stat chips row */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek}</span>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>this week</span>
           </div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Journey Synopsis</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>Where you are and where you're headed</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{totalSessions}</span>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>total sessions</span>
           </div>
         </div>
-        
-        {/* Goals & Status */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 18 }}>
-          <div style={{ padding: "16px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Primary Goal</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{client.goals?.primary || "Build Strength"}</div>
-            {client.goals?.targetDate && (
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>Target: {new Date(client.goals.targetDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
-            )}
-          </div>
-          <div style={{ padding: "16px", borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Secondary Goals</div>
-            {client.goals?.secondaryGoals && client.goals.secondaryGoals.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {client.goals.secondaryGoals.map((g, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: MINT }} />
-                    <span style={{ fontSize: 13, color: TEXT }}>{g}</span>
-                  </div>
-                ))}
+
+        {/* Goal progress bar */}
+        {(() => {
+          const goals = client.goals || {};
+          const current = client.current || {};
+          const assessment = client.assessment || {};
+          const goalLabel = goals.primary || "Lose 20 lbs";
+          const startWeight = assessment.bodyweight || 175;
+          const currentWeight = current.bodyweight || 170;
+          const targetWeight = goals.targetWeight || 155;
+          const totalChange = Math.abs(targetWeight - startWeight);
+          const progressChange = Math.abs(currentWeight - startWeight);
+          const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
+          
+          return (
+            <div style={{ marginTop: 16, padding: "14px 16px", borderRadius: 14, background: `linear-gradient(135deg, ${TEAL}06, ${MINT}04)`, border: `1px solid ${TEAL}15` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{goalLabel}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: TEAL }}>{progressPct}%</span>
               </div>
-            ) : (
-              <div style={{ fontSize: 13, color: TEXT_SEC }}>No secondary goals set</div>
-            )}
-          </div>
-        </div>
-        
-        {/* Coach Synopsis */}
-        <div style={{ padding: "16px 18px", borderRadius: 14, background: `${TEAL}06`, border: `1px solid ${TEAL}15` }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10, background: `${TEAL}15`, flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Coach's Take</div>
-              <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>
-                {client.insight || `${client.name.split(' ')[0]} has been training consistently for ${Math.round(daysSinceAssessment / 7)} weeks. ${attendanceRate >= 80 ? "Excellent consistency - keep it up!" : "Focus on hitting the weekly session targets for best results."}`}
+              <div style={{ height: 8, borderRadius: 4, background: "#e8f0ee", overflow: "hidden", marginBottom: 8 }}>
+                <div style={{ height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${TEAL}, ${MINT})`, width: `${progressPct}%`, transition: "width 0.8s ease" }} />
               </div>
-              {client.coachAngle && (
-                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${TEAL}15` }}>
-                  <strong style={{ color: TEXT }}>Next Step:</strong> {client.coachAngle}
-                </div>
-              )}
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+                <span>{startWeight} lbs</span>
+                <span style={{ fontWeight: 600, color: TEXT }}>{currentWeight} lbs</span>
+                <span>{targetWeight} lbs</span>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
-      {/* ─── DAILY BREAKDOWN CARDS ─── */}
+      {/* ─── 2. UPCOMING SESSIONS ─── */}
       {(() => {
-        const cards = [
-          {
-            title: "Nutrition", color: "#ef6c3e",
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
-                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
-                { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
-              ]},
-            ],
-          },
-          {
-            title: "Activity", color: TEAL,
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Steps", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: "1", g: "1" },
-                { l: "Active Min", v: "48 min", g: "45 min" }, { l: "Distance", v: "4.1 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "420", g: "500" }, { l: "Floors", v: "10", g: "10" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Steps Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: `${client.workoutDays}`, g: "5" },
-                { l: "Active Min", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "385", g: "500" }, { l: "Floors", v: "8", g: "10" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Steps Avg", v: `${(client.steps - 400).toLocaleString()}`, g: "10,000" }, { l: "Workouts", v: `${client.workoutDays * 4}`, g: "20" },
-                { l: "Active Min", v: "38 min", g: "45 min" }, { l: "Distance", v: "3.4 mi", g: "4.5 mi" },
-                { l: "Cal Burned", v: "350", g: "500" }, { l: "Floors", v: "7", g: "10" },
-              ]},
-            ],
-          },
-          {
-            title: "Sleep", color: "#8e7cc3",
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
-            periods: [
-              { label: "Today", rows: [
-                { l: "Duration", v: "7.2 hrs", g: "8 hrs" }, { l: "Bedtime", v: "10:45 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "5:57 AM" }, { l: "Quality", v: "Good" },
-                { l: "Deep Sleep", v: "1.8 hrs", g: "2 hrs" }, { l: "REM", v: "2.1 hrs", g: "2 hrs" },
-              ]},
-              { label: "Last 7 Days", rows: [
-                { l: "Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "6:05 AM" }, { l: "Quality", v: "Good" },
-                { l: "Deep Sleep", v: "1.5 hrs", g: "2 hrs" }, { l: "REM", v: "1.9 hrs", g: "2 hrs" },
-              ]},
-              { label: "Last 30 Days", rows: [
-                { l: "Duration", v: "6.5 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:30 PM", g: "10:30 PM" },
-                { l: "Wake Time", v: "6:10 AM" }, { l: "Quality", v: "Fair" },
-                { l: "Deep Sleep", v: "1.3 hrs", g: "2 hrs" }, { l: "REM", v: "1.7 hrs", g: "2 hrs" },
-              ]},
-            ],
-          },
+        const today = new Date();
+        const upcomingSessions = [
+          { day: "Today", type: "Upper Body", time: "6:00 PM", isToday: true },
+          { day: "Wed", type: "Lower Body", time: "7:00 AM", isToday: false },
+          { day: "Fri", type: "Full Body", time: "6:00 PM", isToday: false },
         ];
-
+        
         return (
           <div style={{
             background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "18px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}>
-            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Daily Breakdown</div>
-            <div style={{
-              display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory",
-              paddingBottom: 8, WebkitOverflowScrolling: "touch",
-              msOverflowStyle: "none", scrollbarWidth: "none"
-            }}>
-              {cards.map((card, ci) => (
-                <div key={ci} style={{
-                  flex: "none", width: isMobile ? "85vw" : 300,
-                  scrollSnapAlign: "start",
-                  background: "#fafcfb", borderRadius: 16, border: `1px solid ${BORDER}`,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Upcoming Sessions</div>
+            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
+              {upcomingSessions.map((session, i) => (
+                <div key={i} style={{
+                  flex: isMobile ? "none" : 1, minWidth: isMobile ? 140 : "auto",
+                  padding: "16px", borderRadius: 14,
+                  background: session.isToday ? `linear-gradient(135deg, ${TEAL}12, ${MINT}08)` : "#f7faf9",
+                  border: session.isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
+                  boxShadow: session.isToday ? `0 4px 12px ${TEAL}15` : "none"
                 }}>
-                  {/* Card header */}
-                  <div style={{
-                    padding: "14px 16px 10px", display: "flex", alignItems: "center", gap: 8,
-                    borderBottom: `1px solid ${BORDER}`,
-                    background: `linear-gradient(135deg, ${card.color}08, ${card.color}04)`
-                  }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: `${card.color}15`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: card.color
-                    }}>{card.icon}</div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{card.title}</span>
-                  </div>
-
-                  {/* Period tabs + data */}
-                  <DataCardPeriods periods={card.periods} color={card.color} isMobile={isMobile} />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: session.isToday ? TEAL : TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{session.day}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{session.type}</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC }}>{session.time}</div>
                 </div>
-              ))}
-            </div>
-            {/* Scroll hint */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
-              {cards.map((_, i) => (
-                <div key={i} style={{ width: i === 0 ? 16 : 6, height: 6, borderRadius: 3, background: i === 0 ? TEAL : "#d4ddd9", transition: "all 0.3s ease" }} />
               ))}
             </div>
           </div>
@@ -3974,740 +3664,242 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      </>)}
+      {/* ─── DAILY BREAKDOWN CARDS ─── */}
+      {(() => {
+        const cards = [
+          {
+            title: "Nutrition", color: "#ef6c3e",
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Calories", v: "1,620", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg + 2}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.9)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.58)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "24g", g: "30g" }, { l: "Water", v: "72 oz", g: "80 oz" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Calories", v: "1,580", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.8)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.55)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "22g", g: "30g" }, { l: "Water", v: "64 oz", g: "80 oz" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Calories", v: "1,540", g: "1,800" }, { l: "Protein", v: `${client.proteinAvg - 6}g`, g: `${client.proteinTarget}g` },
+                { l: "Carbs", v: `${Math.round(client.proteinAvg * 1.7)}g`, g: `${Math.round(client.proteinTarget * 2)}g` }, { l: "Fats", v: `${Math.round(client.proteinAvg * 0.52)}g`, g: `${Math.round(client.proteinTarget * 0.6)}g` },
+                { l: "Fiber", v: "20g", g: "30g" }, { l: "Water", v: "58 oz", g: "80 oz" },
+              ]},
+            ],
+          },
+          {
+            title: "Activity", color: TEAL,
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Steps", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: "1", g: "1" },
+                { l: "Active Min", v: "48 min", g: "45 min" }, { l: "Distance", v: "4.1 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "420", g: "500" }, { l: "Floors", v: "10", g: "10" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Steps Avg", v: client.steps?.toLocaleString(), g: "10,000" }, { l: "Workouts", v: `${client.workoutDays}`, g: "5" },
+                { l: "Active Min", v: "42 min", g: "45 min" }, { l: "Distance", v: "3.8 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "385", g: "500" }, { l: "Floors", v: "8", g: "10" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Steps Avg", v: `${(client.steps - 400).toLocaleString()}`, g: "10,000" }, { l: "Workouts", v: `${client.workoutDays * 4}`, g: "20" },
+                { l: "Active Min", v: "38 min", g: "45 min" }, { l: "Distance", v: "3.4 mi", g: "4.5 mi" },
+                { l: "Cal Burned", v: "350", g: "500" }, { l: "Floors", v: "7", g: "10" },
+              ]},
+            ],
+          },
+          {
+            title: "Sleep", color: "#8e7cc3",
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+            periods: [
+              { label: "Today", rows: [
+                { l: "Duration", v: "7.2 hrs", g: "8 hrs" }, { l: "Bedtime", v: "10:45 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "5:57 AM" }, { l: "Quality", v: "Good" },
+                { l: "Deep Sleep", v: "1.8 hrs", g: "2 hrs" }, { l: "REM", v: "2.1 hrs", g: "2 hrs" },
+              ]},
+              { label: "Last 7 Days", rows: [
+                { l: "Duration", v: "6.8 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:15 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "6:05 AM" }, { l: "Quality", v: "Good" },
+                { l: "Deep Sleep", v: "1.5 hrs", g: "2 hrs" }, { l: "REM", v: "1.9 hrs", g: "2 hrs" },
+              ]},
+              { label: "Last 30 Days", rows: [
+                { l: "Duration", v: "6.5 hrs", g: "8 hrs" }, { l: "Bedtime", v: "11:30 PM", g: "10:30 PM" },
+                { l: "Wake Time", v: "6:10 AM" }, { l: "Quality", v: "Fair" },
+                { l: "Deep Sleep", v: "1.3 hrs", g: "2 hrs" }, { l: "REM", v: "1.7 hrs", g: "2 hrs" },
+              ]},
+            ],
+          },
+        ];
 
-      {/* ═══ TAB: PROFILE ═══ */}
-      {activeTab === "profile" && (<>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 18 }}>
-          {/* Left Column - Stats & Body */}
-          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Body Composition</div>
-              {[
-                ["Current Weight", `${client.current?.bodyweight || wData[wData.length-1]} lbs`],
-                ["Goal Weight", `${client.goals?.targetWeight || Math.round(wData[wData.length-1]-10)} lbs`],
-                ["Body Fat", `${client.current?.bodyFat || 22}%`],
-                ["Goal Body Fat", `${client.goals?.targetBodyFat || 18}%`],
-                ["Lean Mass", `${client.current?.leanMass || 125} lbs`],
-                ["Height", client.profile?.height || `5'6"`],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
+        return (
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "18px" : "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Daily Breakdown</div>
+            <div style={{
+              display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory",
+              paddingBottom: 8, WebkitOverflowScrolling: "touch",
+              msOverflowStyle: "none", scrollbarWidth: "none"
+            }}>
+              {cards.map((card, ci) => (
+                <div key={ci} style={{
+                  flex: "none", width: isMobile ? "85vw" : 300,
+                  scrollSnapAlign: "start",
+                  background: "#fafcfb", borderRadius: 16, border: `1px solid ${BORDER}`,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
+                }}>
+                  {/* Card header */}
+                  <div style={{
+                    padding: "14px 16px 10px", display: "flex", alignItems: "center", gap: 8,
+                    borderBottom: `1px solid ${BORDER}`,
+                    background: `linear-gradient(135deg, ${card.color}08, ${card.color}04)`
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: `${card.color}15`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: card.color
+                    }}>{card.icon}</div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{card.title}</span>
+                  </div>
+
+                  {/* Period tabs + data */}
+                  <DataCardPeriods periods={card.periods} color={card.color} isMobile={isMobile} />
                 </div>
               ))}
             </div>
-            
-            {/* Strength Baselines */}
-            {client.assessment?.strengthBaselines && (
-              <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Strength Baselines</div>
-                {Object.entries(client.assessment.strengthBaselines).map(([key, val], i) => {
-                  const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
-                  return (
-                    <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{names[key] || key}</span>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: TEAL, textAlign: "right" }}>{val.weight} x {val.reps}</span>
+            {/* Scroll hint */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
+              {cards.map((_, i) => (
+                <div key={i} style={{ width: i === 0 ? 16 : 6, height: 6, borderRadius: 3, background: i === 0 ? TEAL : "#d4ddd9", transition: "all 0.3s ease" }} />
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── PROFILE & BASELINES (COLLAPSIBLE) ─── */}
+      {(() => {
+        const current = client.current || {};
+        const goals = client.goals || {};
+        const profile = client.profile || {};
+        const assessment = client.assessment || {};
+        const strengthBaselines = assessment.strengthBaselines || {};
+        
+        const summaryText = `${current.bodyweight || 153} lbs · ${current.bodyFat || 25.2}% BF · ${profile.trainingStyle || "Barbell-focused"}`;
+        
+        return (
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden"
+          }}>
+            {/* Collapsible header */}
+            <div
+              onClick={() => setProfileExpanded(!profileExpanded)}
+              style={{
+                padding: isMobile ? "16px 18px" : "18px 28px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                cursor: "pointer", background: profileExpanded ? "#f7faf9" : "transparent",
+                transition: "background 0.2s ease"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TEAL}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Profile & Baselines</div>
+                  {!profileExpanded && <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{summaryText}</div>}
+                </div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: profileExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+                <polyline points="6,9 12,15 18,9"/>
+              </svg>
+            </div>
+
+            {/* Expanded content */}
+            {profileExpanded && (
+              <div style={{ padding: isMobile ? "0 18px 18px" : "0 28px 24px" }}>
+                {/* Two-column grid */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 18 }}>
+                  {/* Body composition */}
+                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Body Composition</div>
+                    {[
+                      ["Weight", `${current.bodyweight || 153} lbs`],
+                      ["Goal Weight", `${goals.targetWeight || 138} lbs`],
+                      ["Body Fat", `${current.bodyFat || 25.2}%`],
+                      ["Lean Mass", `${current.leanMass || 114} lbs`],
+                      ["Height", profile.height || `5'6"`],
+                    ].map(([l, v], i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
+                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Training details */}
+                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Training Details</div>
+                    {[
+                      ["Style", profile.trainingStyle || "Barbell-focused"],
+                      ["Experience", profile.experience || "Intermediate"],
+                      ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
+                      ["Preferred Time", profile.preferredTime || "Morning"],
+                      ["Communication", profile.communication || "Text"],
+                    ].map(([l, v], i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
+                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Strength baselines */}
+                {Object.keys(strengthBaselines).length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Strength Baselines</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {Object.entries(strengthBaselines).map(([key, val], i) => {
+                        const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
+                        const currentVal = { squat: "120x6", deadlift: "155x5", benchPress: "85x8", overheadPress: "55x6" };
+                        return (
+                          <div key={i} style={{ padding: "8px 14px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{names[key] || key}</span>
+                            <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 6 }}>{val.weight}x{val.reps}</span>
+                            <span style={{ fontSize: 12, color: TEAL, marginLeft: 4 }}>→ {currentVal[key] || `${val.weight + 20}x${val.reps}`}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+
+                {/* Coach notes */}
+                <div style={{ padding: "14px 16px", borderRadius: 12, background: "#fafbfa", borderLeft: `3px solid ${TEAL}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Coach Notes</div>
+                  <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>
+                    {client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming. Focus on hip mobility before squat sessions.`}
+                  </div>
+                </div>
               </div>
             )}
           </div>
-          
-          {/* Right Column - Goals & Notes */}
-          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Goals & Program</div>
-              {[
-                ["Primary Goal", client.goals?.primary || "Build Strength"],
-                ["Secondary", client.goals?.secondaryGoals?.join(", ") || "Improve mobility"],
-                ["Program", client.program || "General Fitness"],
-                ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
-                ["Training Style", client.profile?.trainingStyle || "Barbell-focused"],
-                ["Experience", client.profile?.experience || "Intermediate"],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Notes & Considerations</div>
-              {[
-                ["Injuries/Limitations", client.profile?.injuries || "None reported"],
-                ["Equipment Access", client.profile?.equipment || "Full gym"],
-                ["Preferred Time", client.profile?.preferredTime || "Morning"],
-                ["Communication", client.profile?.communication || "Text preferred"],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
-                </div>
-              ))}
-              <div style={{ padding: "11px 0" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>Coach Notes</span>
-                <p style={{ fontSize: 13, color: TEXT, margin: "6px 0 0", lineHeight: 1.55 }}>{client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming.`}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Training Timeline - moved to profile tab */}
-        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginTop: isMobile ? 14 : 18 }}>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Training Timeline</div>
-          <div style={{ position: "relative", paddingLeft: 28 }}>
-            <div style={{ position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: `linear-gradient(180deg, ${TEAL}, ${MINT})`, borderRadius: 1 }} />
-            {[
-              { date: client.assessment?.date || client.startDate, type: "start", title: "Initial Assessment", desc: `Completed baseline testing. Set primary goal: ${client.goals?.primary || "Build strength"}.`, color: TEAL },
-              { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
-              { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
-              { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
-              { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Attendance rate: ${attendanceRate}%.`, color: MINT },
-              { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
-            ].map((ev, i, arr) => (
-              <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
-                <div style={{
-                  position: "absolute", left: -28, top: 2, width: 20, height: 20, borderRadius: "50%",
-                  background: ev.color, display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: `0 2px 6px ${ev.color}40`
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
-                </div>
-                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>{ev.date}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{ev.title}</div>
-                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.55 }}>{ev.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </>)}
-
-      {/* ═══ TAB: PROGRESS (Client-Facing View) ═══ */}
-      {activeTab === "journey" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 20 }}>
-          
-          {/* ─── COMPACT ATTENDANCE + STREAKS ROW ─── */}
-          {(() => {
-            const attendedSessions = (client.sessions || []).length || client.totalSessions || client.workoutDays * 4 + 2;
-            const scheduledSessions = client.scheduledSessions || attendedSessions;
-            const attendanceRate = scheduledSessions > 0 ? Math.min(100, Math.round((attendedSessions / scheduledSessions) * 100)) : 100;
-            const scoreColor = attendanceRate >= 85 ? ALERT_GREEN : attendanceRate >= 70 ? TEAL : "#ef6c3e";
-            
-            return (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
-                gap: isMobile ? 12 : 14
-              }}>
-                {/* Attendance Rate Card */}
-                <div style={{
-                  background: `linear-gradient(135deg, #f7faf9, #eef6f3)`,
-                  borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "20px" : "24px",
-                  display: "flex", alignItems: "center", gap: 16
-                }}>
-                  {/* Compact Ring */}
-                  {(() => {
-                    const sz = isMobile ? 72 : 80;
-                    const r = sz / 2 - 8;
-                    const circ = 2 * Math.PI * r;
-                    const offset = circ * (1 - attendanceRate / 100);
-                    return (
-                      <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ flexShrink: 0 }}>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#e8f0ee" strokeWidth="7"/>
-                        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={scoreColor} strokeWidth="7"
-                          strokeDasharray={circ} strokeDashoffset={offset}
-                          strokeLinecap="round" transform={`rotate(-90 ${sz/2} ${sz/2})`}
-                          style={{ transition: "stroke-dashoffset 1s ease" }}
-                        />
-                        <text x={sz/2} y={sz/2 + 1} textAnchor="middle" dominantBaseline="central"
-                          style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, fill: scoreColor }}>
-                          {attendanceRate}%
-                        </text>
-                      </svg>
-                    );
-                  })()}
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Attendance</div>
-                    <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: TEXT }}>{attendedSessions}/{scheduledSessions}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions completed</div>
-                  </div>
-                </div>
-
-                {/* Current Goal Card */}
-                {(() => {
-                  const goals = client.goals || {};
-                  const current = client.current || {};
-                  const assessment = client.assessment || {};
-                  const goalType = client.program?.includes("Gain") ? "gain" : "loss";
-                  const targetWeight = goals.targetWeight || (goalType === "gain" ? 180 : 160);
-                  const startWeight = assessment.bodyweight || 175;
-                  const currentWeight = current.bodyweight || 170;
-                  const totalChange = Math.abs(targetWeight - startWeight);
-                  const progressChange = Math.abs(currentWeight - startWeight);
-                  const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
-                  const remaining = Math.abs(targetWeight - currentWeight);
-                  
-                  return (
-                    <div style={{
-                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                      padding: isMobile ? "20px" : "24px",
-                      gridColumn: isMobile ? "auto" : "span 2"
-                    }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Current Goal</div>
-                          <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>
-                            {goalType === "gain" ? "Build to" : "Get to"} {targetWeight} lbs
-                          </div>
-                        </div>
-                        <div style={{
-                          padding: "6px 12px", borderRadius: 12,
-                          background: `${TEAL}12`, color: TEAL,
-                          fontSize: 13, fontWeight: 700
-                        }}>
-                          {remaining} lbs to go
-                        </div>
-                      </div>
-                      
-                      {/* Progress bar */}
-                      <div style={{ marginBottom: 10 }}>
-                        <div style={{
-                          height: 10, borderRadius: 5,
-                          background: "#e8f0ee", overflow: "hidden"
-                        }}>
-                          <div style={{
-                            height: "100%", borderRadius: 5,
-                            background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
-                            width: `${progressPct}%`,
-                            transition: "width 0.8s ease"
-                          }} />
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                        <span style={{ color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{startWeight} lbs</strong></span>
-                        <span style={{ color: TEAL, fontWeight: 700 }}>{progressPct}% complete</span>
-                        <span style={{ color: TEXT_SEC }}>Now: <strong style={{ color: TEXT }}>{currentWeight} lbs</strong></span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            );
-          })()}
-
-          {/* ─── BODY COMPOSITION WITH LINE CHARTS ─── */}
-          {(() => {
-            const assessment = client.assessment || {};
-            const current = client.current || {};
-            const goals = client.goals || {};
-            
-            const bodyCompMetrics = [
-              { label: "Bodyweight", start: assessment.bodyweight || 185, current: current.bodyweight || 180, goal: goals.targetWeight || 170, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
-              { label: "Body Fat", start: assessment.bodyFat || 24, current: current.bodyFat || 20, goal: Math.max(12, (assessment.bodyFat || 24) - 8), unit: "%", color: "#3aafa9", goodDir: "down", eta: "Week 11-13" },
-              { label: "Lean Mass", start: assessment.leanMass || 140, current: current.leanMass || 144, goal: (assessment.leanMass || 140) + 8, unit: "lbs", color: MINT, goodDir: "up", eta: "Week 14-16" },
-            ];
-
-            const weeksTotal = 12;
-            const weeksCurrent = Math.max(1, Math.floor(daysSinceAssessment / 7));
-
-            const smooth = (pts) => {
-              if (pts.length < 2) return "";
-              let d = `M ${pts[0].x},${pts[0].y}`;
-              for (let i = 0; i < pts.length - 1; i++) {
-                const cp = (pts[i+1].x - pts[i].x) / 2.5;
-                d += ` C ${pts[i].x+cp},${pts[i].y} ${pts[i+1].x-cp},${pts[i+1].y} ${pts[i+1].x},${pts[i+1].y}`;
-              }
-              return d;
-            };
-
-            return bodyCompMetrics.map((m, idx) => {
-              const cw = 380, ch = 140, pL = 44, pR = 20, pT = 20, pB = 28;
-              const plotW = cw - pL - pR, plotH = ch - pT - pB;
-
-              const actual = [];
-              for (let w = 0; w <= weeksCurrent; w++) {
-                const t = w / Math.max(1, weeksCurrent);
-                const noise = Math.sin(w * 2.3 + idx) * 0.4;
-                actual.push(m.start + (m.current - m.start) * t + noise);
-              }
-              const projected = [];
-              for (let w = weeksCurrent; w <= weeksTotal; w++) {
-                const t = (w - weeksCurrent) / Math.max(1, weeksTotal - weeksCurrent);
-                const eased = t * t * 0.3 + t * 0.7;
-                projected.push(m.current + (m.goal - m.current) * eased);
-              }
-
-              const allVals = [...actual, ...projected, m.goal];
-              const valMin = Math.min(...allVals) - Math.abs(m.goal - m.start) * 0.15;
-              const valMax = Math.max(...allVals) + Math.abs(m.goal - m.start) * 0.15;
-
-              const toY = (v) => pT + (1 - (v - valMin) / (valMax - valMin)) * plotH;
-              const toX = (w) => pL + (w / weeksTotal) * plotW;
-
-              const actualPts = actual.map((v, i) => ({ x: toX(i), y: toY(v) }));
-              const projPts = projected.map((v, i) => ({ x: toX(weeksCurrent + i), y: toY(v) }));
-              const lastPt = actualPts[actualPts.length - 1];
-              const goalPt = projPts[projPts.length - 1];
-              const startPt = actualPts[0];
-              const areaPath = `${smooth(actualPts)} L ${lastPt.x},${pT + plotH} L ${startPt.x},${pT + plotH} Z`;
-
-              const change = m.current - m.start;
-              const isGood = (m.goodDir === "down" && change < 0) || (m.goodDir === "up" && change > 0);
-              const progressPct = Math.min(100, Math.round((Math.abs(change) / Math.abs(m.goal - m.start)) * 100));
-
-              return (
-                <div key={idx} style={{
-                  background: WHITE,
-                  borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "16px" : "20px 24px"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-                    <div>
-                      <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>{m.label}</div>
-                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
-                        {m.start}{m.unit} → {m.current}{m.unit} → <span style={{ color: m.color, fontWeight: 600 }}>{m.goal}{m.unit}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                      <div style={{
-                        padding: "4px 10px", borderRadius: 12,
-                        background: isGood ? `${ALERT_GREEN}12` : `${TEXT_SEC}10`,
-                        color: isGood ? ALERT_GREEN : TEXT_SEC, fontSize: 11, fontWeight: 700
-                      }}>
-                        {change > 0 ? "+" : ""}{change.toFixed(1)}{m.unit}
-                      </div>
-                      <div style={{
-                        padding: "4px 10px", borderRadius: 12,
-                        background: `${m.color}12`, color: m.color, fontSize: 11, fontWeight: 700
-                      }}>
-                        {progressPct}% to goal
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ borderRadius: 12, background: "#f8faf9", border: `1px solid ${BORDER}`, padding: isMobile ? "10px 6px" : "12px 10px" }}>
-                    <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                      <defs>
-                        <linearGradient id={`pAreaGrad${idx}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={m.color} stopOpacity="0.15"/>
-                          <stop offset="100%" stopColor={m.color} stopOpacity="0.02"/>
-                        </linearGradient>
-                      </defs>
-
-                      {[0, 0.5, 1].map((t, i) => {
-                        const v = valMin + t * (valMax - valMin);
-                        const y = toY(v);
-                        return (
-                          <g key={i}>
-                            <line x1={pL} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
-                            <text x={pL - 6} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
-                              {m.unit === "%" ? v.toFixed(0) : Math.round(v)}
-                            </text>
-                          </g>
-                        );
-                      })}
-
-                      <line x1={pL} y1={toY(m.goal)} x2={cw - pR} y2={toY(m.goal)} stroke={m.color} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.4"/>
-
-                      {[0, weeksCurrent, weeksTotal].map((w, i) => (
-                        <text key={i} x={toX(w)} y={ch - 8} textAnchor="middle" fill={w === weeksCurrent ? TEXT : TEXT_SEC} fontSize="10" fontWeight={w === weeksCurrent ? 700 : 600} fontFamily="DM Sans">
-                          {w === 0 ? "Start" : w === weeksCurrent ? "Now" : `W${w}`}
-                        </text>
-                      ))}
-
-                      <line x1={toX(weeksCurrent)} y1={pT} x2={toX(weeksCurrent)} y2={pT + plotH} stroke={TEXT_SEC} strokeWidth="1" strokeDasharray="4,4" opacity="0.35"/>
-                      <path d={areaPath} fill={`url(#pAreaGrad${idx})`}/>
-                      <path d={smooth(actualPts)} fill="none" stroke={m.color} strokeWidth="3" strokeLinecap="round"/>
-                      <path d={smooth(projPts)} fill="none" stroke={m.color} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="8,5" opacity="0.55"/>
-
-                      {actualPts.map((p, i) => (
-                        <circle key={i} cx={p.x} cy={p.y} r={i === actualPts.length - 1 ? 6 : 3.5} fill={WHITE} stroke={m.color} strokeWidth={i === actualPts.length - 1 ? 3 : 2}/>
-                      ))}
-
-                      <circle cx={lastPt.x} cy={lastPt.y} r="12" fill={m.color} opacity="0.12"/>
-                      <circle cx={goalPt.x} cy={goalPt.y} r="8" fill={m.color} opacity="0.15"/>
-                      <circle cx={goalPt.x} cy={goalPt.y} r="5" fill={m.color}/>
-
-                      <g>
-                        <rect x={startPt.x - 18} y={startPt.y - 20} width="36" height="16" rx="8" fill={TEXT_SEC}/>
-                        <text x={startPt.x} y={startPt.y - 9.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="DM Sans">{m.start}{m.unit === "%" ? "%" : ""}</text>
-                      </g>
-
-                      <g>
-                        <rect x={lastPt.x - 24} y={lastPt.y - 26} width="48" height="18" rx="9" fill={m.color}/>
-                        <text x={lastPt.x} y={lastPt.y - 14} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.current}{m.unit}</text>
-                      </g>
-
-                      <g>
-                        <rect x={goalPt.x - 24} y={goalPt.y + 10} width="48" height="18" rx="9" fill={m.color} opacity="0.85"/>
-                        <text x={goalPt.x} y={goalPt.y + 22} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{m.goal}{m.unit}</text>
-                      </g>
-                    </svg>
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", gap: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ width: 16, height: 3, borderRadius: 2, background: m.color }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Actual</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ width: 16, height: 0, borderTop: `2.5px dashed ${m.color}`, opacity: 0.6 }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Projected</span>
-                      </div>
-                    </div>
-                    <div style={{
-                      padding: "6px 14px", borderRadius: 12, background: `${m.color}08`, border: `1px solid ${m.color}12`,
-                      fontSize: 12, fontWeight: 700, color: TEXT
-                    }}>
-                      Est. Goal: <span style={{ color: m.color }}>{m.eta}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            });
-          })()}
-
-          {/* ─── STRENGTH PROGRESS BAR CHARTS ─── */}
-          {(() => {
-            const generateLiftHistory = (baseline, liftIdx) => {
-              const sessions = [];
-              const sessionCount = 8 + (liftIdx % 3);
-              const seed = client.name.charCodeAt(0) + liftIdx * 7;
-              
-              for (let i = 0; i < sessionCount; i++) {
-                const progress = i / (sessionCount - 1);
-                const baseIncrease = progress * (baseline * 0.12);
-                const variation = Math.sin(i * 1.7 + seed) * 3;
-                const weight = Math.round(baseline + baseIncrease + variation);
-                const reps = 5 + Math.floor((seed + i) % 3) - 1;
-                const date = new Date();
-                date.setDate(date.getDate() - (sessionCount - 1 - i) * 4);
-                sessions.push({
-                  date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                  weight,
-                  reps,
-                  e1rm: Math.round(weight * (36 / (37 - reps)))
-                });
-              }
-              return sessions;
-            };
-
-            const strengthBaselines = client.assessment?.strengthBaselines || {
-              squat: { weight: 135, reps: 5 },
-              benchPress: { weight: 95, reps: 5 },
-              deadlift: { weight: 185, reps: 5 }
-            };
-
-            const liftData = [
-              { name: "Squat", baseline: strengthBaselines.squat?.weight || 135, color: TEAL },
-              { name: "Bench Press", baseline: strengthBaselines.benchPress?.weight || 95, color: MINT },
-              { name: "Deadlift", baseline: strengthBaselines.deadlift?.weight || 185, color: "#3aafa9" },
-            ].map((lift, idx) => ({
-              ...lift,
-              sessions: generateLiftHistory(lift.baseline, idx)
-            }));
-
-            return liftData.map((lift, liftIdx) => {
-              const sessions = lift.sessions;
-              const maxE1RM = Math.max(...sessions.map(s => s.e1rm));
-              const minE1RM = Math.min(...sessions.map(s => s.e1rm));
-              const firstE1RM = sessions[0].e1rm;
-              const lastE1RM = sessions[sessions.length - 1].e1rm;
-              const totalGain = lastE1RM - firstE1RM;
-              const gainPct = Math.round((totalGain / firstE1RM) * 100);
-
-              const cw = 380, ch = 160, pL = 40, pR = 16, pT = 16, pB = 36;
-              const plotW = cw - pL - pR, plotH = ch - pT - pB;
-              const barWidth = Math.min(28, (plotW / sessions.length) - 6);
-              const barGap = (plotW - barWidth * sessions.length) / (sessions.length - 1);
-
-              const yMin = minE1RM - 10;
-              const yMax = maxE1RM + 15;
-              const toY = (v) => pT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
-              const toX = (i) => pL + i * (barWidth + barGap);
-
-              return (
-                <div key={liftIdx} style={{
-                  background: `linear-gradient(155deg, ${lift.color}04, ${lift.color}02, #fafcfb)`,
-                  borderRadius: 20, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "20px" : "24px 28px"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{
-                        width: 44, height: 44, borderRadius: 12, background: `${lift.color}12`,
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={lift.color} strokeWidth="2.2" strokeLinecap="round">
-                          <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/>
-                          <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
-                          <line x1="8" y1="12" x2="16" y2="12"/>
-                        </svg>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>{lift.name}</div>
-                        <div style={{ fontSize: 13, color: TEXT_SEC }}>{sessions.length} sessions logged</div>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <div style={{ padding: "5px 12px", borderRadius: 14, background: `${ALERT_GREEN}12`, color: ALERT_GREEN, fontSize: 12, fontWeight: 700 }}>
-                        +{totalGain} lbs
-                      </div>
-                      <div style={{ padding: "5px 12px", borderRadius: 14, background: `${lift.color}12`, color: lift.color, fontSize: 12, fontWeight: 700 }}>
-                        +{gainPct}%
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-                    <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${TEXT_SEC}08`, border: `1px solid ${BORDER}` }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Starting 1RM</div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: TEXT_SEC }}>{firstE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
-                    </div>
-                    <div style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: `${lift.color}08`, border: `1px solid ${lift.color}15` }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: lift.color, textTransform: "uppercase", marginBottom: 4 }}>Current 1RM</div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: lift.color }}>{lastE1RM} <span style={{ fontSize: 13, fontWeight: 600 }}>lbs</span></div>
-                    </div>
-                  </div>
-
-                  <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: isMobile ? "12px 8px" : "16px 12px" }}>
-                    <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                      <defs>
-                        <linearGradient id={`pBarGrad${liftIdx}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={lift.color} stopOpacity="1"/>
-                          <stop offset="100%" stopColor={lift.color} stopOpacity="0.7"/>
-                        </linearGradient>
-                      </defs>
-
-                      {[0, 0.5, 1].map((t, i) => {
-                        const v = yMin + t * (yMax - yMin);
-                        const y = toY(v);
-                        return (
-                          <g key={i}>
-                            <line x1={pL - 4} y1={y} x2={cw - pR} y2={y} stroke={BORDER} strokeWidth="0.8"/>
-                            <text x={pL - 8} y={y + 3} textAnchor="end" fill={TEXT_SEC} fontSize="10" fontWeight="600" fontFamily="DM Sans">
-                              {Math.round(v)}
-                            </text>
-                          </g>
-                        );
-                      })}
-
-                      {sessions.map((s, i) => {
-                        const barH = toY(yMin) - toY(s.e1rm);
-                        const x = toX(i);
-                        const y = toY(s.e1rm);
-                        const isLast = i === sessions.length - 1;
-                        const isFirst = i === 0;
-                        
-                        return (
-                          <g key={i}>
-                            <rect
-                              x={x} y={y} width={barWidth} height={barH}
-                              rx={4} ry={4}
-                              fill={isLast ? lift.color : isFirst ? `${lift.color}50` : `${lift.color}${Math.round(50 + (i / sessions.length) * 50).toString(16).padStart(2, '0')}`}
-                            />
-                            {isLast && (
-                              <g>
-                                <rect x={x + barWidth/2 - 18} y={y - 20} width="36" height="16" rx="8" fill={lift.color}/>
-                                <text x={x + barWidth/2} y={y - 9} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="DM Sans">{s.e1rm}</text>
-                              </g>
-                            )}
-                            <text x={x + barWidth/2} y={ch - 8} textAnchor="middle" fill={TEXT_SEC} fontSize="9" fontWeight="500" fontFamily="DM Sans">
-                              {i === 0 || i === sessions.length - 1 || i === Math.floor(sessions.length / 2) ? s.date.split(' ')[0] : ''}
-                            </text>
-                          </g>
-                        );
-                      })}
-
-                      {(() => {
-                        const pts = sessions.map((s, i) => ({ x: toX(i) + barWidth / 2, y: toY(s.e1rm) }));
-                        const smooth = (points) => {
-                          if (points.length < 2) return "";
-                          let d = `M ${points[0].x},${points[0].y}`;
-                          for (let i = 0; i < points.length - 1; i++) {
-                            const cp = (points[i+1].x - points[i].x) / 2.5;
-                            d += ` C ${points[i].x+cp},${points[i].y} ${points[i+1].x-cp},${points[i+1].y} ${points[i+1].x},${points[i+1].y}`;
-                          }
-                          return d;
-                        };
-                        return <path d={smooth(pts)} fill="none" stroke={lift.color} strokeWidth="2" strokeLinecap="round" opacity="0.4" strokeDasharray="4,3"/>;
-                      })()}
-                    </svg>
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                    <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                      <span style={{ fontWeight: 600 }}>Best Set:</span> {sessions[sessions.length - 1].weight} lbs x {sessions[sessions.length - 1].reps}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 12, height: 3, borderRadius: 2, background: lift.color, opacity: 0.4 }} />
-                      <span style={{ fontSize: 11, color: TEXT_SEC }}>Est. 1RM trend</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            });
-          })()}
-
-          {/* ─── ACHIEVEMENTS & STREAKS ─── */}
-          <div style={{
-            background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)`,
-            borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "20px" : "28px 32px"
-          }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
-            <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
-            
-            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-              <div style={{
-                flex: 1, padding: "18px 16px", borderRadius: 16,
-                background: `linear-gradient(135deg, ${TEAL}08, ${TEAL}04)`,
-                border: `1px solid ${TEAL}15`, textAlign: "center"
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Current Streak</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: TEAL }}>{currentStreak}</div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
-              </div>
-              <div style={{
-                flex: 1, padding: "18px 16px", borderRadius: 16,
-                background: `linear-gradient(135deg, ${MINT}08, ${MINT}04)`,
-                border: `1px solid ${MINT}15`, textAlign: "center"
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 6 }}>Best Streak</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: MINT }}>{bestStreak}</div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>sessions</div>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 10 }}>
-              {[
-                { name: "First Session", icon: "check", earned: totalSessions >= 1 },
-                { name: "5 Session Streak", icon: "fire", earned: bestStreak >= 5 },
-                { name: "10 Sessions", icon: "trophy", earned: totalSessions >= 10 },
-                { name: "Body Comp Warrior", icon: "muscle", earned: true },
-                { name: "PR Crusher", icon: "star", earned: true },
-                { name: "Nutrition Champion", icon: "apple", earned: client.mealsLogged >= 15 },
-              ].map((a, i) => {
-                const icons = {
-                  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
-                  fire: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z"/></svg>,
-                  trophy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V12"/><path d="M14 22V12"/><rect x="6" y="2" width="12" height="10" rx="2"/></svg>,
-                  muscle: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
-                  star: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>,
-                  apple: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
-                };
-                return (
-                  <div key={i} style={{
-                    padding: "14px 12px", borderRadius: 14,
-                    background: a.earned ? `linear-gradient(135deg, ${ALERT_GREEN}08, ${ALERT_GREEN}04)` : "#f8f9f8",
-                    border: `1px solid ${a.earned ? `${ALERT_GREEN}20` : BORDER}`,
-                    textAlign: "center", opacity: a.earned ? 1 : 0.5
-                  }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10, margin: "0 auto 8px",
-                      background: a.earned ? `${ALERT_GREEN}15` : "#e8f0ee",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: a.earned ? ALERT_GREEN : TEXT_SEC
-                    }}>
-                      {icons[a.icon]}
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: a.earned ? TEXT : TEXT_SEC, marginBottom: 2 }}>{a.name}</div>
-                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.earned ? "Earned" : "Locked"}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ─── SHARE/EXPORT FOOTER ─── */}
-          <div style={{
-            background: `linear-gradient(135deg, ${TEAL}, ${MINT})`,
-            borderRadius: 20, padding: isMobile ? "24px 20px" : "32px 40px",
-            textAlign: "center", color: WHITE
-          }}>
-            <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, marginBottom: 8 }}>
-              Keep showing up. The results will follow.
-            </div>
-            <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 20 }}>
-              Every session is a step closer to your goal.
-            </div>
-            
-            <button
-              onClick={() => setShowReport(true)}
-              style={{
-                padding: isMobile ? "12px 24px" : "14px 32px",
-                borderRadius: 12, border: "2px solid rgba(255,255,255,0.3)",
-                background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)",
-                color: WHITE, fontSize: 14, fontWeight: 600,
-                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 10,
-                transition: "all 0.2s ease"
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"; }}
-              onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
-                <polyline points="16 6 12 2 8 6"/>
-                <line x1="12" y1="2" x2="12" y2="15"/>
-              </svg>
-              Share or Export Report
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ══�� TAB: CHATS ═══ */}
-      {activeTab === "chats" && (
-        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{client.name.split(" ")[0]}'s Conversations</div>
-          <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 18 }}>Chat history between {client.name.split(" ")[0]} and Milton AI</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              { role: "user", text: "My squat felt really heavy yesterday. Should I be worried?", time: "Mon 9:12 AM" },
-              { role: "ai", text: "Looking at your last few sessions, your squat volume has increased 15% over 2 weeks. That accumulated fatigue is normal! Consider a lighter session this week to let your body adapt.", time: "Mon 9:12 AM" },
-              { role: "user", text: "That makes sense. Should I just do lighter weights same reps?", time: "Mon 9:14 AM" },
-              { role: "ai", text: "I'd suggest dropping to 70-75% of your working weights and focusing on movement quality. Here's a deload protocol:\n\n1) Reduce weight by 25-30%\n2) Keep reps the same\n3) Focus on tempo and positioning\n\nThis will help you come back stronger next week!", time: "Mon 9:14 AM" },
-              { role: "user", text: "Perfect, I'll try that Wednesday. Thanks!", time: "Mon 9:16 AM" },
-              { role: "ai", text: "Great plan! I've noted this in your training log. Let me know how the session feels — I'll adjust next week's programming based on your recovery.", time: "Mon 9:16 AM" },
-            ].map((msg, i) => (
-              <div key={i} style={{ display: "flex", gap: 10 }}>
-                {msg.role === "user" ? (
-                  <Avatar name={client.name} size={32} />
-                ) : (
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
-                  </div>
-                )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{msg.role === "user" ? client.name.split(" ")[0] : "Milton"}</span>
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{msg.time}</span>
-                  </div>
-                  <div style={{
-                    padding: "12px 16px", borderRadius: "4px 16px 16px 16px",
-                    background: msg.role === "user" ? "#f7faf9" : `linear-gradient(135deg, rgba(43,122,120,0.04), rgba(92,219,149,0.04))`,
-                    border: `1px solid ${msg.role === "user" ? BORDER : "rgba(43,122,120,0.12)"}`,
-                    fontSize: 13, lineHeight: 1.6, color: TEXT, whiteSpace: "pre-line"
-                  }}>{msg.text}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
 
 /* ═════════════════════════════════════════════
    SEND REPORT MODAL
-   ═════════════��═══════════════════════════════ */
+   ═════════════════════════════════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
