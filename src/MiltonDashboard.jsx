@@ -3387,12 +3387,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{totalSessions}</span>
             <span style={{ fontSize: 12, color: TEXT_SEC }}>total sessions</span>
           </div>
-          {lastSession && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{lastSession.type}</span>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>{lastSession.date}</span>
-            </div>
-          )}
         </div>
 
         {/* Goal progress bar */}
