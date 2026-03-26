@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CoachPro - Client Dashboard",
+  title: "Milton - Client Detail",
   description: "Professional fitness coaching client management dashboard",
 };
 
