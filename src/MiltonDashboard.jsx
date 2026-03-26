@@ -3192,6 +3192,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [selectedCalDay, setSelectedCalDay] = useState(null);
+  const [workoutExpanded, setWorkoutExpanded] = useState(false);
+  const [nutritionExpanded, setNutritionExpanded] = useState(false);
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -3721,7 +3723,10 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
 {day.workout && (
   <div style={{ padding: "14px 16px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15`, gridColumn: isMobile ? "1" : "1 / -1" }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+    <div 
+      onClick={() => setWorkoutExpanded(!workoutExpanded)}
+      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -3731,191 +3736,209 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </div>
       {/* Workout summary */}
-      <div style={{ display: "flex", gap: 12 }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.workout.duration}</div>
-          <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Min</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.workout.duration}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Min</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#ef6c3e" }}>{day.workout.calories}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEAL }}>{day.workout.exercises.length}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Exercises</div>
+          </div>
         </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#ef6c3e" }}>{day.workout.calories}</div>
-          <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: TEAL }}>{day.workout.exercises.length}</div>
-          <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Exercises</div>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: workoutExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
       </div>
     </div>
     
-    {/* Individual exercises */}
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {day.workout.exercises.map((exercise, idx) => (
-        <div key={idx} style={{
-          display: "flex", flexDirection: "column", gap: 8, padding: "12px 14px",
-          background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{exercise.name}</div>
-            {exercise.duration && !exercise.sets && (
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{exercise.duration}s {exercise.notes || ""}</div>
+    {/* Individual exercises - collapsible */}
+    {workoutExpanded && (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+        {day.workout.exercises.map((exercise, idx) => (
+          <div key={idx} style={{
+            display: "flex", flexDirection: "column", gap: 8, padding: "12px 14px",
+            background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{exercise.name}</div>
+              {exercise.duration && !exercise.sets && (
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>{exercise.duration}s {exercise.notes || ""}</div>
+              )}
+            </div>
+            
+            {/* Strength exercises with sets */}
+            {exercise.sets && exercise.sets[0]?.weight !== undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {exercise.sets.map((set, sIdx) => (
+                  <div key={sIdx} style={{
+                    padding: "6px 10px", borderRadius: 6, background: "#f7faf9", border: `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", gap: 6
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: TEAL }}>Set {sIdx + 1}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.weight} lbs</span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>x {set.reps}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* HIIT exercises with sets */}
+            {exercise.sets && exercise.sets[0]?.rest !== undefined && exercise.sets[0]?.weight === undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {exercise.sets.map((set, sIdx) => (
+                  <div key={sIdx} style={{
+                    padding: "6px 10px", borderRadius: 6, background: "#fef3c7", border: `1px solid #fcd34d`,
+                    display: "flex", alignItems: "center", gap: 6
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>Set {sIdx + 1}</span>
+                    {set.reps && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.reps} reps</span>}
+                    {set.duration && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.duration}s</span>}
+                    {set.weight && <span style={{ fontSize: 11, color: TEXT_SEC }}>@ {set.weight} lbs</span>}
+                    <span style={{ fontSize: 10, color: TEXT_SEC }}>({set.rest}s rest)</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Cardio exercises */}
+            {exercise.avgHR !== undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dbeafe" }}>
+                  <span style={{ fontSize: 11, color: "#3b82f6", fontWeight: 600 }}>{exercise.duration} min</span>
+                </div>
+                {exercise.distance && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dcfce7" }}>
+                    <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{exercise.distance} mi</span>
+                  </div>
+                )}
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fee2e2" }}>
+                  <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600 }}>{exercise.avgHR} bpm avg</span>
+                </div>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fef3c7" }}>
+                  <span style={{ fontSize: 11, color: "#d97706", fontWeight: 600 }}>{exercise.calories} cal</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Mobility exercises */}
+            {exercise.duration && !exercise.sets && !exercise.avgHR && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3e8ff" }}>
+                  <span style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600 }}>{exercise.duration}s hold</span>
+                </div>
+                {exercise.reps && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#e0e7ff" }}>
+                    <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 600 }}>{exercise.reps} reps</span>
+                  </div>
+                )}
+                {exercise.notes && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3f4f6" }}>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{exercise.notes}</span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-          
-          {/* Strength exercises with sets */}
-          {exercise.sets && exercise.sets[0]?.weight !== undefined && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {exercise.sets.map((set, sIdx) => (
-                <div key={sIdx} style={{
-                  padding: "6px 10px", borderRadius: 6, background: "#f7faf9", border: `1px solid ${BORDER}`,
-                  display: "flex", alignItems: "center", gap: 6
-                }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: TEAL }}>Set {sIdx + 1}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.weight} lbs</span>
-                  <span style={{ fontSize: 11, color: TEXT_SEC }}>x {set.reps}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* HIIT exercises with sets */}
-          {exercise.sets && exercise.sets[0]?.rest !== undefined && exercise.sets[0]?.weight === undefined && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {exercise.sets.map((set, sIdx) => (
-                <div key={sIdx} style={{
-                  padding: "6px 10px", borderRadius: 6, background: "#fef3c7", border: `1px solid #fcd34d`,
-                  display: "flex", alignItems: "center", gap: 6
-                }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>Set {sIdx + 1}</span>
-                  {set.reps && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.reps} reps</span>}
-                  {set.duration && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.duration}s</span>}
-                  {set.weight && <span style={{ fontSize: 11, color: TEXT_SEC }}>@ {set.weight} lbs</span>}
-                  <span style={{ fontSize: 10, color: TEXT_SEC }}>({set.rest}s rest)</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Cardio exercises */}
-          {exercise.avgHR !== undefined && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dbeafe" }}>
-                <span style={{ fontSize: 11, color: "#3b82f6", fontWeight: 600 }}>{exercise.duration} min</span>
-              </div>
-              {exercise.distance && (
-                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dcfce7" }}>
-                  <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{exercise.distance} mi</span>
-                </div>
-              )}
-              <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fee2e2" }}>
-                <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600 }}>{exercise.avgHR} bpm avg</span>
-              </div>
-              <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fef3c7" }}>
-                <span style={{ fontSize: 11, color: "#d97706", fontWeight: 600 }}>{exercise.calories} cal</span>
-              </div>
-            </div>
-          )}
-          
-          {/* Mobility exercises */}
-          {exercise.duration && !exercise.sets && !exercise.avgHR && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3e8ff" }}>
-                <span style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600 }}>{exercise.duration}s hold</span>
-              </div>
-              {exercise.reps && (
-                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#e0e7ff" }}>
-                  <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 600 }}>{exercise.reps} reps</span>
-                </div>
-              )}
-              {exercise.notes && (
-                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3f4f6" }}>
-                  <span style={{ fontSize: 11, color: TEXT_SEC }}>{exercise.notes}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    )}
   </div>
   )}
                       {day.nutrition && (
                         <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15`, gridColumn: isMobile ? "1" : "1 / -1" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                          <div 
+                            onClick={() => setNutritionExpanded(!nutritionExpanded)}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+                          >
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
                               </div>
                               <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
+                              <span style={{ fontSize: 12, color: TEXT_SEC }}>({day.nutrition.meals.length} meals)</span>
                             </div>
                             {/* Daily totals */}
-                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.nutrition.totals.calories}</div>
-                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.nutrition.totals.calories}</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#3b82f6" }}>{day.nutrition.totals.protein}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Protein</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#f59e0b" }}>{day.nutrition.totals.carbs}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Carbs</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#8b5cf6" }}>{day.nutrition.totals.fat}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Fat</div>
+                                </div>
                               </div>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: "#3b82f6" }}>{day.nutrition.totals.protein}g</div>
-                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Protein</div>
-                              </div>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: "#f59e0b" }}>{day.nutrition.totals.carbs}g</div>
-                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Carbs</div>
-                              </div>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: "#8b5cf6" }}>{day.nutrition.totals.fat}g</div>
-                                <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Fat</div>
-                              </div>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: nutritionExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+                                <polyline points="6,9 12,15 18,9"/>
+                              </svg>
                             </div>
                           </div>
                           
-                          {/* Individual meals */}
-                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            {day.nutrition.meals.map((meal, idx) => (
-                              <div key={idx} style={{
-                                display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-                                background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
-                              }}>
-                                <div style={{
-                                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                                  background: meal.type === "Breakfast" ? "#fef3c7" : meal.type === "Lunch" ? "#dcfce7" : meal.type === "Dinner" ? "#fce7f3" : "#e0e7ff",
-                                  display: "flex", alignItems: "center", justifyContent: "center"
+                          {/* Individual meals - collapsible */}
+                          {nutritionExpanded && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+                              {day.nutrition.meals.map((meal, idx) => (
+                                <div key={idx} style={{
+                                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                                  background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
                                 }}>
-                                  {meal.type === "Breakfast" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>}
-                                  {meal.type === "Lunch" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M12 12m-9 0a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0"/><path d="M12 7v5l3 3"/></svg>}
-                                  {meal.type === "Dinner" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>}
-                                  {meal.type === "Snacks" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>}
+                                  <div style={{
+                                    width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                                    background: meal.type === "Breakfast" ? "#fef3c7" : meal.type === "Lunch" ? "#dcfce7" : meal.type === "Dinner" ? "#fce7f3" : "#e0e7ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center"
+                                  }}>
+                                    {meal.type === "Breakfast" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>}
+                                    {meal.type === "Lunch" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M12 12m-9 0a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0"/><path d="M12 7v5l3 3"/></svg>}
+                                    {meal.type === "Dinner" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>}
+                                    {meal.type === "Snacks" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>}
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>{meal.type}</span>
+                                      <span style={{ fontSize: 11, color: TEXT_SEC }}>{meal.time}</span>
+                                    </div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meal.name}</div>
+                                  </div>
+                                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3f4f6", textAlign: "center", minWidth: 48 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{meal.calories}</div>
+                                      <div style={{ fontSize: 9, color: TEXT_SEC }}>cal</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#dbeafe", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6" }}>{meal.protein}g</div>
+                                      <div style={{ fontSize: 9, color: "#3b82f6" }}>P</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#fef3c7", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#d97706" }}>{meal.carbs}g</div>
+                                      <div style={{ fontSize: 9, color: "#d97706" }}>C</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3e8ff", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#8b5cf6" }}>{meal.fat}g</div>
+                                      <div style={{ fontSize: 9, color: "#8b5cf6" }}>F</div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                                    <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>{meal.type}</span>
-                                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{meal.time}</span>
-                                  </div>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meal.name}</div>
-                                </div>
-                                <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3f4f6", textAlign: "center", minWidth: 48 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{meal.calories}</div>
-                                    <div style={{ fontSize: 9, color: TEXT_SEC }}>cal</div>
-                                  </div>
-                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#dbeafe", textAlign: "center", minWidth: 40 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6" }}>{meal.protein}g</div>
-                                    <div style={{ fontSize: 9, color: "#3b82f6" }}>P</div>
-                                  </div>
-                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#fef3c7", textAlign: "center", minWidth: 40 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#d97706" }}>{meal.carbs}g</div>
-                                    <div style={{ fontSize: 9, color: "#d97706" }}>C</div>
-                                  </div>
-                                  <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3e8ff", textAlign: "center", minWidth: 40 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#8b5cf6" }}>{meal.fat}g</div>
-                                    <div style={{ fontSize: 9, color: "#8b5cf6" }}>F</div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            {day.nutrition.meals.length === 0 && (
-                              <div style={{ textAlign: "center", padding: "16px", color: TEXT_SEC, fontSize: 13 }}>No meals logged</div>
-                            )}
-                          </div>
+                              ))}
+                              {day.nutrition.meals.length === 0 && (
+                                <div style={{ textAlign: "center", padding: "16px", color: TEXT_SEC, fontSize: 13 }}>No meals logged</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                       {day.sleep && (
