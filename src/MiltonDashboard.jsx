@@ -3435,8 +3435,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         {[
           { id: "overview", label: "Overview" },
           { id: "journey", label: "Progress" },
-          { id: "profile", label: "Profile" },
-          { id: "chats", label: "Chats" },
         ].map(tab => (
           <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
@@ -3974,115 +3972,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      </>)}
-
-      {/* ═══ TAB: PROFILE ═══ */}
-      {activeTab === "profile" && (<>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 18 }}>
-          {/* Left Column - Stats & Body */}
-          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Body Composition</div>
-              {[
-                ["Current Weight", `${client.current?.bodyweight || wData[wData.length-1]} lbs`],
-                ["Goal Weight", `${client.goals?.targetWeight || Math.round(wData[wData.length-1]-10)} lbs`],
-                ["Body Fat", `${client.current?.bodyFat || 22}%`],
-                ["Goal Body Fat", `${client.goals?.targetBodyFat || 18}%`],
-                ["Lean Mass", `${client.current?.leanMass || 125} lbs`],
-                ["Height", client.profile?.height || `5'6"`],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
-                </div>
-              ))}
-            </div>
-            
-            {/* Strength Baselines */}
-            {client.assessment?.strengthBaselines && (
-              <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Strength Baselines</div>
-                {Object.entries(client.assessment.strengthBaselines).map(([key, val], i) => {
-                  const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
-                  return (
-                    <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{names[key] || key}</span>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: TEAL, textAlign: "right" }}>{val.weight} x {val.reps}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          
-          {/* Right Column - Goals & Notes */}
-          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Goals & Program</div>
-              {[
-                ["Primary Goal", client.goals?.primary || "Build Strength"],
-                ["Secondary", client.goals?.secondaryGoals?.join(", ") || "Improve mobility"],
-                ["Program", client.program || "General Fitness"],
-                ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
-                ["Training Style", client.profile?.trainingStyle || "Barbell-focused"],
-                ["Experience", client.profile?.experience || "Intermediate"],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Notes & Considerations</div>
-              {[
-                ["Injuries/Limitations", client.profile?.injuries || "None reported"],
-                ["Equipment Access", client.profile?.equipment || "Full gym"],
-                ["Preferred Time", client.profile?.preferredTime || "Morning"],
-                ["Communication", client.profile?.communication || "Text preferred"],
-              ].map(([l,v],i) => (
-                <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT, textAlign: "right" }}>{v}</span>
-                </div>
-              ))}
-              <div style={{ padding: "11px 0" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_SEC }}>Coach Notes</span>
-                <p style={{ fontSize: 13, color: TEXT, margin: "6px 0 0", lineHeight: 1.55 }}>{client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming.`}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Training Timeline - moved to profile tab */}
-        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginTop: isMobile ? 14 : 18 }}>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Training Timeline</div>
-          <div style={{ position: "relative", paddingLeft: 28 }}>
-            <div style={{ position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: `linear-gradient(180deg, ${TEAL}, ${MINT})`, borderRadius: 1 }} />
-            {[
-              { date: client.assessment?.date || client.startDate, type: "start", title: "Initial Assessment", desc: `Completed baseline testing. Set primary goal: ${client.goals?.primary || "Build strength"}.`, color: TEAL },
-              { date: "Week 2", type: "milestone", title: "First PR", desc: "Hit new squat PR after consistent form work.", color: MINT },
-              { date: "Week 3", type: "insight", title: "Milton Insight", desc: "Detected strength plateau on bench press. Recommended deload week.", color: "#8e7cc3" },
-              { date: "Week 4", type: "action", title: "Program Adjustment", desc: "Added accessory work to address weak triceps.", color: "#ef6c3e" },
-              { date: "Week 5", type: "milestone", title: `${totalSessions} Sessions`, desc: `Completed ${totalSessions} total sessions. Attendance rate: ${attendanceRate}%.`, color: MINT },
-              { date: "Today", type: "current", title: "Current Status", desc: `${currentStreak} session streak. ${client.alert || "On track for weekly goal"}.`, color: ALERT_GREEN },
-            ].map((ev, i, arr) => (
-              <div key={i} style={{ position: "relative", marginBottom: i < arr.length - 1 ? 24 : 0 }}>
-                <div style={{
-                  position: "absolute", left: -28, top: 2, width: 20, height: 20, borderRadius: "50%",
-                  background: ev.color, display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: `0 2px 6px ${ev.color}40`
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
-                </div>
-                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>{ev.date}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{ev.title}</div>
-                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.55 }}>{ev.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </>)}
 
       {/* ═══ TAB: PROGRESS (Client-Facing View) ═══ */}
@@ -4658,46 +4547,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </svg>
               Share or Export Report
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* ══�� TAB: CHATS ═══ */}
-      {activeTab === "chats" && (
-        <div style={{ background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`, padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{client.name.split(" ")[0]}'s Conversations</div>
-          <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 18 }}>Chat history between {client.name.split(" ")[0]} and Milton AI</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              { role: "user", text: "My squat felt really heavy yesterday. Should I be worried?", time: "Mon 9:12 AM" },
-              { role: "ai", text: "Looking at your last few sessions, your squat volume has increased 15% over 2 weeks. That accumulated fatigue is normal! Consider a lighter session this week to let your body adapt.", time: "Mon 9:12 AM" },
-              { role: "user", text: "That makes sense. Should I just do lighter weights same reps?", time: "Mon 9:14 AM" },
-              { role: "ai", text: "I'd suggest dropping to 70-75% of your working weights and focusing on movement quality. Here's a deload protocol:\n\n1) Reduce weight by 25-30%\n2) Keep reps the same\n3) Focus on tempo and positioning\n\nThis will help you come back stronger next week!", time: "Mon 9:14 AM" },
-              { role: "user", text: "Perfect, I'll try that Wednesday. Thanks!", time: "Mon 9:16 AM" },
-              { role: "ai", text: "Great plan! I've noted this in your training log. Let me know how the session feels — I'll adjust next week's programming based on your recovery.", time: "Mon 9:16 AM" },
-            ].map((msg, i) => (
-              <div key={i} style={{ display: "flex", gap: 10 }}>
-                {msg.role === "user" ? (
-                  <Avatar name={client.name} size={32} />
-                ) : (
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
-                  </div>
-                )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{msg.role === "user" ? client.name.split(" ")[0] : "Milton"}</span>
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{msg.time}</span>
-                  </div>
-                  <div style={{
-                    padding: "12px 16px", borderRadius: "4px 16px 16px 16px",
-                    background: msg.role === "user" ? "#f7faf9" : `linear-gradient(135deg, rgba(43,122,120,0.04), rgba(92,219,149,0.04))`,
-                    border: `1px solid ${msg.role === "user" ? BORDER : "rgba(43,122,120,0.12)"}`,
-                    fontSize: 13, lineHeight: 1.6, color: TEXT, whiteSpace: "pre-line"
-                  }}>{msg.text}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}
