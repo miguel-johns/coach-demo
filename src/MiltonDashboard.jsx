@@ -3670,120 +3670,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      {/* ─── PROFILE & BASELINES (COLLAPSIBLE) ─── */}
-      {(() => {
-        const current = client.current || {};
-        const goals = client.goals || {};
-        const profile = client.profile || {};
-        const assessment = client.assessment || {};
-        const strengthBaselines = assessment.strengthBaselines || {};
-        
-        const summaryText = `${current.bodyweight || 153} lbs · ${current.bodyFat || 25.2}% BF · ${profile.trainingStyle || "Barbell-focused"}`;
-        
-        return (
-          <div style={{
-            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden"
-          }}>
-            {/* Collapsible header */}
-            <div
-              onClick={() => setProfileExpanded(!profileExpanded)}
-              style={{
-                padding: isMobile ? "16px 18px" : "18px 28px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                cursor: "pointer", background: profileExpanded ? "#f7faf9" : "transparent",
-                transition: "background 0.2s ease"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TEAL}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Profile & Baselines</div>
-                  {!profileExpanded && <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{summaryText}</div>}
-                </div>
-              </div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: profileExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
-                <polyline points="6,9 12,15 18,9"/>
-              </svg>
-            </div>
-
-            {/* Expanded content */}
-            {profileExpanded && (
-              <div style={{ padding: isMobile ? "0 18px 18px" : "0 28px 24px" }}>
-                {/* Two-column grid */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 18 }}>
-                  {/* Body composition */}
-                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Body Composition</div>
-                    {[
-                      ["Weight", `${current.bodyweight || 153} lbs`],
-                      ["Goal Weight", `${goals.targetWeight || 138} lbs`],
-                      ["Body Fat", `${current.bodyFat || 25.2}%`],
-                      ["Lean Mass", `${current.leanMass || 114} lbs`],
-                      ["Height", profile.height || `5'6"`],
-                    ].map(([l, v], i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
-                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Training details */}
-                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Training Details</div>
-                    {[
-                      ["Style", profile.trainingStyle || "Barbell-focused"],
-                      ["Experience", profile.experience || "Intermediate"],
-                      ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
-                      ["Preferred Time", profile.preferredTime || "Morning"],
-                      ["Communication", profile.communication || "Text"],
-                    ].map(([l, v], i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
-                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Strength baselines */}
-                {Object.keys(strengthBaselines).length > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Strength Baselines</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {Object.entries(strengthBaselines).map(([key, val], i) => {
-                        const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
-                        const currentVal = { squat: "120x6", deadlift: "155x5", benchPress: "85x8", overheadPress: "55x6" };
-                        return (
-                          <div key={i} style={{ padding: "8px 14px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{names[key] || key}</span>
-                            <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 6 }}>{val.weight}x{val.reps}</span>
-                            <span style={{ fontSize: 12, color: TEAL, marginLeft: 4 }}>→ {currentVal[key] || `${val.weight + 20}x${val.reps}`}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Coach notes */}
-                <div style={{ padding: "14px 16px", borderRadius: 12, background: "#fafbfa", borderLeft: `3px solid ${TEAL}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Coach Notes</div>
-                  <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>
-                    {client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming. Focus on hip mobility before squat sessions.`}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
       {/* ─── DAILY BREAKDOWN CARDS ─── */}
       {(() => {
         const cards = [
@@ -3899,13 +3785,127 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           </div>
         );
       })()}
+
+      {/* ─── PROFILE & BASELINES (COLLAPSIBLE) ─── */}
+      {(() => {
+        const current = client.current || {};
+        const goals = client.goals || {};
+        const profile = client.profile || {};
+        const assessment = client.assessment || {};
+        const strengthBaselines = assessment.strengthBaselines || {};
+        
+        const summaryText = `${current.bodyweight || 153} lbs · ${current.bodyFat || 25.2}% BF · ${profile.trainingStyle || "Barbell-focused"}`;
+        
+        return (
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden"
+          }}>
+            {/* Collapsible header */}
+            <div
+              onClick={() => setProfileExpanded(!profileExpanded)}
+              style={{
+                padding: isMobile ? "16px 18px" : "18px 28px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                cursor: "pointer", background: profileExpanded ? "#f7faf9" : "transparent",
+                transition: "background 0.2s ease"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TEAL}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Profile & Baselines</div>
+                  {!profileExpanded && <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{summaryText}</div>}
+                </div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: profileExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+                <polyline points="6,9 12,15 18,9"/>
+              </svg>
+            </div>
+
+            {/* Expanded content */}
+            {profileExpanded && (
+              <div style={{ padding: isMobile ? "0 18px 18px" : "0 28px 24px" }}>
+                {/* Two-column grid */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 18 }}>
+                  {/* Body composition */}
+                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Body Composition</div>
+                    {[
+                      ["Weight", `${current.bodyweight || 153} lbs`],
+                      ["Goal Weight", `${goals.targetWeight || 138} lbs`],
+                      ["Body Fat", `${current.bodyFat || 25.2}%`],
+                      ["Lean Mass", `${current.leanMass || 114} lbs`],
+                      ["Height", profile.height || `5'6"`],
+                    ].map(([l, v], i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
+                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Training details */}
+                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Training Details</div>
+                    {[
+                      ["Style", profile.trainingStyle || "Barbell-focused"],
+                      ["Experience", profile.experience || "Intermediate"],
+                      ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
+                      ["Preferred Time", profile.preferredTime || "Morning"],
+                      ["Communication", profile.communication || "Text"],
+                    ].map(([l, v], i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
+                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Strength baselines */}
+                {Object.keys(strengthBaselines).length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Strength Baselines</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {Object.entries(strengthBaselines).map(([key, val], i) => {
+                        const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
+                        const currentVal = { squat: "120x6", deadlift: "155x5", benchPress: "85x8", overheadPress: "55x6" };
+                        return (
+                          <div key={i} style={{ padding: "8px 14px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{names[key] || key}</span>
+                            <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 6 }}>{val.weight}x{val.reps}</span>
+                            <span style={{ fontSize: 12, color: TEAL, marginLeft: 4 }}>→ {currentVal[key] || `${val.weight + 20}x${val.reps}`}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Coach notes */}
+                <div style={{ padding: "14px 16px", borderRadius: 12, background: "#fafbfa", borderLeft: `3px solid ${TEAL}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Coach Notes</div>
+                  <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>
+                    {client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming. Focus on hip mobility before squat sessions.`}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
 /* ═════════════════════════════════════════════
    SEND REPORT MODAL
-   ═════════════��═══════════════════════════════ */
+   ═════════════════════════════════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
