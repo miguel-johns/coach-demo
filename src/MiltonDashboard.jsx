@@ -3646,12 +3646,12 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
 
 {/* Desktop: side-by-side layout, Mobile: stacked */}
-  <div style={{ display: isMobile ? "block" : "flex", gap: 24, alignItems: "flex-start" }}>
+  <div style={{ display: isMobile ? "block" : "flex", gap: 20, alignItems: "flex-start" }}>
   {/* Calendar section */}
   <div style={{ 
-    flex: isMobile ? "none" : (selectedCalDay !== null ? "0 0 50%" : "1"),
-    minWidth: 0,
-    transition: "flex 0.2s ease"
+    width: isMobile ? "100%" : (selectedCalDay !== null ? "55%" : "100%"),
+    flexShrink: 0,
+    transition: "width 0.25s ease"
   }}>
                 {/* Day headers */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
@@ -3711,8 +3711,8 @@ return (
   flex: isMobile ? "none" : "1",
   minWidth: 0,
   background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-  padding: isMobile ? "16px" : "20px", marginTop: isMobile ? 8 : 0,
-  maxHeight: isMobile ? "none" : "520px", overflowY: isMobile ? "visible" : "auto"
+  padding: isMobile ? "16px" : "18px", marginTop: isMobile ? 8 : 0,
+  maxHeight: isMobile ? "none" : "480px", overflowY: isMobile ? "visible" : "auto"
   }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div>
