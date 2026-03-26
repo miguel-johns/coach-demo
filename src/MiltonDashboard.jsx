@@ -3645,63 +3645,70 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               )}
             </div>
 
-            {/* Day headers */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{isMobile ? d.charAt(0) : d}</div>
-              ))}
-            </div>
+            {/* Desktop: side-by-side layout, Mobile: stacked */}
+            <div style={{ display: isMobile ? "block" : "flex", gap: 24 }}>
+              {/* Calendar section */}
+              <div style={{ flex: isMobile ? "none" : (selectedCalDay !== null ? "0 0 55%" : "1") }}>
+                {/* Day headers */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                    <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{isMobile ? d.charAt(0) : d}</div>
+                  ))}
+                </div>
 
-            {/* Calendar grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 16 }}>
-              {Array.from({ length: paddingDays }).map((_, i) => (
-                <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
-              ))}
-              {calendarDays.map((day, i) => {
-                const intensity = getIntensity(day);
-                const isSelected = selectedCalDay === i;
-                const isToday = day.date.toDateString() === today.toDateString();
+                {/* Calendar grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0 }}>
+                  {Array.from({ length: paddingDays }).map((_, i) => (
+                    <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
+                  ))}
+                  {calendarDays.map((day, i) => {
+                    const intensity = getIntensity(day);
+                    const isSelected = selectedCalDay === i;
+                    const isToday = day.date.toDateString() === today.toDateString();
+                    
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedCalDay(isSelected ? null : i)}
+                        style={{
+                          aspectRatio: "1", borderRadius: isMobile ? 6 : 10,
+                          background: intensityColors[intensity],
+                          border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", transition: "all 0.15s ease", position: "relative",
+                          transform: isSelected ? "scale(1.05)" : "scale(1)",
+                          boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
+                        }}
+                      >
+                        <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
+                          {day.dayNum}
+                        </div>
+                        {!isMobile && (
+                          <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                            {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
+                            {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
+                            {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
+                            {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected day details */}
+              {selectedCalDay !== null && (() => {
+                const day = calendarDays[selectedCalDay];
+                const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
                 
                 return (
-                  <div
-                    key={i}
-                    onClick={() => setSelectedCalDay(isSelected ? null : i)}
-                    style={{
-                      aspectRatio: "1", borderRadius: isMobile ? 6 : 10,
-                      background: intensityColors[intensity],
-                      border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", transition: "all 0.15s ease", position: "relative",
-                      transform: isSelected ? "scale(1.05)" : "scale(1)",
-                      boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
-                    }}
-                  >
-                    <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
-                      {day.dayNum}
-                    </div>
-                    {!isMobile && (
-                      <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
-                        {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
-                        {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
-                        {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
-                        {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Selected day details */}
-            {selectedCalDay !== null && (() => {
-              const day = calendarDays[selectedCalDay];
-              const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
-              
-              return (
-                <div style={{
-                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "16px" : "20px", marginTop: 8
-                }}>
+                  <div style={{
+                    flex: isMobile ? "none" : "1",
+                    background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                    padding: isMobile ? "16px" : "20px", marginTop: isMobile ? 8 : 0,
+                    maxHeight: isMobile ? "none" : "500px", overflowY: isMobile ? "visible" : "auto"
+                  }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div>
                       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{day.dayName}, {day.month} {day.dayNum}</div>
@@ -3974,6 +3981,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 </div>
               );
             })()}
+            </div>
           </div>
         );
       })()}
