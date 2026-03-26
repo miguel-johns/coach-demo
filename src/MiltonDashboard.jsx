@@ -3650,21 +3650,20 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   {/* Calendar section */}
   <div style={{ 
     width: isMobile ? "100%" : (selectedCalDay !== null ? "55%" : "100%"),
-    flexShrink: 0,
-    overflow: "hidden",
+    minWidth: 0,
     transition: "width 0.25s ease"
   }}>
                 {/* Day headers */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6, minWidth: 0 }}>
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                    <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{isMobile ? d.charAt(0) : d}</div>
+                    <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC, minWidth: 0 }}>{isMobile ? d.charAt(0) : d}</div>
                   ))}
                 </div>
 
 {/* Calendar grid */}
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0, width: "100%" }}>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0, minWidth: 0 }}>
                   {Array.from({ length: paddingDays }).map((_, i) => (
-                    <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
+                    <div key={`pad-${i}`} style={{ aspectRatio: "1", minWidth: 0 }} />
                   ))}
                   {calendarDays.map((day, i) => {
                     const intensity = getIntensity(day);
@@ -3682,7 +3681,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                           cursor: "pointer", transition: "all 0.15s ease", position: "relative",
                           transform: isSelected ? "scale(1.05)" : "scale(1)",
-                          boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
+                          boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none",
+                          minWidth: 0
                         }}
                       >
                         <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
