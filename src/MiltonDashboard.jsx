@@ -3500,10 +3500,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         const intensityColors = { 0: "#f8f9f8", 1: `${TEAL}25`, 2: `${TEAL}45`, 3: `${TEAL}70`, 4: TEAL };
         const firstDate = calendarDays[0].date;
         const paddingDays = firstDate.getDay();
-        
-        // Find today's index for default selection on desktop
-        const todayIndex = calendarDays.findIndex(d => d.date.toDateString() === today.toDateString());
-        const activeDay = selectedCalDay !== null ? selectedCalDay : (!isMobile ? todayIndex : null);
 
         return (
           <div style={{
@@ -3533,143 +3529,136 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               )}
             </div>
 
-            {/* Desktop: side-by-side layout, Mobile: stacked */}
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 16 : 24 }}>
-              {/* Calendar section */}
-              <div style={{ flex: isMobile ? "none" : "0 0 auto", width: isMobile ? "100%" : "auto" }}>
-                {/* Day headers */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                    <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC, width: isMobile ? "auto" : 44 }}>{isMobile ? d.charAt(0) : d}</div>
-                  ))}
-                </div>
+            {/* Day headers */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{isMobile ? d.charAt(0) : d}</div>
+              ))}
+            </div>
 
-                {/* Calendar grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6 }}>
-                  {Array.from({ length: paddingDays }).map((_, i) => (
-                    <div key={`pad-${i}`} style={{ aspectRatio: "1", width: isMobile ? "auto" : 44 }} />
-                  ))}
-                  {calendarDays.map((day, i) => {
-                    const intensity = getIntensity(day);
-                    const isSelected = activeDay === i;
-                    const isToday = day.date.toDateString() === today.toDateString();
-                    
-                    return (
-                      <div
-                        key={i}
-                        onClick={() => setSelectedCalDay(i === selectedCalDay ? (!isMobile ? todayIndex : null) : i)}
-                        style={{
-                          aspectRatio: "1", width: isMobile ? "auto" : 44, borderRadius: isMobile ? 6 : 10,
-                          background: intensityColors[intensity],
-                          border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          cursor: "pointer", transition: "all 0.15s ease", position: "relative",
-                          transform: isSelected ? "scale(1.05)" : "scale(1)",
-                          boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
-                        }}
-                      >
-                        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
-                          {day.dayNum}
-                        </div>
-                        {!isMobile && (
-                          <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
-                            {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
-                            {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
-                            {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
-                            {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Selected day details - always visible on desktop, conditional on mobile */}
-              {(activeDay !== null && activeDay >= 0) && (() => {
-                const day = calendarDays[activeDay];
-                const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
+            {/* Calendar grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 16 }}>
+              {Array.from({ length: paddingDays }).map((_, i) => (
+                <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
+              ))}
+              {calendarDays.map((day, i) => {
+                const intensity = getIntensity(day);
+                const isSelected = selectedCalDay === i;
+                const isToday = day.date.toDateString() === today.toDateString();
                 
                 return (
-                  <div style={{
-                    flex: 1, background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                    padding: isMobile ? "16px" : "20px", minWidth: isMobile ? "auto" : 280
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{day.dayName}, {day.month} {day.dayNum}</div>
-                        <div style={{ fontSize: 12, color: TEXT_SEC }}>{hasAny ? `${getIntensity(day)} categories logged` : "No activity logged"}</div>
+                  <div
+                    key={i}
+                    onClick={() => setSelectedCalDay(isSelected ? null : i)}
+                    style={{
+                      aspectRatio: "1", borderRadius: isMobile ? 6 : 10,
+                      background: intensityColors[intensity],
+                      border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", transition: "all 0.15s ease", position: "relative",
+                      transform: isSelected ? "scale(1.05)" : "scale(1)",
+                      boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
+                    }}
+                  >
+                    <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
+                      {day.dayNum}
+                    </div>
+                    {!isMobile && (
+                      <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                        {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
+                        {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
+                        {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
+                        {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
                       </div>
-                      {isMobile && (
-                        <div onClick={() => setSelectedCalDay(null)} style={{
-                          width: 28, height: 28, borderRadius: 8, background: "#f0f2f1",
-                          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-                        }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
-                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                          </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selected day details */}
+            {selectedCalDay !== null && (() => {
+              const day = calendarDays[selectedCalDay];
+              const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
+              
+              return (
+                <div style={{
+                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                  padding: isMobile ? "16px" : "20px", marginTop: 8
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{day.dayName}, {day.month} {day.dayNum}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{hasAny ? `${getIntensity(day)} categories logged` : "No activity logged"}</div>
+                    </div>
+                    <div onClick={() => setSelectedCalDay(null)} style={{
+                      width: 28, height: 28, borderRadius: 8, background: "#f0f2f1",
+                      display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {!hasAny ? (
+                    <div style={{ textAlign: "center", padding: "20px 0", color: TEXT_SEC }}>No data recorded for this day</div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
+                      {day.workout && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>Workout</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Type:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.type}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Duration:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.duration} min</span></div>
+                          </div>
                         </div>
                       )}
-                    </div>
-
-                    {!hasAny ? (
-                      <div style={{ textAlign: "center", padding: "20px 0", color: TEXT_SEC }}>No data recorded for this day</div>
-                    ) : (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-                        {day.workout && (
-                          <div style={{ padding: "12px 14px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                              </div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: TEAL }}>Workout</span>
+                      {day.nutrition && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
                             </div>
-                            <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                              <div><span style={{ color: TEXT_SEC }}>Type:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.workout.type}</span></div>
-                              <div><span style={{ color: TEXT_SEC }}>Duration:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.workout.duration} min</span></div>
-                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
                           </div>
-                        )}
-                        {day.nutrition && (
-                          <div style={{ padding: "12px 14px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15` }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
-                              </div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
-                            </div>
-                            <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                              <div><span style={{ color: TEXT_SEC }}>Calories:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.nutrition.calories}</span></div>
-                              <div><span style={{ color: TEXT_SEC }}>Protein:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.nutrition.protein}g</span></div>
-                            </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Calories:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.calories}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Protein:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.protein}g</span></div>
                           </div>
-                        )}
-                        {day.sleep && (
-                          <div style={{ padding: "12px 14px", borderRadius: 12, background: `#8e7cc308`, border: `1px solid #8e7cc315` }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, background: `#8e7cc315`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                              </div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#8e7cc3" }}>Sleep</span>
+                        </div>
+                      )}
+                      {day.sleep && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#8e7cc308`, border: `1px solid #8e7cc315` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#8e7cc315`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                             </div>
-                            <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                              <div><span style={{ color: TEXT_SEC }}>Duration:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.sleep.hours.toFixed(1)} hrs</span></div>
-                              <div><span style={{ color: TEXT_SEC }}>Quality:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.sleep.quality}</span></div>
-                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#8e7cc3" }}>Sleep</span>
                           </div>
-                        )}
-                        {day.steps && (
-                          <div style={{ padding: "12px 14px", borderRadius: 12, background: `#3aafa908`, border: `1px solid #3aafa915` }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, background: `#3aafa915`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3aafa9" strokeWidth="2"><circle cx="12" cy="5" r="2"/><path d="M10 22V18L7 13l3-4.5h4l3 4.5-3 5v4"/></svg>
-                              </div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#3aafa9" }}>Steps</span>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Duration:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.hours.toFixed(1)} hrs</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Quality:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.sleep.quality}</span></div>
+                          </div>
+                        </div>
+                      )}
+                      {day.steps && (
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#3aafa908`, border: `1px solid #3aafa915` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#3aafa915`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3aafa9" strokeWidth="2"><circle cx="12" cy="5" r="2"/><path d="M10 22V18L7 13l3-4.5h4l3 4.5-3 5v4"/></svg>
                             </div>
-                            <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                              <div><span style={{ color: TEXT_SEC }}>Steps:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.steps.count.toLocaleString()}</span></div>
-                              <div><span style={{ color: TEXT_SEC }}>Active:</span> <span style={{ fontWeight: 600, color: TEXT }}>{day.steps.activeMinutes} min</span></div>
-                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: "#3aafa9" }}>Steps</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Steps:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.steps.count.toLocaleString()}</span></div>
+                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Active:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.steps.activeMinutes} min</span></div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -3677,7 +3666,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 </div>
               );
             })()}
-            </div>
           </div>
         );
       })()}
