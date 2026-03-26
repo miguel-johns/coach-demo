@@ -3651,6 +3651,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   <div style={{ 
     width: isMobile ? "100%" : (selectedCalDay !== null ? "55%" : "100%"),
     flexShrink: 0,
+    overflow: "hidden",
     transition: "width 0.25s ease"
   }}>
                 {/* Day headers */}
@@ -3660,8 +3661,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   ))}
                 </div>
 
-                {/* Calendar grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0 }}>
+{/* Calendar grid */}
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0, width: "100%" }}>
                   {Array.from({ length: paddingDays }).map((_, i) => (
                     <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
                   ))}
