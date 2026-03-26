@@ -3192,6 +3192,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [selectedCalDay, setSelectedCalDay] = useState(null);
+  const [workoutExpanded, setWorkoutExpanded] = useState(false);
+  const [nutritionExpanded, setNutritionExpanded] = useState(false);
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -3470,13 +3472,133 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           const hasSleep = seed < 80;
           const hasSteps = seed < 70;
           
+          // Generate detailed meals for the day
+          const generateMeals = () => {
+            const mealTypes = [
+              { type: "Breakfast", time: "7:30 AM", items: [
+                { name: "Greek Yogurt with Berries", calories: 180, protein: 15, carbs: 22, fat: 4 },
+                { name: "Scrambled Eggs (2)", calories: 180, protein: 14, carbs: 2, fat: 12 },
+                { name: "Oatmeal with Banana", calories: 280, protein: 8, carbs: 52, fat: 5 },
+                { name: "Protein Smoothie", calories: 320, protein: 28, carbs: 38, fat: 6 },
+                { name: "Avocado Toast", calories: 290, protein: 8, carbs: 28, fat: 18 },
+              ]},
+              { type: "Lunch", time: "12:30 PM", items: [
+                { name: "Grilled Chicken Salad", calories: 420, protein: 38, carbs: 18, fat: 22 },
+                { name: "Turkey Wrap", calories: 380, protein: 28, carbs: 35, fat: 14 },
+                { name: "Salmon Bowl", calories: 520, protein: 35, carbs: 45, fat: 20 },
+                { name: "Quinoa Buddha Bowl", calories: 450, protein: 18, carbs: 55, fat: 16 },
+                { name: "Chicken Burrito Bowl", calories: 580, protein: 42, carbs: 48, fat: 22 },
+              ]},
+              { type: "Dinner", time: "6:30 PM", items: [
+                { name: "Grilled Steak with Vegetables", calories: 520, protein: 45, carbs: 15, fat: 32 },
+                { name: "Baked Salmon with Rice", calories: 480, protein: 38, carbs: 35, fat: 18 },
+                { name: "Chicken Stir-Fry", calories: 420, protein: 35, carbs: 32, fat: 16 },
+                { name: "Pasta with Meat Sauce", calories: 620, protein: 32, carbs: 68, fat: 22 },
+                { name: "Shrimp Tacos", calories: 450, protein: 28, carbs: 38, fat: 20 },
+              ]},
+              { type: "Snacks", time: "Various", items: [
+                { name: "Protein Bar", calories: 220, protein: 20, carbs: 22, fat: 8 },
+                { name: "Mixed Nuts (1 oz)", calories: 170, protein: 5, carbs: 6, fat: 15 },
+                { name: "Apple with Almond Butter", calories: 195, protein: 4, carbs: 26, fat: 9 },
+                { name: "Cottage Cheese", calories: 110, protein: 14, carbs: 5, fat: 4 },
+                { name: "Hummus with Carrots", calories: 130, protein: 4, carbs: 14, fat: 7 },
+              ]},
+            ];
+            
+            const meals = [];
+            mealTypes.forEach((mealType, idx) => {
+              const mealSeed = (seed + idx * 17) % 100;
+              if (mealSeed < 85) { // 85% chance of having this meal
+                const itemIndex = (seed + idx * 7) % mealType.items.length;
+                meals.push({
+                  type: mealType.type,
+                  time: mealType.time,
+                  ...mealType.items[itemIndex]
+                });
+              }
+            });
+            
+            const totals = meals.reduce((acc, m) => ({
+              calories: acc.calories + m.calories,
+              protein: acc.protein + m.protein,
+              carbs: acc.carbs + m.carbs,
+              fat: acc.fat + m.fat
+            }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+            
+            return { meals, totals };
+          };
+          
+          const nutritionData = hasMeals ? generateMeals() : null;
+          
+          // Generate detailed workout data
+          const generateWorkout = () => {
+            const workoutType = ["Strength", "Cardio", "HIIT", "Mobility"][i % 4];
+            const exercisesByType = {
+              Strength: [
+                { name: "Back Squat", sets: [{ reps: 8, weight: 135 }, { reps: 6, weight: 155 }, { reps: 6, weight: 165 }, { reps: 4, weight: 175 }] },
+                { name: "Bench Press", sets: [{ reps: 10, weight: 95 }, { reps: 8, weight: 105 }, { reps: 6, weight: 115 }] },
+                { name: "Deadlift", sets: [{ reps: 5, weight: 185 }, { reps: 5, weight: 205 }, { reps: 3, weight: 225 }] },
+                { name: "Barbell Row", sets: [{ reps: 10, weight: 95 }, { reps: 8, weight: 105 }, { reps: 8, weight: 105 }] },
+                { name: "Overhead Press", sets: [{ reps: 8, weight: 65 }, { reps: 8, weight: 70 }, { reps: 6, weight: 75 }] },
+                { name: "Leg Press", sets: [{ reps: 12, weight: 180 }, { reps: 10, weight: 200 }, { reps: 10, weight: 220 }] },
+                { name: "Lat Pulldown", sets: [{ reps: 12, weight: 90 }, { reps: 10, weight: 100 }, { reps: 8, weight: 110 }] },
+                { name: "Dumbbell Lunges", sets: [{ reps: 10, weight: 30 }, { reps: 10, weight: 35 }, { reps: 8, weight: 40 }] },
+              ],
+              Cardio: [
+                { name: "Treadmill Run", duration: 25, distance: 2.5, avgHR: 145, calories: 280 },
+                { name: "Cycling", duration: 30, distance: 8.2, avgHR: 138, calories: 320 },
+                { name: "Rowing Machine", duration: 20, distance: 4.0, avgHR: 152, calories: 240 },
+                { name: "Stair Climber", duration: 15, distance: null, avgHR: 158, calories: 180 },
+                { name: "Elliptical", duration: 25, distance: null, avgHR: 135, calories: 250 },
+              ],
+              HIIT: [
+                { name: "Burpees", sets: [{ reps: 15, rest: 30 }, { reps: 12, rest: 30 }, { reps: 10, rest: 30 }] },
+                { name: "Box Jumps", sets: [{ reps: 12, rest: 30 }, { reps: 12, rest: 30 }, { reps: 10, rest: 30 }] },
+                { name: "Battle Ropes", sets: [{ duration: 30, rest: 20 }, { duration: 30, rest: 20 }, { duration: 25, rest: 20 }] },
+                { name: "Kettlebell Swings", sets: [{ reps: 20, weight: 35, rest: 30 }, { reps: 18, weight: 35, rest: 30 }] },
+                { name: "Mountain Climbers", sets: [{ reps: 30, rest: 20 }, { reps: 30, rest: 20 }, { reps: 25, rest: 20 }] },
+                { name: "Jump Squats", sets: [{ reps: 15, rest: 30 }, { reps: 15, rest: 30 }, { reps: 12, rest: 30 }] },
+              ],
+              Mobility: [
+                { name: "Hip Flexor Stretch", duration: 60, notes: "Each side" },
+                { name: "Cat-Cow Stretch", duration: 90, reps: 15 },
+                { name: "Foam Roll - IT Band", duration: 120, notes: "Each leg" },
+                { name: "World's Greatest Stretch", duration: 90, reps: 8 },
+                { name: "Pigeon Pose", duration: 60, notes: "Each side" },
+                { name: "Thoracic Spine Rotation", duration: 60, reps: 10 },
+                { name: "Ankle Mobility Drill", duration: 90, notes: "Each ankle" },
+              ],
+            };
+            
+            const availableExercises = exercisesByType[workoutType];
+            const numExercises = 3 + (seed % 4); // 3-6 exercises
+            const exercises = [];
+            
+            for (let j = 0; j < numExercises && j < availableExercises.length; j++) {
+              const exIndex = (seed + j * 11) % availableExercises.length;
+              exercises.push(availableExercises[exIndex]);
+            }
+            
+            const totalDuration = 30 + (seed % 45);
+            const totalCalories = 200 + (seed % 300);
+            
+            return {
+              type: workoutType,
+              duration: totalDuration,
+              calories: totalCalories,
+              exercises
+            };
+          };
+          
+          const workoutData = hasWorkout ? generateWorkout() : null;
+          
           return {
             date,
             dayNum: date.getDate(),
             month: date.toLocaleDateString('en-US', { month: 'short' }),
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-            workout: hasWorkout ? { type: ["Strength", "Cardio", "HIIT", "Mobility"][i % 4], duration: 30 + (seed % 45), exercises: 4 + (seed % 5), calories: 200 + (seed % 300) } : null,
-            nutrition: hasMeals ? { calories: 1400 + (seed % 600), protein: 90 + (seed % 70), carbs: 120 + (seed % 100), fat: 40 + (seed % 40) } : null,
+            workout: workoutData,
+            nutrition: nutritionData,
             sleep: hasSleep ? { hours: 5.5 + (seed % 35) / 10, quality: ["Poor", "Fair", "Good", "Great"][Math.floor(seed / 25)] } : null,
             steps: hasSteps ? { count: 4000 + (seed % 10000), activeMinutes: 20 + (seed % 50) } : null,
           };
@@ -3523,63 +3645,76 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               )}
             </div>
 
-            {/* Day headers */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6 }}>
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{isMobile ? d.charAt(0) : d}</div>
-              ))}
-            </div>
+{/* Desktop: side-by-side layout, Mobile: stacked */}
+  <div style={{ display: isMobile ? "block" : "flex", gap: 20, alignItems: "flex-start" }}>
+  {/* Calendar section */}
+  <div style={{ 
+    width: isMobile ? "100%" : (selectedCalDay !== null ? "55%" : "100%"),
+    minWidth: 0,
+    transition: "width 0.25s ease"
+  }}>
+                {/* Day headers */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 6, minWidth: 0 }}>
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                    <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: TEXT_SEC, minWidth: 0 }}>{isMobile ? d.charAt(0) : d}</div>
+                  ))}
+                </div>
 
-            {/* Calendar grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: 16 }}>
-              {Array.from({ length: paddingDays }).map((_, i) => (
-                <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
-              ))}
-              {calendarDays.map((day, i) => {
-                const intensity = getIntensity(day);
-                const isSelected = selectedCalDay === i;
-                const isToday = day.date.toDateString() === today.toDateString();
-                
-                return (
-                  <div
-                    key={i}
-                    onClick={() => setSelectedCalDay(isSelected ? null : i)}
-                    style={{
-                      aspectRatio: "1", borderRadius: isMobile ? 6 : 10,
-                      background: intensityColors[intensity],
-                      border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", transition: "all 0.15s ease", position: "relative",
-                      transform: isSelected ? "scale(1.05)" : "scale(1)",
-                      boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none"
-                    }}
-                  >
-                    <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
-                      {day.dayNum}
-                    </div>
-                    {!isMobile && (
-                      <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
-                        {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
-                        {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
-                        {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
-                        {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
+{/* Calendar grid */}
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: isMobile ? 4 : 6, marginBottom: isMobile ? 16 : 0, minWidth: 0 }}>
+                  {Array.from({ length: paddingDays }).map((_, i) => (
+                    <div key={`pad-${i}`} style={{ aspectRatio: "1", minWidth: 0 }} />
+                  ))}
+                  {calendarDays.map((day, i) => {
+                    const intensity = getIntensity(day);
+                    const isSelected = selectedCalDay === i;
+                    const isToday = day.date.toDateString() === today.toDateString();
+                    
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedCalDay(isSelected ? null : i)}
+                        style={{
+                          aspectRatio: "1", borderRadius: isMobile ? 6 : 10,
+                          background: intensityColors[intensity],
+                          border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", transition: "all 0.15s ease", position: "relative",
+                          transform: isSelected ? "scale(1.05)" : "scale(1)",
+                          boxShadow: isSelected ? `0 4px 12px ${TEAL}30` : "none",
+                          minWidth: 0
+                        }}
+                      >
+                        <div style={{ fontSize: isMobile ? 11 : 14, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
+                          {day.dayNum}
+                        </div>
+                        {!isMobile && (
+                          <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                            {day.workout && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
+                            {day.nutrition && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
+                            {day.sleep && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#8e7cc3" }} />}
+                            {day.steps && <div style={{ width: 4, height: 4, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#3aafa9" }} />}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-            {/* Selected day details */}
-            {selectedCalDay !== null && (() => {
-              const day = calendarDays[selectedCalDay];
-              const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
-              
-              return (
-                <div style={{
-                  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                  padding: isMobile ? "16px" : "20px", marginTop: 8
-                }}>
+              {/* Selected day details */}
+              {selectedCalDay !== null && (() => {
+                const day = calendarDays[selectedCalDay];
+                const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
+                
+return (
+  <div style={{
+  flex: isMobile ? "none" : "1",
+  minWidth: 0,
+  background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+  padding: isMobile ? "16px" : "18px", marginTop: isMobile ? 8 : 0,
+  maxHeight: isMobile ? "none" : "480px", overflowY: isMobile ? "visible" : "auto"
+  }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div>
                       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{day.dayName}, {day.month} {day.dayNum}</div>
@@ -3599,32 +3734,224 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                     <div style={{ textAlign: "center", padding: "20px 0", color: TEXT_SEC }}>No data recorded for this day</div>
                   ) : (
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
-                      {day.workout && (
-                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                            </div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>Workout</span>
-                          </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Type:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.type}</span></div>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Duration:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.workout.duration} min</span></div>
-                          </div>
-                        </div>
-                      )}
+{day.workout && (
+  <div style={{ padding: "14px 16px", borderRadius: 12, background: `${TEAL}08`, border: `1px solid ${TEAL}15`, gridColumn: isMobile ? "1" : "1 / -1" }}>
+    <div 
+      onClick={() => setWorkoutExpanded(!workoutExpanded)}
+      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <div>
+          <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{day.workout.type} Workout</span>
+        </div>
+      </div>
+      {/* Workout summary */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.workout.duration}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Min</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#ef6c3e" }}>{day.workout.calories}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEAL }}>{day.workout.exercises.length}</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Exercises</div>
+          </div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: workoutExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </div>
+    </div>
+    
+    {/* Individual exercises - collapsible */}
+    {workoutExpanded && (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+        {day.workout.exercises.map((exercise, idx) => (
+          <div key={idx} style={{
+            display: "flex", flexDirection: "column", gap: 8, padding: "12px 14px",
+            background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{exercise.name}</div>
+              {exercise.duration && !exercise.sets && (
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>{exercise.duration}s {exercise.notes || ""}</div>
+              )}
+            </div>
+            
+            {/* Strength exercises with sets */}
+            {exercise.sets && exercise.sets[0]?.weight !== undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {exercise.sets.map((set, sIdx) => (
+                  <div key={sIdx} style={{
+                    padding: "6px 10px", borderRadius: 6, background: "#f7faf9", border: `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", gap: 6
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: TEAL }}>Set {sIdx + 1}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.weight} lbs</span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>x {set.reps}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* HIIT exercises with sets */}
+            {exercise.sets && exercise.sets[0]?.rest !== undefined && exercise.sets[0]?.weight === undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {exercise.sets.map((set, sIdx) => (
+                  <div key={sIdx} style={{
+                    padding: "6px 10px", borderRadius: 6, background: "#fef3c7", border: `1px solid #fcd34d`,
+                    display: "flex", alignItems: "center", gap: 6
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>Set {sIdx + 1}</span>
+                    {set.reps && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.reps} reps</span>}
+                    {set.duration && <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{set.duration}s</span>}
+                    {set.weight && <span style={{ fontSize: 11, color: TEXT_SEC }}>@ {set.weight} lbs</span>}
+                    <span style={{ fontSize: 10, color: TEXT_SEC }}>({set.rest}s rest)</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Cardio exercises */}
+            {exercise.avgHR !== undefined && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dbeafe" }}>
+                  <span style={{ fontSize: 11, color: "#3b82f6", fontWeight: 600 }}>{exercise.duration} min</span>
+                </div>
+                {exercise.distance && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#dcfce7" }}>
+                    <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{exercise.distance} mi</span>
+                  </div>
+                )}
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fee2e2" }}>
+                  <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600 }}>{exercise.avgHR} bpm avg</span>
+                </div>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#fef3c7" }}>
+                  <span style={{ fontSize: 11, color: "#d97706", fontWeight: 600 }}>{exercise.calories} cal</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Mobility exercises */}
+            {exercise.duration && !exercise.sets && !exercise.avgHR && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3e8ff" }}>
+                  <span style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600 }}>{exercise.duration}s hold</span>
+                </div>
+                {exercise.reps && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#e0e7ff" }}>
+                    <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 600 }}>{exercise.reps} reps</span>
+                  </div>
+                )}
+                {exercise.notes && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: "#f3f4f6" }}>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{exercise.notes}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+  )}
                       {day.nutrition && (
-                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15` }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
+                        <div style={{ padding: "14px 16px", borderRadius: 12, background: `#ef6c3e08`, border: `1px solid #ef6c3e15`, gridColumn: isMobile ? "1" : "1 / -1" }}>
+                          <div 
+                            onClick={() => setNutritionExpanded(!nutritionExpanded)}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 28, height: 28, borderRadius: 8, background: `#ef6c3e15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef6c3e" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>
+                              </div>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
+                              <span style={{ fontSize: 12, color: TEXT_SEC }}>({day.nutrition.meals.length} meals)</span>
                             </div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: "#ef6c3e" }}>Nutrition</span>
+                            {/* Daily totals */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{day.nutrition.totals.calories}</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Cal</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#3b82f6" }}>{day.nutrition.totals.protein}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Protein</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#f59e0b" }}>{day.nutrition.totals.carbs}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Carbs</div>
+                                </div>
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: "#8b5cf6" }}>{day.nutrition.totals.fat}g</div>
+                                  <div style={{ fontSize: 10, color: TEXT_SEC, textTransform: "uppercase" }}>Fat</div>
+                                </div>
+                              </div>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: nutritionExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+                                <polyline points="6,9 12,15 18,9"/>
+                              </svg>
+                            </div>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Calories:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.calories}</span></div>
-                            <div><span style={{ fontSize: 11, color: TEXT_SEC }}>Protein:</span> <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day.nutrition.protein}g</span></div>
-                          </div>
+                          
+                          {/* Individual meals - collapsible */}
+                          {nutritionExpanded && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+                              {day.nutrition.meals.map((meal, idx) => (
+                                <div key={idx} style={{
+                                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                                  background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`
+                                }}>
+                                  <div style={{
+                                    width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                                    background: meal.type === "Breakfast" ? "#fef3c7" : meal.type === "Lunch" ? "#dcfce7" : meal.type === "Dinner" ? "#fce7f3" : "#e0e7ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center"
+                                  }}>
+                                    {meal.type === "Breakfast" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>}
+                                    {meal.type === "Lunch" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M12 12m-9 0a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0"/><path d="M12 7v5l3 3"/></svg>}
+                                    {meal.type === "Dinner" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>}
+                                    {meal.type === "Snacks" && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>}
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase" }}>{meal.type}</span>
+                                      <span style={{ fontSize: 11, color: TEXT_SEC }}>{meal.time}</span>
+                                    </div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meal.name}</div>
+                                  </div>
+                                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3f4f6", textAlign: "center", minWidth: 48 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{meal.calories}</div>
+                                      <div style={{ fontSize: 9, color: TEXT_SEC }}>cal</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#dbeafe", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6" }}>{meal.protein}g</div>
+                                      <div style={{ fontSize: 9, color: "#3b82f6" }}>P</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#fef3c7", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#d97706" }}>{meal.carbs}g</div>
+                                      <div style={{ fontSize: 9, color: "#d97706" }}>C</div>
+                                    </div>
+                                    <div style={{ padding: "4px 8px", borderRadius: 6, background: "#f3e8ff", textAlign: "center", minWidth: 40 }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: "#8b5cf6" }}>{meal.fat}g</div>
+                                      <div style={{ fontSize: 9, color: "#8b5cf6" }}>F</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              {day.nutrition.meals.length === 0 && (
+                                <div style={{ textAlign: "center", padding: "16px", color: TEXT_SEC, fontSize: 13 }}>No meals logged</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                       {day.sleep && (
@@ -3660,6 +3987,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 </div>
               );
             })()}
+            </div>
           </div>
         );
       })()}
