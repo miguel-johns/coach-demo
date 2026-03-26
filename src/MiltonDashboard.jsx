@@ -3897,7 +3897,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   );
 }
 
-/* ═════════════════════════════════════════════
+/* ═════════════════════════════════�����═══════════
    SEND REPORT MODAL
    ═════════════════════════════════════════════ */
 
@@ -8000,6 +8000,13 @@ export default function MiltonDashboard() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientFilter, setClientFilter] = useState(null);
   const [showAddClient, setShowAddClient] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMiltonBrain, setShowMiltonBrain] = useState(false);
+  const [brainDocuments, setBrainDocuments] = useState([
+    { id: 1, name: "Training Philosophy.pdf", size: "2.4 MB", date: "2026-03-15", status: "processed" },
+    { id: 2, name: "Nutrition Guidelines.docx", size: "1.1 MB", date: "2026-03-10", status: "processed" },
+  ]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [mainReportBlocks, setMainReportBlocks] = useState(null);
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
@@ -8554,14 +8561,91 @@ Remember: Be specific, be brief, be helpful.`;
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
             </div>
           ) : (
-            <div style={{
-              width: 34, height: 34, borderRadius: "50%", background: "#f0f4f3",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: TEXT_SEC
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
+            <div style={{ position: "relative" }}>
+              <div 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", background: showProfileMenu ? TEAL : "#f0f4f3",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: showProfileMenu ? WHITE : TEXT_SEC,
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              {/* Profile Menu Dropdown */}
+              {showProfileMenu && (
+                <>
+                  <div onClick={() => setShowProfileMenu(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }} />
+                  <div style={{
+                    position: "absolute", top: 44, left: 0, zIndex: 100,
+                    width: 260, background: WHITE, borderRadius: 16,
+                    border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                    overflow: "hidden", animation: "fadeSlideIn 0.2s ease"
+                  }}>
+                    {/* Header */}
+                    <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}` }}>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>Coach Profile</div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2, textDecoration: "underline" }}>miguel@joinmmnt.com</div>
+                    </div>
+                    {/* Menu Items */}
+                    <div style={{ padding: "8px 0" }}>
+                      <div onClick={() => setShowProfileMenu(false)} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                        cursor: "pointer", transition: "background 0.15s ease"
+                      }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Profile</span>
+                      </div>
+                      <div onClick={() => setShowProfileMenu(false)} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                        cursor: "pointer", transition: "background 0.15s ease"
+                      }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+                        </svg>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Help Center</span>
+                      </div>
+                      <div onClick={() => { setShowProfileMenu(false); setShowMiltonBrain(true); }} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                        cursor: "pointer", transition: "background 0.15s ease"
+                      }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
+                          <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+                        </svg>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: TEAL }}>Milton Brain</span>
+                      </div>
+                      <div style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px",
+                        cursor: "not-allowed", opacity: 0.5
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                          </svg>
+                          <span style={{ fontSize: 15, fontWeight: 500, color: TEXT_SEC }}>Billing</span>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>Coming Soon</span>
+                      </div>
+                      <div style={{ height: 1, background: BORDER, margin: "4px 16px" }} />
+                      <div onClick={() => setShowProfileMenu(false)} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                        cursor: "pointer", transition: "background 0.15s ease"
+                      }} onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: "#dc2626" }}>Logout</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -8773,18 +8857,95 @@ Remember: Be specific, be brief, be helpful.`;
                 </svg>
                 Add Client
               </div>
-              <div style={{
-                width: 38, height: 38, borderRadius: "50%", background: "#f0f4f3",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`,
-                transition: "all 0.15s ease"
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
+              <div style={{ position: "relative" }}>
+                <div 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  style={{
+                    width: 38, height: 38, borderRadius: "50%", 
+                    background: showProfileMenu ? TEAL : "#f0f4f3",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: showProfileMenu ? WHITE : TEXT_SEC, 
+                    border: `1px solid ${showProfileMenu ? TEAL : BORDER}`,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { if (!showProfileMenu) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}}
+                  onMouseLeave={e => { if (!showProfileMenu) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                {/* Profile Menu Dropdown */}
+                {showProfileMenu && (
+                  <>
+                    <div onClick={() => setShowProfileMenu(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }} />
+                    <div style={{
+                      position: "absolute", top: 48, right: 0, zIndex: 100,
+                      width: 280, background: WHITE, borderRadius: 16,
+                      border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                      overflow: "hidden", animation: "fadeSlideIn 0.2s ease"
+                    }}>
+                      {/* Header */}
+                      <div style={{ padding: "20px 22px", borderBottom: `1px solid ${BORDER}` }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Coach Profile</div>
+                        <div style={{ fontSize: 14, color: TEXT_SEC, marginTop: 4, textDecoration: "underline", cursor: "pointer" }}>miguel@joinmmnt.com</div>
+                      </div>
+                      {/* Menu Items */}
+                      <div style={{ padding: "8px 0" }}>
+                        <div onClick={() => setShowProfileMenu(false)} style={{
+                          display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
+                          cursor: "pointer", transition: "background 0.15s ease"
+                        }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                          </svg>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Profile</span>
+                        </div>
+                        <div onClick={() => setShowProfileMenu(false)} style={{
+                          display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
+                          cursor: "pointer", transition: "background 0.15s ease"
+                        }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+                          </svg>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Help Center</span>
+                        </div>
+                        <div onClick={() => { setShowProfileMenu(false); setShowMiltonBrain(true); }} style={{
+                          display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
+                          cursor: "pointer", transition: "background 0.15s ease"
+                        }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
+                            <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+                          </svg>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: TEAL }}>Milton Brain</span>
+                        </div>
+                        <div style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px",
+                          cursor: "not-allowed", opacity: 0.5
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round">
+                              <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            <span style={{ fontSize: 16, fontWeight: 500, color: TEXT_SEC }}>Billing</span>
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 500, color: TEXT_SEC }}>Coming Soon</span>
+                        </div>
+                        <div style={{ height: 1, background: BORDER, margin: "4px 18px" }} />
+                        <div onClick={() => setShowProfileMenu(false)} style={{
+                          display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
+                          cursor: "pointer", transition: "background 0.15s ease"
+                        }} onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                          </svg>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: "#dc2626" }}>Logout</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </>)}
           </div>
@@ -9185,9 +9346,198 @@ Remember: Be specific, be brief, be helpful.`;
       </main>
       ) : null}
 
-      {/* ═══ ADD CLIENT MODAL ═══ */}
-      {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
+{/* ═══ ADD CLIENT MODAL ═══ */}
+  {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
 
+  {/* ═══ MILTON BRAIN MODAL ═══ */}
+  {showMiltonBrain && (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
+      background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
+      padding: isMobile ? 16 : 40, animation: "fadeSlideIn 0.2s ease"
+    }} onClick={() => setShowMiltonBrain(false)}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: WHITE, borderRadius: 20, width: "100%", maxWidth: 560,
+        maxHeight: isMobile ? "85vh" : "80vh", display: "flex", flexDirection: "column",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden"
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: isMobile ? "18px 20px" : "24px 28px", borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, background: `${TEAL}12`,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
+                <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
+                <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton Brain</div>
+              <div style={{ fontSize: 13, color: TEXT_SEC }}>Train your AI with custom documents</div>
+            </div>
+          </div>
+          <div onClick={() => setShowMiltonBrain(false)} style={{
+            width: 36, height: 36, borderRadius: 10, background: "#f0f2f1",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px" : "24px 28px" }}>
+          {/* Upload Area */}
+          <div 
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.pdf,.doc,.docx,.txt,.md';
+              input.multiple = true;
+              input.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                  setUploadingDoc(true);
+                  setTimeout(() => {
+                    const newDocs = files.map((f, i) => ({
+                      id: Date.now() + i,
+                      name: f.name,
+                      size: (f.size / (1024 * 1024)).toFixed(1) + " MB",
+                      date: new Date().toISOString().split('T')[0],
+                      status: "processing"
+                    }));
+                    setBrainDocuments(prev => [...newDocs, ...prev]);
+                    setUploadingDoc(false);
+                    setTimeout(() => {
+                      setBrainDocuments(prev => prev.map(d => 
+                        d.status === "processing" ? { ...d, status: "processed" } : d
+                      ));
+                    }, 2000);
+                  }, 1000);
+                }
+              };
+              input.click();
+            }}
+            style={{
+              border: `2px dashed ${BORDER}`, borderRadius: 16, padding: "32px 24px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+              cursor: "pointer", transition: "all 0.2s ease", background: "#fafbfa",
+              marginBottom: 24
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.background = `${TEAL}05`; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fafbfa"; }}
+          >
+            {uploadingDoc ? (
+              <>
+                <div style={{
+                  width: 48, height: 48, borderRadius: "50%", border: `3px solid ${BORDER}`,
+                  borderTopColor: TEAL, animation: "spin 1s linear infinite"
+                }} />
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Uploading...</div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 14, background: `${TEAL}12`,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Upload Documents</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>PDF, DOC, DOCX, TXT, or MD files</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Uploaded Documents */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+              Uploaded Documents ({brainDocuments.length})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {brainDocuments.map(doc => (
+                <div key={doc.id} style={{
+                  display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+                  background: "#f7faf9", borderRadius: 12, border: `1px solid ${BORDER}`
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: doc.name.endsWith('.pdf') ? "#fee2e2" : doc.name.endsWith('.docx') || doc.name.endsWith('.doc') ? "#dbeafe" : "#f3e8ff",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                      stroke={doc.name.endsWith('.pdf') ? "#ef4444" : doc.name.endsWith('.docx') || doc.name.endsWith('.doc') ? "#3b82f6" : "#a855f7"} 
+                      strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.name}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.size} • {doc.date}</div>
+                  </div>
+                  {doc.status === "processing" ? (
+                    <div style={{
+                      padding: "4px 10px", borderRadius: 8, background: "#fef3c7", color: "#d97706",
+                      fontSize: 11, fontWeight: 600
+                    }}>Processing</div>
+                  ) : (
+                    <div style={{
+                      padding: "4px 10px", borderRadius: 8, background: "#dcfce7", color: "#16a34a",
+                      fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                      Processed
+                    </div>
+                  )}
+                  <div onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))} style={{
+                    width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.color = "#ef4444"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                  </div>
+                </div>
+              ))}
+              {brainDocuments.length === 0 && (
+                <div style={{ textAlign: "center", padding: "24px", color: TEXT_SEC, fontSize: 14 }}>
+                  No documents uploaded yet. Upload files to train Milton on your coaching methodology.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: isMobile ? "16px 20px" : "18px 28px", borderTop: `1px solid ${BORDER}`,
+          background: "#fafbfa", display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>
+            {brainDocuments.filter(d => d.status === "processed").length} documents trained
+          </div>
+          <button onClick={() => setShowMiltonBrain(false)} style={{
+            padding: "10px 20px", borderRadius: 10, border: "none",
+            background: TEAL, color: WHITE, fontSize: 14, fontWeight: 600, cursor: "pointer"
+          }}>Done</button>
+        </div>
+      </div>
+    </div>
+  )}
+  
   {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
   {isMobile && (
     <MobileChatSheet
