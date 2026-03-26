@@ -3333,127 +3333,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         Back to Dashboard
       </div>}
 
-      {/* ─── CLIENT HEADER ─── */}
-      <div style={{
-        background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        display: "flex", flexDirection: "column", gap: 16
-      }}>
-        <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 14 : 18, flexWrap: "wrap" }}>
-          <Avatar name={client.name} size={isMobile ? 56 : 64} />
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 14, marginTop: 6, alignItems: "center" }}>
-              <AlertBadge type={client.alertType} label={client.alert} />
-              {currentStreak > 0 && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 4,
-                  padding: "4px 10px", borderRadius: 12,
-                  background: `${MINT}15`, color: MINT, fontSize: 12, fontWeight: 600
-                }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                  {currentStreak} session streak
-                </div>
-              )}
-              <span style={{ fontSize: 13, color: TEXT_SEC }}>Program: <strong style={{ color: TEXT }}>{client.program}</strong></span>
-              <span style={{ fontSize: 13, color: TEXT_SEC }}>Start: <strong style={{ color: TEXT }}>{client.startDate}</strong></span>
-            </div>
-          </div>
-        </div>
-        {/* Session indicators */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          <div style={{ 
-            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek} this week</span>
-          </div>
-          <div style={{ 
-            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-            borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{totalSessions} total sessions</span>
-          </div>
-          {lastSession && (
-            <div style={{ 
-              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", 
-              borderRadius: 10, background: "#f7faf9", border: `1px solid ${BORDER}` 
-            }}>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>Last: <strong style={{ color: TEXT }}>{lastSession.type}</strong> ({lastSession.date})</span>
-            </div>
-          )}
-        </div>
-
-        {showAddDevice && (
-          <div style={{
-            padding: "14px 16px", borderRadius: 14,
-            background: "#f7faf9", border: `1px solid ${BORDER}`,
-            animation: "fadeSlideIn 0.2s ease"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Connect a Device</span>
-              <div onClick={() => setShowAddDevice(false)} style={{ cursor: "pointer", color: TEXT_SEC, padding: 2 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {Object.entries(dataConnectors).filter(([key]) => !client.connectors.includes(key)).map(([key, conn]) => (
-                <div key={key} onClick={() => setShowAddDevice(false)} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "8px 14px", borderRadius: 22,
-                  background: WHITE, border: `1px solid ${BORDER}`,
-                  cursor: "pointer", fontSize: 12, fontWeight: 600, color: TEXT,
-                  transition: "all 0.15s ease"
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = conn.bg; e.currentTarget.style.boxShadow = `0 2px 8px ${conn.bg}25`; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  <div style={{
-                    width: 22, height: 22, borderRadius: "50%", background: conn.bg,
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>{conn.icon(11)}</div>
-                  {conn.name}
-                </div>
-              ))}
-              {Object.entries(dataConnectors).filter(([key]) => !client.connectors.includes(key)).length === 0 && (
-                <span style={{ fontSize: 12, color: TEXT_SEC }}>All devices connected</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── TAB BAR ─── */}
-      <div style={{
-        display: "flex", gap: 4, background: WHITE, borderRadius: 14, padding: 4,
-        border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflowX: "auto"
-      }}>
-        {[
-          { id: "overview", label: "Overview" },
-        ].map(tab => (
-          <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-            flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-            padding: isMobile ? "10px 8px" : "10px 16px", borderRadius: 10, cursor: "pointer",
-            background: activeTab === tab.id ? TEAL : "transparent",
-            color: activeTab === tab.id ? "#fff" : TEXT_SEC,
-            fontWeight: activeTab === tab.id ? 600 : 500,
-            fontSize: isMobile ? 12 : 13, whiteSpace: "nowrap",
-            transition: "all 0.2s ease",
-            boxShadow: activeTab === tab.id ? "0 2px 8px rgba(43,122,120,0.25)" : "none"
-          }}>{tab.label}</div>
-        ))}
-      </div>
-
-{/* ═══ TAB: OVERVIEW ═══ */}
-      {activeTab === "overview" && (<>
-
-      {/* ─── 1. HEADER CARD (SIMPLIFIED) ─── */}
+      {/* ─── HEADER CARD ─── */}
       <div style={{
         background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
         padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
@@ -4019,8 +3899,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           </div>
         );
       })()}
-
-      </>)}
     </div>
   );
 }
