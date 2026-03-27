@@ -1,4 +1,5 @@
 import { streamText, tool } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 import { z } from "zod"
 
 // In-memory storage for logged workouts (in production, use a database)
@@ -416,8 +417,13 @@ export default async function handler(req, res) {
     const { messages } = req.body
     const systemPrompt = buildSystemPrompt()
 
+    // Use Anthropic SDK directly for production compatibility
+    const anthropic = createAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+
     const result = await streamText({
-      model: 'anthropic/claude-sonnet-4-20250514',
+      model: anthropic('claude-sonnet-4-20250514'),
       system: systemPrompt,
       messages: messages.map((m) => ({
         role: m.type === "user" ? "user" : "assistant",
