@@ -8732,6 +8732,9 @@ export default function MiltonDashboard() {
 
     // Call our backend API which has workout data and tools
     (async () => {
+      const startTime = Date.now();
+      const MIN_THINKING_TIME = 2000; // Minimum 2 seconds of "thinking"
+      
       try {
         const allMessages = [...chatMessages, newUserMessage];
         
@@ -8753,16 +8756,27 @@ export default function MiltonDashboard() {
         const data = await response.json();
         const aiText = data.text || "I couldn't generate a response.";
         
-        setChatMessages(prev => [...prev, { type: "ai", text: aiText }]);
-        setChatTyping(false);
-        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        // Ensure minimum thinking time has passed
+        const elapsed = Date.now() - startTime;
+        const remainingDelay = Math.max(0, MIN_THINKING_TIME - elapsed);
+        
+        setTimeout(() => {
+          setChatMessages(prev => [...prev, { type: "ai", text: aiText }]);
+          setChatTyping(false);
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        }, remainingDelay);
       } catch (error) {
         console.error("[v0] Chat error:", error);
-        // Fallback to local AI
-        const resp = generateAIResponse(text);
-        setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
-        setChatTyping(false);
-        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        // Fallback to local AI - still apply thinking delay
+        const elapsed = Date.now() - startTime;
+        const remainingDelay = Math.max(0, MIN_THINKING_TIME - elapsed);
+        
+        setTimeout(() => {
+          const resp = generateAIResponse(text);
+          setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
+          setChatTyping(false);
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        }, remainingDelay);
       }
     })();
   };
