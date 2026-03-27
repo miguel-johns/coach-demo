@@ -1713,10 +1713,22 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
     }}>
     <img src={LOGO_URL} alt="Milton" style={{ width: 28, height: 28 }} />
     </div>
-    <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 8 }}>
-    {[0,1,2].map(j => (
-    <div key={j} style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, opacity: 0.5, animation: `typingDot 1.2s ease ${j * 0.2}s infinite` }} />
-    ))}
+    <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 6 }}>
+      <span style={{ 
+        fontSize: 13, 
+        color: TEXT_SEC, 
+        fontStyle: "italic",
+        animation: "pulse 2s ease-in-out infinite"
+      }}>Thinking</span>
+      <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
+        {[0,1,2].map(j => (
+          <div key={j} style={{ 
+            width: 4, height: 4, borderRadius: "50%", 
+            background: TEXT_SEC, 
+            animation: `typingDot 1.4s ease ${j * 0.2}s infinite` 
+          }} />
+        ))}
+      </div>
     </div>
     </div>
     )}
@@ -9816,10 +9828,14 @@ export default function MiltonDashboard() {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
         }
-        @keyframes typingDot {
-          0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-          30% { opacity: 1; transform: translateY(-3px); }
-        }
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+  }
+  @keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+  }
         @keyframes canvasSlideIn {
           from { opacity: 0; transform: scale(0.96) translateX(20px); }
           to { opacity: 1; transform: scale(1) translateX(0); }
