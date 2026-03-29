@@ -1664,8 +1664,9 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
     <div style={{
     flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 8px" : "20px 20px 8px",
     display: "flex", flexDirection: "column", gap: 20,
-    background: isMobile ? "transparent" : "#fafcfb"
-    }}>
+    background: isMobile ? "transparent" : "#fafcfb",
+    scrollbarWidth: "none", msOverflowStyle: "none"
+    }} className="hide-scrollbar">
         {messages.map((msg, i) => (
           <div key={i} style={{
             display: "flex", flexDirection: "column",
@@ -1907,8 +1908,9 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
             {/* Messages */}
             <div style={{
               flex: 1, overflowY: "auto", padding: "16px 14px 8px",
-              display: "flex", flexDirection: "column", gap: 18
-            }}>
+              display: "flex", flexDirection: "column", gap: 18,
+              scrollbarWidth: "none", msOverflowStyle: "none"
+            }} className="hide-scrollbar">
               {messages.map((msg, i) => (
                 <div key={i} style={{
                   display: "flex", flexDirection: "column",
