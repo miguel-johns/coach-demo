@@ -1409,6 +1409,44 @@ function generateAIResponse(msg) {
   const matchedKey = clientKeys.find(k => lower.includes(k) || lower.includes(demoClients[k].name.toLowerCase()));
   const client = matchedKey ? demoClients[matchedKey] : null;
 
+  // CRAFT MESSAGE / WRITE MESSAGE / DRAFT MESSAGE - TOP PRIORITY
+  if ((lower.includes("craft") || lower.includes("write") || lower.includes("draft") || lower.includes("send")) && (lower.includes("message") || lower.includes("text") || lower.includes("reach out"))) {
+    if (client) {
+      const first = client.name.split(" ")[0];
+      const missedSessions = client.sessionsThisWeek?.includes("0") || client.issue?.toLowerCase().includes("missed") || client.status === "at-risk";
+      
+      let messageText = "";
+      let messagePurpose = "";
+      
+      if (missedSessions || client.status === "at-risk" || lower.includes("rebook") || lower.includes("missed")) {
+        // REBOOKING MESSAGE - Priority #1
+        messagePurpose = "Rebooking";
+        messageText = `Hey ${first}! Wanted to check in - looks like we haven't connected in a bit. Life happens! When works best to get you back on track? I can work with whatever fits your schedule this week.`;
+      } else if (client.win) {
+        // CELEBRATION MESSAGE
+        messagePurpose = "Celebration";
+        messageText = `Hey ${first}! Just wanted to say - ${client.win.toLowerCase()}! You're putting in the work and it's showing. Keep it up!`;
+      } else if (client.issue) {
+        // CHECK-IN MESSAGE
+        messagePurpose = "Check-in";
+        messageText = `Hey ${first}! Quick check-in - how's everything going? ${client.issue.includes("Bench") ? "I noticed the bench has been tricky lately - want to chat about some adjustments?" : "Let me know if there's anything you need."}`; 
+      } else {
+        // GENERAL CHECK-IN
+        messagePurpose = "General";
+        messageText = `Hey ${first}! Just checking in - how's everything going? Let me know if there's anything you need this week.`;
+      }
+      
+      return {
+        title: `Message for ${first}`,
+        text: `**Message for ${client.name}:**\n\n---\n\n"${messageText}"\n\n---\n\n**Purpose:** ${messagePurpose}\n**Ready to copy and send!**`
+      };
+    }
+    return {
+      title: "Craft Message",
+      text: `**Which client would you like me to write a message for?**\n\n**Need rebooking (priority):**\n- Emily Rodriguez — Missed last 2 sessions\n- Daniel Torres — Hasn't trained in a week\n\n**Check-ins:**\n- Marcus Johnson — Assessment overdue\n- Sarah Chen — Doing great, could celebrate wins`
+    };
+  }
+
   // PULL UP PROGRAM / VIEW CLIENT
   if ((lower.includes("pull up") || lower.includes("show me") || lower.includes("open")) && client) {
     const first = client.name.split(" ")[0];
@@ -1466,10 +1504,10 @@ function generateAIResponse(msg) {
   }
 
   // WHO NEEDS ATTENTION / PRIORITY QUEUE
-  if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize")) {
+  if (lower.includes("attention") || lower.includes("who needs") || lower.includes("priority") || lower.includes("queue") || lower.includes("summarize") || lower.includes("follow up")) {
     return { 
       title: "Priority Queue", 
-      text: `**Here's who needs your attention today:**\n\n- **Marcus Johnson** (Week 10) — Assessment overdue. It's been 8 weeks since his InBody. Schedule a reassessment to update training maxes.\n\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Needs a check-in and fresh programming.\n\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Needs re-activation.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown`
+      text: `**Here's who needs your attention today:**\n\n**REBOOKING NEEDED (Priority #1):**\n- **Emily Rodriguez** (Week 5) — Missed last 2 sessions. Her program ends this week. Reach out to rebook!\n- **Daniel Torres** — Hasn't trained in a week. Was making great progress (down 7 lbs). Get him back on the calendar!\n\n**Other follow-ups:**\n- **Marcus Johnson** (Week 10) — Assessment overdue. 8 weeks since InBody.\n\n**Sessions today:** Sarah Chen, David Park, Lisa Martinez, Michael Brown\n\nWant me to craft a rebooking message for Emily or Daniel?`
     };
   }
 
@@ -8739,7 +8777,6 @@ export default function MiltonDashboard() {
       
       try {
         const allMessages = [...chatMessages, newUserMessage];
-        console.log("[v0] Sending to API:", { messageCount: allMessages.length, clientsCount: clients.length, selectedClientIndex: selectedClient });
         
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -8752,17 +8789,13 @@ export default function MiltonDashboard() {
             selectedClientIndex: selectedClient
           }),
         });
-
-        console.log("[v0] API response status:", response.status);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.log("[v0] API error data:", errorData);
           throw new Error(errorData.error || `API error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("[v0] API response data:", data);
         const aiText = data.text || "I couldn't generate a response.";
         
         // Ensure minimum thinking time has passed
