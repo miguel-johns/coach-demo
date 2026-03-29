@@ -352,7 +352,10 @@ function generateProactiveAlerts(clients) {
   const dayOfWeek = today.getDay()
   
   clients.forEach(c => {
-    const n = c.nutrition
+    const n = c.nutrition || {}
+    
+    // Skip nutrition alerts if no nutrition data
+    if (!n.proteinTarget) return
     
     // URGENT: Low protein for extended period
     if (n.daysLowProtein >= 3 && n.proteinAvg < n.proteinTarget * 0.75) {
@@ -378,8 +381,8 @@ function generateProactiveAlerts(clients) {
       })
     }
     
-    // MODERATE: Low calories
-    if (n.calorieAvg < n.calorieTarget * 0.85 && n.weeklyTrends.loggingRate > 0.5) {
+    // MODERATE: Low calories (only if we have detailed nutrition data)
+    if (n.calorieAvg && n.calorieTarget && n.weeklyTrends && n.calorieAvg < n.calorieTarget * 0.85 && n.weeklyTrends.loggingRate > 0.5) {
       alerts.push({
         priority: 'moderate',
         client: c.name,
@@ -390,8 +393,8 @@ function generateProactiveAlerts(clients) {
       })
     }
     
-    // MODERATE: Weight plateau with good adherence
-    if (c.weight.trend === 'plateau' && n.mealLoggingStreak >= 14) {
+    // MODERATE: Weight plateau with good adherence (only if we have weight data)
+    if (c.weight && c.weight.trend === 'plateau' && n.mealLoggingStreak >= 14) {
       alerts.push({
         priority: 'moderate',
         client: c.name,
@@ -455,20 +458,30 @@ function formatWorkout(workout) {
 }
 
 function formatNutrition(nutrition) {
+  if (!nutrition) return '  - No nutrition data available'
   const n = nutrition
-  return `  - Daily Targets: ${n.proteinTarget}g protein, ${n.calorieTarget} cal, ${n.carbsTarget}g carbs, ${n.fatTarget}g fat
+  const hasDetailedData = n.carbsTarget && n.fatTarget && n.weeklyTrends
+  
+  if (hasDetailedData) {
+    return `  - Daily Targets: ${n.proteinTarget}g protein, ${n.calorieTarget} cal, ${n.carbsTarget}g carbs, ${n.fatTarget}g fat
   - Current Averages: ${n.proteinAvg}g protein (${Math.round(n.proteinAvg/n.proteinTarget*100)}%), ${n.calorieAvg} cal, ${n.carbsAvg}g carbs, ${n.fatAvg}g fat
-  - Protein Streak: ${n.proteinStreak} days hitting target
-  - Meal Logging Streak: ${n.mealLoggingStreak} days
-  - Weekly Logging Rate: ${Math.round(n.weeklyTrends.loggingRate * 100)}%
-  - Recent Meals: ${n.recentMeals.slice(0, 3).map(m => `${m.date} ${m.type}: ${m.foods} (${m.calories}cal, ${m.protein}g protein)`).join('; ')}`
+  - Protein Streak: ${n.proteinStreak || 0} days hitting target
+  - Meal Logging Streak: ${n.mealLoggingStreak || 0} days
+  - Weekly Logging Rate: ${n.weeklyTrends ? Math.round(n.weeklyTrends.loggingRate * 100) : 'N/A'}%
+  - Recent Meals: ${n.recentMeals ? n.recentMeals.slice(0, 3).map(m => `${m.date} ${m.type}: ${m.foods} (${m.calories}cal, ${m.protein}g protein)`).join('; ') : 'No recent meals logged'}`
+  } else {
+    // Simple nutrition data from frontend
+    return `  - Protein: ${n.proteinAvg || 0}g avg / ${n.proteinTarget || 'N/A'}g target
+  - Calories: ${n.calorieAvg || 0} avg / ${n.calorieTarget || 'N/A'} target
+  - Tracking: ${n.tracking ? 'Yes' : 'No'}`
+  }
 }
 
-function buildSystemPrompt() {
+function buildSystemPrompt(clients = demoClients, selectedClient = null) {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   
   // Generate proactive alerts
-  const alerts = generateProactiveAlerts(demoClients)
+  const alerts = generateProactiveAlerts(clients)
   const urgentAlerts = alerts.filter(a => a.priority === 'urgent')
   const moderateAlerts = alerts.filter(a => a.priority === 'moderate')
   const positiveAlerts = alerts.filter(a => a.priority === 'positive')
@@ -489,22 +502,37 @@ ${positiveAlerts.length > 0 ? `### Wins to Celebrate:
 ${positiveAlerts.map(a => `- **${a.client}**: ${a.message}
   - Suggested: ${a.suggestedAction}`).join('\n')}` : ''}`
 
-  const clientData = demoClients.map(c => {
-    const workoutHistory = c.recentWorkouts ? c.recentWorkouts.map(formatWorkout).join('\n') : 'No recent workouts'
+  const clientData = clients.map(c => {
+    // Handle both frontend and demo client data structures
+    const workouts = c.recentWorkouts || c.sessions || []
+    const workoutHistory = workouts.length > 0 ? workouts.slice(0, 3).map(formatWorkout).join('\n') : 'No recent workouts'
     const strengthData = c.strengthProgress ? Object.entries(c.strengthProgress).map(([lift, data]) => 
       `    - ${lift}: ${data.current} (${data.change} from baseline)`
     ).join('\n') : ''
     const nutritionData = formatNutrition(c.nutrition)
     
+    // Handle frontend data structure (uses goals.primary) vs demo structure (uses goal)
+    const goalText = c.goal || (c.goals && c.goals.primary) || 'No goal set'
+    const weightInfo = c.weight 
+      ? `${c.weight.current} lbs (${c.weight.change})` 
+      : c.current 
+        ? `${c.current.bodyweight} lbs` 
+        : 'N/A'
+    const statusText = c.status || 'active'
+    const weekText = c.week || 'N/A'
+    const streakText = c.loggingStreak ?? (c.streak ? c.streak.current : 0)
+    const issueOrWin = c.issue ? `Issue: ${c.issue}` : c.win ? `Win: ${c.win}` : c.insight || ''
+    const actionText = c.action || c.coachAngle || ''
+    
     return `
-**${c.name}** (Week ${c.week}, ${c.status})
-- Goal: ${c.goal}
+**${c.name}** (Week ${weekText}, ${statusText})
+- Goal: ${goalText}
 - Program: ${c.program}
-- ${c.issue ? `Issue: ${c.issue}` : `Win: ${c.win}`}
-- Logging streak: ${c.loggingStreak} days
-- Weight: ${c.weight.current} lbs (${c.weight.change})
-- Sessions: ${c.sessionsThisWeek}/${c.sessionsPerWeek} this week, ${c.totalSessions} total
-- Recommended: ${c.action}
+${issueOrWin ? `- ${issueOrWin}` : ''}
+- Logging streak: ${streakText} days
+- Weight: ${weightInfo}
+- Sessions: ${c.sessionsThisWeek || 0}/${c.sessionsPerWeek || 'N/A'} this week, ${c.totalSessions || 0} total
+${actionText ? `- Recommended: ${actionText}` : ''}
 
 **Nutrition Data:**
 ${nutritionData}
@@ -584,6 +612,8 @@ ${recentMealLogs}
 - Urgent attention needed: ${urgentAlerts.map(a => a.client).join(', ') || 'None'}
 - Worth checking on: ${moderateAlerts.map(a => a.client).join(', ') || 'None'}
 - Wins to celebrate: ${positiveAlerts.map(a => a.client).join(', ') || 'None'}
+${selectedClient ? `\n## Currently Viewing: ${selectedClient.name}
+The coach is currently looking at ${selectedClient.name}'s profile. When they say "she", "he", "they", "this client", or ask questions without naming someone, they're referring to ${selectedClient.name}. Prioritize information about this client in your responses.` : ''}
 
 Remember: Be specific, be brief, be helpful. You have FULL access to workout AND nutrition data! Proactively surface insights.`
 }
@@ -1002,8 +1032,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages } = req.body
-    const systemPrompt = buildSystemPrompt()
+    const { messages, clients, selectedClientIndex } = req.body
+    
+    // Merge frontend client data with demo data for nutrition context
+    const clientsToUse = clients && clients.length > 0 
+      ? clients.map(c => {
+          // Find matching demo client to get nutrition data
+          const demoMatch = demoClients.find(d => d.name === c.name)
+          return demoMatch ? { ...demoMatch, ...c, nutrition: demoMatch.nutrition } : c
+        })
+      : demoClients
+    
+    const selectedClient = selectedClientIndex !== null && selectedClientIndex !== undefined && clientsToUse[selectedClientIndex]
+      ? clientsToUse[selectedClientIndex]
+      : null
+    
+    const systemPrompt = buildSystemPrompt(clientsToUse, selectedClient)
 
     const anthropic = createAnthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,

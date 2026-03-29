@@ -8746,7 +8746,9 @@ export default function MiltonDashboard() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            messages: allMessages
+            messages: allMessages,
+            clients: clients,
+            selectedClientIndex: selectedClient
           }),
         });
 
