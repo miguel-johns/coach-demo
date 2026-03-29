@@ -2031,7 +2031,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════���═══════════════════════════════════
    MOBILE CANVAS SHEET - Swipe up drawer for canvas/inbox/schedule
    ═════════════════════════════════════════════ */
 function MobileCanvasSheet({ 
@@ -8739,6 +8739,7 @@ export default function MiltonDashboard() {
       
       try {
         const allMessages = [...chatMessages, newUserMessage];
+        console.log("[v0] Sending to API:", { messageCount: allMessages.length, clientsCount: clients.length, selectedClientIndex: selectedClient });
         
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -8752,12 +8753,16 @@ export default function MiltonDashboard() {
           }),
         });
 
+        console.log("[v0] API response status:", response.status);
+        
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.log("[v0] API error data:", errorData);
           throw new Error(errorData.error || `API error: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log("[v0] API response data:", data);
         const aiText = data.text || "I couldn't generate a response.";
         
         // Ensure minimum thinking time has passed
@@ -9794,7 +9799,7 @@ export default function MiltonDashboard() {
     </div>
   )}
   
-  {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
+  {/* ��══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
   {isMobile && (
     <MobileChatSheet
       chatOpen={chatOpen} setChatOpen={setChatOpen}
