@@ -326,6 +326,16 @@ const messageTemplates = {
   missedSession: (name, days) =>
     `Hey ${name.split(' ')[0]}! Haven't seen you log in ${days} days - everything okay? No pressure, just checking in. When you're ready, we can pick back up wherever works for you.`,
   
+  // REBOOKING - The most important follow-up!
+  rebookSession: (name, missedCount, lastWorkout) =>
+    `Hey ${name.split(' ')[0]}! Wanted to check in - looks like we haven't connected in a bit${lastWorkout ? ` (last session was ${lastWorkout})` : ''}. Life happens! When works best to get you back on track? I can work with whatever fits your schedule this week.`,
+  
+  rebookUrgent: (name, daysSinceSession) =>
+    `Hey ${name.split(' ')[0]}! Missing you at the gym! It's been ${daysSinceSession} days since your last session. Let's get something on the calendar - even a quick 30-min session to keep momentum. What day works this week?`,
+  
+  rebookGentle: (name) =>
+    `Hey ${name.split(' ')[0]}! Just checking in - how's everything going? Whenever you're ready to jump back in, I'm here. No pressure, just want you to know I've got your back.`,
+  
   proteinStreak: (name, days) =>
     `${name.split(' ')[0]}! ${days} days straight hitting your protein target - that's huge! Your consistency is really showing in your progress. Keep it up!`,
   
@@ -576,16 +586,47 @@ You can:
 7. **Draft follow-up messages** that combine workout AND nutrition context
 8. Provide analysis on strength progress and training patterns
 
+## Priority Framework (IN ORDER OF IMPORTANCE)
+**#1 REBOOKING - This is your TOP priority!**
+- Clients who missed sessions or haven't trained recently need to be rebooked FIRST
+- When you see missed sessions, ALWAYS suggest reaching out to get them back on the calendar
+- Getting clients training again is more important than any nutrition tweak
+
+**#2 Engagement & Consistency**
+- Clients not logging meals or workouts
+- Clients who seem disengaged
+
+**#3 Nutrition & Programming**
+- Low protein, calorie issues, program adjustments
+- These matter, but only AFTER the client is showing up
+
+## When Asked to "Craft a Message" or "Write a Message" for Someone
+IMMEDIATELY output a ready-to-copy message. Format it like this:
+
+---
+**Message for [Name]:**
+
+"Hey [First name]! [Your personalized message here based on their data and situation]"
+
+---
+
+- Make it casual, warm, and encouraging
+- Focus on REBOOKING if they've missed sessions
+- Include specific details from their data (last workout date, streak, etc.)
+- Keep it to 2-3 sentences max
+- Ready to copy/paste - no extra explanation needed
+
 ## Proactive Coaching Behavior
 At the START of conversations, briefly mention:
-- Any urgent alerts (missed sessions, low protein streaks) - 1-2 most important
-- Who needs a check-in today
+- Any clients who need REBOOKING (missed sessions) - this is #1!
+- Any urgent nutrition alerts - 1-2 most important
 - Any wins worth celebrating
 
 Keep the opening to 2-3 sentences max. Only elaborate if asked.
 
 When asked "who needs attention" or similar:
-- Prioritize clients with BOTH workout AND nutrition concerns
+- FIRST: Anyone who needs rebooking (missed sessions)
+- THEN: Clients with nutrition concerns
 - Lead with the most actionable items
 - Offer to draft specific messages
 
@@ -596,8 +637,8 @@ When asked "who needs attention" or similar:
 - When asked about nutrition: reference protein averages, calorie trends, streaks, and recent meals
 - When logging a workout: use the logWorkout tool, then confirm what was logged
 - When logging a meal: use the logMeal tool, then confirm what was logged
-- When asked "who needs attention": prioritize based on the alerts section - nutrition AND workout concerns
-- When asked to write a message: write it ready to copy/paste, casual and encouraging tone, combine workout AND nutrition context when relevant
+- When asked "who needs attention": LEAD WITH REBOOKING NEEDS, then nutrition AND workout concerns
+- When asked to craft/write a message: OUTPUT THE MESSAGE IMMEDIATELY - ready to copy/paste, casual tone
 - When summarizing: use bullet points
 - When asked about remaining macros: calculate what's left for the day based on logged meals vs targets
 ${alertSection}
@@ -967,31 +1008,58 @@ const coachingTools = {
       const messages = []
       
       // Generate appropriate messages based on client status
-      if (focusArea === 'celebration' || n.proteinStreak >= 5) {
-        messages.push({
-          type: 'celebration',
-          message: messageTemplates.proteinStreak(client.name, n.proteinStreak)
-        })
+      // PRIORITY #1: REBOOKING - Check for missed sessions FIRST
+      const lastWorkoutDate = client.recentWorkouts && client.recentWorkouts[0] 
+        ? client.recentWorkouts[0].date 
+        : null
+      
+      if (focusArea === 'workouts' || client.sessionsThisWeek === 0 || client.sessionsThisWeek < client.sessionsPerWeek) {
+        // Determine urgency level
+        const missedSessions = client.sessionsPerWeek - (client.sessionsThisWeek || 0)
+        if (missedSessions >= 2) {
+          messages.push({
+            type: 'rebooking_urgent',
+            priority: 1,
+            message: messageTemplates.rebookUrgent(client.name, 5)
+          })
+        } else if (client.sessionsThisWeek === 0) {
+          messages.push({
+            type: 'rebooking',
+            priority: 1,
+            message: messageTemplates.rebookSession(client.name, missedSessions, lastWorkoutDate)
+          })
+        } else {
+          messages.push({
+            type: 'gentle_checkin',
+            priority: 2,
+            message: messageTemplates.rebookGentle(client.name)
+          })
+        }
       }
       
-      if (focusArea === 'celebration' || n.mealLoggingStreak >= 7) {
-        messages.push({
-          type: 'celebration',
-          message: messageTemplates.mealLoggingStreak(client.name, n.mealLoggingStreak)
-        })
-      }
-      
-      if (focusArea === 'nutrition' || n.daysLowProtein >= 3) {
+      // PRIORITY #2: Nutrition concerns
+      if (focusArea === 'nutrition' || (n && n.daysLowProtein >= 3)) {
         messages.push({
           type: 'nutrition_concern',
+          priority: 3,
           message: messageTemplates.lowProtein(client.name, n.proteinAvg, n.proteinTarget, n.daysLowProtein)
         })
       }
       
-      if (focusArea === 'workouts' || client.sessionsThisWeek === 0) {
+      // PRIORITY #3: Celebrations (good for engagement)
+      if (focusArea === 'celebration' || (n && n.proteinStreak >= 5)) {
         messages.push({
-          type: 'missed_sessions',
-          message: messageTemplates.missedSession(client.name, 7)
+          type: 'celebration',
+          priority: 4,
+          message: messageTemplates.proteinStreak(client.name, n.proteinStreak)
+        })
+      }
+      
+      if (focusArea === 'celebration' || (n && n.mealLoggingStreak >= 7)) {
+        messages.push({
+          type: 'celebration',
+          priority: 4,
+          message: messageTemplates.mealLoggingStreak(client.name, n.mealLoggingStreak)
         })
       }
       
@@ -1009,16 +1077,105 @@ const coachingTools = {
         })
       }
       
+      // Sort by priority
+      messages.sort((a, b) => (a.priority || 99) - (b.priority || 99))
+      
       return {
         success: true,
         client: client.name,
         status: client.status,
         suggestedMessages: messages,
         context: {
-          proteinStatus: `${n.proteinAvg}g avg vs ${n.proteinTarget}g target`,
-          workoutStatus: `${client.sessionsThisWeek}/${client.sessionsPerWeek} sessions this week`,
-          streaks: { protein: n.proteinStreak, logging: n.mealLoggingStreak },
-          weightTrend: client.weight.change
+          proteinStatus: n ? `${n.proteinAvg}g avg vs ${n.proteinTarget}g target` : 'No nutrition data',
+          workoutStatus: `${client.sessionsThisWeek || 0}/${client.sessionsPerWeek || 'N/A'} sessions this week`,
+          streaks: n ? { protein: n.proteinStreak, logging: n.mealLoggingStreak } : null,
+          weightTrend: client.weight ? client.weight.change : 'N/A'
+        }
+      }
+    }
+  }),
+  
+  // Dedicated tool for crafting messages - makes it explicit
+  craftMessage: tool({
+    description: 'Craft a personalized follow-up message for a client. Use this when the coach says "craft a message", "write a message", "draft a message" for any client. Returns a ready-to-send message.',
+    inputSchema: z.object({
+      clientName: z.string().describe('The name of the client'),
+      purpose: z.enum(['rebooking', 'nutrition', 'celebration', 'check-in', 'general']).describe('The purpose of the message - rebooking is highest priority for missed sessions')
+    }),
+    execute: async ({ clientName, purpose }) => {
+      const client = demoClients.find(c => c.name.toLowerCase() === clientName.toLowerCase())
+      if (!client) {
+        return { success: false, error: `Client "${clientName}" not found. Available clients: ${demoClients.map(c => c.name).join(', ')}` }
+      }
+      
+      const n = client.nutrition || {}
+      const firstName = client.name.split(' ')[0]
+      const lastWorkout = client.recentWorkouts && client.recentWorkouts[0] ? client.recentWorkouts[0].date : null
+      const missedSessions = (client.sessionsPerWeek || 0) - (client.sessionsThisWeek || 0)
+      
+      let message = ''
+      let messagePurpose = purpose
+      
+      // Auto-detect if rebooking should be the focus (override if needed)
+      if (client.sessionsThisWeek === 0 || missedSessions >= 2) {
+        messagePurpose = 'rebooking'
+      }
+      
+      switch (messagePurpose) {
+        case 'rebooking':
+          if (missedSessions >= 2) {
+            message = messageTemplates.rebookUrgent(client.name, 5)
+          } else if (client.sessionsThisWeek === 0) {
+            message = messageTemplates.rebookSession(client.name, missedSessions, lastWorkout)
+          } else {
+            message = messageTemplates.rebookGentle(client.name)
+          }
+          break
+        case 'nutrition':
+          if (n.daysLowProtein >= 3) {
+            message = messageTemplates.lowProtein(client.name, n.proteinAvg, n.proteinTarget, n.daysLowProtein)
+          } else if (n.calorieAvg && n.calorieTarget && n.calorieAvg < n.calorieTarget * 0.85) {
+            message = messageTemplates.lowCalories(client.name, n.calorieAvg, n.calorieTarget)
+          } else {
+            message = `Hey ${firstName}! Just wanted to check in on your nutrition - how's meal prep going this week? Let me know if you need any quick recipe ideas.`
+          }
+          break
+        case 'celebration':
+          if (n.proteinStreak >= 5) {
+            message = messageTemplates.proteinStreak(client.name, n.proteinStreak)
+          } else if (n.mealLoggingStreak >= 7) {
+            message = messageTemplates.mealLoggingStreak(client.name, n.mealLoggingStreak)
+          } else {
+            message = `Hey ${firstName}! Just wanted to say you've been doing great - keep up the awesome work!`
+          }
+          break
+        case 'check-in':
+          if (client.status === 'new-client') {
+            message = messageTemplates.newClientEncouragement(client.name, client.week)
+          } else {
+            message = `Hey ${firstName}! How's everything going? Wanted to check in and see how you're feeling about your progress lately.`
+          }
+          break
+        default:
+          // General - pick the most relevant message
+          if (missedSessions >= 1 || client.sessionsThisWeek === 0) {
+            message = messageTemplates.rebookSession(client.name, missedSessions, lastWorkout)
+          } else if (n.daysLowProtein >= 3) {
+            message = messageTemplates.lowProtein(client.name, n.proteinAvg, n.proteinTarget, n.daysLowProtein)
+          } else {
+            message = `Hey ${firstName}! Quick check-in - how's everything going? Let me know if there's anything you need.`
+          }
+      }
+      
+      return {
+        success: true,
+        client: client.name,
+        purpose: messagePurpose,
+        message: message,
+        context: {
+          sessionsThisWeek: `${client.sessionsThisWeek || 0}/${client.sessionsPerWeek || 'N/A'}`,
+          lastWorkout: lastWorkout || 'No recent workouts',
+          nutritionStatus: n.proteinAvg ? `${n.proteinAvg}g protein avg` : 'No nutrition data'
         }
       }
     }
