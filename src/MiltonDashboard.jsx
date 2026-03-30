@@ -2082,7 +2082,8 @@ function MobileCanvasSheet({
   setCanvasMode,
   setChatMessages,
   setChatTyping,
-  onChatSend
+  onChatSend,
+  clients
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2256,6 +2257,7 @@ function MobileCanvasSheet({
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
+              clients={clients}
               onClose={onClose}
             />
           )}
@@ -2342,7 +2344,7 @@ function MobileCanvasSheet({
   );
 }
 
-/* ═══════════════════════════════════════════
+/* ═════════════════════════���══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -6425,7 +6427,7 @@ function MealPlanCanvas({ data, onClose }) {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onSave }) {
+function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
   const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
@@ -6434,6 +6436,8 @@ function WorkoutCanvas({ data, onClose, onSave }) {
   const [newExercise, setNewExercise] = useState({ name: "", sets: "", reps: "", weight: "", rest: "60-90s" });
   const [hasChanges, setHasChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
+  const [selectedClient, setSelectedClient] = useState(data?.client || "");
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
   
   // When expandedDay changes, copy exercises to local state
   useEffect(() => {
@@ -6582,7 +6586,9 @@ function WorkoutCanvas({ data, onClose, onSave }) {
         background: WHITE,
         borderBottom: `1px solid ${BORDER}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        animation: "fadeUp 0.4s ease-out forwards"
+        animation: "fadeUp 0.4s ease-out forwards",
+        position: "relative",
+        zIndex: 100
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ 
@@ -6596,11 +6602,85 @@ function WorkoutCanvas({ data, onClose, onSave }) {
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.client ? `Program for ${data.client}` : data.programName || "Training Program"}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.programName || "Training Program"}</div>
           </div>
         </div>
         
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Client Dropdown */}
+          <div style={{ position: "relative", zIndex: 9999 }}>
+            <button
+              onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 14px", borderRadius: 8,
+                background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
+                border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                cursor: "pointer", fontSize: 13, fontWeight: 500,
+                color: selectedClient ? TEAL : TEXT_SEC,
+                transition: "all 0.15s ease"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>{selectedClient || "Select Client"}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: isClientDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
+                <polyline points="6,9 12,15 18,9"/>
+              </svg>
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isClientDropdownOpen && (
+              <div style={{
+                position: "absolute", top: "100%", right: 0, marginTop: 4,
+                background: WHITE, borderRadius: 8, border: `1px solid ${BORDER}`,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                minWidth: 220, maxHeight: 280, overflowY: "auto",
+                zIndex: 9999,
+                animation: "fadeUp 0.15s ease-out"
+              }}>
+                {clients.length > 0 ? clients.map((client, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
+                    style={{
+                      padding: "10px 12px", cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 10,
+                      background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                      borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
+                      transition: "background 0.15s ease"
+                    }}
+                    onMouseEnter={e => { if (selectedClient !== client.name) e.currentTarget.style.background = "#f5f7f6"; }}
+                    onMouseLeave={e => { if (selectedClient !== client.name) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%",
+                      background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: WHITE, fontSize: 11, fontWeight: 600
+                    }}>
+                      {client.name.split(" ").map(n => n[0]).join("")}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{client.name}</div>
+                      <div style={{ fontSize: 10, color: TEXT_SEC }}>{client.program || "No program"}</div>
+                    </div>
+                    {selectedClient === client.name && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                    )}
+                  </div>
+                )) : (
+                  <div style={{ padding: "12px", color: TEXT_SEC, fontSize: 12, textAlign: "center" }}>
+                    No clients available
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {/* Week toggle buttons */}
           <div style={{ 
             display: "flex", background: "#f0f4f3", borderRadius: 8, padding: 3
@@ -9047,6 +9127,7 @@ export default function MiltonDashboard() {
           {canvasType === "workout" && (
             <WorkoutCanvas 
               data={canvasData}
+              clients={clients}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
             />
           )}
@@ -9856,6 +9937,7 @@ export default function MiltonDashboard() {
       setChatMessages={setChatMessages}
       setChatTyping={setChatTyping}
       onChatSend={handleChatSend}
+      clients={clients}
     />
   )}
 
