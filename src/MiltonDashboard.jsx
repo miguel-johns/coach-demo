@@ -2631,7 +2631,14 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
           return d;
         };
 
-        return bodyCompMetrics.map((m, idx) => {
+        return (
+          <div style={{
+            display: isMobile ? "flex" : "grid",
+            gridTemplateColumns: isMobile ? undefined : "repeat(3, 1fr)",
+            flexDirection: isMobile ? "column" : undefined,
+            gap: isMobile ? 14 : 18
+          }}>
+            {bodyCompMetrics.map((m, idx) => {
           const cw = 380, ch = 160, pL = 44, pR = 20, pT = 24, pB = 32;
           const plotW = cw - pL - pR, plotH = ch - pT - pB;
 
@@ -2796,7 +2803,9 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
               </div>
             </SectionCard>
           );
-        });
+        })}
+          </div>
+        );
       })()}
 
       {/* ─── STRENGTH PROGRESS (BAR CHARTS) ─── */}
@@ -2835,7 +2844,14 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
           sessions: generateLiftHistory(lift.baseline, idx)
         }));
 
-        return liftData.map((lift, liftIdx) => {
+        return (
+          <div style={{
+            display: isMobile ? "flex" : "grid",
+            gridTemplateColumns: isMobile ? undefined : "repeat(3, 1fr)",
+            flexDirection: isMobile ? "column" : undefined,
+            gap: isMobile ? 14 : 18
+          }}>
+            {liftData.map((lift, liftIdx) => {
           const sessions = lift.sessions;
           const maxE1RM = Math.max(...sessions.map(s => s.e1rm));
           const minE1RM = Math.min(...sessions.map(s => s.e1rm));
@@ -2986,7 +3002,9 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
               </div>
             </SectionCard>
           );
-        });
+        })}
+          </div>
+        );
       })()}
 
       {/* ─── ACHIEVEMENTS & STREAKS ─── */}
