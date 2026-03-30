@@ -2344,7 +2344,7 @@ function MobileCanvasSheet({
   );
 }
 
-/* ════════════════════════════════════════���══
+/* ═════════════════════════���══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -6586,7 +6586,9 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
         background: WHITE,
         borderBottom: `1px solid ${BORDER}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        animation: "fadeUp 0.4s ease-out forwards"
+        animation: "fadeUp 0.4s ease-out forwards",
+        position: "relative",
+        zIndex: 100
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ 
