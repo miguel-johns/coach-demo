@@ -6606,7 +6606,7 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
         
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Client Dropdown */}
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", zIndex: 9999 }}>
             <button
               onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
               style={{
@@ -6634,9 +6634,9 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               <div style={{
                 position: "absolute", top: "100%", right: 0, marginTop: 4,
                 background: WHITE, borderRadius: 8, border: `1px solid ${BORDER}`,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                minWidth: 200, maxHeight: 240, overflowY: "auto",
-                zIndex: 100,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                minWidth: 220, maxHeight: 280, overflowY: "auto",
+                zIndex: 9999,
                 animation: "fadeUp 0.15s ease-out"
               }}>
                 {clients.length > 0 ? clients.map((client, idx) => (
