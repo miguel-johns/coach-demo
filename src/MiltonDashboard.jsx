@@ -6446,7 +6446,7 @@ function MealPlanCanvas({ data, onClose }) {
 }
 
 function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
-  const [weekView, setWeekView] = useState(2); // 1, 2, or 4 weeks
+  const [weekView, setWeekView] = useState(4); // Always 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
   const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
   const [exercises, setExercises] = useState([]); // Local copy of exercises for editing
@@ -6699,27 +6699,6 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               </div>
             )}
           </div>
-          {/* Week toggle buttons */}
-          <div style={{ 
-            display: "flex", background: "#f0f4f3", borderRadius: 8, padding: 3
-          }}>
-            {[1, 2, 4].map(num => (
-              <button
-                key={num}
-                onClick={() => setWeekView(num)}
-                style={{
-                  padding: "6px 12px", borderRadius: 6, border: "none",
-                  background: weekView === num ? TEAL : "transparent",
-                  color: weekView === num ? WHITE : TEXT_SEC,
-                  fontSize: 12, fontWeight: 600, cursor: "pointer",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                {num} Week
-              </button>
-            ))}
-          </div>
-          
           {/* Close button */}
           <div 
             onClick={onClose}
@@ -6754,21 +6733,6 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                 animation: `fadeUp 0.5s ease-out ${0.15 + weekIdx * 0.1}s forwards`
               }}
             >
-              {/* Week label - vertical */}
-              <div style={{ 
-                width: 32, minWidth: 32, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "flex-start", paddingTop: 40
-              }}>
-                <div style={{ 
-                  writingMode: "vertical-rl", textOrientation: "mixed",
-                  transform: "rotate(180deg)",
-                  fontSize: 11, fontWeight: 600, color: TEXT_SEC,
-                  textTransform: "uppercase", letterSpacing: "0.05em"
-                }}>
-                  Week {weekNum}
-                </div>
-              </div>
-              
               {/* Days columns */}
               <div style={{ 
                 display: "flex", gap: 8, overflowX: "auto", paddingRight: 16,
@@ -6809,9 +6773,6 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                           textTransform: "uppercase", letterSpacing: "0.04em"
                         }}>
                           {day}
-                        </div>
-                        <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>
-                          Day {dayIdx + 1}
                         </div>
                       </div>
                       
@@ -9942,7 +9903,7 @@ export default function MiltonDashboard() {
     />
   )}
   
-  {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═══ */}
+  {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═��═ */}
   {isMobile && (
     <MobileCanvasSheet
       isOpen={canvasMode}
