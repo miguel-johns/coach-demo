@@ -6774,6 +6774,35 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               </div>
             )}
           </div>
+          
+          {/* Save button */}
+          <div 
+            onClick={() => {
+              if (selectedClient) {
+                alert(`Program assigned to ${selectedClient}!`);
+              } else {
+                alert("Please select a client first.");
+              }
+            }}
+            title="Save & Assign"
+            style={{ 
+              width: 32, height: 32, borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: WHITE, 
+              border: "none", background: TEAL,
+              transition: "all 0.15s ease",
+              boxShadow: "0 2px 6px rgba(76, 139, 129, 0.3)"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#3d7a6e"; e.currentTarget.style.boxShadow = "0 4px 10px rgba(76, 139, 129, 0.4)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = TEAL; e.currentTarget.style.boxShadow = "0 2px 6px rgba(76, 139, 129, 0.3)"; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </div>
+          
           {/* Close button */}
           <div 
             onClick={onClose}
@@ -6950,47 +6979,17 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
       <div style={{
         padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
         background: WHITE, fontSize: 12, color: TEXT_SEC,
-        display: "flex", alignItems: "center", justifyContent: "space-between"
+        display: "flex", alignItems: "center", gap: 10
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <span>Click any workout day to expand it</span>
-        </div>
-        
-        <button
-          onClick={() => {
-            if (selectedClient) {
-              alert(`Program assigned to ${selectedClient}!`);
-            } else {
-              alert("Please select a client first.");
-            }
-          }}
-          style={{
-            padding: "10px 20px", borderRadius: 10,
-            background: TEAL, border: "none",
-            color: WHITE, fontSize: 13, fontWeight: 600,
-            cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 8,
-            transition: "all 0.15s ease",
-            boxShadow: "0 2px 8px rgba(76, 139, 129, 0.3)"
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "#3d7a6e"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(76, 139, 129, 0.4)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = TEAL; e.currentTarget.style.boxShadow = "0 2px 8px rgba(76, 139, 129, 0.3)"; }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-            <polyline points="17 21 17 13 7 13 7 21"/>
-            <polyline points="7 3 7 8 15 8"/>
+        <div style={{
+          width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
-          Save & Assign
-        </button>
+        </div>
+        <span>Click any workout day to expand it</span>
       </div>
       
       {/* Expanded Day Overlay */}
