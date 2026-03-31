@@ -8793,7 +8793,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ══════════════���══════════════════════════════
+/* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
    ═════════════════════════════════════════════ */
 export default function MiltonDashboard() {
