@@ -3260,6 +3260,9 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [activeTab, setActiveTab] = useState("overview");
   const [viewMode, setViewMode] = useState("coach"); // "coach" | "client"
   const [selectedDay, setSelectedDay] = useState(16);
+  const [expandedSession, setExpandedSession] = useState(null);
+  const [completedSessions, setCompletedSessions] = useState([]);
+  const sessionsScrollRef = useRef(null);
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
@@ -3499,32 +3502,274 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       {(() => {
         const today = new Date();
         const upcomingSessions = [
-          { day: "Today", type: "Upper Body", time: "6:00 PM", isToday: true },
-          { day: "Wed", type: "Lower Body", time: "7:00 AM", isToday: false },
-          { day: "Fri", type: "Full Body", time: "6:00 PM", isToday: false },
+          { 
+            id: 1,
+            day: "Today", 
+            type: "Upper Body", 
+            time: "6:00 PM", 
+            isToday: true,
+            date: new Date(),
+            exercises: [
+              { name: "Barbell Bench Press", sets: 4, reps: "8, 8, 6, 6", weight: "155 lb" },
+              { name: "Incline Dumbbell Press", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
+              { name: "Barbell Shoulder Press", sets: 3, reps: "8, 8, 8", weight: "95 lb" },
+              { name: "Lateral Raises", sets: 3, reps: "12, 12, 10", weight: "20 lb" },
+            ]
+          },
+          { 
+            id: 2,
+            day: "Wed", 
+            type: "Lower Body", 
+            time: "7:00 AM", 
+            isToday: false,
+            date: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000),
+            exercises: [
+              { name: "Barbell Full Squat", sets: 4, reps: "8, 8, 6, 6", weight: "185 lb" },
+              { name: "Romanian Deadlift", sets: 3, reps: "10, 10, 8", weight: "135 lb" },
+              { name: "Leg Press", sets: 3, reps: "12, 12, 10", weight: "270 lb" },
+              { name: "Leg Curl", sets: 3, reps: "12, 10, 10", weight: "80 lb" },
+            ]
+          },
+          { 
+            id: 3,
+            day: "Fri", 
+            type: "Full Body", 
+            time: "6:00 PM", 
+            isToday: false,
+            date: new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000),
+            exercises: [
+              { name: "Barbell Deadlift", sets: 3, reps: "10-12 reps", weight: "185 lb" },
+              { name: "Pull-ups", sets: 3, reps: "8-10 reps", weight: "BW" },
+              { name: "Dumbbell Lunges", sets: 3, reps: "10 each leg", weight: "40 lb" },
+              { name: "Dumbbell Rows", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
+            ]
+          },
         ];
+        
+        const scrollSessions = (direction) => {
+          if (sessionsScrollRef.current) {
+            const scrollAmount = 200;
+            sessionsScrollRef.current.scrollBy({
+              left: direction === 'left' ? -scrollAmount : scrollAmount,
+              behavior: 'smooth'
+            });
+          }
+        };
         
         return (
           <div style={{
             background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
             padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}>
-            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Upcoming Sessions</div>
-            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
-              {upcomingSessions.map((session, i) => (
-                <div key={i} style={{
-                  flex: isMobile ? "none" : 1, minWidth: isMobile ? 140 : "auto",
-                  padding: "16px", borderRadius: 14,
-                  background: session.isToday ? `linear-gradient(135deg, ${TEAL}12, ${MINT}08)` : "#f7faf9",
-                  border: session.isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
-                  boxShadow: session.isToday ? `0 4px 12px ${TEAL}15` : "none"
-                }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: session.isToday ? TEAL : TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{session.day}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>Upcoming Sessions</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => scrollSessions('left')}
+                  style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: "#f0f4f3", border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="15,18 9,12 15,6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => scrollSessions('right')}
+                  style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: "#f0f4f3", border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,6 15,12 9,18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div 
+              ref={sessionsScrollRef}
+              style={{ 
+                display: "flex", gap: 12, overflowX: "auto", 
+                padding: "4px 2px 8px 2px",
+                scrollbarWidth: "none", msOverflowStyle: "none"
+              }}
+              className="hide-scrollbar"
+            >
+              {upcomingSessions.map((session, i) => {
+                const isCompleted = completedSessions.includes(session.id);
+                return (
+                <div 
+                  key={i} 
+                  onClick={() => setExpandedSession(session)}
+                  style={{
+                    flex: "0 0 auto", minWidth: isMobile ? 140 : 160,
+                    padding: "16px", borderRadius: 14,
+                    background: isCompleted ? `${MINT}15` : (session.isToday ? `linear-gradient(135deg, ${TEAL}12, ${MINT}08)` : "#f7faf9"),
+                    border: isCompleted ? `2px solid ${MINT}` : (session.isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`),
+                    boxShadow: session.isToday ? `0 4px 12px ${TEAL}15` : "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    position: "relative"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.1)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = session.isToday ? `0 4px 12px ${TEAL}15` : "none"; }}
+                >
+                  {isCompleted && (
+                    <div style={{ 
+                      position: "absolute", top: 8, right: 8,
+                      width: 20, height: 20, borderRadius: "50%",
+                      background: MINT, display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isCompleted ? MINT : (session.isToday ? TEAL : TEXT_SEC), textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                    {isCompleted ? "Completed" : session.day}
+                  </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{session.type}</div>
                   <div style={{ fontSize: 13, color: TEXT_SEC }}>{session.time}</div>
                 </div>
-              ))}
+              )})}
             </div>
+            
+            {/* Expanded Session Modal */}
+            {expandedSession && (
+              <div 
+                onClick={() => setExpandedSession(null)}
+                style={{
+                  position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                  background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  zIndex: 1000, padding: 20
+                }}
+              >
+                <div 
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    background: WHITE, borderRadius: 20, width: "100%", maxWidth: 480,
+                    maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column",
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+                  }}
+                >
+                  {/* Modal Header */}
+                  <div style={{ 
+                    padding: "20px 24px", borderBottom: `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "space-between"
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: expandedSession.isToday ? TEAL : TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                        {expandedSession.day} at {expandedSession.time}
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{expandedSession.type}</div>
+                    </div>
+                    <div 
+                      onClick={() => setExpandedSession(null)}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, background: "#f0f4f3",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {/* Exercises List */}
+                  <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+                      {expandedSession.exercises?.length || 0} Exercises
+                    </div>
+                    {expandedSession.exercises?.map((exercise, idx) => (
+                      <div 
+                        key={idx}
+                        style={{
+                          padding: "14px 16px", borderRadius: 12,
+                          background: "#f7faf9", border: `1px solid ${BORDER}`,
+                          marginBottom: 10
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: 8, background: TEAL_LIGHT,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 12, fontWeight: 700, color: TEAL, flexShrink: 0
+                          }}>
+                            {exercise.sets}x
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 4 }}>{exercise.name}</div>
+                            <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                              {exercise.reps} · {exercise.weight}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Mark Complete Button */}
+                  <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
+                    {completedSessions.includes(expandedSession.id) ? (
+                      <button
+                        onClick={() => {
+                          setCompletedSessions(prev => prev.filter(id => id !== expandedSession.id));
+                        }}
+                        style={{
+                          width: "100%", padding: "14px 20px", borderRadius: 12,
+                          background: "#f0f4f3", border: `1px solid ${BORDER}`,
+                          color: TEXT_SEC, fontSize: 14, fontWeight: 600,
+                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                        }}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                          <path d="M3 3v5h5"/>
+                        </svg>
+                        Undo Completion
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setCompletedSessions(prev => [...prev, expandedSession.id]);
+                          setExpandedSession(null);
+                        }}
+                        style={{
+                          width: "100%", padding: "14px 20px", borderRadius: 12,
+                          background: TEAL, border: "none",
+                          color: WHITE, fontSize: 14, fontWeight: 600,
+                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                          boxShadow: `0 4px 12px ${TEAL}40`,
+                          transition: "all 0.2s ease"
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#3d7a6e"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = TEAL; e.currentTarget.style.transform = "translateY(0)"; }}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                        Mark as Complete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -6889,7 +7134,6 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                         </div>
                         <div style={{ 
                           fontSize: 13, fontWeight: isToday ? 700 : 600, 
-                          color: isToday ? TEAL : (isCurrentMonth ? TEXT : "#c0c8c5"),
                           minWidth: 24, height: 24, 
                           display: "flex", alignItems: "center", justifyContent: "center",
                           borderRadius: "50%",
@@ -8549,7 +8793,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ══════════════���══════════════════════════════
+/* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
    ═════════════════════════════════════════════ */
 export default function MiltonDashboard() {
