@@ -7541,7 +7541,7 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
         >
           {/* Expanded Header */}
           <div style={{ 
-            padding: "20px 24px", 
+            padding: isMobile ? "16px" : "20px 24px", 
             background: WHITE,
             borderBottom: `1px solid ${BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "space-between"
@@ -7563,8 +7563,8 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                 </svg>
               </button>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
-                  Week {expandedDay.weekNum} - {expandedDay.dayLabel}
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>
+                  {expandedDay.date ? formatMobileDate(expandedDay.date) : `Week ${expandedDay.weekNum} - ${expandedDay.dayLabel}`}
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
                   {expandedDay.workout?.title || "Workout Day"}
@@ -7574,7 +7574,118 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
             
           </div>
           
-          {/* Expanded Content - Spreadsheet Style */}
+          {/* Mobile: Card-based exercise list */}
+          {isMobile ? (
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+              {exercises.map((ex, exIdx) => (
+                <div 
+                  key={exIdx}
+                  style={{
+                    background: "#f8faf9", borderRadius: 12, border: `1px solid ${BORDER}`,
+                    padding: "16px", position: "relative"
+                  }}
+                >
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleDeleteExercise(exIdx)}
+                    style={{
+                      position: "absolute", top: 12, right: 12,
+                      width: 24, height: 24, borderRadius: 6, border: "none",
+                      background: "transparent", cursor: "pointer", color: TEXT_SEC,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                  
+                  {/* Exercise name */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingRight: 24 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: TEAL, color: WHITE,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 700
+                    }}>
+                      {exIdx + 1}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                  </div>
+                  
+                  {/* Stats grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Sets</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
+                    </div>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Reps</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.reps}</div>
+                    </div>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Weight</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{ex.weight}</div>
+                    </div>
+                    <div style={{ 
+                      background: "#fff7ed", borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid #fed7aa`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: "#c2410c", textTransform: "uppercase", marginBottom: 4 }}>Rest</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#c2410c" }}>{ex.rest}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Add exercise button */}
+              <button
+                onClick={() => setIsAddingRow(true)}
+                style={{
+                  padding: "16px", borderRadius: 12, border: `2px dashed ${BORDER}`,
+                  background: "transparent", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  color: TEXT_SEC, fontSize: 14, fontWeight: 500
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Exercise
+              </button>
+              
+              {/* Mobile Summary */}
+              <div style={{ 
+                padding: "16px", background: "#f8faf9", borderRadius: 12,
+                display: "flex", justifyContent: "space-around", marginTop: 8
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{exercises.length}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Exercises</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
+                    {exercises.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
+                  </div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Total Sets</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>45-60</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Minutes</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+          /* Desktop: Spreadsheet Style */
           <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
             {/* Spreadsheet Table */}
             <div style={{ flex: 1, overflow: "auto" }}>
@@ -8078,24 +8189,26 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               </div>
             </div>
           </div>
+          )}
           
           {/* Footer Actions */}
           <div style={{
-            padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
-            background: WHITE, display: "flex", alignItems: "center", justifyContent: "flex-end"
+            padding: isMobile ? "12px 16px" : "16px 24px", borderTop: `1px solid ${BORDER}`,
+            background: WHITE, display: "flex", alignItems: "center", justifyContent: isMobile ? "stretch" : "flex-end"
           }}>
             <button
                 onClick={handleSave}
                 disabled={!hasChanges || saveStatus === 'saving'}
                 style={{
-                  padding: "10px 20px", borderRadius: 8,
+                  padding: isMobile ? "14px 20px" : "10px 20px", borderRadius: isMobile ? 10 : 8,
                   border: "none", 
                   background: saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5",
-                  fontSize: 13, fontWeight: 600, color: WHITE,
+                  fontSize: isMobile ? 14 : 13, fontWeight: 600, color: WHITE,
                   cursor: hasChanges && saveStatus !== 'saving' ? "pointer" : "default", 
                   transition: "all 0.15s ease",
-                  display: "flex", alignItems: "center", gap: 6,
-                  opacity: hasChanges || saveStatus === 'saved' ? 1 : 0.7
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  opacity: hasChanges || saveStatus === 'saved' ? 1 : 0.7,
+                  width: isMobile ? "100%" : "auto"
                 }}
                 onMouseEnter={e => { if (hasChanges && saveStatus !== 'saving') e.currentTarget.style.background = "#236b69"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5"; }}
