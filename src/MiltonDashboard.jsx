@@ -3262,7 +3262,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [selectedDay, setSelectedDay] = useState(16);
   const [expandedSession, setExpandedSession] = useState(null);
   const [completedSessions, setCompletedSessions] = useState([]);
-  const sessionsScrollRef = React.useRef(null);
+  const sessionsScrollRef = useRef(null);
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
