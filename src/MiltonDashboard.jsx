@@ -6447,7 +6447,7 @@ function MealPlanCanvas({ data, onClose }) {
 
 function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   const [weekView, setWeekView] = useState(4); // Always 4 weeks
-  const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel }
+  const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel, date }
   const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
   const [exercises, setExercises] = useState([]); // Local copy of exercises for editing
   const [isAddingRow, setIsAddingRow] = useState(false);
@@ -6456,6 +6456,37 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
   const [selectedClient, setSelectedClient] = useState(data?.client || "");
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  
+  // Calendar month navigation
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  
+  // Get the first Monday of the month or the last Monday of previous month
+  const getFirstMondayOfView = (date) => {
+    const firstOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const dayOfWeek = firstOfMonth.getDay();
+    // Adjust to get to Monday (0 = Sunday, 1 = Monday, etc.)
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const firstMonday = new Date(firstOfMonth);
+    firstMonday.setDate(firstOfMonth.getDate() - daysToSubtract);
+    return firstMonday;
+  };
+  
+  // Navigate months
+  const goToPrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+  
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+  
+  // Format month name
+  const formatMonth = (date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
   
   // When expandedDay changes, copy exercises to local state
   useEffect(() => {
@@ -6624,6 +6655,50 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
           </div>
         </div>
         
+        {/* Month Navigation */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={goToPrevMonth}
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: WHITE, border: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          
+          <div style={{ 
+            minWidth: 160, textAlign: "center",
+            fontSize: 15, fontWeight: 600, color: TEXT
+          }}>
+            {formatMonth(currentDate)}
+          </div>
+          
+          <button
+            onClick={goToNextMonth}
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: WHITE, border: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
+            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="9,6 15,12 9,18"/>
+            </svg>
+          </button>
+        </div>
+        
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Client Dropdown */}
           <div style={{ position: "relative", zIndex: 9999 }}>
@@ -6723,6 +6798,7 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
         {weeks.map((weekNum, weekIdx) => {
           const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
+          const firstMonday = getFirstMondayOfView(currentDate);
           
           return (
             <div 
@@ -6744,14 +6820,21 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                   const isRest = !workout;
                   const animDelay = 0.2 + weekIdx * 0.1 + dayIdx * 0.03;
                   
+                  // Calculate the actual date for this cell
+                  const cellDate = new Date(firstMonday);
+                  cellDate.setDate(firstMonday.getDate() + (weekIdx * 7) + dayIdx);
+                  const dayNumber = cellDate.getDate();
+                  const isCurrentMonth = cellDate.getMonth() === currentDate.getMonth();
+                  const isToday = cellDate.toDateString() === new Date().toDateString();
+                  
                   return (
                     <div
-                      key={`${weekNum}-${day}`}
-                      onClick={() => !isRest && setExpandedDay({ weekNum, dayIdx, workout, dayLabel: day })}
+                      key={`${weekNum}-${day}-${dayNumber}`}
+                      onClick={() => !isRest && setExpandedDay({ weekNum, dayIdx, workout, dayLabel: day, date: cellDate })}
                       style={{
                         minWidth: 160, width: 160,
                         background: WHITE, borderRadius: 12,
-                        border: `1px solid ${BORDER}`,
+                        border: isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
                         overflow: "hidden",
                         opacity: 0, transform: "scale(0.95)",
                         animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
@@ -6766,13 +6849,25 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                       <div style={{ 
                         padding: "8px 12px", 
                         borderBottom: isRest ? "none" : `1px solid ${BORDER}`,
-                        background: isRest ? "#fafcfb" : WHITE
+                        background: isToday ? TEAL_LIGHT : (isRest ? "#fafcfb" : WHITE),
+                        display: "flex", alignItems: "center", justifyContent: "space-between"
                       }}>
                         <div style={{ 
-                          fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                          fontSize: 10, fontWeight: 600, color: isCurrentMonth ? TEXT_SEC : "#c0c8c5",
                           textTransform: "uppercase", letterSpacing: "0.04em"
                         }}>
                           {day}
+                        </div>
+                        <div style={{ 
+                          fontSize: 13, fontWeight: isToday ? 700 : 600, 
+                          color: isToday ? TEAL : (isCurrentMonth ? TEXT : "#c0c8c5"),
+                          minWidth: 24, height: 24, 
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          borderRadius: "50%",
+                          background: isToday ? TEAL : "transparent",
+                          color: isToday ? WHITE : (isCurrentMonth ? TEXT : "#c0c8c5")
+                        }}>
+                          {dayNumber}
                         </div>
                       </div>
                       
