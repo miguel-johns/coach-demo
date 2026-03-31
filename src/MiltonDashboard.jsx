@@ -6691,6 +6691,7 @@ function MealPlanCanvas({ data, onClose }) {
 }
 
 function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
+  const isMobile = useIsMobile();
   const [weekView, setWeekView] = useState(4); // Always 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel, date }
   const [editingCell, setEditingCell] = useState(null); // { rowIdx, field }
@@ -6707,6 +6708,9 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  
+  // Mobile: current day being viewed (for single-day view)
+  const [mobileCurrentDay, setMobileCurrentDay] = useState(() => new Date());
   
   // Get the first Monday of the month or the last Monday of previous month
   const getFirstMondayOfView = (date) => {
@@ -6731,6 +6735,40 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   // Format month name
   const formatMonth = (date) => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+  
+  // Mobile: navigate days
+  const goToPrevDay = () => {
+    const newDate = new Date(mobileCurrentDay);
+    newDate.setDate(newDate.getDate() - 1);
+    setMobileCurrentDay(newDate);
+  };
+  
+  const goToNextDay = () => {
+    const newDate = new Date(mobileCurrentDay);
+    newDate.setDate(newDate.getDate() + 1);
+    setMobileCurrentDay(newDate);
+  };
+  
+  // Format date for mobile header
+  const formatMobileDate = (date) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+  
+  // Get day of week index (0 = Monday, 6 = Sunday)
+  const getDayOfWeekIndex = (date) => {
+    const day = date.getDay();
+    return day === 0 ? 6 : day - 1; // Convert Sunday=0 to Monday=0 based
   };
   
   // When expandedDay changes, copy exercises to local state
@@ -6874,100 +6912,226 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
-      {/* Header */}
-      <div style={{ 
-        padding: "20px 24px", 
-        background: WHITE,
-        borderBottom: `1px solid ${BORDER}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        animation: "fadeUp 0.4s ease-out forwards",
-        position: "relative",
-        zIndex: 100
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ 
-            width: 36, height: 36, borderRadius: 10, 
-            background: TEAL_LIGHT,
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.programName || "Training Program"}</div>
-          </div>
-        </div>
-        
-        {/* Month Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={goToPrevMonth}
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: WHITE, border: `1px solid ${BORDER}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: TEXT_SEC,
-              transition: "all 0.15s ease"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
-            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="15,18 9,12 15,6"/>
-            </svg>
-          </button>
-          
-          <div style={{ 
-            minWidth: 160, textAlign: "center",
-            fontSize: 15, fontWeight: 600, color: TEXT
-          }}>
-            {formatMonth(currentDate)}
-          </div>
-          
-          <button
-            onClick={goToNextMonth}
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: WHITE, border: `1px solid ${BORDER}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: TEXT_SEC,
-              transition: "all 0.15s ease"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
-            onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="9,6 15,12 9,18"/>
-            </svg>
-          </button>
-        </div>
-        
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Client Dropdown */}
-          <div style={{ position: "relative", zIndex: 9999 }}>
+      {/* Header - Mobile */}
+      {isMobile ? (
+        <div style={{ 
+          padding: "12px 16px", 
+          background: WHITE,
+          borderBottom: `1px solid ${BORDER}`,
+          animation: "fadeUp 0.4s ease-out forwards",
+          position: "relative",
+          zIndex: 100
+        }}>
+          {/* Day Navigation with Client & Save buttons */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            {/* Left: Prev button */}
             <button
-              onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+              onClick={goToPrevDay}
               style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "8px 14px", borderRadius: 8,
-                background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
-                border: `1px solid ${selectedClient ? TEAL : BORDER}`,
-                cursor: "pointer", fontSize: 13, fontWeight: 500,
-                color: selectedClient ? TEAL : TEXT_SEC,
-                transition: "all 0.15s ease"
+                width: 36, height: 36, borderRadius: 8,
+                background: WHITE, border: `1px solid ${BORDER}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span>{selectedClient || "Select Client"}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: isClientDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
-                <polyline points="6,9 12,15 18,9"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
               </svg>
             </button>
+            
+            {/* Center: Date display */}
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>{formatMobileDate(mobileCurrentDay)}</div>
+              <div style={{ fontSize: 11, color: TEXT_SEC }}>
+                {mobileCurrentDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+            
+            {/* Right: Next, Client, Save buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={goToNextDay}
+                style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: WHITE, border: `1px solid ${BORDER}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="9,6 15,12 9,18"/>
+                </svg>
+              </button>
+              
+              {/* Client icon button */}
+              <div style={{ position: "relative", zIndex: 9999 }}>
+                <div 
+                  onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                  style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
+                    border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: selectedClient ? TEAL : TEXT_SEC
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                
+                {/* Mobile Client Dropdown */}
+                {isClientDropdownOpen && (
+                  <div style={{
+                    position: "absolute", top: "100%", right: 0, marginTop: 4,
+                    background: WHITE, borderRadius: 8, border: `1px solid ${BORDER}`,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                    minWidth: 180, maxHeight: 240, overflowY: "auto",
+                    zIndex: 9999,
+                    animation: "fadeUp 0.15s ease-out"
+                  }}>
+                    {clients.length > 0 ? clients.map((client, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
+                        style={{
+                          padding: "10px 14px", cursor: "pointer",
+                          background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                          borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
+                          fontSize: 13, fontWeight: selectedClient === client.name ? 600 : 500,
+                          color: selectedClient === client.name ? TEAL : TEXT
+                        }}
+                      >
+                        {client.name}
+                      </div>
+                    )) : (
+                      <div style={{ padding: "10px 14px", fontSize: 13, color: TEXT_SEC }}>No clients available</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Save button */}
+              <div 
+                onClick={() => {
+                  if (selectedClient) {
+                    alert(`Program assigned to ${selectedClient}!`);
+                  } else {
+                    alert("Please select a client first.");
+                  }
+                }}
+                style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: TEAL, border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: WHITE
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Header - Desktop */
+        <div style={{ 
+          padding: "20px 24px", 
+          background: WHITE,
+          borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          animation: "fadeUp 0.4s ease-out forwards",
+          position: "relative",
+          zIndex: 100
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ 
+              width: 36, height: 36, borderRadius: 10, 
+              background: TEAL_LIGHT,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
+              <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.programName || "Training Program"}</div>
+            </div>
+          </div>
+          
+          {/* Month Navigation */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={goToPrevMonth}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: WHITE, border: `1px solid ${BORDER}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC,
+                transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
+              onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            
+            <div style={{ 
+              minWidth: 160, textAlign: "center",
+              fontSize: 15, fontWeight: 600, color: TEXT
+            }}>
+              {formatMonth(currentDate)}
+            </div>
+            
+            <button
+              onClick={goToNextMonth}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: WHITE, border: `1px solid ${BORDER}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC,
+                transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; }}
+              onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="9,6 15,12 9,18"/>
+              </svg>
+            </button>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Client Dropdown */}
+            <div style={{ position: "relative", zIndex: 9999 }}>
+              <button
+                onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 14px", borderRadius: 8,
+                  background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
+                  border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                  cursor: "pointer", fontSize: 13, fontWeight: 500,
+                  color: selectedClient ? TEAL : TEXT_SEC,
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>{selectedClient || "Select Client"}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: isClientDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
+                  <polyline points="6,9 12,15 18,9"/>
+                </svg>
+              </button>
             
             {/* Dropdown Menu */}
             {isClientDropdownOpen && (
@@ -7066,13 +7230,139 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
             </svg>
           </div>
         </div>
-      </div>
+        </div>
+      )}
       
-      {/* Calendar grid - weeks as rows, days as columns */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
-        {weeks.map((weekNum, weekIdx) => {
-          const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
-          const firstMonday = getFirstMondayOfView(currentDate);
+      {/* Mobile: Single Day View */}
+      {isMobile ? (
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+          {(() => {
+            const dayIdx = getDayOfWeekIndex(mobileCurrentDay);
+            const weekOfMonth = Math.floor((mobileCurrentDay.getDate() - 1) / 7);
+            const schedule = weekSchedules[weekOfMonth % weekSchedules.length];
+            const workoutType = schedule[dayIdx];
+            const workout = workoutTemplates[workoutType];
+            const isRest = !workout;
+            
+            return (
+              <div style={{ animation: "fadeUp 0.3s ease-out" }}>
+                {isRest ? (
+                  <div style={{
+                    background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                    padding: "60px 24px", textAlign: "center"
+                  }}>
+                    <div style={{
+                      width: 64, height: 64, borderRadius: "50%", background: "#f0f4f3",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      margin: "0 auto 16px"
+                    }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                        <path d="M17 18a5 5 0 0 0-10 0"/>
+                        <line x1="12" y1="2" x2="12" y2="9"/>
+                        <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/>
+                        <line x1="1" y1="18" x2="3" y2="18"/>
+                        <line x1="21" y1="18" x2="23" y2="18"/>
+                        <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/>
+                        <line x1="23" y1="22" x2="1" y2="22"/>
+                        <polyline points="8,6 12,2 16,6"/>
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Rest Day</div>
+                    <div style={{ fontSize: 14, color: TEXT_SEC }}>Take time to recover and recharge</div>
+                  </div>
+                ) : (
+                  <div style={{
+                    background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                    overflow: "hidden"
+                  }}>
+                    {/* Workout Header */}
+                    <div style={{ 
+                      padding: "16px 20px", 
+                      background: `linear-gradient(135deg, ${TEAL}08, ${MINT}05)`,
+                      borderBottom: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                        {workout.title}
+                      </div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                        {workout.exercises?.length || 0} exercises
+                      </div>
+                    </div>
+                    
+                    {/* Exercises List */}
+                    <div style={{ padding: "12px 16px" }}>
+                      {workout.exercises?.map((ex, idx) => (
+                        <div 
+                          key={idx}
+                          onClick={() => setExpandedDay({ 
+                            weekNum: weekOfMonth + 1, 
+                            dayIdx, 
+                            workout, 
+                            dayLabel: dayLabels[dayIdx],
+                            date: mobileCurrentDay 
+                          })}
+                          style={{
+                            padding: "14px 0",
+                            borderBottom: idx < workout.exercises.length - 1 ? `1px solid ${BORDER}` : "none",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                            <div style={{
+                              width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 12, fontWeight: 700, color: TEAL, flexShrink: 0
+                            }}>
+                              {ex.sets}x
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 2 }}>{ex.name}</div>
+                              <div style={{ fontSize: 13, color: TEXT_SEC }}>{ex.reps} · {ex.weight}</div>
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginTop: 8 }}>
+                              <polyline points="9,6 15,12 9,18"/>
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Edit Button */}
+                    <div style={{ padding: "12px 16px", borderTop: `1px solid ${BORDER}` }}>
+                      <button
+                        onClick={() => setExpandedDay({ 
+                          weekNum: weekOfMonth + 1, 
+                          dayIdx, 
+                          workout, 
+                          dayLabel: dayLabels[dayIdx],
+                          date: mobileCurrentDay 
+                        })}
+                        style={{
+                          width: "100%", padding: "12px 16px", borderRadius: 10,
+                          background: TEAL, border: "none",
+                          color: WHITE, fontSize: 14, fontWeight: 600,
+                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        Edit Workout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      ) : (
+        /* Desktop: Calendar grid - weeks as rows, days as columns */
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none", msOverflowStyle: "none" }} className="hide-scrollbar">
+          {weeks.map((weekNum, weekIdx) => {
+            const schedule = weekSchedules[(weekNum - 1) % weekSchedules.length];
+            const firstMonday = getFirstMondayOfView(currentDate);
           
           return (
             <div 
@@ -7216,25 +7506,28 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               </div>
             </div>
           );
-        })}
-      </div>
-      
-      {/* Footer bar */}
-      <div style={{
-        padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
-        background: WHITE, fontSize: 12, color: TEXT_SEC,
-        display: "flex", alignItems: "center", gap: 10
-      }}>
-        <div style={{
-          width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
-          display: "flex", alignItems: "center", justifyContent: "center"
-        }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
+          })}
         </div>
-        <span>Click any workout day to expand it</span>
-      </div>
+      )}
+      
+      {/* Footer bar - Desktop only */}
+      {!isMobile && (
+        <div style={{
+          padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
+          background: WHITE, fontSize: 12, color: TEXT_SEC,
+          display: "flex", alignItems: "center", gap: 10
+        }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span>Click any workout day to expand it</span>
+        </div>
+      )}
       
       {/* Expanded Day Overlay */}
       {expandedDay && (
@@ -7248,7 +7541,7 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
         >
           {/* Expanded Header */}
           <div style={{ 
-            padding: "20px 24px", 
+            padding: isMobile ? "16px" : "20px 24px", 
             background: WHITE,
             borderBottom: `1px solid ${BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "space-between"
@@ -7270,8 +7563,8 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                 </svg>
               </button>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
-                  Week {expandedDay.weekNum} - {expandedDay.dayLabel}
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>
+                  {expandedDay.date ? formatMobileDate(expandedDay.date) : `Week ${expandedDay.weekNum} - ${expandedDay.dayLabel}`}
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
                   {expandedDay.workout?.title || "Workout Day"}
@@ -7281,7 +7574,118 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
             
           </div>
           
-          {/* Expanded Content - Spreadsheet Style */}
+          {/* Mobile: Card-based exercise list */}
+          {isMobile ? (
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+              {exercises.map((ex, exIdx) => (
+                <div 
+                  key={exIdx}
+                  style={{
+                    background: "#f8faf9", borderRadius: 12, border: `1px solid ${BORDER}`,
+                    padding: "16px", position: "relative"
+                  }}
+                >
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleDeleteExercise(exIdx)}
+                    style={{
+                      position: "absolute", top: 12, right: 12,
+                      width: 24, height: 24, borderRadius: 6, border: "none",
+                      background: "transparent", cursor: "pointer", color: TEXT_SEC,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                  
+                  {/* Exercise name */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingRight: 24 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: TEAL, color: WHITE,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 700
+                    }}>
+                      {exIdx + 1}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                  </div>
+                  
+                  {/* Stats grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Sets</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
+                    </div>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Reps</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.reps}</div>
+                    </div>
+                    <div style={{ 
+                      background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Weight</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{ex.weight}</div>
+                    </div>
+                    <div style={{ 
+                      background: "#fff7ed", borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid #fed7aa`
+                    }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: "#c2410c", textTransform: "uppercase", marginBottom: 4 }}>Rest</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#c2410c" }}>{ex.rest}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Add exercise button */}
+              <button
+                onClick={() => setIsAddingRow(true)}
+                style={{
+                  padding: "16px", borderRadius: 12, border: `2px dashed ${BORDER}`,
+                  background: "transparent", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  color: TEXT_SEC, fontSize: 14, fontWeight: 500
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Exercise
+              </button>
+              
+              {/* Mobile Summary */}
+              <div style={{ 
+                padding: "16px", background: "#f8faf9", borderRadius: 12,
+                display: "flex", justifyContent: "space-around", marginTop: 8
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{exercises.length}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Exercises</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
+                    {exercises.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
+                  </div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Total Sets</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>45-60</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>Minutes</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+          /* Desktop: Spreadsheet Style */
           <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
             {/* Spreadsheet Table */}
             <div style={{ flex: 1, overflow: "auto" }}>
@@ -7785,24 +8189,26 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
               </div>
             </div>
           </div>
+          )}
           
           {/* Footer Actions */}
           <div style={{
-            padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
-            background: WHITE, display: "flex", alignItems: "center", justifyContent: "flex-end"
+            padding: isMobile ? "12px 16px" : "16px 24px", borderTop: `1px solid ${BORDER}`,
+            background: WHITE, display: "flex", alignItems: "center", justifyContent: isMobile ? "stretch" : "flex-end"
           }}>
             <button
                 onClick={handleSave}
                 disabled={!hasChanges || saveStatus === 'saving'}
                 style={{
-                  padding: "10px 20px", borderRadius: 8,
+                  padding: isMobile ? "14px 20px" : "10px 20px", borderRadius: isMobile ? 10 : 8,
                   border: "none", 
                   background: saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5",
-                  fontSize: 13, fontWeight: 600, color: WHITE,
+                  fontSize: isMobile ? 14 : 13, fontWeight: 600, color: WHITE,
                   cursor: hasChanges && saveStatus !== 'saving' ? "pointer" : "default", 
                   transition: "all 0.15s ease",
-                  display: "flex", alignItems: "center", gap: 6,
-                  opacity: hasChanges || saveStatus === 'saved' ? 1 : 0.7
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  opacity: hasChanges || saveStatus === 'saved' ? 1 : 0.7,
+                  width: isMobile ? "100%" : "auto"
                 }}
                 onMouseEnter={e => { if (hasChanges && saveStatus !== 'saving') e.currentTarget.style.background = "#236b69"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = saveStatus === 'saved' ? "#3aaf6a" : hasChanges ? TEAL : "#a0b8b5"; }}
