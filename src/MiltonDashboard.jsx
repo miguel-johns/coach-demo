@@ -3498,8 +3498,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         })()}
       </div>
 
-{/* ─── 2. UPCOMING SESSIONS ─── */}
-  {(() => {
+      {/* ─── 2. UPCOMING SESSIONS ─── */}
+      {(() => {
         const today = new Date();
         const upcomingSessions = [
           { 
