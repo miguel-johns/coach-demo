@@ -3262,6 +3262,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [selectedDay, setSelectedDay] = useState(16);
   const [expandedSession, setExpandedSession] = useState(null);
   const [completedSessions, setCompletedSessions] = useState([]);
+  const sessionsScrollRef = React.useRef(null);
   const [customizeMode, setCustomizeMode] = useState(false);
   const [coachNoteText, setCoachNoteText] = useState("");
   const [showAddDevice, setShowAddDevice] = useState(false);
@@ -3544,8 +3545,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             ]
           },
         ];
-        
-        const sessionsScrollRef = React.useRef(null);
         
         const scrollSessions = (direction) => {
           if (sessionsScrollRef.current) {
@@ -7135,7 +7134,6 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
                         </div>
                         <div style={{ 
                           fontSize: 13, fontWeight: isToday ? 700 : 600, 
-                          color: isToday ? TEAL : (isCurrentMonth ? TEXT : "#c0c8c5"),
                           minWidth: 24, height: 24, 
                           display: "flex", alignItems: "center", justifyContent: "center",
                           borderRadius: "50%",
