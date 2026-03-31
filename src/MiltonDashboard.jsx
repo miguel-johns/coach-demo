@@ -3545,13 +3545,69 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           },
         ];
         
+        const sessionsScrollRef = React.useRef(null);
+        
+        const scrollSessions = (direction) => {
+          if (sessionsScrollRef.current) {
+            const scrollAmount = 200;
+            sessionsScrollRef.current.scrollBy({
+              left: direction === 'left' ? -scrollAmount : scrollAmount,
+              behavior: 'smooth'
+            });
+          }
+        };
+        
         return (
           <div style={{
             background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
             padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
           }}>
-            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Upcoming Sessions</div>
-            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>Upcoming Sessions</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => scrollSessions('left')}
+                  style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: "#f0f4f3", border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="15,18 9,12 15,6"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => scrollSessions('right')}
+                  style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: "#f0f4f3", border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: TEXT_SEC,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,6 15,12 9,18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div 
+              ref={sessionsScrollRef}
+              style={{ 
+                display: "flex", gap: 12, overflowX: "auto", 
+                padding: "4px 2px 8px 2px",
+                scrollbarWidth: "none", msOverflowStyle: "none"
+              }}
+              className="hide-scrollbar"
+            >
               {upcomingSessions.map((session, i) => {
                 const isCompleted = completedSessions.includes(session.id);
                 return (
@@ -3559,7 +3615,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   key={i} 
                   onClick={() => setExpandedSession(session)}
                   style={{
-                    flex: isMobile ? "none" : 1, minWidth: isMobile ? 140 : "auto",
+                    flex: "0 0 auto", minWidth: isMobile ? 140 : 160,
                     padding: "16px", borderRadius: 14,
                     background: isCompleted ? `${MINT}15` : (session.isToday ? `linear-gradient(135deg, ${TEAL}12, ${MINT}08)` : "#f7faf9"),
                     border: isCompleted ? `2px solid ${MINT}` : (session.isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`),
