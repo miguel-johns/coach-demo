@@ -20,6 +20,10 @@ const demoClients = [
     sessionsPerWeek: 4,
     sessionsThisWeek: 3,
     totalSessions: 18,
+    trainerNotes: [
+      { date: "2026-03-21", note: "Squat depth improving but still rounding lower back at bottom. Cue: chest up, brace harder." },
+      { date: "2026-03-19", note: "Mentioned stress from wedding planning. Keep sessions energizing, maybe add fun finishers." }
+    ],
     nutrition: {
       tracking: true,
       proteinAvg: 95,
@@ -85,6 +89,10 @@ const demoClients = [
     sessionsPerWeek: 5,
     sessionsThisWeek: 4,
     totalSessions: 32,
+    trainerNotes: [
+      { date: "2026-03-21", note: "Deadlift form is dialed. Ready to test 300. Consider adding deficit pulls next phase." },
+      { date: "2026-03-19", note: "Bench PR! 180x4. Very pumped. Good energy, great session overall." }
+    ],
     nutrition: {
       tracking: true,
       proteinAvg: 185,
@@ -152,6 +160,10 @@ const demoClients = [
     sessionsPerWeek: 3,
     sessionsThisWeek: 0,
     totalSessions: 8,
+    trainerNotes: [
+      { date: "2026-03-10", note: "Energy was good but mentioned feeling overwhelmed with work. Keep sessions under 45 min." },
+      { date: "2026-03-07", note: "Loves the push-up progression. Very motivated by visible progress on bodyweight movements." }
+    ],
     nutrition: {
       tracking: true,
       proteinAvg: 68,
@@ -208,6 +220,10 @@ const demoClients = [
     sessionsPerWeek: 4,
     sessionsThisWeek: 3,
     totalSessions: 28,
+    trainerNotes: [
+      { date: "2026-03-21", note: "295 squat moved well. 315 is 4-6 weeks out. Pause squats are building confidence in the hole." },
+      { date: "2026-03-19", note: "205 bench PR! On track for 225 by meet. Keep grinding accessories." }
+    ],
     nutrition: {
       tracking: true,
       proteinAvg: 165,
@@ -274,6 +290,10 @@ const demoClients = [
     sessionsPerWeek: 2,
     sessionsThisWeek: 2,
     totalSessions: 4,
+    trainerNotes: [
+      { date: "2026-03-20", note: "First week back! Keeping it light. Core reconnection is priority - glute bridges feeling good." },
+      { date: "2026-03-18", note: "Very motivated to get back in shape. Go slow - she'll want to push but needs to rebuild foundation." }
+    ],
     nutrition: {
       tracking: true,
       proteinAvg: 85,
@@ -567,80 +587,72 @@ ${workoutHistory}`
       ).join('\n')}`
     : ''
 
-  return `You are Milton, an AI coaching copilot for nutrition and fitness coaches. You have real-time access to all client data including their workout history, exercise performance, AND nutrition tracking.
+  return `You are Milton, an AI coaching copilot for personal trainers and fitness coaches. You have real-time access to all client data including workout history, exercise performance, nutrition tracking, and session notes.
+
+## NORTH STAR: SESSION QUALITY
+Your #1 goal is ensuring every training session is exceptional. Everything else supports this:
+- **Pre-Session**: Prepare the coach with curated intel so they walk in ready
+- **In-Session**: Surface progressive overload recommendations and cues
+- **Post-Session**: Capture notes and observations for future sessions
+
+Great sessions → client results → retention → business success. This is the flywheel.
 
 ## Your Personality
-- Warm but efficient — like a trusted colleague
+- Warm but efficient — like a trusted colleague who has your back
 - Action-oriented — always suggest a clear next step
-- Proactive — surface important alerts without being asked
-- Concise — keep responses to 2-4 sentences unless asked for more detail
+- Proactive — surface session-critical info without being asked
+- Concise — 2-4 sentences unless asked for more detail
+- Trainer-first language — speak like someone who understands the craft
 
-## Capabilities
-You can:
-1. View all client workout data, including exercises, sets, reps, weights, and RPE
-2. Log new workouts or exercises for clients using the logWorkout tool
-3. **Log meals and track macros** using the logMeal tool
-4. **Analyze nutrition trends** (protein, calories, macro balance, logging consistency)
-5. **Proactively surface clients needing attention** - nutrition issues, missed sessions, wins to celebrate
-6. **Suggest meal plans** based on remaining daily macros
-7. **Draft follow-up messages** that combine workout AND nutrition context
-8. Provide analysis on strength progress and training patterns
+## Core Capabilities
+1. **Session Prep** (use getSessionPrep tool) - Pull curated intel before a session: last workout, progressive overload recommendations, client notes, flags
+2. **Progressive Overload** - Analyze when to push weight/reps/sets based on RPE trends
+3. **Log Workouts** - Record sessions, exercises, sets, weights, RPE
+4. **Log Meals** - Track nutrition, calculate remaining macros
+5. **Surface Alerts** - Identify clients needing attention (missed sessions, nutrition gaps, wins)
+6. **Draft Messages** - Create personalized check-ins and follow-ups
 
-## Priority Framework (IN ORDER OF IMPORTANCE)
-**#1 REBOOKING - This is your TOP priority!**
-- Clients who missed sessions or haven't trained recently need to be rebooked FIRST
-- When you see missed sessions, ALWAYS suggest reaching out to get them back on the calendar
-- Getting clients training again is more important than any nutrition tweak
+## Priority Framework for Alerts
+**#1 SESSION REBOOKING** - Clients who haven't trained recently or missed sessions
+**#2 SESSION QUALITY FLAGS** - Anything that could impact the next session (injury notes, energy issues, form concerns)
+**#3 ENGAGEMENT** - Clients not logging or seeming disengaged
+**#4 NUTRITION** - Protein deficits, calorie issues (these support sessions)
 
-**#2 Engagement & Consistency**
-- Clients not logging meals or workouts
-- Clients who seem disengaged
+## Session Prep Context
+When asked about an upcoming session, or when the coach selects a client, use the getSessionPrep tool to provide:
+- **Last Session Summary**: Key lifts, weights, RPE, any notes
+- **Progressive Overload Recommendations**: What to push today based on data
+- **Client Flags**: Recent notes, injury concerns, motivation level
+- **Goal Context**: Where they are vs where they want to be
 
-**#3 Nutrition & Programming**
-- Low protein, calorie issues, program adjustments
-- These matter, but only AFTER the client is showing up
+## Post-Session Capture
+When the coach mentions a session just ended, proactively offer to:
+- Log the workout details
+- Capture quick notes (form observations, energy level, wins)
+- Flag anything for next session (sore shoulder, needs form work, etc.)
 
-## When Asked to "Craft a Message" or "Write a Message" for Someone
-IMMEDIATELY output a ready-to-copy message. Format it like this:
+## Message Drafting
+When asked to "craft a message" or "write a message":
 
 ---
 **Message for [Name]:**
 
-"Hey [First name]! [Your personalized message here based on their data and situation]"
+"Hey [First name]! [Your personalized message based on their data]"
 
 ---
 
-- Make it casual, warm, and encouraging
-- Focus on REBOOKING if they've missed sessions
-- Include specific details from their data (last workout date, streak, etc.)
-- Keep it to 2-3 sentences max
-- Ready to copy/paste - no extra explanation needed
-
-## Proactive Coaching Behavior
-At the START of conversations, briefly mention:
-- Any clients who need REBOOKING (missed sessions) - this is #1!
-- Any urgent nutrition alerts - 1-2 most important
-- Any wins worth celebrating
-
-Keep the opening to 2-3 sentences max. Only elaborate if asked.
-
-When asked "who needs attention" or similar:
-- FIRST: Anyone who needs rebooking (missed sessions)
-- THEN: Clients with nutrition concerns
-- Lead with the most actionable items
-- Offer to draft specific messages
+- Casual, warm, encouraging tone
+- REBOOKING focus if they've missed sessions
+- Include specific details from their data
+- 2-3 sentences max, ready to copy/paste
 
 ## Response Rules
-- ONLY reference the 5 clients listed below — never invent clients or data
-- Use specific names and numbers from the data
-- When asked about workouts: reference actual exercise data with weights/reps/RPE
-- When asked about nutrition: reference protein averages, calorie trends, streaks, and recent meals
-- When logging a workout: use the logWorkout tool, then confirm what was logged
-- When logging a meal: use the logMeal tool, then confirm what was logged
-- When asked "who needs attention": LEAD WITH REBOOKING NEEDS, then nutrition AND workout concerns
-- When asked to craft/write a message: OUTPUT THE MESSAGE IMMEDIATELY - ready to copy/paste, casual tone
-- When summarizing: use bullet points
-- When asked about remaining macros: calculate what's left for the day based on logged meals vs targets
+- ONLY reference the 5 clients listed below — never invent data
+- Use specific names, numbers, and dates from the data
+- When discussing sessions: reference actual exercise data with weights/reps/RPE
+- When asked "who needs attention": lead with session-related needs first
+- When asked about remaining macros: calculate based on logged meals vs targets
+- Keep responses actionable and trainer-focused
 ${alertSection}
 
 ## Current Client Roster (5 clients):
@@ -656,11 +668,191 @@ ${recentMealLogs}
 ${selectedClient ? `\n## Currently Viewing: ${selectedClient.name}
 The coach is currently looking at ${selectedClient.name}'s profile. When they say "she", "he", "they", "this client", or ask questions without naming someone, they're referring to ${selectedClient.name}. Prioritize information about this client in your responses.` : ''}
 
-Remember: Be specific, be brief, be helpful. You have FULL access to workout AND nutrition data! Proactively surface insights.`
+Remember: Session quality is the north star. When a coach mentions a client, use getSessionPrep to surface curated intel. After sessions, capture notes for next time. Be specific, brief, and trainer-focused.`
 }
 
 // Define tools for workout and nutrition logging
 const coachingTools = {
+  // SESSION PREP - The most important tool for session quality
+  getSessionPrep: tool({
+    description: 'Get curated session prep data for a client before their training session. Use this when a coach asks about an upcoming session, selects a client, or says something like "I have [client] coming in" or "prep me for [client]". This surfaces last session data, progressive overload recommendations, and flags.',
+    inputSchema: z.object({
+      clientName: z.string().describe('The name of the client')
+    }),
+    execute: async ({ clientName }) => {
+      const client = demoClients.find(c => c.name.toLowerCase() === clientName.toLowerCase())
+      if (!client) {
+        return { success: false, error: `Client "${clientName}" not found. Available clients: ${demoClients.map(c => c.name).join(', ')}` }
+      }
+      
+      const lastWorkout = client.recentWorkouts && client.recentWorkouts[0] ? client.recentWorkouts[0] : null
+      const secondLastWorkout = client.recentWorkouts && client.recentWorkouts[1] ? client.recentWorkouts[1] : null
+      
+      // Generate progressive overload recommendations based on RPE trends
+      const progressiveOverloadRecs = []
+      if (lastWorkout) {
+        lastWorkout.exercises.forEach(ex => {
+          const lastSet = ex.sets[ex.sets.length - 1]
+          if (lastSet.rpe <= 7) {
+            progressiveOverloadRecs.push({
+              exercise: ex.name,
+              recommendation: `Push weight: RPE ${lastSet.rpe} on ${lastSet.weight}lbs suggests room to add 5-10lbs`,
+              lastPerformance: `${lastSet.weight}lbs x ${lastSet.reps} @ RPE ${lastSet.rpe}`
+            })
+          } else if (lastSet.rpe >= 8.5) {
+            progressiveOverloadRecs.push({
+              exercise: ex.name,
+              recommendation: `Hold weight: RPE ${lastSet.rpe} indicates working near limit. Consolidate before progressing.`,
+              lastPerformance: `${lastSet.weight}lbs x ${lastSet.reps} @ RPE ${lastSet.rpe}`
+            })
+          } else {
+            progressiveOverloadRecs.push({
+              exercise: ex.name,
+              recommendation: `Ready for small jump: Consider +5lbs or +1 rep`,
+              lastPerformance: `${lastSet.weight}lbs x ${lastSet.reps} @ RPE ${lastSet.rpe}`
+            })
+          }
+        })
+      }
+      
+      // Detect session-critical flags
+      const flags = []
+      const n = client.nutrition || {}
+      
+      // Session gap flag
+      const daysSinceLastSession = lastWorkout 
+        ? Math.floor((new Date() - new Date(lastWorkout.date)) / (1000 * 60 * 60 * 24))
+        : null
+      if (daysSinceLastSession && daysSinceLastSession > 5) {
+        flags.push({ type: 'warning', message: `${daysSinceLastSession} days since last session - may need lighter start` })
+      }
+      
+      // Nutrition flag
+      if (n.daysLowProtein >= 3 || n.calorieAvg < n.calorieTarget * 0.8) {
+        flags.push({ type: 'warning', message: `Under-fueled: ${n.proteinAvg}g protein avg (target: ${n.proteinTarget}g). May affect performance.` })
+      }
+      
+      // Form/injury notes from last session
+      if (lastWorkout && lastWorkout.notes) {
+        if (lastWorkout.notes.toLowerCase().includes('form') || 
+            lastWorkout.notes.toLowerCase().includes('pain') ||
+            lastWorkout.notes.toLowerCase().includes('tight') ||
+            lastWorkout.notes.toLowerCase().includes('heavy')) {
+          flags.push({ type: 'note', message: `Last session note: "${lastWorkout.notes}"` })
+        }
+      }
+      
+// Positive momentum
+  if (n.proteinStreak >= 5) {
+  flags.push({ type: 'positive', message: `${n.proteinStreak}-day protein streak - fueling well!` })
+  }
+  if (client.loggingStreak >= 7) {
+  flags.push({ type: 'positive', message: `${client.loggingStreak}-day logging streak - highly engaged` })
+  }
+  
+  // Include most recent trainer note as context
+  if (client.trainerNotes && client.trainerNotes.length > 0) {
+    const latestNote = client.trainerNotes[0]
+    flags.push({ type: 'coach-note', message: `Your note (${latestNote.date}): ${latestNote.note}` })
+  }
+  
+  return {
+        success: true,
+        client: client.name,
+        goal: client.goal,
+        program: client.program,
+        week: client.week,
+        status: client.status,
+        
+        // Last session summary
+        lastSession: lastWorkout ? {
+          date: lastWorkout.date,
+          daysSince: daysSinceLastSession,
+          type: lastWorkout.type,
+          duration: lastWorkout.duration,
+          keyLifts: lastWorkout.exercises.map(ex => {
+            const topSet = ex.sets.reduce((best, s) => s.weight > best.weight ? s : best, ex.sets[0])
+            return `${ex.name}: ${topSet.weight}lbs x ${topSet.reps} @ RPE ${topSet.rpe}`
+          }),
+          notes: lastWorkout.notes
+        } : null,
+        
+        // Progressive overload recommendations
+        progressiveOverload: progressiveOverloadRecs,
+        
+        // Flags and alerts
+        flags,
+        
+// Quick context
+  sessionsThisWeek: client.sessionsThisWeek,
+  sessionsPerWeek: client.sessionsPerWeek,
+  totalSessions: client.totalSessions,
+  strengthProgress: client.strengthProgress,
+  
+  // Trainer notes from previous sessions
+  trainerNotes: client.trainerNotes ? client.trainerNotes.slice(0, 3) : [],
+  
+  // Nutrition snapshot (affects session performance)
+        nutritionSnapshot: {
+          proteinAvg: n.proteinAvg,
+          proteinTarget: n.proteinTarget,
+          calorieAvg: n.calorieAvg,
+          calorieTarget: n.calorieTarget,
+          streak: n.proteinStreak || 0
+        }
+      }
+    }
+  }),
+  
+  // POST-SESSION NOTES - Capture quick observations
+  captureSessionNotes: tool({
+    description: 'Capture quick notes after a training session. Use this when the coach wants to record observations, form notes, or flags for next session.',
+    inputSchema: z.object({
+      clientName: z.string().describe('The name of the client'),
+      sessionType: z.string().describe('Type of session (e.g., "Upper Body", "Legs", "Pull")'),
+      energyLevel: z.enum(['low', 'moderate', 'high']).describe('Client energy level during session'),
+      wins: z.string().nullable().describe('What went well (PRs, form improvements, attitude)'),
+      formNotes: z.string().nullable().describe('Any form observations or corrections made'),
+      flagsForNextSession: z.string().nullable().describe('Things to watch or address next session'),
+      overallRPE: z.number().describe('Overall session RPE (1-10)')
+    }),
+    execute: async ({ clientName, sessionType, energyLevel, wins, formNotes, flagsForNextSession, overallRPE }) => {
+      const client = demoClients.find(c => c.name.toLowerCase() === clientName.toLowerCase())
+      if (!client) {
+        return { success: false, error: `Client "${clientName}" not found.` }
+      }
+      
+      const sessionNote = {
+        clientName: client.name,
+        date: new Date().toISOString().split('T')[0],
+        sessionType,
+        energyLevel,
+        wins: wins || '',
+        formNotes: formNotes || '',
+        flagsForNextSession: flagsForNextSession || '',
+        overallRPE,
+        capturedAt: new Date().toISOString()
+      }
+      
+      // Store in memory (in production, this would go to database)
+      if (!client.sessionNotes) client.sessionNotes = []
+      client.sessionNotes.push(sessionNote)
+      
+      return {
+        success: true,
+        message: `Session notes captured for ${client.name}`,
+        summary: {
+          session: sessionType,
+          energy: energyLevel,
+          rpe: overallRPE,
+          wins: wins || 'None noted',
+          flags: flagsForNextSession || 'None'
+        },
+        nextSessionReminder: flagsForNextSession ? `Remember next session: ${flagsForNextSession}` : null
+      }
+    }
+  }),
+  
   logWorkout: tool({
     description: 'Log a workout session for a client. Use this when the coach wants to record a workout, exercise, or training session for any client.',
     inputSchema: z.object({
