@@ -9641,14 +9641,16 @@ export default function MiltonDashboard() {
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         }, remainingDelay);
       } catch (error) {
-        console.error("[v0] Chat error:", error);
+        console.error("[v0] Chat API error - falling back to canned response:", error);
+        console.error("[v0] Error details:", error.message);
         // Fallback to local AI - still apply thinking delay
         const elapsed = Date.now() - startTime;
         const remainingDelay = Math.max(0, MIN_THINKING_TIME - elapsed);
         
         setTimeout(() => {
-          const resp = generateAIResponse(text);
-          setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
+          // Show error message in chat instead of canned response for debugging
+          const errorMsg = `**API Error - Using Fallback Response**\n\n_Error: ${error.message}_\n\n---\n\n` + generateAIResponse(text).text;
+          setChatMessages(prev => [...prev, { type: "ai", text: errorMsg }]);
           setChatTyping(false);
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         }, remainingDelay);
