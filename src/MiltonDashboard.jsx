@@ -1324,15 +1324,15 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — Lower body today. Squat hit 120x6 last session, ready to test progression\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 4 sessions today. Here's your quick prep:\n\n**Up First: Sarah Chen** (10am) — Lower body. Squat was 120x6 @ RPE 7 last time. Ready to push to 125. Watch her lower back rounding at depth.\n\n**Needs Rebooking:**\n- Emily Rodriguez — 14 days since last session. Quick check-in message?\n\n**Win to Celebrate:**\n- Marcus Johnson hit a 180x4 bench PR! 7-day protein streak too.\n\nWho should I prep you for first?" },
 ];
 
 const suggestedPrompts = [
-  "Pull up Sarah's program",
-  "What did Marcus do last session?",
-  "Build a workout for Emily",
-  "Who needs programming this week?",
-  "Show me Sarah's squat progression",
+  "Prep me for Sarah's session",
+  "Draft a message for Emily",
+  "What should I push Marcus on today?",
+  "Who needs rebooking?",
+  "Log notes from my last session",
 ];
 
 // Demo client data for Milton AI responses
@@ -2344,7 +2344,7 @@ function MobileCanvasSheet({
   );
 }
 
-/* ═════════════════════════���══════════════���══
+/* ═════════════════════════�����══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
