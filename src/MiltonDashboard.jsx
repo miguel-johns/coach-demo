@@ -9603,35 +9603,89 @@ export default function MiltonDashboard() {
       return;
     }
 
-    // Call our backend API which has workout data and tools
+    // Call OpenAI directly via Vercel AI Gateway
     (async () => {
       const startTime = Date.now();
-      const MIN_THINKING_TIME = 2000; // Minimum 2 seconds of "thinking"
+      const MIN_THINKING_TIME = 1500;
       
       try {
-        const allMessages = [...chatMessages, newUserMessage];
+        // Build system prompt with client data
+        const selectedClientData = selectedClient !== null ? clients[selectedClient] : null;
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
-        const response = await fetch("/api/chat", {
+        const clientSummaries = clients.map(c => {
+          const n = c.nutrition || {};
+          return `**${c.name}** (Week ${c.week}, ${c.status})
+- Goal: ${c.goal}
+- Program: ${c.program}
+- Sessions: ${c.sessionsThisWeek || 0}/${c.sessionsPerWeek || 'N/A'} this week
+- Nutrition: ${n.proteinAvg || 'N/A'}g protein avg (target: ${n.proteinTarget || 'N/A'}g)
+- Trainer Notes: ${c.trainerNotes ? c.trainerNotes.map(n => n.note).join(' | ') : 'None'}
+- Recent Workout: ${c.recentWorkouts?.[0] ? `${c.recentWorkouts[0].type} on ${c.recentWorkouts[0].date}` : 'None logged'}
+- Strength: ${c.strengthProgress ? Object.entries(c.strengthProgress).map(([k,v]) => `${k}: ${v.current} (${v.change})`).join(', ') : 'N/A'}`;
+        }).join('\n\n');
+        
+        const systemPrompt = `You are Milton, an AI coaching copilot for personal trainers. Your #1 goal is ensuring every training session is exceptional.
+
+## Your Personality
+- Warm but efficient — like a trusted colleague
+- Action-oriented — always suggest a clear next step
+- Concise — 2-4 sentences unless asked for more detail
+- Use specific data from the client roster below
+
+## When asked to "prep" for a session:
+- Summarize last workout with key lifts, weights, RPE
+- Give progressive overload recommendation (push weight if RPE was <7, hold if RPE was >8.5)
+- Surface any trainer notes or flags
+- Keep it actionable
+
+## When asked to draft a message:
+Output a ready-to-copy message like:
+---
+**Message for [Name]:**
+"Hey [Name]! [personalized message]"
+---
+
+## Client Roster:
+${clientSummaries}
+
+## Today: ${today}
+${selectedClientData ? `\n## Currently Viewing: ${selectedClientData.name}\nWhen they say "this client" or ask without naming someone, they mean ${selectedClientData.name}.` : ''}
+
+Be specific, brief, and trainer-focused. Use actual numbers from the data.`;
+
+        // Build messages for OpenAI
+        const openaiMessages = [
+          { role: "system", content: systemPrompt },
+          ...chatMessages.map(m => ({
+            role: m.type === "user" ? "user" : "assistant",
+            content: m.text
+          })),
+          { role: "user", content: text }
+        ];
+        
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
           },
           body: JSON.stringify({
-            messages: allMessages,
-            clients: clients,
-            selectedClientIndex: selectedClient
+            model: "gpt-4o",
+            messages: openaiMessages,
+            max_tokens: 1000,
+            temperature: 0.7
           }),
         });
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `API error: ${response.status}`);
+          throw new Error(errorData.error?.message || `OpenAI error: ${response.status}`);
         }
 
         const data = await response.json();
-        const aiText = data.text || "I couldn't generate a response.";
+        const aiText = data.choices?.[0]?.message?.content || "I couldn't generate a response.";
         
-        // Ensure minimum thinking time has passed
         const elapsed = Date.now() - startTime;
         const remainingDelay = Math.max(0, MIN_THINKING_TIME - elapsed);
         
@@ -9641,16 +9695,14 @@ export default function MiltonDashboard() {
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         }, remainingDelay);
       } catch (error) {
-        console.error("[v0] Chat API error - falling back to canned response:", error);
-        console.error("[v0] Error details:", error.message);
-        // Fallback to local AI - still apply thinking delay
+        console.error("[v0] OpenAI error:", error);
         const elapsed = Date.now() - startTime;
         const remainingDelay = Math.max(0, MIN_THINKING_TIME - elapsed);
         
         setTimeout(() => {
-          // Show error message in chat instead of canned response for debugging
-          const errorMsg = `**API Error - Using Fallback Response**\n\n_Error: ${error.message}_\n\n---\n\n` + generateAIResponse(text).text;
-          setChatMessages(prev => [...prev, { type: "ai", text: errorMsg }]);
+          // Fallback to canned response
+          const resp = generateAIResponse(text);
+          setChatMessages(prev => [...prev, { type: "ai", text: resp.text }]);
           setChatTyping(false);
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         }, remainingDelay);
@@ -9823,7 +9875,7 @@ export default function MiltonDashboard() {
         </div>
       )}
 
-      {/* ═══ CANVAS MODE - Desktop Only (Mobile uses MobileCanvasSheet) ═══ */}
+      {/* ══�� CANVAS MODE - Desktop Only (Mobile uses MobileCanvasSheet) ═══ */}
       {canvasMode && !isMobile && (
         <div style={{
           flex: 1,
