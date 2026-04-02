@@ -3,7 +3,7 @@
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],
   "functions": {
-    "api/chat.js": {
+    "api/chat/route.js": {
       "maxDuration": 60
     }
   }

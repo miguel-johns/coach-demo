@@ -1373,14 +1373,10 @@ const coachingTools = {
   })
 }
 
-// Vercel Serverless Function handler
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
+// Vercel Serverless Function handler - Web API standard
+export async function POST(request) {
   try {
-    const { messages, clients, selectedClientIndex } = req.body
+    const { messages, clients, selectedClientIndex } = await request.json()
     
     // Merge frontend client data with demo data for nutrition context
     const clientsToUse = clients && clients.length > 0 
@@ -1413,14 +1409,14 @@ export default async function handler(req, res) {
       fullText += chunk
     }
 
-    res.status(200).json({ text: fullText })
+    return Response.json({ text: fullText })
   } catch (error) {
     console.error('[v0] Chat API error:', error)
-    res.status(500).json({ 
+    return Response.json({ 
       error: 'Failed to generate response', 
       details: error.message,
       name: error.name,
       cause: error.cause ? String(error.cause) : undefined
-    })
+    }, { status: 500 })
   }
 }
