@@ -30,7 +30,7 @@ function useIsMobile() {
 }
 
 // Chat options component for interactive selections
-  function ChatOptions({ options, multiSelect, onSelect, disabled }) {
+function ChatOptions({ options, multiSelect, onSelect, disabled }) {
     const [selected, setSelected] = useState(multiSelect ? [] : null);
     const GREEN = "#5CDB95";
     
@@ -9615,14 +9615,21 @@ export default function MiltonDashboard() {
         
         const clientSummaries = clients.map(c => {
           const n = c.nutrition || {};
-          return `**${c.name}** (Week ${c.week}, ${c.status})
-- Goal: ${c.goal}
-- Program: ${c.program}
+          const lastSession = c.sessions?.[0];
+          const topExercises = lastSession?.exercises?.slice(0, 2).map(ex => {
+            const topSet = ex.sets?.reduce((best, s) => (s.weight > (best?.weight || 0)) ? s : best, ex.sets[0]);
+            return `${ex.name}: ${topSet?.weight || 'N/A'}lbs x ${topSet?.reps || 'N/A'} @ RPE ${topSet?.rpe || 'N/A'}`;
+          }).join(', ') || 'No data';
+          
+          return `**${c.name}** (Week ${c.week || 'N/A'}, ${c.status || 'active'})
+- Goal: ${c.goals?.primary || c.goal || 'N/A'}
+- Program: ${c.program || 'N/A'}
 - Sessions: ${c.sessionsThisWeek || 0}/${c.sessionsPerWeek || 'N/A'} this week
 - Nutrition: ${n.proteinAvg || 'N/A'}g protein avg (target: ${n.proteinTarget || 'N/A'}g)
-- Trainer Notes: ${c.trainerNotes ? c.trainerNotes.map(n => n.note).join(' | ') : 'None'}
-- Recent Workout: ${c.recentWorkouts?.[0] ? `${c.recentWorkouts[0].type} on ${c.recentWorkouts[0].date}` : 'None logged'}
-- Strength: ${c.strengthProgress ? Object.entries(c.strengthProgress).map(([k,v]) => `${k}: ${v.current} (${v.change})`).join(', ') : 'N/A'}`;
+- Last Session: ${lastSession ? `${lastSession.type} on ${lastSession.date}` : 'None logged'}
+- Key Lifts: ${topExercises}
+- Coach Notes: ${lastSession?.notes || 'None'}
+- Insight: ${c.insight || 'N/A'}`;
         }).join('\n\n');
         
         const systemPrompt = `You are Milton, an AI coaching copilot for personal trainers. Your #1 goal is ensuring every training session is exceptional.
