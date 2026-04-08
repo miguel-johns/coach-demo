@@ -9203,6 +9203,7 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
    MAIN DASHBOARD COMPONENT
    ═════════════════════════════════════════════ */
 export default function MiltonDashboard() {
+  console.log("[v0] MiltonDashboard component rendering");
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
