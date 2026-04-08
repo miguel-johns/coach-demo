@@ -30,65 +30,65 @@ function useIsMobile() {
 }
 
 // Chat options component for interactive selections
-  function ChatOptions({ options, multiSelect, onSelect, disabled }) {
-    const [selected, setSelected] = useState(multiSelect ? [] : null);
-    const GREEN = "#5CDB95";
-    
-    const handleClick = (option) => {
-      if (disabled) return;
-      if (multiSelect) {
-        setSelected(prev => prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]);
-      } else {
-        setSelected(option);
-        onSelect(option);
-      }
-    };
-    
-    const handleConfirm = () => {
-      if (selected.length > 0) {
-        onSelect(selected);
-      }
-    };
-    
-    return (
-      <div style={{ marginTop: 12 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {options.map(opt => (
-            <button
-              key={opt}
-              onClick={() => handleClick(opt)}
-              disabled={disabled}
-              style={{
-                padding: "8px 14px", borderRadius: 20,
-                background: (multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : WHITE,
-                border: `1px solid ${(multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : BORDER}`,
-                color: (multiSelect ? selected.includes(opt) : selected === opt) ? WHITE : TEXT,
-                fontSize: 13, fontWeight: 500, cursor: disabled ? "default" : "pointer",
-                opacity: disabled ? 0.5 : 1,
-                transition: "all 0.15s ease"
-              }}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-        {multiSelect && !disabled && selected.length > 0 && (
+function ChatOptions({ options, multiSelect, onSelect, disabled }) {
+  const [selected, setSelected] = useState(multiSelect ? [] : null);
+  const GREEN = "#5CDB95";
+  
+  const handleClick = (option) => {
+    if (disabled) return;
+    if (multiSelect) {
+      setSelected(prev => prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]);
+    } else {
+      setSelected(option);
+      onSelect(option);
+    }
+  };
+  
+  const handleConfirm = () => {
+    if (selected.length > 0) {
+      onSelect(selected);
+    }
+  };
+  
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {options.map(opt => (
           <button
-            onClick={handleConfirm}
+            key={opt}
+            onClick={() => handleClick(opt)}
+            disabled={disabled}
             style={{
-              marginTop: 10, padding: "8px 16px", borderRadius: 20, border: "none",
-              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+              padding: "8px 14px", borderRadius: 20,
+              background: (multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : WHITE,
+              border: `1px solid ${(multiSelect ? selected.includes(opt) : selected === opt) ? GREEN : BORDER}`,
+              color: (multiSelect ? selected.includes(opt) : selected === opt) ? WHITE : TEXT,
+              fontSize: 13, fontWeight: 500, cursor: disabled ? "default" : "pointer",
+              opacity: disabled ? 0.5 : 1,
+              transition: "all 0.15s ease"
             }}
           >
-            Continue
+            {opt}
           </button>
-        )}
+        ))}
       </div>
-    );
-  }
+      {multiSelect && !disabled && selected.length > 0 && (
+        <button
+          onClick={handleConfirm}
+          style={{
+            marginTop: 10, padding: "8px 16px", borderRadius: 20, border: "none",
+            background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+          }}
+        >
+          Continue
+        </button>
+      )}
+    </div>
+  );
+}
 
-  // Simple markdown-like formatter for AI responses
-  function FormattedText({ text, color = TEXT_SEC }) {
+// Simple markdown-like formatter for AI responses
+function FormattedText({ text, color = TEXT_SEC }) {
   if (!text) return null;
   
   // Split into paragraphs first
@@ -6268,8 +6268,8 @@ function MealPlanCanvas({ data, onClose }) {
     return () => { cancelled = true; };
   }, [data]);
   
-  // Fallback sample data if API fails
-  function getFallbackMealPlan() {
+// Fallback sample data if API fails
+function getFallbackMealPlan() {
     return {
       weeks: [1, 2, 3, 4].map(weekNum => ({
         weekNumber: weekNum,
@@ -9203,7 +9203,6 @@ function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
    MAIN DASHBOARD COMPONENT
    ═════════════════════════════════════════════ */
 export default function MiltonDashboard() {
-  console.log("[v0] MiltonDashboard component rendering");
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
