@@ -5996,8 +5996,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       title: "Meal Plan", 
       desc: "Build custom nutrition plans with daily meals, macros, and recipes",
       color: "#2B7A78",
-      available: false,
-      comingSoon: true
+      available: true,
+      number: 2
     },
     { 
       id: "messages",
@@ -6005,8 +6005,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       title: "Automated Messages", 
       desc: "Schedule check-ins, reminders, and motivational messages",
       color: "#5CDB95",
-      available: false,
-      comingSoon: true
+      available: true,
+      number: 3
     },
     { 
       id: "reports",
