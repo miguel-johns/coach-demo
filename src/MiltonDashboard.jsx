@@ -9747,8 +9747,10 @@ export default function MiltonDashboard() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [brainDocuments, setBrainDocuments] = useState([
-  { id: 1, name: "Training Philosophy.pdf", size: "2.4 MB", date: "2026-03-15", status: "processed" },
-  { id: 2, name: "Nutrition Guidelines.docx", size: "1.1 MB", date: "2026-03-10", status: "processed" },
+  { id: 1, name: "Training Philosophy.pdf", size: "2.4 MB", date: "2026-03-15", status: "validated", type: "PDF" },
+  { id: 2, name: "Nutrition Guidelines.docx", size: "1.1 MB", date: "2026-03-10", status: "validated", type: "Word" },
+  { id: 3, name: "Client Onboarding Process.mp4", size: "48.2 MB", date: "2026-04-12", status: "pending_validation", type: "Video" },
+  { id: 4, name: "Macro Calculation Worksheet.pdf", size: "0.8 MB", date: "2026-04-14", status: "pending_validation", type: "PDF" },
   ]);
   const [mainReportBlocks, setMainReportBlocks] = useState(null);
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
