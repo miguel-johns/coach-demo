@@ -2072,10 +2072,10 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
 /* ═══════���═══════════════════════════════════
    MOBILE CANVAS SHEET - Swipe up drawer for canvas/inbox/schedule
    ═════════════════════════════════════════════ */
-function MobileCanvasSheet({ 
-  isOpen, 
-  onClose, 
-  canvasType, 
+function MobileCanvasSheet({
+  isOpen,
+  onClose,
+  canvasType,
   canvasData,
   setCanvasType,
   setCanvasData,
@@ -2083,7 +2083,9 @@ function MobileCanvasSheet({
   setChatMessages,
   setChatTyping,
   onChatSend,
-  clients
+  clients,
+  brainDocuments,
+  setBrainDocuments
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2135,9 +2137,10 @@ function MobileCanvasSheet({
       case "mealPlan": return "Meal Plan";
       case "workout": return "Workout Program";
       case "messages": return "Messages";
-      case "report": return "Reports";
-      case "messageSequence": return "Message Sequence";
-      default: return "Canvas";
+  case "report": return "Reports";
+  case "messageSequence": return "Message Sequence";
+  case "aiEngine": return "Your AI Engine";
+  default: return "Canvas";
     }
   };
 
@@ -2236,9 +2239,20 @@ function MobileCanvasSheet({
                 } else if (templateType === "reports") {
                   setCanvasType("report");
                   setCanvasData({});
+                } else if (templateType === "aiEngine") {
+                  setCanvasType("aiEngine");
+                  setCanvasData({});
                 }
               }}
               onClose={onClose}
+            />
+          )}
+          {canvasType === "aiEngine" && (
+            <AIEngineCanvas
+              onClose={onClose}
+              brainDocuments={brainDocuments}
+              setBrainDocuments={setBrainDocuments}
+              isMobile={true}
             />
           )}
           {canvasType === "messages" && (
@@ -5977,6 +5991,515 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
   );
 }
 
+/* ═════════════════════════════════════════════
+   AI ENGINE CANVAS - Multi-modal content upload with validation
+   ═════════════════════════════════════════════ */
+function AIEngineCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [validationStatus, setValidationStatus] = useState({}); // { docId: { validated: bool, usageRules: {} } }
+  const GREEN = "#5CDB95";
+  
+  const fileTypes = [
+    { ext: ".pdf", label: "PDF", color: "#ef4444", bg: "#fee2e2" },
+    { ext: ".doc,.docx", label: "Word", color: "#3b82f6", bg: "#dbeafe" },
+    { ext: ".txt,.md", label: "Text", color: "#a855f7", bg: "#f3e8ff" },
+    { ext: ".mp4,.mov,.webm", label: "Video", color: "#f59e0b", bg: "#fef3c7" },
+    { ext: ".mp3,.wav,.m4a", label: "Audio", color: "#10b981", bg: "#d1fae5" },
+  ];
+
+  const getFileTypeInfo = (filename) => {
+    const ext = filename.toLowerCase().split('.').pop();
+    if (['pdf'].includes(ext)) return fileTypes[0];
+    if (['doc', 'docx'].includes(ext)) return fileTypes[1];
+    if (['txt', 'md'].includes(ext)) return fileTypes[2];
+    if (['mp4', 'mov', 'webm', 'avi'].includes(ext)) return fileTypes[3];
+    if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return fileTypes[4];
+    return { ext: ext, label: ext.toUpperCase(), color: TEXT_SEC, bg: "#f0f0f0" };
+  };
+
+  const handleFileUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.txt,.md,.mp4,.mov,.webm,.mp3,.wav,.m4a';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        setUploadingDoc(true);
+        setTimeout(() => {
+          const newDocs = files.map((f, i) => ({
+            id: Date.now() + i,
+            name: f.name,
+            size: (f.size / (1024 * 1024)).toFixed(1) + " MB",
+            date: new Date().toISOString().split('T')[0],
+            status: "processing",
+            type: getFileTypeInfo(f.name).label
+          }));
+          setBrainDocuments(prev => [...newDocs, ...prev]);
+          setUploadingDoc(false);
+          
+          // Initialize validation status for new docs
+          newDocs.forEach(doc => {
+            setValidationStatus(prev => ({
+              ...prev,
+              [doc.id]: { validated: false, usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } }
+            }));
+          });
+          
+          // Simulate processing completion
+          setTimeout(() => {
+            setBrainDocuments(prev => prev.map(d => 
+              d.status === "processing" ? { ...d, status: "pending_validation" } : d
+            ));
+          }, 2000);
+        }, 1000);
+      }
+    };
+    input.click();
+  };
+
+  const validateDocument = (docId) => {
+    setBrainDocuments(prev => prev.map(d => 
+      d.id === docId ? { ...d, status: "validated" } : d
+    ));
+    setValidationStatus(prev => ({
+      ...prev,
+      [docId]: { ...prev[docId], validated: true }
+    }));
+  };
+
+  const updateUsageRule = (docId, rule, value) => {
+    setValidationStatus(prev => ({
+      ...prev,
+      [docId]: {
+        ...prev[docId],
+        usageRules: { ...prev[docId]?.usageRules, [rule]: value }
+      }
+    }));
+  };
+
+  const pendingValidation = brainDocuments.filter(d => d.status === "pending_validation");
+  const validatedDocs = brainDocuments.filter(d => d.status === "validated" || d.status === "processed");
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      position: "relative", background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
+    }}>
+      {/* Close button */}
+      {!isMobile && (
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+            transition: "all 0.15s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ 
+        padding: isMobile ? "20px 16px" : "32px 40px 24px",
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: "#f3e8ff", padding: "6px 12px", borderRadius: 20,
+          marginBottom: 12
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#8e7cc3" }}>AI Engine</span>
+        </div>
+        <h1 style={{ 
+          fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+          letterSpacing: "-0.02em", lineHeight: 1.2
+        }}>
+          Your AI Engine
+        </h1>
+        <p style={{ 
+          fontSize: isMobile ? 13 : 14, color: TEXT_SEC, margin: "8px 0 0", 
+          maxWidth: 450, lineHeight: 1.5
+        }}>
+          Upload videos, documents, and PDFs to train your AI. Validate how each piece of content will be used.
+        </p>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+          {[
+            { id: "upload", label: "Upload", count: null },
+            { id: "review", label: "Pending Review", count: pendingValidation.length },
+            { id: "settings", label: "Active Content", count: validatedDocs.length }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "8px 16px", borderRadius: 10, border: "none",
+                background: activeTab === tab.id ? TEAL : "transparent",
+                color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.15s ease"
+              }}
+            >
+              {tab.label}
+              {tab.count !== null && tab.count > 0 && (
+                <span style={{
+                  background: activeTab === tab.id ? "rgba(255,255,255,0.25)" : TEAL,
+                  color: activeTab === tab.id ? WHITE : WHITE,
+                  padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700
+                }}>{tab.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "24px 40px" }}>
+        
+        {/* Upload Tab */}
+        {activeTab === "upload" && (
+          <div>
+            {/* Upload Area */}
+            <div 
+              onClick={handleFileUpload}
+              style={{
+                border: `2px dashed ${BORDER}`, borderRadius: 16, padding: isMobile ? "32px 20px" : "48px 32px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
+                cursor: "pointer", transition: "all 0.2s ease", background: "#fafbfa",
+                marginBottom: 32
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#8e7cc3"; e.currentTarget.style.background = "rgba(142,124,195,0.05)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fafbfa"; }}
+            >
+              {uploadingDoc ? (
+                <>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: "50%", border: `3px solid ${BORDER}`,
+                    borderTopColor: "#8e7cc3", animation: "spin 1s linear infinite"
+                  }} />
+                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Uploading...</div>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    width: 72, height: 72, borderRadius: 18, background: "#f3e8ff",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: TEXT }}>Upload Content</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 6 }}>
+                      Drop files or click to browse
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Supported File Types */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+                Supported Formats
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {fileTypes.map((type, idx) => (
+                  <div key={idx} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "10px 14px", background: type.bg, borderRadius: 10,
+                    border: `1px solid ${type.color}20`
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={type.color} strokeWidth="2" strokeLinecap="round">
+                      {type.label === "Video" ? (
+                        <><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16"/></>
+                      ) : type.label === "Audio" ? (
+                        <><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>
+                      ) : (
+                        <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></>
+                      )}
+                    </svg>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: type.color }}>{type.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div style={{
+              background: "#f0f4f3", borderRadius: 16, padding: isMobile ? "20px" : "24px",
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>
+                How Your AI Engine Works
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {[
+                  { num: 1, title: "Upload Content", desc: "Add videos, documents, and PDFs with your coaching methodology" },
+                  { num: 2, title: "Review & Validate", desc: "Check extracted information and approve how it will be used" },
+                  { num: 3, title: "Configure Usage", desc: "Control which features can access each piece of content" },
+                  { num: 4, title: "AI Learns", desc: "Your AI assistant uses validated content to provide personalized guidance" }
+                ].map(step => (
+                  <div key={step.num} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: "#8e7cc3",
+                      color: WHITE, fontSize: 13, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                    }}>{step.num}</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{step.title}</div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>{step.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Review Tab - Pending Validation */}
+        {activeTab === "review" && (
+          <div>
+            {pendingValidation.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "48px 24px", color: TEXT_SEC }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 4 }}>All content validated</div>
+                <div style={{ fontSize: 14 }}>Upload new content to see it here for review</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {pendingValidation.map(doc => {
+                  const typeInfo = getFileTypeInfo(doc.name);
+                  const validation = validationStatus[doc.id] || { usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } };
+                  
+                  return (
+                    <div key={doc.id} style={{
+                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                      overflow: "hidden"
+                    }}>
+                      {/* Document Header */}
+                      <div style={{ 
+                        padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
+                        borderBottom: `1px solid ${BORDER}`
+                      }}>
+                        <div style={{
+                          width: 44, height: 44, borderRadius: 12, background: typeInfo.bg,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={typeInfo.color} strokeWidth="1.8" strokeLinecap="round">
+                            {typeInfo.label === "Video" ? (
+                              <><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16"/></>
+                            ) : (
+                              <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></>
+                            )}
+                          </svg>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{doc.name}</div>
+                          <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.size} - {doc.date}</div>
+                        </div>
+                        <div style={{
+                          padding: "4px 12px", borderRadius: 8, background: "#fef3c7", color: "#d97706",
+                          fontSize: 11, fontWeight: 600
+                        }}>Pending Review</div>
+                      </div>
+
+                      {/* Validation Content */}
+                      <div style={{ padding: "20px" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+                          Configure Usage Permissions
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+                          {[
+                            { id: "coaching", label: "Coaching Advice", desc: "Use in AI coaching responses" },
+                            { id: "nutrition", label: "Meal Plans", desc: "Reference for nutrition guidance" },
+                            { id: "workouts", label: "Workout Programs", desc: "Influence exercise recommendations" },
+                            { id: "messages", label: "Automated Messages", desc: "Include in client communications" }
+                          ].map(rule => (
+                            <div 
+                              key={rule.id}
+                              onClick={() => updateUsageRule(doc.id, rule.id, !validation.usageRules?.[rule.id])}
+                              style={{
+                                padding: "14px 16px", borderRadius: 12, cursor: "pointer",
+                                background: validation.usageRules?.[rule.id] ? `${GREEN}10` : "#f7faf9",
+                                border: `1px solid ${validation.usageRules?.[rule.id] ? GREEN : BORDER}`,
+                                display: "flex", alignItems: "center", gap: 12,
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              <div style={{
+                                width: 22, height: 22, borderRadius: 6,
+                                background: validation.usageRules?.[rule.id] ? GREEN : WHITE,
+                                border: `2px solid ${validation.usageRules?.[rule.id] ? GREEN : BORDER}`,
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                {validation.usageRules?.[rule.id] && (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                    <polyline points="20,6 9,17 4,12"/>
+                                  </svg>
+                                )}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{rule.label}</div>
+                                <div style={{ fontSize: 11, color: TEXT_SEC }}>{rule.desc}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Validate Button */}
+                        <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                          <button 
+                            onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))}
+                            style={{
+                              padding: "10px 20px", borderRadius: 10, border: `1px solid ${BORDER}`,
+                              background: WHITE, color: TEXT_SEC, fontSize: 13, fontWeight: 600, cursor: "pointer"
+                            }}
+                          >Reject</button>
+                          <button 
+                            onClick={() => validateDocument(doc.id)}
+                            style={{
+                              padding: "10px 24px", borderRadius: 10, border: "none",
+                              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
+                            }}
+                          >Validate & Activate</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings Tab - Active Content */}
+        {activeTab === "settings" && (
+          <div>
+            {validatedDocs.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "48px 24px", color: TEXT_SEC }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 4 }}>No active content</div>
+                <div style={{ fontSize: 14 }}>Upload and validate content to train your AI</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {validatedDocs.map(doc => {
+                  const typeInfo = getFileTypeInfo(doc.name);
+                  const validation = validationStatus[doc.id] || { usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } };
+                  const activeRules = Object.entries(validation.usageRules || {}).filter(([,v]) => v).map(([k]) => k);
+                  
+                  return (
+                    <div key={doc.id} style={{
+                      display: "flex", alignItems: "center", gap: 14, padding: "16px 18px",
+                      background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: 12, background: typeInfo.bg,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={typeInfo.color} strokeWidth="1.8" strokeLinecap="round">
+                          {typeInfo.label === "Video" ? (
+                            <><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16"/></>
+                          ) : typeInfo.label === "Audio" ? (
+                            <><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>
+                          ) : (
+                            <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></>
+                          )}
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.name}</div>
+                        <div style={{ fontSize: 12, color: TEXT_SEC, display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                          {activeRules.map(rule => (
+                            <span key={rule} style={{
+                              padding: "2px 8px", background: `${GREEN}15`, color: GREEN,
+                              borderRadius: 6, fontSize: 10, fontWeight: 600, textTransform: "capitalize"
+                            }}>{rule}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: "4px 12px", borderRadius: 8, background: "#dcfce7", color: "#16a34a",
+                        fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+                        Active
+                      </div>
+                      <div 
+                        onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))}
+                        style={{
+                          width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.color = "#ef4444"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer Stats */}
+      <div style={{
+        padding: isMobile ? "14px 16px" : "16px 40px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafbfa", display: "flex", alignItems: "center", justifyContent: "space-between"
+      }}>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>
+            <span style={{ fontWeight: 700, color: TEXT }}>{validatedDocs.length}</span> active
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>
+            <span style={{ fontWeight: 700, color: "#d97706" }}>{pendingValidation.length}</span> pending
+          </div>
+        </div>
+        <button 
+          onClick={handleFileUpload}
+          style={{
+            padding: "10px 20px", borderRadius: 10, border: "none",
+            background: "#8e7cc3", color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Upload More
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
@@ -6016,6 +6539,15 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       color: "#45818e",
       available: false,
       comingSoon: true
+    },
+    { 
+      id: "aiEngine",
+      icon: "layers", 
+      title: "Your AI Engine", 
+      desc: "Upload videos, documents, and PDFs to train your AI assistant",
+      color: "#8e7cc3",
+      available: true,
+      number: 4
     }
   ];
   
@@ -9214,12 +9746,10 @@ export default function MiltonDashboard() {
   const [clientFilter, setClientFilter] = useState(null);
   const [showAddClient, setShowAddClient] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showMiltonBrain, setShowMiltonBrain] = useState(false);
   const [brainDocuments, setBrainDocuments] = useState([
-    { id: 1, name: "Training Philosophy.pdf", size: "2.4 MB", date: "2026-03-15", status: "processed" },
-    { id: 2, name: "Nutrition Guidelines.docx", size: "1.1 MB", date: "2026-03-10", status: "processed" },
+  { id: 1, name: "Training Philosophy.pdf", size: "2.4 MB", date: "2026-03-15", status: "processed" },
+  { id: 2, name: "Nutrition Guidelines.docx", size: "1.1 MB", date: "2026-03-10", status: "processed" },
   ]);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [mainReportBlocks, setMainReportBlocks] = useState(null);
   const [mainCustomizeMode, setMainCustomizeMode] = useState(false);
   const chatEndRef = useRef(null);
@@ -9227,7 +9757,7 @@ export default function MiltonDashboard() {
 
   // Canvas state
   const [canvasMode, setCanvasMode] = useState(false);
-  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report'
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report' | 'aiEngine'
   const [canvasData, setCanvasData] = useState(null);
   const [canvasClient, setCanvasClient] = useState(null);
   const [canvasHistory, setCanvasHistory] = useState([]);
@@ -9737,15 +10267,14 @@ export default function MiltonDashboard() {
                         </svg>
                         <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Help Center</span>
                       </div>
-                      <div onClick={() => { setShowProfileMenu(false); setShowMiltonBrain(true); }} style={{
+                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
                         display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
                         cursor: "pointer", transition: "background 0.15s ease"
                       }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
-                          <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
-                          <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                         </svg>
-                        <span style={{ fontSize: 15, fontWeight: 500, color: TEAL }}>Milton Brain</span>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
                       </div>
                       <div style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px",
@@ -9859,11 +10388,22 @@ export default function MiltonDashboard() {
   } else if (templateType === "reports") {
   setCanvasType("report");
   setCanvasData({});
+  } else if (templateType === "aiEngine") {
+  setCanvasType("aiEngine");
+  setCanvasData({});
   }
   }}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
+{canvasType === "aiEngine" && (
+  <AIEngineCanvas
+    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+    brainDocuments={brainDocuments}
+    setBrainDocuments={setBrainDocuments}
+    isMobile={isMobile}
+  />
+)}
 {canvasType === "messages" && (
   <MessagesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -10038,15 +10578,14 @@ export default function MiltonDashboard() {
                           </svg>
                           <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Help Center</span>
                         </div>
-                        <div onClick={() => { setShowProfileMenu(false); setShowMiltonBrain(true); }} style={{
+                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
                           display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
                           cursor: "pointer", transition: "background 0.15s ease"
                         }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
-                            <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
-                            <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                           </svg>
-                          <span style={{ fontSize: 16, fontWeight: 500, color: TEAL }}>Milton Brain</span>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
                         </div>
                         <div style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px",
@@ -10477,196 +11016,7 @@ export default function MiltonDashboard() {
 {/* ═══ ADD CLIENT MODAL ═══ */}
   {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
 
-  {/* ═══ MILTON BRAIN MODAL ═══ */}
-  {showMiltonBrain && (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
-      background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: isMobile ? 16 : 40, animation: "fadeSlideIn 0.2s ease"
-    }} onClick={() => setShowMiltonBrain(false)}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: WHITE, borderRadius: 20, width: "100%", maxWidth: 560,
-        maxHeight: isMobile ? "85vh" : "80vh", display: "flex", flexDirection: "column",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden"
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: isMobile ? "18px 20px" : "24px 28px", borderBottom: `1px solid ${BORDER}`,
-          display: "flex", alignItems: "center", justifyContent: "space-between"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 12, background: `${TEAL}12`,
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
-                <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2H10a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
-                <line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Milton Brain</div>
-              <div style={{ fontSize: 13, color: TEXT_SEC }}>Train your AI with custom documents</div>
-            </div>
-          </div>
-          <div onClick={() => setShowMiltonBrain(false)} style={{
-            width: 36, height: 36, borderRadius: 10, background: "#f0f2f1",
-            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px" : "24px 28px" }}>
-          {/* Upload Area */}
-          <div 
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = '.pdf,.doc,.docx,.txt,.md';
-              input.multiple = true;
-              input.onchange = (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length > 0) {
-                  setUploadingDoc(true);
-                  setTimeout(() => {
-                    const newDocs = files.map((f, i) => ({
-                      id: Date.now() + i,
-                      name: f.name,
-                      size: (f.size / (1024 * 1024)).toFixed(1) + " MB",
-                      date: new Date().toISOString().split('T')[0],
-                      status: "processing"
-                    }));
-                    setBrainDocuments(prev => [...newDocs, ...prev]);
-                    setUploadingDoc(false);
-                    setTimeout(() => {
-                      setBrainDocuments(prev => prev.map(d => 
-                        d.status === "processing" ? { ...d, status: "processed" } : d
-                      ));
-                    }, 2000);
-                  }, 1000);
-                }
-              };
-              input.click();
-            }}
-            style={{
-              border: `2px dashed ${BORDER}`, borderRadius: 16, padding: "32px 24px",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-              cursor: "pointer", transition: "all 0.2s ease", background: "#fafbfa",
-              marginBottom: 24
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.background = `${TEAL}05`; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fafbfa"; }}
-          >
-            {uploadingDoc ? (
-              <>
-                <div style={{
-                  width: 48, height: 48, borderRadius: "50%", border: `3px solid ${BORDER}`,
-                  borderTopColor: TEAL, animation: "spin 1s linear infinite"
-                }} />
-                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Uploading...</div>
-              </>
-            ) : (
-              <>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 14, background: `${TEAL}12`,
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Upload Documents</div>
-                  <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>PDF, DOC, DOCX, TXT, or MD files</div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Uploaded Documents */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
-              Uploaded Documents ({brainDocuments.length})
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {brainDocuments.map(doc => (
-                <div key={doc.id} style={{
-                  display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
-                  background: "#f7faf9", borderRadius: 12, border: `1px solid ${BORDER}`
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: doc.name.endsWith('.pdf') ? "#fee2e2" : doc.name.endsWith('.docx') || doc.name.endsWith('.doc') ? "#dbeafe" : "#f3e8ff",
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
-                      stroke={doc.name.endsWith('.pdf') ? "#ef4444" : doc.name.endsWith('.docx') || doc.name.endsWith('.doc') ? "#3b82f6" : "#a855f7"} 
-                      strokeWidth="1.8" strokeLinecap="round">
-                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.name}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.size} • {doc.date}</div>
-                  </div>
-                  {doc.status === "processing" ? (
-                    <div style={{
-                      padding: "4px 10px", borderRadius: 8, background: "#fef3c7", color: "#d97706",
-                      fontSize: 11, fontWeight: 600
-                    }}>Processing</div>
-                  ) : (
-                    <div style={{
-                      padding: "4px 10px", borderRadius: 8, background: "#dcfce7", color: "#16a34a",
-                      fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
-                      Processed
-                    </div>
-                  )}
-                  <div onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))} style={{
-                    width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.color = "#ef4444"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                    </svg>
-                  </div>
-                </div>
-              ))}
-              {brainDocuments.length === 0 && (
-                <div style={{ textAlign: "center", padding: "24px", color: TEXT_SEC, fontSize: 14 }}>
-                  No documents uploaded yet. Upload files to train Milton on your coaching methodology.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: isMobile ? "16px 20px" : "18px 28px", borderTop: `1px solid ${BORDER}`,
-          background: "#fafbfa", display: "flex", alignItems: "center", justifyContent: "space-between"
-        }}>
-          <div style={{ fontSize: 13, color: TEXT_SEC }}>
-            {brainDocuments.filter(d => d.status === "processed").length} documents trained
-          </div>
-          <button onClick={() => setShowMiltonBrain(false)} style={{
-            padding: "10px 20px", borderRadius: 10, border: "none",
-            background: TEAL, color: WHITE, fontSize: 14, fontWeight: 600, cursor: "pointer"
-          }}>Done</button>
-        </div>
-      </div>
-    </div>
-  )}
-  
-  {/* ��══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
+    {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
   {isMobile && (
     <MobileChatSheet
       chatOpen={chatOpen} setChatOpen={setChatOpen}
@@ -10679,19 +11029,21 @@ export default function MiltonDashboard() {
   
   {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═��═ */}
   {isMobile && (
-    <MobileCanvasSheet
-      isOpen={canvasMode}
-      onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-      canvasType={canvasType}
-      canvasData={canvasData}
-      setCanvasType={setCanvasType}
-      setCanvasData={setCanvasData}
-      setCanvasMode={setCanvasMode}
-      setChatMessages={setChatMessages}
-      setChatTyping={setChatTyping}
-      onChatSend={handleChatSend}
-      clients={clients}
-    />
+<MobileCanvasSheet
+  isOpen={canvasMode}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  canvasType={canvasType}
+  canvasData={canvasData}
+  setCanvasType={setCanvasType}
+  setCanvasData={setCanvasData}
+  setCanvasMode={setCanvasMode}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
+  onChatSend={handleChatSend}
+  clients={clients}
+  brainDocuments={brainDocuments}
+  setBrainDocuments={setBrainDocuments}
+  />
   )}
 
       <style>{`
