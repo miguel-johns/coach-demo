@@ -5,6 +5,8 @@ import ProgressDashboard from "./dashboards/ProgressDashboard";
 import ProgramDashboard from "./dashboards/ProgramDashboard";
 import RecipeDashboard from "./dashboards/RecipeDashboard";
 import MorningDashboard from "./dashboards/MorningDashboard";
+import ProgramPreview from "./dashboards/ProgramPreview";
+import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -6016,14 +6018,16 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   const CANVAS_TEAL = "#2BBFAA";
 
   // Dashboard preview components map
-  const DashboardComponents = {
-    workout: WorkoutDashboard,
-    nutrition: NutritionDashboard,
-    progress: ProgressDashboard,
-    program: ProgramDashboard,
-    recipe: RecipeDashboard,
-    morning: MorningDashboard,
-    blank: null,
+const DashboardComponents = {
+  workout: WorkoutDashboard,
+  nutrition: NutritionDashboard,
+  progress: ProgressDashboard,
+  program: ProgramDashboard,
+  recipe: RecipeDashboard,
+  morning: MorningDashboard,
+  programPreview: ProgramPreview,
+  weeklyRecipePicker: WeeklyRecipePicker,
+  blank: null,
   };
 
 const dashboardTemplates = [
@@ -6056,17 +6060,31 @@ const dashboardTemplates = [
   color: "#ef6c3e" // orange - food/cooking
   },
   {
+  id: "programPreview",
+  name: "Program Preview",
+  desc: "Full program overview with phases, weeks, and volume breakdown",
+  number: 5,
+  color: "#3b82f6" // blue - structured/program
+  },
+  {
+  id: "weeklyRecipePicker",
+  name: "Meal Picks",
+  desc: "Swipe-based recipe picker for weekly meal planning",
+  number: 6,
+  color: "#ec4899" // pink - fun/interactive
+  },
+  {
   id: "progress",
   name: "Progress Report",
   desc: "90-day transformation view with weight trends and milestones",
-  number: 5,
+  number: 7,
   color: "#8b5cf6" // purple - achievement
   },
   {
   id: "blank",
   name: "Blank Canvas",
   desc: "Start from scratch and describe what you need to Milton",
-  number: 6,
+  number: 8,
   color: "#9ca3af" // gray - neutral
   },
   ];
