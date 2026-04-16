@@ -6026,43 +6026,49 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
     blank: null,
   };
 
-  const dashboardTemplates = [
-    {
-      id: "morning",
-      name: "Morning Brief",
-      desc: "Daily check-in with today's focus, habits, and motivation",
-      number: 1
-    },
-    {
-      id: "workout",
-      name: "Workout Dashboard",
-      desc: "Interactive workout logging with rest timers and set tracking",
-      number: 2
-    },
-    {
-      id: "nutrition",
-      name: "Nutrition Dashboard", 
-      desc: "Daily meal logging with macro tracking and weekly views",
-      number: 3
-    },
-    {
-      id: "recipe",
-      name: "Recipe Dashboard",
-      desc: "Weekly meal planning with recipe cards and shopping lists",
-      number: 4
-    },
-    {
-      id: "progress",
-      name: "Progress Report",
-      desc: "90-day transformation view with weight trends and milestones",
-      number: 5
-    },
-    {
-      id: "blank",
-      name: "Blank Canvas",
-      desc: "Start from scratch and describe what you need to Milton",
-      number: 6
-    },
+const dashboardTemplates = [
+  {
+  id: "morning",
+  name: "Morning Brief",
+  desc: "Daily check-in with today's focus, habits, and motivation",
+  number: 1,
+  color: "#f59e0b" // amber - sunrise/morning
+  },
+  {
+  id: "workout",
+  name: "Workout Dashboard",
+  desc: "Interactive workout logging with rest timers and set tracking",
+  number: 2,
+  color: "#1a1a1a" // dark - strength/power
+  },
+  {
+  id: "nutrition",
+  name: "Nutrition Dashboard",
+  desc: "Daily meal logging with macro tracking and weekly views",
+  number: 3,
+  color: "#10b981" // emerald - healthy/fresh
+  },
+  {
+  id: "recipe",
+  name: "Recipe Dashboard",
+  desc: "Weekly meal planning with recipe cards and shopping lists",
+  number: 4,
+  color: "#ef6c3e" // orange - food/cooking
+  },
+  {
+  id: "progress",
+  name: "Progress Report",
+  desc: "90-day transformation view with weight trends and milestones",
+  number: 5,
+  color: "#8b5cf6" // purple - achievement
+  },
+  {
+  id: "blank",
+  name: "Blank Canvas",
+  desc: "Start from scratch and describe what you need to Milton",
+  number: 6,
+  color: "#9ca3af" // gray - neutral
+  },
   ];
 
   const handlePublish = () => {
@@ -6304,26 +6310,26 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
               onMouseEnter={() => setHoveredTemplate(template.id)}
               onMouseLeave={() => setHoveredTemplate(null)}
               style={{
-                background: WHITE,
-                borderRadius: isMobile ? 12 : 16,
-                border: `1px solid ${hoveredTemplate === template.id ? CANVAS_TEAL : "#e0e0e0"}`,
-                padding: isMobile ? 16 : 24,
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                boxShadow: hoveredTemplate === template.id 
-                  ? `0 8px 24px rgba(43,191,170,0.12)` 
-                  : "none"
+background: WHITE,
+  borderRadius: isMobile ? 12 : 16,
+  border: `1px solid ${hoveredTemplate === template.id ? template.color : "#e0e0e0"}`,
+  padding: isMobile ? 16 : 24,
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  boxShadow: hoveredTemplate === template.id
+  ? `0 8px 24px ${template.color}20`
+  : "none"
               }}
             >
               {/* Icon + Number badge + Title row */}
               <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 14 }}>
-                <div style={{
-                  width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: isMobile ? 10 : 12,
-                  background: "rgba(43,191,170,0.08)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0
-                }}>
-                  <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="1.8" strokeLinecap="round">
+<div style={{
+  width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: isMobile ? 10 : 12,
+  background: `${template.color}15`,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  flexShrink: 0
+  }}>
+  <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={template.color} strokeWidth="1.8" strokeLinecap="round">
                     {template.id === "blank" ? (
                       <>
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -6341,13 +6347,13 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{
-                      width: 18, height: 18, borderRadius: "50%",
-                      background: CANVAS_TEAL, color: WHITE,
-                      fontSize: 10, fontWeight: 700,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0
-                    }}>{template.number}</span>
+<span style={{
+  width: 18, height: 18, borderRadius: "50%",
+  background: template.color, color: WHITE,
+  fontSize: 10, fontWeight: 700,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  flexShrink: 0
+  }}>{template.number}</span>
                     <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: TEXT }}>{template.name}</span>
                   </div>
                   {!isMobile && (
