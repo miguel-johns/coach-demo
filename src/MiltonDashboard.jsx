@@ -6433,10 +6433,18 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   </button>
   </div>
   <div style={{
-  background: "#f0f0f0", borderRadius: 16, overflow: "hidden",
-  border: `1px solid ${BORDER}`, height: 320
+  background: "#1a1a1a", borderRadius: 16, overflow: "hidden",
+  border: `1px solid ${BORDER}`, height: 480, display: "flex", justifyContent: "center", paddingTop: 16
   }}>
-  <div style={{ transform: "scale(0.6)", transformOrigin: "top center", width: "166.67%", marginLeft: "-33.33%" }}>
+  <div style={{ 
+    transform: "scale(0.48)", 
+    transformOrigin: "top center", 
+    width: 420,
+    height: "fit-content",
+    borderRadius: 12,
+    overflow: "hidden",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+  }}>
   {DashboardComponents[selectedTemplate.id] && React.createElement(DashboardComponents[selectedTemplate.id])}
   </div>
   </div>
