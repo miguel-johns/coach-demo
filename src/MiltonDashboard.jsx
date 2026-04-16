@@ -6383,105 +6383,77 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
           </div>
         )}
 
-        {/* Template Detail View */}
+        {/* Template Detail View - Full mobile preview */}
         {activeTab === "templates" && selectedTemplate && (
-          <div>
-            {/* Back button */}
-            <button
-              onClick={() => setSelectedTemplate(null)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "8px 0", marginBottom: 20, border: "none",
-                background: "transparent", color: TEXT_SEC, fontSize: 13,
-                fontWeight: 500, cursor: "pointer"
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-              Back to templates
-            </button>
-
-            {/* Template header */}
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            background: "#111", display: "flex", flexDirection: "column"
+          }}>
+            {/* Minimal top bar */}
             <div style={{
-              background: selectedTemplate.color, borderRadius: 20, padding: 24,
-              marginBottom: 24, color: WHITE
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "12px 16px", background: "#1a1a1a", borderBottom: "1px solid rgba(255,255,255,0.08)"
             }}>
-              <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                {selectedTemplate.category} Dashboard
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>{selectedTemplate.name}</h2>
-              <p style={{ fontSize: 14, opacity: 0.8, margin: 0, lineHeight: 1.5 }}>{selectedTemplate.desc}</p>
-            </div>
-
-{/* Preview section */}
-  <div style={{ marginBottom: 24 }}>
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-  Preview
-  </div>
-  <button
-  onClick={() => setPreviewingDashboard(selectedTemplate.id)}
-  style={{
-  padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
-  background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, cursor: "pointer",
-  display: "flex", alignItems: "center", gap: 6
-  }}
-  >
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-  <path d="M15 3h6v6M14 10l6.1-6.1M9 21H3v-6M10 14l-6.1 6.1"/>
-  </svg>
-  Full Preview
-  </button>
-  </div>
-  <div style={{
-  background: "#1a1a1a", borderRadius: 16, overflow: "hidden",
-  border: `1px solid ${BORDER}`, height: 480, display: "flex", justifyContent: "center", paddingTop: 16
-  }}>
-  <div style={{ 
-    transform: "scale(0.48)", 
-    transformOrigin: "top center", 
-    width: 420,
-    height: "fit-content",
-    borderRadius: 12,
-    overflow: "hidden",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
-  }}>
-  {DashboardComponents[selectedTemplate.id] && React.createElement(DashboardComponents[selectedTemplate.id])}
-  </div>
-  </div>
-  </div>
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => setSelectedTemplate(null)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "8px 12px", borderRadius: 8, border: "none",
+                  background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13,
+                  fontWeight: 500, cursor: "pointer"
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                Back
+              </button>
               <button
                 onClick={() => activateDashboard(selectedTemplate)}
                 style={{
-                  flex: 1, padding: "14px 24px", borderRadius: 12, border: "none",
-                  background: DASHBOARD_TEAL, color: WHITE,
-                  fontSize: 14, fontWeight: 600, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "8px 16px", borderRadius: 8, border: "none",
+                  background: DASHBOARD_TEAL, color: "#fff", fontSize: 13,
+                  fontWeight: 600, cursor: "pointer"
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <polyline points="20,6 9,17 4,12"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16,6 12,2 8,6"/><line x1="12" y1="2" x2="12" y2="15"/>
                 </svg>
-                Activate Dashboard
-              </button>
-              <button
-                style={{
-                  padding: "14px 24px", borderRadius: 12, border: `1px solid ${BORDER}`,
-                  background: WHITE, color: TEXT,
-                  fontSize: 14, fontWeight: 600, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-                Customize with Milton
+                Publish
               </button>
             </div>
+            
+            {/* Mobile device frame */}
+            <div style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 24, overflow: "hidden"
+            }}>
+              <div style={{
+                width: 375, maxWidth: "100%", height: "100%", maxHeight: 750,
+                background: "#000", borderRadius: 40, padding: 12,
+                boxShadow: "0 25px 80px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(255,255,255,0.1)"
+              }}>
+                {/* Phone notch */}
+                <div style={{
+                  width: 120, height: 28, background: "#000", borderRadius: 20,
+                  margin: "0 auto 8px", position: "relative", zIndex: 10
+                }}>
+                  <div style={{
+                    width: 60, height: 6, background: "#1a1a1a", borderRadius: 3,
+                    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)"
+                  }} />
+                </div>
+                {/* Screen content */}
+                <div style={{
+                  width: "100%", height: "calc(100% - 36px)", background: "#fff", borderRadius: 28,
+                  overflow: "auto", position: "relative"
+                }}>
+                  {DashboardComponents[selectedTemplate.id] && React.createElement(DashboardComponents[selectedTemplate.id])}
+                </div>
+              </div>
+            </div>
+          </div>
           </div>
         )}
 
