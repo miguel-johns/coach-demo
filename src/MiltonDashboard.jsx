@@ -11067,14 +11067,16 @@ export default function MiltonDashboard() {
   />
   )}
 {canvasType === "aiDashboards" && (
-  <AIDashboardsCanvas
-    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-    isMobile={isMobile}
+> <AIDashboardsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  isMobile={isMobile}
   />
-)}
+  )}
 {canvasType === "aiEngine" && (
   <AIEngineCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+    onHome={() => setCanvasType("templates")}
     brainDocuments={brainDocuments}
     setBrainDocuments={setBrainDocuments}
     isMobile={isMobile}
@@ -11083,6 +11085,7 @@ export default function MiltonDashboard() {
 {canvasType === "messages" && (
   <MessagesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
   />
@@ -11091,6 +11094,7 @@ export default function MiltonDashboard() {
   <MealPlanCanvas
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "workout" && (
@@ -11098,17 +11102,20 @@ export default function MiltonDashboard() {
               data={canvasData}
               clients={clients}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "messageSequence" && (
             <MessageSequenceCanvas 
               data={canvasData}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
             />
           )}
 {canvasType === "report" && (
   <ReportsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
   />
@@ -11117,12 +11124,14 @@ export default function MiltonDashboard() {
   <InboxCanvas
   isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
   />
   )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
   isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
   />
   )}
   </div>
