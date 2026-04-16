@@ -11068,11 +11068,11 @@ export default function MiltonDashboard() {
   )}
 {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  onHome={() => setCanvasType("templates")}
-  isMobile={isMobile}
+    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+    onHome={() => setCanvasType("templates")}
+    isMobile={isMobile}
   />
-  )}
+)}
 {canvasType === "aiEngine" && (
   <AIEngineCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
