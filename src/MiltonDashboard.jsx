@@ -2256,7 +2256,7 @@ function MobileCanvasSheet({
   }}
   onClose={onClose}
   />
-  )}
+)}
   {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
   onClose={onClose}
@@ -10904,11 +10904,11 @@ export default function MiltonDashboard() {
   }}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
-  )}
-{canvasType === "aiDashboards" && (
+)}
+  {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
-    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-    onHome={() => setCanvasType("templates")}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
     isMobile={isMobile}
   />
 )}
