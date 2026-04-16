@@ -3284,10 +3284,8 @@ function DataCardPeriods({ periods, color, isMobile }) {
                 </>
               )}
             </div>
-          );
-        })}
-      </div>
-    </div>
+);
+                  })}
   );
 }
 
@@ -6716,48 +6714,7 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                 <div style={{ fontSize: 14 }}>Upload new content to see it here for review</div>
               </div>
             ) : (
-              <div style={{ display: "flex", gap: 16 }}>
-                {/* Left sidebar - Chat placeholder */}
-                <div style={{
-                  width: 260, background: "#f8fafc", borderRadius: 12, padding: 16,
-                  alignSelf: "flex-start", flexShrink: 0
-                }}>
-                  {/* Chat header */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: "50%", background: "#0d9488",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#134e4a", fontSize: 12, fontWeight: 600
-                      }}>M</div>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>Milton</span>
-                    </div>
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>v1.0</span>
-                  </div>
-                  
-                  {/* Assistant message */}
-                  <div style={{
-                    background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8,
-                    padding: "10px 12px", fontSize: 13, color: TEXT, lineHeight: 1.5, marginBottom: 14
-                  }}>
-                    I pulled 4 rules from Training Philosophy.pdf. Review the list — once it looks right, activate to go live.
-                  </div>
-                  
-                  {/* Disabled chat input */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "10px 14px", borderRadius: 20, border: `1px solid ${BORDER}`,
-                    background: "#f8fafc", opacity: 0.7
-                  }}>
-                    <span style={{ flex: 1, fontSize: 12, color: TEXT_SEC }}>Chat editing coming soon...</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Right main content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {pendingValidation.map(doc => {
                     const typeInfo = getFileTypeInfo(doc.name);
                     const validation = validationStatus[doc.id] || { usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } };
