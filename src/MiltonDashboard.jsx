@@ -2270,7 +2270,7 @@ clientName: "New Client",
               onHome={() => setCanvasType("templates")}
               brainDocuments={brainDocuments}
               setBrainDocuments={setBrainDocuments}
-              isMobile={true}
+isMobile={true}
   />
   )}
   {canvasType === "messages" && (
@@ -4348,7 +4348,7 @@ return (
         );
       })()}
 
-      {/* ─── DAILY BREAKDOWN CARDS ─── */}
+      {/* ��── DAILY BREAKDOWN CARDS ─── */}
       {(() => {
         const cards = [
           {
@@ -10913,7 +10913,7 @@ export default function MiltonDashboard() {
     onHome={() => setCanvasType("templates")}
     brainDocuments={brainDocuments}
     setBrainDocuments={setBrainDocuments}
-    isMobile={isMobile}
+isMobile={isMobile}
   />
   )}
   {canvasType === "messages" && (
