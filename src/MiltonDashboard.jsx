@@ -7928,29 +7928,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#fafcfb" }}>
-{/* Back button - top left */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 16, left: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15,18 9,12 15,6"/>
-        </svg>
-      </div>
-
       {/* Header - Mobile */}
       {isMobile ? (
         <div style={{ 
-          padding: "52px 16px 12px 16px", 
+          padding: "12px 16px", 
           background: WHITE,
           borderBottom: `1px solid ${BORDER}`,
           animation: "fadeUp 0.4s ease-out forwards",
@@ -7959,20 +7940,36 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
         }}>
           {/* Day Navigation with Client & Save buttons */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            {/* Left: Prev button */}
-            <button
-              onClick={goToPrevDay}
-              style={{
-                width: 36, height: 36, borderRadius: 8,
-                background: WHITE, border: `1px solid ${BORDER}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: TEXT_SEC
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-            </button>
+            {/* Left: Back + Prev buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div
+                onClick={onHome || onClose}
+                style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </div>
+              <button
+                onClick={goToPrevDay}
+                style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: WHITE, border: `1px solid ${BORDER}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: TEXT_SEC
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+            </div>
             
             {/* Center: Date display */}
             <div style={{ textAlign: "center", flex: 1 }}>
@@ -8084,13 +8081,20 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           zIndex: 100
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ 
-              width: 36, height: 36, borderRadius: 10, 
-              background: TEAL_LIGHT,
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <div
+              onClick={onHome || onClose}
+              style={{ 
+                width: 36, height: 36, borderRadius: 10, 
+                background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+                transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
               </svg>
             </div>
             <div>
@@ -11478,7 +11482,7 @@ export default function MiltonDashboard() {
             ); })}
           </div>
         ) : (
-          /* ─── Desktop: Table ─── */
+          /* ──��� Desktop: Table ─── */
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1,
