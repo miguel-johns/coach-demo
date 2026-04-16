@@ -4995,8 +4995,25 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
   
   return (
     <div style={{
-      display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", background: WHITE
+      display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", background: WHITE, position: "relative"
     }}>
+      {/* Back button - top left */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, left: 16, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+        Back
+      </button>
+
       {/* Sidebar - Conversation List (show full on mobile if no conversation selected, or hide if conversation is selected) */}
       <div style={{
         width: isMobile ? "100%" : 300, 
@@ -5007,7 +5024,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
         flex: isMobile ? 1 : "none"
       }}>
         {/* Header */}
-        <div style={{ padding: "16px 16px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ padding: "48px 16px 16px 16px", borderBottom: `1px solid ${BORDER}` }}>
           {/* Action Buttons */}
           <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
             {[
@@ -5379,10 +5396,27 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
   const getCategoryColor = (cat) => categories.find(c => c.id === cat)?.color || TEXT_SEC;
   
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb", position: "relative" }}>
+      {/* Back button - top left */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 12, left: 16, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+        Back
+      </button>
+
       {/* Header */}
       <div style={{
-        padding: "12px 16px", borderBottom: `1px solid ${BORDER}`,
+        padding: "12px 16px 12px 110px", borderBottom: `1px solid ${BORDER}`,
         display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
@@ -5815,30 +5849,28 @@ function MessagesCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   
   return (
     <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
-      {/* Close button */}
-      <div
+      {/* Back button - top left */}
+      <button
         onClick={onClose}
         style={{
-          position: "absolute", top: 16, right: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
+          position: "absolute", top: 16, left: 16, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
         }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <polyline points="15,18 9,12 15,6"/>
         </svg>
-      </div>
+        Back
+      </button>
       
       {/* Timeline Preview Panel */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: WHITE, overflow: "hidden" }}>
         {/* Header */}
 <div style={{
-  padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`,
+  padding: "16px 24px 16px 110px", borderBottom: `1px solid ${BORDER}`,
   display: "flex", alignItems: "center", justifyContent: "space-between"
   }}>
   <div>
@@ -6139,37 +6171,21 @@ const dashboardTemplates = [
           borderBottom: `1px solid ${BORDER}`
         }}>
 {/* Left side */}
-  <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
-  {/* Home button */}
-  {onHome && (
-  <button
-  onClick={onHome}
-  style={{
-  display: "flex", alignItems: "center", justifyContent: "center",
-  width: 32, height: 32, borderRadius: 8, border: "none",
-  background: "transparent", color: TEXT_SEC, cursor: "pointer"
-  }}
-  title="All Canvases"
-  >
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-  </button>
-  )}
-  <button
-  onClick={() => setSelectedTemplate(null)}
-  style={{
-  display: "flex", alignItems: "center", gap: 4,
-  padding: isMobile ? "8px" : "8px 12px", borderRadius: 8, border: "none",
-  background: "transparent", color: TEXT_SEC, fontSize: 13,
-  fontWeight: 500, cursor: "pointer"
-  }}
-  >
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-  <polyline points="15,18 9,12 15,6"/>
-  </svg>
-  {!isMobile && "Back"}
-  </button>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
+            <button
+              onClick={() => setSelectedTemplate(null)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, color: TEXT_SEC, fontSize: 13,
+                fontWeight: 500, cursor: "pointer"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              Back
+            </button>
             
             {/* Template name + status */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -6463,49 +6479,22 @@ const dashboardTemplates = [
       display: "flex", flexDirection: "column", height: "100%",
       background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
     }}>
-{/* Top bar with home button - mobile only */}
-  {isMobile && onHome && (
-  <div style={{
-  display: "flex", alignItems: "center", padding: "12px 16px",
-  borderBottom: `1px solid ${BORDER}`
-  }}>
-  <button
-  onClick={onHome}
-  style={{
-  display: "flex", alignItems: "center", gap: 6,
-  padding: "8px 12px", borderRadius: 8, border: "none",
-  background: "transparent", color: TEXT_SEC, fontSize: 13,
-  fontWeight: 500, cursor: "pointer"
-  }}
-  >
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-  All Canvases
-  </button>
-  </div>
-  )}
-
-  {/* Close button - desktop only */}
-  {!isMobile && (
-  <div
-  onClick={onClose}
-  style={{
-  position: "absolute", top: 16, right: 16, zIndex: 10,
-  width: 32, height: 32, borderRadius: 10,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-  background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-  transition: "all 0.15s ease"
-  }}
-  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-  >
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-  </div>
-  )}
+{/* Back button - top left */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, left: 16, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+        Back
+      </button>
   
   {/* Content */}
   <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 20px" : "48px 40px" }}>
@@ -6733,49 +6722,22 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
       display: "flex", flexDirection: "column", height: "100%",
       position: "relative", background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
     }}>
-      {/* Top bar with home button - mobile only */}
-      {isMobile && onHome && (
-        <div style={{
-          display: "flex", alignItems: "center", padding: "12px 16px",
-          borderBottom: `1px solid ${BORDER}`
-        }}>
-          <button
-            onClick={onHome}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 12px", borderRadius: 8, border: "none",
-              background: "transparent", color: TEXT_SEC, fontSize: 13,
-              fontWeight: 500, cursor: "pointer"
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            All Canvases
-          </button>
-        </div>
-      )}
-
-      {/* Close button - desktop only */}
-      {!isMobile && (
-        <div 
-          onClick={onClose}
-          style={{ 
-            position: "absolute", top: 16, right: 16, zIndex: 10,
-            width: 32, height: 32, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-            transition: "all 0.15s ease"
-          }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </div>
-      )}
+      {/* Back button - top left */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 16, left: 16, zIndex: 10,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+        Back
+      </button>
 
       {/* Header */}
       <div style={{ 
@@ -10169,27 +10131,25 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f8faf9", position: "relative" }}>
-      {/* Close button */}
-      <div
+      {/* Back button - top left */}
+      <button
         onClick={onClose}
         style={{
-          position: "absolute", top: 16, right: 16, zIndex: 20,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
+          position: "absolute", top: 16, left: 16, zIndex: 20,
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEXT_SEC, fontSize: 13,
+          fontWeight: 500, cursor: "pointer"
         }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <polyline points="15,18 9,12 15,6"/>
         </svg>
-      </div>
+        Back
+      </button>
       
       {/* Header */}
-      <div style={{ padding: "16px 56px 16px 24px", borderBottom: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ padding: "16px 24px 16px 110px", borderBottom: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Progress Report</h2>
           <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
