@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import WorkoutDashboard from "./dashboards/WorkoutDashboard";
+import NutritionDashboard from "./dashboards/NutritionDashboard";
+import ProgressDashboard from "./dashboards/ProgressDashboard";
+import ProgramDashboard from "./dashboards/ProgramDashboard";
+import RecipeDashboard from "./dashboards/RecipeDashboard";
+import MorningDashboard from "./dashboards/MorningDashboard";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -250,8 +256,9 @@ function NavIcon({ icon, size = 20 }) {
     inbox: <svg {...s} viewBox="0 0 24 24"><polyline points="22,12 16,12 14,15 10,15 8,12 2,12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>,
     canvas: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
     send: <svg {...s} viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>,
-    file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
-    chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
+  chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  layout: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><rect x="11" y="11" width="8" height="4" rx="1"/><rect x="11" y="17" width="5" height="2" rx="0.5"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -2140,6 +2147,7 @@ function MobileCanvasSheet({
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
   case "aiEngine": return "Your AI Engine";
+  case "aiDashboards": return "AI Dashboards";
   default: return "Canvas";
     }
   };
@@ -2236,18 +2244,24 @@ function MobileCanvasSheet({
                 } else if (templateType === "messages") {
                   setCanvasType("messages");
                   setCanvasData({});
-                } else if (templateType === "reports") {
-                  setCanvasType("report");
-                  setCanvasData({});
-                } else if (templateType === "aiEngine") {
-                  setCanvasType("aiEngine");
-                  setCanvasData({});
-                }
-              }}
-              onClose={onClose}
-            />
-          )}
-          {canvasType === "aiEngine" && (
+  } else if (templateType === "aiDashboards") {
+  setCanvasType("aiDashboards");
+  setCanvasData({});
+  } else if (templateType === "aiEngine") {
+  setCanvasType("aiEngine");
+  setCanvasData({});
+  }
+  }}
+  onClose={onClose}
+  />
+  )}
+  {canvasType === "aiDashboards" && (
+  <AIDashboardsCanvas
+  onClose={onClose}
+  isMobile={true}
+  />
+  )}
+  {canvasType === "aiEngine" && (
             <AIEngineCanvas
               onClose={onClose}
               brainDocuments={brainDocuments}
@@ -5989,11 +6003,412 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
       </div>
     </div>
   );
-}
+  }
 
 /* ═════════════════════════════════════════════
-   AI ENGINE CANVAS - Multi-modal content upload with validation
+   AI DASHBOARDS CANVAS - Creative builder tool for client dashboards
    ═════════════════════════════════════════════ */
+function AIDashboardsCanvas({ onClose, isMobile }) {
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
+  const [publishStatus, setPublishStatus] = useState("draft"); // draft | publishing | live
+  const CANVAS_TEAL = "#2BBFAA";
+
+  // Dashboard preview components map
+  const DashboardComponents = {
+    workout: WorkoutDashboard,
+    nutrition: NutritionDashboard,
+    progress: ProgressDashboard,
+    program: ProgramDashboard,
+    recipe: RecipeDashboard,
+    morning: MorningDashboard,
+    blank: null,
+  };
+
+  const dashboardTemplates = [
+    {
+      id: "morning",
+      name: "Morning Brief",
+      desc: "Daily check-in with today's focus, habits, and motivation",
+      number: 1
+    },
+    {
+      id: "workout",
+      name: "Workout Dashboard",
+      desc: "Interactive workout logging with rest timers and set tracking",
+      number: 2
+    },
+    {
+      id: "nutrition",
+      name: "Nutrition Dashboard", 
+      desc: "Daily meal logging with macro tracking and weekly views",
+      number: 3
+    },
+    {
+      id: "recipe",
+      name: "Recipe Dashboard",
+      desc: "Weekly meal planning with recipe cards and shopping lists",
+      number: 4
+    },
+    {
+      id: "progress",
+      name: "Progress Report",
+      desc: "90-day transformation view with weight trends and milestones",
+      number: 5
+    },
+    {
+      id: "blank",
+      name: "Blank Canvas",
+      desc: "Start from scratch and describe what you need to Milton",
+      number: 6
+    },
+  ];
+
+  const handlePublish = () => {
+    setPublishStatus("publishing");
+    // Publishing will happen through chat conversation
+  };
+
+  // ═══ BUILDER VIEW - When a template is selected ═══
+  if (selectedTemplate) {
+    const PreviewComponent = DashboardComponents[selectedTemplate.id];
+    const deviceWidth = deviceSize === "mobile" ? 390 : 600;
+    
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column", height: "100%",
+        background: "#f5f5f5", fontFamily: "'DM Sans', sans-serif"
+      }}>
+        {/* Toolbar */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 20px", background: WHITE, borderBottom: `1px solid ${BORDER}`
+        }}>
+          {/* Left side */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={() => setSelectedTemplate(null)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 12px", borderRadius: 8, border: "none",
+                background: "transparent", color: TEXT_SEC, fontSize: 13,
+                fontWeight: 500, cursor: "pointer"
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              All Dashboards
+            </button>
+            
+            {/* Canvas pill */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 20,
+              background: "rgba(43,191,170,0.08)"
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" opacity="1"/>
+                <path d="M2 17l10 5 10-5" opacity="0.6"/>
+                <path d="M2 12l10 5 10-5" opacity="0.3"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: CANVAS_TEAL }}>Canvas</span>
+            </div>
+            
+            {/* Template name + status */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{selectedTemplate.name}</span>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                {publishStatus === "live" ? "· Live" : "· Draft"}
+              </span>
+            </div>
+          </div>
+          
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Device toggle */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 2,
+              background: "#f5f5f5", borderRadius: 8, padding: 3
+            }}>
+              <button
+                onClick={() => setDeviceSize("mobile")}
+                style={{
+                  width: 32, height: 28, borderRadius: 6, border: "none",
+                  background: deviceSize === "mobile" ? WHITE : "transparent",
+                  boxShadow: deviceSize === "mobile" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "mobile" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => setDeviceSize("tablet")}
+                style={{
+                  width: 32, height: 28, borderRadius: 6, border: "none",
+                  background: deviceSize === "tablet" ? WHITE : "transparent",
+                  boxShadow: deviceSize === "tablet" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "tablet" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                  <rect x="4" y="3" width="16" height="18" rx="2"/><line x1="12" y1="17" x2="12" y2="17"/>
+                </svg>
+              </button>
+            </div>
+            
+            {/* Save Draft button */}
+            <button
+              style={{
+                padding: "8px 14px", borderRadius: 8,
+                border: `1px solid ${BORDER}`, background: WHITE,
+                color: TEXT_SEC, fontSize: 13, fontWeight: 500, cursor: "pointer"
+              }}
+            >
+              Save Draft
+            </button>
+            
+            {/* Publish button */}
+            <button
+              onClick={handlePublish}
+              disabled={publishStatus === "publishing"}
+              style={{
+                padding: "8px 16px", borderRadius: 8, border: "none",
+                background: publishStatus === "live" ? "#16a34a" : "#0B1628",
+                color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                opacity: publishStatus === "publishing" ? 0.6 : 1
+              }}
+            >
+              {publishStatus === "live" ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                  Live
+                </>
+              ) : publishStatus === "publishing" ? (
+                "Publishing..."
+              ) : (
+                "Publish"
+              )}
+            </button>
+          </div>
+        </div>
+        
+        {/* Preview area */}
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: 32, overflow: "auto"
+        }}>
+          {/* Preview container - clean, no phone chrome */}
+          <div style={{
+            width: deviceWidth, maxWidth: "100%", height: 700,
+            background: WHITE, borderRadius: 16, border: `1px solid #e0e0e0`,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+            overflow: "hidden", position: "relative"
+          }}>
+            {/* Scrollable content - hidden scrollbar */}
+            <div style={{
+              width: "100%", height: "100%", overflow: "auto",
+              scrollbarWidth: "none", msOverflowStyle: "none"
+            }}>
+              <style>{`.preview-scroll::-webkit-scrollbar { display: none; }`}</style>
+              <div className="preview-scroll" style={{ width: "100%", height: "100%", overflow: "auto" }}>
+                {selectedTemplate.id === "blank" ? (
+                  <div style={{
+                    height: "100%", display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", padding: 40
+                  }}>
+                    <div style={{
+                      width: 80, height: 80, borderRadius: 20, border: `2px dashed ${BORDER}`,
+                      display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.5" strokeLinecap="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Blank Canvas</div>
+                    <div style={{ fontSize: 14, color: TEXT_SEC, textAlign: "center", maxWidth: 280 }}>
+                      Describe what you want in the chat and Milton will build it for you
+                    </div>
+                  </div>
+                ) : PreviewComponent ? (
+                  <PreviewComponent />
+                ) : null}
+              </div>
+            </div>
+          </div>
+          
+          {/* Preview info text */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, marginTop: 16
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>
+              Live preview · {deviceWidth} × 700 · Updates as you chat
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ TEMPLATE PICKER VIEW - When no template is selected ═══
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
+    }}>
+      {/* Close button */}
+      {!isMobile && (
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+            transition: "all 0.15s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "32px 20px" : "48px 40px" }}>
+        {/* Header */}
+        <h1 style={{ 
+          fontSize: isMobile ? 24 : 30, fontWeight: 700, color: TEXT, margin: 0,
+          letterSpacing: "-0.02em", lineHeight: 1.2
+        }}>
+          What would you like to create?
+        </h1>
+        <p style={{ 
+          fontSize: 14, color: TEXT_SEC, margin: "8px 0 32px", 
+          lineHeight: 1.5
+        }}>
+          Choose a template to get started. Milton will help you build and customize it.
+        </p>
+
+        {/* Template grid - 2 columns, 6 cards */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
+          gap: 16,
+          marginBottom: 32
+        }}>
+          {dashboardTemplates.map(template => (
+            <div
+              key={template.id}
+              onClick={() => setSelectedTemplate(template)}
+              onMouseEnter={() => setHoveredTemplate(template.id)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              style={{
+                background: WHITE,
+                borderRadius: 16,
+                border: `1px solid ${hoveredTemplate === template.id ? CANVAS_TEAL : "#e0e0e0"}`,
+                padding: 24,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: hoveredTemplate === template.id 
+                  ? `0 8px 24px rgba(43,191,170,0.12)` 
+                  : "none"
+              }}
+            >
+              {/* Icon + Number badge + Title row */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 10 }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  background: "rgba(43,191,170,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="1.8" strokeLinecap="round">
+                    {template.id === "blank" ? (
+                      <>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                      </>
+                    ) : (
+                      <>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                        <line x1="9" y1="21" x2="9" y2="9"/>
+                      </>
+                    )}
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: "50%",
+                      background: CANVAS_TEAL, color: WHITE,
+                      fontSize: 11, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>{template.number}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.name}</span>
+                  </div>
+                  <div style={{ 
+                    fontSize: 13, color: TEXT_SEC, marginTop: 6, lineHeight: 1.45,
+                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                  }}>
+                    {template.desc}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Get started link */}
+              <div style={{ 
+                fontSize: 13, color: TEXT_SEC, marginTop: 8,
+                display: "flex", alignItems: "center", gap: 4
+              }}>
+                Get started 
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="9,6 15,12 9,18"/>
+                </svg>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Natural language banner */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "16px 20px", borderRadius: 12,
+          background: "rgba(43,191,170,0.06)", border: `1px solid rgba(43,191,170,0.15)`
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" opacity="1"/>
+            <path d="M2 17l10 5 10-5" opacity="0.6"/>
+            <path d="M2 12l10 5 10-5" opacity="0.3"/>
+          </svg>
+          <span style={{ fontSize: 13, color: TEXT }}>
+            <strong>Tip:</strong> Describe what you need in chat — Milton can also create dashboards from natural language requests.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+  
+  /* ═════════════════════════════════════════════
+  AI ENGINE CANVAS - Multi-modal content upload with validation
+  ═════════════════════════════════════════════ */
 function AIEngineCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
@@ -6532,13 +6947,13 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       number: 3
     },
     { 
-      id: "reports",
-      icon: "file", 
-      title: "Progress Reports", 
-      desc: "Generate comprehensive client progress summaries",
+      id: "aiDashboards",
+      icon: "layout", 
+      title: "AI Dashboards", 
+      desc: "Create customizable client dashboards with smart triggers",
       color: "#45818e",
-      available: false,
-      comingSoon: true
+      available: true,
+      number: 4
     },
     { 
       id: "aiEngine",
@@ -6547,7 +6962,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       desc: "Upload videos, documents, and PDFs to train your AI assistant",
       color: "#8e7cc3",
       available: true,
-      number: 4
+      number: 5
     }
   ];
   
@@ -10387,8 +10802,8 @@ export default function MiltonDashboard() {
   } else if (templateType === "messages") {
   setCanvasType("messages");
   setCanvasData({});
-  } else if (templateType === "reports") {
-  setCanvasType("report");
+  } else if (templateType === "aiDashboards") {
+  setCanvasType("aiDashboards");
   setCanvasData({});
   } else if (templateType === "aiEngine") {
   setCanvasType("aiEngine");
@@ -10398,6 +10813,12 @@ export default function MiltonDashboard() {
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
+{canvasType === "aiDashboards" && (
+  <AIDashboardsCanvas
+    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+    isMobile={isMobile}
+  />
+)}
 {canvasType === "aiEngine" && (
   <AIEngineCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -10759,7 +11180,7 @@ export default function MiltonDashboard() {
             })()}
           </div>
 
-          {/* ── Card 4: Success Rate - Progressive Bar Chart ── */}
+          {/* ── Card 4: Success Rate - Progressive Bar Chart ���─ */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
