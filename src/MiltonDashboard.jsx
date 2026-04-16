@@ -250,8 +250,9 @@ function NavIcon({ icon, size = 20 }) {
     inbox: <svg {...s} viewBox="0 0 24 24"><polyline points="22,12 16,12 14,15 10,15 8,12 2,12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>,
     canvas: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
     send: <svg {...s} viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>,
-    file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
-    chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
+  chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  layout: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><rect x="11" y="11" width="8" height="4" rx="1"/><rect x="11" y="17" width="5" height="2" rx="0.5"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -2140,6 +2141,7 @@ function MobileCanvasSheet({
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
   case "aiEngine": return "Your AI Engine";
+  case "aiDashboards": return "AI Dashboards";
   default: return "Canvas";
     }
   };
@@ -2236,18 +2238,24 @@ function MobileCanvasSheet({
                 } else if (templateType === "messages") {
                   setCanvasType("messages");
                   setCanvasData({});
-                } else if (templateType === "reports") {
-                  setCanvasType("report");
-                  setCanvasData({});
-                } else if (templateType === "aiEngine") {
-                  setCanvasType("aiEngine");
-                  setCanvasData({});
-                }
-              }}
-              onClose={onClose}
-            />
-          )}
-          {canvasType === "aiEngine" && (
+  } else if (templateType === "aiDashboards") {
+  setCanvasType("aiDashboards");
+  setCanvasData({});
+  } else if (templateType === "aiEngine") {
+  setCanvasType("aiEngine");
+  setCanvasData({});
+  }
+  }}
+  onClose={onClose}
+  />
+  )}
+  {canvasType === "aiDashboards" && (
+  <AIDashboardsCanvas
+  onClose={onClose}
+  isMobile={true}
+  />
+  )}
+  {canvasType === "aiEngine" && (
             <AIEngineCanvas
               onClose={onClose}
               brainDocuments={brainDocuments}
@@ -5989,11 +5997,590 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
       </div>
     </div>
   );
-}
+  }
 
 /* ═════════════════════════════════════════════
-   AI ENGINE CANVAS - Multi-modal content upload with validation
+   AI DASHBOARDS CANVAS - Dashboard templates with triggers and customization
    ═════════════════════════════════════════════ */
+function AIDashboardsCanvas({ onClose, isMobile }) {
+  const [activeTab, setActiveTab] = useState("templates"); // templates | active | customize
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [activeDashboards, setActiveDashboards] = useState([
+    { id: 1, templateId: "workout", name: "Workout Dashboard", trigger: "workout_assigned", status: "active", clients: 12, lastUsed: "2 hours ago" },
+  ]);
+  const [customizing, setCustomizing] = useState(null);
+  const DASHBOARD_TEAL = "#45818e";
+
+  const dashboardTemplates = [
+    {
+      id: "workout",
+      name: "Workout Dashboard",
+      desc: "Interactive workout logging with rest timers, set tracking, and coach notes",
+      trigger: "workout_assigned",
+      triggerLabel: "When client has a workout assigned",
+      color: "#1a1a1a",
+      preview: "workout",
+      features: ["Set logging", "Rest timers", "Video demos", "Coach notes"],
+      category: "Training"
+    },
+    {
+      id: "nutrition",
+      name: "Nutrition Dashboard", 
+      desc: "Daily meal logging with macro tracking, weekly views, and AI insights",
+      trigger: "nutrition_plan_active",
+      triggerLabel: "When nutrition plan is active",
+      color: "#2B7A78",
+      preview: "nutrition",
+      features: ["Meal logging", "Macro tracking", "Weekly view", "AI insights"],
+      category: "Nutrition"
+    },
+    {
+      id: "progress",
+      name: "Progress Dashboard",
+      desc: "90-day transformation view with weight trends, body comp, and milestones",
+      trigger: "milestone_reached",
+      triggerLabel: "At 30/60/90 day milestones",
+      color: "#5CDB95",
+      preview: "progress",
+      features: ["Weight chart", "Body composition", "Strength gains", "Milestones"],
+      category: "Progress"
+    },
+    {
+      id: "program",
+      name: "Program Dashboard",
+      desc: "Full program overview with week-by-week schedule and progress tracking",
+      trigger: "program_started",
+      triggerLabel: "When client starts a program",
+      color: "#8e7cc3",
+      preview: "program",
+      features: ["Week view", "Phase timeline", "Session tracking", "Coach CTA"],
+      category: "Training"
+    },
+    {
+      id: "recipe",
+      name: "Recipe Dashboard",
+      desc: "Weekly meal planning with recipe cards and shopping list generation",
+      trigger: "meal_plan_assigned",
+      triggerLabel: "When meal plan is assigned",
+      color: "#e67e22",
+      preview: "recipe",
+      features: ["Recipe cards", "Prep times", "Ingredients", "Shopping list"],
+      category: "Nutrition"
+    },
+    {
+      id: "morning",
+      name: "Morning Dashboard",
+      desc: "Daily check-in with today's focus, habits, and motivation",
+      trigger: "daily_6am",
+      triggerLabel: "Every day at 6:00 AM",
+      color: "#f39c12",
+      preview: "morning",
+      features: ["Daily focus", "Habit tracking", "Coach message", "Quick actions"],
+      category: "Engagement"
+    },
+  ];
+
+  const triggerOptions = [
+    { id: "workout_assigned", label: "When client has a workout assigned", icon: "dumbbell" },
+    { id: "nutrition_plan_active", label: "When nutrition plan is active", icon: "utensils" },
+    { id: "program_started", label: "When client starts a program", icon: "calendar" },
+    { id: "meal_plan_assigned", label: "When meal plan is assigned", icon: "clipboard" },
+    { id: "milestone_reached", label: "At 30/60/90 day milestones", icon: "trophy" },
+    { id: "daily_6am", label: "Every day at 6:00 AM", icon: "sun" },
+    { id: "weekly_monday", label: "Every Monday morning", icon: "calendar" },
+    { id: "check_in_due", label: "When check-in is due", icon: "bell" },
+    { id: "manual", label: "Manual send only", icon: "hand" },
+  ];
+
+  const activateDashboard = (template) => {
+    const newDashboard = {
+      id: Date.now(),
+      templateId: template.id,
+      name: template.name,
+      trigger: template.trigger,
+      status: "active",
+      clients: 0,
+      lastUsed: "Just now"
+    };
+    setActiveDashboards(prev => [...prev, newDashboard]);
+    setSelectedTemplate(null);
+    setActiveTab("active");
+  };
+
+  const deactivateDashboard = (id) => {
+    setActiveDashboards(prev => prev.filter(d => d.id !== id));
+  };
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      position: "relative", background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
+    }}>
+      {/* Close button */}
+      {!isMobile && (
+        <div 
+          onClick={onClose}
+          style={{ 
+            position: "absolute", top: 16, right: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+            transition: "all 0.15s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ 
+        padding: isMobile ? "20px 16px" : "32px 40px 24px",
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ 
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: `${DASHBOARD_TEAL}15`, padding: "6px 12px", borderRadius: 20,
+          marginBottom: 12
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD_TEAL} strokeWidth="2" strokeLinecap="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 600, color: DASHBOARD_TEAL }}>Dashboards</span>
+        </div>
+        <h1 style={{ 
+          fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+          letterSpacing: "-0.02em", lineHeight: 1.2
+        }}>
+          AI Dashboards
+        </h1>
+        <p style={{ 
+          fontSize: isMobile ? 13 : 14, color: TEXT_SEC, margin: "8px 0 0", 
+          maxWidth: 500, lineHeight: 1.5
+        }}>
+          Create beautiful client dashboards. Customize with Milton, set triggers for automatic delivery.
+        </p>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+          {[
+            { id: "templates", label: "Templates", count: dashboardTemplates.length },
+            { id: "active", label: "Active", count: activeDashboards.length },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "8px 16px", borderRadius: 10, border: "none",
+                background: activeTab === tab.id ? DASHBOARD_TEAL : "transparent",
+                color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.15s ease"
+              }}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{
+                  background: activeTab === tab.id ? "rgba(255,255,255,0.25)" : `${DASHBOARD_TEAL}20`,
+                  color: activeTab === tab.id ? WHITE : DASHBOARD_TEAL,
+                  padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700
+                }}>{tab.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "24px 40px" }}>
+        
+        {/* Templates Tab */}
+        {activeTab === "templates" && !selectedTemplate && (
+          <div>
+            {/* Category sections */}
+            {["Training", "Nutrition", "Progress", "Engagement"].map(category => {
+              const categoryTemplates = dashboardTemplates.filter(t => t.category === category);
+              if (categoryTemplates.length === 0) return null;
+              
+              return (
+                <div key={category} style={{ marginBottom: 32 }}>
+                  <div style={{ 
+                    fontSize: 12, fontWeight: 700, color: TEXT_SEC, 
+                    textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 
+                  }}>
+                    {category}
+                  </div>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
+                    gap: 12 
+                  }}>
+                    {categoryTemplates.map(template => {
+                      const isActive = activeDashboards.some(d => d.templateId === template.id);
+                      
+                      return (
+                        <div
+                          key={template.id}
+                          onClick={() => setSelectedTemplate(template)}
+                          onMouseEnter={() => setHoveredTemplate(template.id)}
+                          onMouseLeave={() => setHoveredTemplate(null)}
+                          style={{
+                            background: WHITE,
+                            borderRadius: 16,
+                            border: `1px solid ${hoveredTemplate === template.id ? template.color : BORDER}`,
+                            padding: 20,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            transform: hoveredTemplate === template.id ? "translateY(-2px)" : "translateY(0)",
+                            boxShadow: hoveredTemplate === template.id 
+                              ? `0 8px 24px rgba(0,0,0,0.1)` 
+                              : "0 2px 8px rgba(0,0,0,0.04)"
+                          }}
+                        >
+                          {/* Header row */}
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                            <div style={{
+                              width: 44, height: 44, borderRadius: 12,
+                              background: hoveredTemplate === template.id ? template.color : `${template.color}15`,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.2s ease",
+                              flexShrink: 0
+                            }}>
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" 
+                                stroke={hoveredTemplate === template.id ? WHITE : template.color} 
+                                strokeWidth="1.8" strokeLinecap="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <line x1="3" y1="9" x2="21" y2="9"/>
+                                <line x1="9" y1="21" x2="9" y2="9"/>
+                              </svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.name}</div>
+                                {isActive && (
+                                  <span style={{
+                                    padding: "2px 8px", borderRadius: 6,
+                                    background: "#dcfce7", color: "#16a34a",
+                                    fontSize: 10, fontWeight: 600
+                                  }}>Active</span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>
+                                {template.desc}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Features */}
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                            {template.features.map((feature, idx) => (
+                              <span key={idx} style={{
+                                padding: "4px 10px", borderRadius: 6,
+                                background: "#f5f5f5", color: TEXT_SEC,
+                                fontSize: 11, fontWeight: 500
+                              }}>{feature}</span>
+                            ))}
+                          </div>
+
+                          {/* Trigger */}
+                          <div style={{
+                            display: "flex", alignItems: "center", gap: 8,
+                            padding: "10px 12px", borderRadius: 10,
+                            background: "#f7faf9", border: `1px solid ${BORDER}`
+                          }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD_TEAL} strokeWidth="2" strokeLinecap="round">
+                              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            <span style={{ fontSize: 12, color: TEXT_SEC }}>{template.triggerLabel}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Template Detail View */}
+        {activeTab === "templates" && selectedTemplate && (
+          <div>
+            {/* Back button */}
+            <button
+              onClick={() => setSelectedTemplate(null)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 0", marginBottom: 20, border: "none",
+                background: "transparent", color: TEXT_SEC, fontSize: 13,
+                fontWeight: 500, cursor: "pointer"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              Back to templates
+            </button>
+
+            {/* Template header */}
+            <div style={{
+              background: selectedTemplate.color, borderRadius: 20, padding: 24,
+              marginBottom: 24, color: WHITE
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                {selectedTemplate.category} Dashboard
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>{selectedTemplate.name}</h2>
+              <p style={{ fontSize: 14, opacity: 0.8, margin: 0, lineHeight: 1.5 }}>{selectedTemplate.desc}</p>
+            </div>
+
+            {/* Preview mockup */}
+            <div style={{
+              background: "#f0f0f0", borderRadius: 16, padding: 16, marginBottom: 24,
+              border: `1px solid ${BORDER}`
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Preview
+              </div>
+              <div style={{
+                background: WHITE, borderRadius: 12, padding: 20,
+                minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${BORDER}`
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    width: 64, height: 64, borderRadius: 16, background: `${selectedTemplate.color}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
+                  }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={selectedTemplate.color} strokeWidth="1.8" strokeLinecap="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <line x1="3" y1="9" x2="21" y2="9"/>
+                      <line x1="9" y1="21" x2="9" y2="9"/>
+                    </svg>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                    {selectedTemplate.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    Ask Milton to customize this dashboard
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Trigger selection */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 12 }}>
+                When should this dashboard be sent?
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {triggerOptions.slice(0, 5).map(trigger => (
+                  <div
+                    key={trigger.id}
+                    onClick={() => setSelectedTemplate({ ...selectedTemplate, trigger: trigger.id, triggerLabel: trigger.label })}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "14px 16px", borderRadius: 12,
+                      background: selectedTemplate.trigger === trigger.id ? `${DASHBOARD_TEAL}10` : WHITE,
+                      border: `1px solid ${selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : BORDER}`,
+                      cursor: "pointer", transition: "all 0.15s ease"
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: "50%",
+                      border: `2px solid ${selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : BORDER}`,
+                      background: selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {selectedTemplate.trigger === trigger.id && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 14, color: TEXT }}>{trigger.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => activateDashboard(selectedTemplate)}
+                style={{
+                  flex: 1, padding: "14px 24px", borderRadius: 12, border: "none",
+                  background: DASHBOARD_TEAL, color: WHITE,
+                  fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                Activate Dashboard
+              </button>
+              <button
+                style={{
+                  padding: "14px 24px", borderRadius: 12, border: `1px solid ${BORDER}`,
+                  background: WHITE, color: TEXT,
+                  fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                Customize with Milton
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Active Tab */}
+        {activeTab === "active" && (
+          <div>
+            {activeDashboards.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "48px 24px", color: TEXT_SEC }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/>
+                  <line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 4 }}>No active dashboards</div>
+                <div style={{ fontSize: 14 }}>Choose a template to create your first dashboard</div>
+                <button
+                  onClick={() => setActiveTab("templates")}
+                  style={{
+                    marginTop: 20, padding: "12px 24px", borderRadius: 10, border: "none",
+                    background: DASHBOARD_TEAL, color: WHITE,
+                    fontSize: 14, fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  Browse Templates
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {activeDashboards.map(dashboard => {
+                  const template = dashboardTemplates.find(t => t.id === dashboard.templateId);
+                  const trigger = triggerOptions.find(t => t.id === dashboard.trigger);
+                  
+                  return (
+                    <div key={dashboard.id} style={{
+                      display: "flex", alignItems: "center", gap: 16, padding: "18px 20px",
+                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`
+                    }}>
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 12,
+                        background: template?.color || DASHBOARD_TEAL,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0
+                      }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="1.8" strokeLinecap="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/>
+                          <line x1="3" y1="9" x2="21" y2="9"/>
+                          <line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{dashboard.name}</div>
+                          <span style={{
+                            padding: "2px 8px", borderRadius: 6,
+                            background: "#dcfce7", color: "#16a34a",
+                            fontSize: 10, fontWeight: 600
+                          }}>Active</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: TEXT_SEC }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            {trigger?.label || "Manual"}
+                          </span>
+                          <span>{dashboard.clients} clients</span>
+                          <span>{dashboard.lastUsed}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            border: `1px solid ${BORDER}`, background: WHITE,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: TEXT_SEC
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => deactivateDashboard(dashboard.id)}
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            border: `1px solid ${BORDER}`, background: WHITE,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: TEXT_SEC
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#fecaca"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: isMobile ? "14px 16px" : "16px 40px", borderTop: `1px solid ${BORDER}`,
+        background: "#fafbfa", display: "flex", alignItems: "center", justifyContent: "space-between"
+      }}>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>
+            <span style={{ fontWeight: 700, color: TEXT }}>{activeDashboards.length}</span> active
+          </div>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>
+            <span style={{ fontWeight: 700, color: TEXT }}>{dashboardTemplates.length}</span> templates
+          </div>
+        </div>
+        <button 
+          onClick={() => { setActiveTab("templates"); setSelectedTemplate(null); }}
+          style={{
+            padding: "10px 20px", borderRadius: 10, border: "none",
+            background: DASHBOARD_TEAL, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
+  
+  /* ═════════════════════════════════════════════
+  AI ENGINE CANVAS - Multi-modal content upload with validation
+  ═════════════════════════════════════════════ */
 function AIEngineCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
@@ -6532,13 +7119,13 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       number: 3
     },
     { 
-      id: "reports",
-      icon: "file", 
-      title: "Progress Reports", 
-      desc: "Generate comprehensive client progress summaries",
+      id: "aiDashboards",
+      icon: "layout", 
+      title: "AI Dashboards", 
+      desc: "Create customizable client dashboards with smart triggers",
       color: "#45818e",
-      available: false,
-      comingSoon: true
+      available: true,
+      number: 4
     },
     { 
       id: "aiEngine",
@@ -6547,7 +7134,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       desc: "Upload videos, documents, and PDFs to train your AI assistant",
       color: "#8e7cc3",
       available: true,
-      number: 4
+      number: 5
     }
   ];
   
@@ -10387,8 +10974,8 @@ export default function MiltonDashboard() {
   } else if (templateType === "messages") {
   setCanvasType("messages");
   setCanvasData({});
-  } else if (templateType === "reports") {
-  setCanvasType("report");
+  } else if (templateType === "aiDashboards") {
+  setCanvasType("aiDashboards");
   setCanvasData({});
   } else if (templateType === "aiEngine") {
   setCanvasType("aiEngine");
@@ -10398,6 +10985,12 @@ export default function MiltonDashboard() {
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   />
   )}
+{canvasType === "aiDashboards" && (
+  <AIDashboardsCanvas
+    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+    isMobile={isMobile}
+  />
+)}
 {canvasType === "aiEngine" && (
   <AIEngineCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
