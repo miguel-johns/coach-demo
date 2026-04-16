@@ -6073,112 +6073,92 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   // ═══ BUILDER VIEW - When a template is selected ═══
   if (selectedTemplate) {
     const PreviewComponent = DashboardComponents[selectedTemplate.id];
-    const deviceWidth = deviceSize === "mobile" ? 390 : 600;
+    const deviceWidth = isMobile ? "100%" : (deviceSize === "mobile" ? 390 : 600);
     
     return (
       <div style={{
         display: "flex", flexDirection: "column", height: "100%",
-        background: "#f5f5f5", fontFamily: "'DM Sans', sans-serif"
+        background: isMobile ? WHITE : "#f5f5f5", fontFamily: "'DM Sans', sans-serif"
       }}>
-        {/* Toolbar */}
+        {/* Toolbar - simplified for mobile */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 20px", background: WHITE, borderBottom: `1px solid ${BORDER}`
+          padding: isMobile ? "12px 16px" : "12px 20px", 
+          background: WHITE, 
+          borderBottom: `1px solid ${BORDER}`
         }}>
           {/* Left side */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
             <button
               onClick={() => setSelectedTemplate(null)}
               style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "8px 12px", borderRadius: 8, border: "none",
+                display: "flex", alignItems: "center", gap: 4,
+                padding: isMobile ? "8px" : "8px 12px", borderRadius: 8, border: "none",
                 background: "transparent", color: TEXT_SEC, fontSize: 13,
                 fontWeight: 500, cursor: "pointer"
               }}
-              onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <polyline points="15,18 9,12 15,6"/>
               </svg>
-              All Dashboards
+              {!isMobile && "Back"}
             </button>
             
-            {/* Canvas pill */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 12px", borderRadius: 20,
-              background: "rgba(43,191,170,0.08)"
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" opacity="1"/>
-                <path d="M2 17l10 5 10-5" opacity="0.6"/>
-                <path d="M2 12l10 5 10-5" opacity="0.3"/>
-              </svg>
-              <span style={{ fontSize: 12, fontWeight: 600, color: CANVAS_TEAL }}>Canvas</span>
-            </div>
-            
             {/* Template name + status */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{selectedTemplate.name}</span>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>
-                {publishStatus === "live" ? "· Live" : "· Draft"}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: isMobile ? 15 : 14, fontWeight: 600, color: TEXT }}>{selectedTemplate.name}</span>
+              <span style={{ 
+                fontSize: 10, fontWeight: 600, color: TEXT_SEC,
+                padding: "2px 6px", borderRadius: 4, background: "#f0f0f0"
+              }}>
+                {publishStatus === "live" ? "Live" : "Draft"}
               </span>
             </div>
           </div>
           
           {/* Right side */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {/* Device toggle */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 2,
-              background: "#f5f5f5", borderRadius: 8, padding: 3
-            }}>
-              <button
-                onClick={() => setDeviceSize("mobile")}
-                style={{
-                  width: 32, height: 28, borderRadius: 6, border: "none",
-                  background: deviceSize === "mobile" ? WHITE : "transparent",
-                  boxShadow: deviceSize === "mobile" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "mobile" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                  <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => setDeviceSize("tablet")}
-                style={{
-                  width: 32, height: 28, borderRadius: 6, border: "none",
-                  background: deviceSize === "tablet" ? WHITE : "transparent",
-                  boxShadow: deviceSize === "tablet" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "tablet" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                  <rect x="4" y="3" width="16" height="18" rx="2"/><line x1="12" y1="17" x2="12" y2="17"/>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Save Draft button */}
-            <button
-              style={{
-                padding: "8px 14px", borderRadius: 8,
-                border: `1px solid ${BORDER}`, background: WHITE,
-                color: TEXT_SEC, fontSize: 13, fontWeight: 500, cursor: "pointer"
-              }}
-            >
-              Save Draft
-            </button>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 10 }}>
+            {/* Device toggle - desktop only */}
+            {!isMobile && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 2,
+                background: "#f5f5f5", borderRadius: 8, padding: 3
+              }}>
+                <button
+                  onClick={() => setDeviceSize("mobile")}
+                  style={{
+                    width: 32, height: 28, borderRadius: 6, border: "none",
+                    background: deviceSize === "mobile" ? WHITE : "transparent",
+                    boxShadow: deviceSize === "mobile" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "mobile" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setDeviceSize("tablet")}
+                  style={{
+                    width: 32, height: 28, borderRadius: 6, border: "none",
+                    background: deviceSize === "tablet" ? WHITE : "transparent",
+                    boxShadow: deviceSize === "tablet" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={deviceSize === "tablet" ? TEXT : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <rect x="4" y="3" width="16" height="18" rx="2"/><line x1="12" y1="17" x2="12" y2="17"/>
+                  </svg>
+                </button>
+              </div>
+            )}
             
             {/* Publish button */}
             <button
               onClick={handlePublish}
               disabled={publishStatus === "publishing"}
               style={{
-                padding: "8px 16px", borderRadius: 8, border: "none",
+                padding: isMobile ? "8px 14px" : "8px 16px", borderRadius: 8, border: "none",
                 background: publishStatus === "live" ? "#16a34a" : "#0B1628",
                 color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
                 display: "flex", alignItems: "center", gap: 6,
@@ -6193,7 +6173,7 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
                   Live
                 </>
               ) : publishStatus === "publishing" ? (
-                "Publishing..."
+                "..."
               ) : (
                 "Publish"
               )}
@@ -6203,17 +6183,21 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
         
         {/* Preview area */}
         <div style={{
-          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          padding: 32, overflow: "auto"
+          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", 
+          justifyContent: isMobile ? "flex-start" : "center",
+          padding: isMobile ? 0 : 32, overflow: "auto"
         }}>
-          {/* Preview container - clean, no phone chrome */}
+          {/* Preview container */}
           <div style={{
-            width: deviceWidth, maxWidth: "100%", height: 700,
-            background: WHITE, borderRadius: 16, border: `1px solid #e0e0e0`,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+            width: deviceWidth, maxWidth: "100%", 
+            height: isMobile ? "100%" : 700,
+            background: WHITE, 
+            borderRadius: isMobile ? 0 : 16, 
+            border: isMobile ? "none" : `1px solid #e0e0e0`,
+            boxShadow: isMobile ? "none" : "0 8px 32px rgba(0,0,0,0.06)",
             overflow: "hidden", position: "relative"
           }}>
-            {/* Scrollable content - hidden scrollbar */}
+            {/* Scrollable content */}
             <div style={{
               width: "100%", height: "100%", overflow: "auto",
               scrollbarWidth: "none", msOverflowStyle: "none"
@@ -6247,15 +6231,17 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
             </div>
           </div>
           
-          {/* Preview info text */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 8, marginTop: 16
-          }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
-            <span style={{ fontSize: 12, color: TEXT_SEC }}>
-              Live preview · {deviceWidth} × 700 · Updates as you chat
-            </span>
-          </div>
+          {/* Preview info text - desktop only */}
+          {!isMobile && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginTop: 16
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                Live preview · Updates as you chat
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -6304,11 +6290,11 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
           Choose a template to get started. Milton will help you build and customize it.
         </p>
 
-        {/* Template grid - 2 columns, 6 cards */}
+        {/* Template grid */}
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
-          gap: 16,
+          gap: isMobile ? 12 : 16,
           marginBottom: 32
         }}>
           {dashboardTemplates.map(template => (
@@ -6319,9 +6305,9 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
               onMouseLeave={() => setHoveredTemplate(null)}
               style={{
                 background: WHITE,
-                borderRadius: 16,
+                borderRadius: isMobile ? 12 : 16,
                 border: `1px solid ${hoveredTemplate === template.id ? CANVAS_TEAL : "#e0e0e0"}`,
-                padding: 24,
+                padding: isMobile ? 16 : 24,
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 boxShadow: hoveredTemplate === template.id 
@@ -6330,14 +6316,14 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
               }}
             >
               {/* Icon + Number badge + Title row */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 14 }}>
                 <div style={{
-                  width: 48, height: 48, borderRadius: 12,
+                  width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: isMobile ? 10 : 12,
                   background: "rgba(43,191,170,0.08)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="1.8" strokeLinecap="round">
+                  <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="1.8" strokeLinecap="round">
                     {template.id === "blank" ? (
                       <>
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -6353,52 +6339,63 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
                     )}
                   </svg>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{
-                      width: 20, height: 20, borderRadius: "50%",
+                      width: 18, height: 18, borderRadius: "50%",
                       background: CANVAS_TEAL, color: WHITE,
-                      fontSize: 11, fontWeight: 700,
-                      display: "flex", alignItems: "center", justifyContent: "center"
+                      fontSize: 10, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0
                     }}>{template.number}</span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{template.name}</span>
+                    <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: TEXT }}>{template.name}</span>
                   </div>
-                  <div style={{ 
-                    fontSize: 13, color: TEXT_SEC, marginTop: 6, lineHeight: 1.45,
-                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
-                  }}>
-                    {template.desc}
-                  </div>
+                  {!isMobile && (
+                    <div style={{ 
+                      fontSize: 13, color: TEXT_SEC, marginTop: 6, lineHeight: 1.45,
+                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                    }}>
+                      {template.desc}
+                    </div>
+                  )}
                 </div>
+                {/* Arrow for mobile */}
+                {isMobile && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,6 15,12 9,18"/>
+                  </svg>
+                )}
               </div>
               
-              {/* Get started link */}
-              <div style={{ 
-                fontSize: 13, color: TEXT_SEC, marginTop: 8,
-                display: "flex", alignItems: "center", gap: 4
-              }}>
-                Get started 
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <polyline points="9,6 15,12 9,18"/>
-                </svg>
-              </div>
+              {/* Get started link - desktop only */}
+              {!isMobile && (
+                <div style={{ 
+                  fontSize: 13, color: TEXT_SEC, marginTop: 12,
+                  display: "flex", alignItems: "center", gap: 4
+                }}>
+                  Get started 
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,6 15,12 9,18"/>
+                  </svg>
+                </div>
+              )}
             </div>
           ))}
         </div>
         
         {/* Natural language banner */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "16px 20px", borderRadius: 12,
+          display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: 10,
+          padding: isMobile ? "12px 14px" : "16px 20px", borderRadius: 12,
           background: "rgba(43,191,170,0.06)", border: `1px solid rgba(43,191,170,0.15)`
         }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: isMobile ? 1 : 0 }}>
             <path d="M12 2L2 7l10 5 10-5-10-5z" opacity="1"/>
             <path d="M2 17l10 5 10-5" opacity="0.6"/>
             <path d="M2 12l10 5 10-5" opacity="0.3"/>
           </svg>
-          <span style={{ fontSize: 13, color: TEXT }}>
-            <strong>Tip:</strong> Describe what you need in chat — Milton can also create dashboards from natural language requests.
+          <span style={{ fontSize: isMobile ? 12 : 13, color: TEXT, lineHeight: 1.4 }}>
+            <strong>Tip:</strong> {isMobile ? "Describe what you need in chat to create dashboards." : "Describe what you need in chat — Milton can also create dashboards from natural language requests."}
           </span>
         </div>
       </div>
@@ -11123,7 +11120,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
 
-          {/* ── Card 3: Client Growth - Progressive Bar Chart ── */}
+          {/* ── Card 3: Client Growth - Progressive Bar Chart ���─ */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
