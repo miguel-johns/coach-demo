@@ -6210,7 +6210,8 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header - only show when no template is selected */}
+      {!selectedTemplate && (
       <div style={{ 
         padding: isMobile ? "20px 16px" : "32px 40px 24px",
         borderBottom: `1px solid ${BORDER}`
@@ -6268,6 +6269,7 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
           ))}
         </div>
       </div>
+      )}
 
       {/* Content */}
       <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "24px 40px" }}>
@@ -11392,7 +11394,7 @@ export default function MiltonDashboard() {
             })()}
           </div>
 
-          {/* ── Card 4: Success Rate - Progressive Bar Chart ── */}
+          {/* ── Card 4: Success Rate - Progressive Bar Chart ���─ */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
