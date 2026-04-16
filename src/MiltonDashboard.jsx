@@ -6442,42 +6442,6 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   </div>
   </div>
 
-            {/* Trigger selection */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 12 }}>
-                When should this dashboard be sent?
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {triggerOptions.slice(0, 5).map(trigger => (
-                  <div
-                    key={trigger.id}
-                    onClick={() => setSelectedTemplate({ ...selectedTemplate, trigger: trigger.id, triggerLabel: trigger.label })}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "14px 16px", borderRadius: 12,
-                      background: selectedTemplate.trigger === trigger.id ? `${DASHBOARD_TEAL}10` : WHITE,
-                      border: `1px solid ${selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : BORDER}`,
-                      cursor: "pointer", transition: "all 0.15s ease"
-                    }}
-                  >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: "50%",
-                      border: `2px solid ${selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : BORDER}`,
-                      background: selectedTemplate.trigger === trigger.id ? DASHBOARD_TEAL : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {selectedTemplate.trigger === trigger.id && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                          <polyline points="20,6 9,17 4,12"/>
-                        </svg>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 14, color: TEXT }}>{trigger.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Action buttons */}
             <div style={{ display: "flex", gap: 12 }}>
               <button
