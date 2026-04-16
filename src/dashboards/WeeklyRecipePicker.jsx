@@ -487,11 +487,12 @@ export default function WeeklyRecipePicker() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, maxWidth: 480, margin: "0 auto" }}>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        * { box-sizing:border-box; margin:0; padding:0; }
-      `}</style>
+<style>{`
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  .slot-tabs::-webkit-scrollbar { display: none; }
+  `}</style>
 
       {/* Header */}
       <div style={{ padding: "48px 20px 12px" }}>
@@ -511,7 +512,7 @@ export default function WeeklyRecipePicker() {
         </div>
 
         {/* Slot tabs */}
-        <div style={{ display: "flex", gap: 4, overflowX: "auto" }}>
+        <div className="slot-tabs" style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {MEAL_SLOTS.map((slot, i) => {
             const slotDone = cardIndices[slot] >= (data.slots[slot]?.length || 0);
             const slotSaved = saved[slot].length;
