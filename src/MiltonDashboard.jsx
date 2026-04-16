@@ -6410,13 +6410,15 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   display: "flex", flexDirection: "column"
   }}>
   {/* Render actual dashboard component based on template */}
-  <div style={{ flex: 1, overflow: "auto", paddingTop: 12 }}>
+  <div style={{ flex: 1, overflow: "auto" }}>
+    <div style={{ paddingTop: 16 }}>
             {selectedTemplate.id === "morning" && <MorningDashboard />}
             {selectedTemplate.id === "workout" && <WorkoutDashboard />}
             {selectedTemplate.id === "recovery" && <ProgressDashboard />}
             {selectedTemplate.id === "weekly" && <ProgramDashboard />}
             {selectedTemplate.id === "nutrition" && <NutritionDashboard />}
             {selectedTemplate.id === "mindset" && <RecipeDashboard />}
+    </div>
           </div>
         </div>
       </div>
