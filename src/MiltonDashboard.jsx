@@ -6409,42 +6409,14 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
           overflow: "hidden",
           display: "flex", flexDirection: "column"
         }}>
-          {/* Mock phone header */}
-          <div style={{
-            padding: "12px 20px",
-            background: selectedTemplate.bg,
-            display: "flex", alignItems: "center", justifyContent: "space-between"
-          }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: selectedTemplate.color }}>
-              {selectedTemplate.name}
-            </span>
-            <span style={{ fontSize: 11, color: selectedTemplate.color, opacity: 0.7 }}>
-              Preview
-            </span>
-          </div>
-
-          {/* Mock content */}
-          <div style={{ flex: 1, padding: 20, background: "#fafafa" }}>
-            <div style={{
-              padding: 16, background: WHITE, borderRadius: 12,
-              border: `1px solid ${BORDER}`, marginBottom: 12
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
-                Dashboard Preview
-              </div>
-              <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5 }}>
-                This is a preview of your {selectedTemplate.name.toLowerCase()}. Use the chat to customize blocks, colors, and content.
-              </div>
-            </div>
-
-            {/* Placeholder blocks */}
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{
-                height: 60, background: `${selectedTemplate.bg}40`,
-                borderRadius: 8, marginBottom: 8,
-                border: `1px dashed ${selectedTemplate.color}40`
-              }} />
-            ))}
+          {/* Render actual dashboard component based on template */}
+          <div style={{ flex: 1, overflow: "auto" }}>
+            {selectedTemplate.id === "morning" && <MorningDashboard />}
+            {selectedTemplate.id === "workout" && <WorkoutDashboard />}
+            {selectedTemplate.id === "recovery" && <ProgressDashboard />}
+            {selectedTemplate.id === "weekly" && <ProgramDashboard />}
+            {selectedTemplate.id === "nutrition" && <NutritionDashboard />}
+            {selectedTemplate.id === "mindset" && <RecipeDashboard />}
           </div>
         </div>
       </div>
