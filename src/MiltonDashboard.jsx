@@ -11067,7 +11067,7 @@ export default function MiltonDashboard() {
   />
   )}
 {canvasType === "aiDashboards" && (
-> <AIDashboardsCanvas
+  <AIDashboardsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   isMobile={isMobile}
