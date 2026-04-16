@@ -6454,7 +6454,6 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
               </div>
             </div>
           </div>
-          </div>
         )}
 
         {/* Active Tab */}
