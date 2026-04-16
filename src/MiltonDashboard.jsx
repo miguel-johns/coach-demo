@@ -1705,7 +1705,7 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
 
 function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
-  const showSuggestions = messages.length <= 1 && !typing && canvasType !== "messages";
+  const showSuggestions = messages.length <= 1 && !typing && canvasType !== "workflows";
   return (
     <>
     <div style={{
@@ -2243,8 +2243,8 @@ clientName: "New Client",
   programName: "Custom Program",
   weeks: 4
   });
-  } else if (templateType === "messages") {
-  setCanvasType("messages");
+  } else if (templateType === "workflows") {
+  setCanvasType("workflows");
   setCanvasData({});
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
@@ -2273,8 +2273,8 @@ clientName: "New Client",
 isMobile={true}
   />
   )}
-  {canvasType === "messages" && (
-  <MessagesCanvas
+  {canvasType === "workflows" && (
+  <WorkflowsCanvas
   onClose={onClose}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
@@ -5633,303 +5633,488 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
   );
 }
 
-function MessagesCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [chatStep, setChatStep] = useState(0); // 0: who, 1: types, 2: frequency, 3: duration, 4: generating, 5: done
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [frequency, setFrequency] = useState(null);
-  const [duration, setDuration] = useState(null);
-  const [generatedMessages, setGeneratedMessages] = useState([]);
-  const [expandedMessage, setExpandedMessage] = useState(null);
+function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady
+  const [selectedAudience, setSelectedAudience] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
   
-  const GREEN = "#5CDB95";
-  
-  const clients = [
-    { name: "Sarah Chen", initials: "SC" },
-    { name: "Marcus Johnson", initials: "MJ" },
-    { name: "Emily Rodriguez", initials: "ER" },
-    { name: "All Clients", initials: "ALL" }
-  ];
-  
-  const messageTypes = [
-    { id: "checkin", label: "Check-ins" },
-    { id: "motivation", label: "Motivation" },
-    { id: "reminder", label: "Reminders" },
-    { id: "tips", label: "Tips & Education" }
-  ];
-  
-  const frequencies = [
-    { id: "daily", label: "Daily" },
-    { id: "3x", label: "3x per week" },
-    { id: "weekly", label: "Weekly" }
-  ];
-  
-  const durations = [
-    { id: "2weeks", label: "2 weeks" },
-    { id: "4weeks", label: "4 weeks" },
-    { id: "8weeks", label: "8 weeks" }
-  ];
-  
-  const typeColors = {
-    checkin: TEAL,
-    motivation: "#f59e0b",
-    reminder: "#6366f1",
-    tips: "#ec4899"
+  // Design tokens
+  const C = {
+    ink: "#0B1628",
+    muted: "#5F5E5A",
+    muted2: "#888780",
+    border: "#E5E5E0",
+    border2: "#D3D1C7",
+    bg: "#FAFAF7",
+    surface: "#FFFFFF",
+    surface2: "#F1EFE8",
+    teal50: "#E1F5EE",
+    teal500: "#1D9E75",
+    teal700: "#0F6E56",
+    teal900: "#04342C",
+    amber50: "#FAEEDA",
+    amber200: "#FAC775",
+    amber500: "#EF9F27",
+    amber700: "#854F0B",
+    coral50: "#FAECE7",
+    coral500: "#D85A30",
+    coral700: "#712B13",
+    purple50: "#EEEDFE",
+    purple500: "#7F77DD",
+    purple700: "#3C3489",
+    blue50: "#E6F1FB",
+    blue500: "#378ADD",
+    blue700: "#0C447C"
   };
   
-  // Handler refs to avoid stale closures
-  const handleClientSelectRef = useRef(null);
-  const handleTypesSelectRef = useRef(null);
-  const handleFrequencySelectRef = useRef(null);
-  const handleDurationSelectRef = useRef(null);
-  
-  const handleClientSelect = (clientName) => {
-    const client = clients.find(c => c.name === clientName) || { name: clientName };
-    setSelectedClient(client);
-    // Mark previous options as answered
-    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
-    setChatMessages(prev => [...prev, { type: "user", text: clientName }]);
-    setChatTyping(true);
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, {
-        type: "ai",
-        text: `Great! What types of messages do you want to send to ${client.name === "All Clients" ? "all your clients" : client.name}? You can pick multiple.`,
-        options: messageTypes.map(t => t.label),
-        multiSelect: true,
-        onSelect: (val) => handleTypesSelectRef.current?.(val)
-      }]);
-      setChatTyping(false);
-      setChatStep(1);
-    }, 500);
-  };
-  
-  const handleTypesSelect = (selected) => {
-    const typeIds = selected.map(label => messageTypes.find(t => t.label === label)?.id).filter(Boolean);
-    setSelectedTypes(typeIds);
-    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
-    setChatMessages(prev => [...prev, { type: "user", text: selected.join(", ") }]);
-    setChatTyping(true);
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, {
-        type: "ai",
-        text: "How often should messages go out?",
-        options: frequencies.map(f => f.label),
-        onSelect: (val) => handleFrequencySelectRef.current?.(val)
-      }]);
-      setChatTyping(false);
-      setChatStep(2);
-    }, 500);
-  };
-  
-  const handleFrequencySelect = (freqLabel) => {
-    const freq = frequencies.find(f => f.label === freqLabel)?.id || "weekly";
-    setFrequency(freq);
-    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
-    setChatMessages(prev => [...prev, { type: "user", text: freqLabel }]);
-    setChatTyping(true);
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, {
-        type: "ai",
-        text: "How long should this sequence run?",
-        options: durations.map(d => d.label),
-        onSelect: (val) => handleDurationSelectRef.current?.(val)
-      }]);
-      setChatTyping(false);
-      setChatStep(3);
-    }, 500);
-  };
-  
-  const handleDurationSelect = (durLabel) => {
-    const dur = durations.find(d => d.label === durLabel)?.id || "4weeks";
-    setDuration(dur);
-    setChatMessages(prev => prev.map(m => m.options ? { ...m, answered: true } : m));
-    setChatMessages(prev => [...prev, { type: "user", text: durLabel }]);
-    setChatTyping(true);
-    setChatStep(4);
-    
-    // Generate messages
-    setTimeout(() => {
-      const msgs = generateMessagesWithParams(dur);
-      setGeneratedMessages(msgs);
-      setChatMessages(prev => [...prev, {
-        type: "ai",
-        text: `Done! I've created ${msgs.length} messages for ${selectedClient?.name || "your clients"}. Review them in the timeline and activate when you're ready.`
-      }]);
-      setChatTyping(false);
-      setChatStep(5);
-    }, 2000);
-  };
-  
-  const generateMessagesWithParams = (dur) => {
-    const name = selectedClient?.name === "All Clients" ? "team" : selectedClient?.name?.split(' ')[0];
-    const weeksNum = dur === "2weeks" ? 2 : dur === "4weeks" ? 4 : 8;
-    const messages = [];
-    
-    const typeContents = {
-      checkin: ["How are you feeling today?", "Quick check-in - how's your energy?", "What's one win from this week?"],
-      motivation: ["You're doing amazing!", "Remember why you started.", "Every step counts."],
-      reminder: ["Don't forget your session today!", "Time for your workout!", "Meal prep reminder!"],
-      tips: ["Try drinking water before meals.", "Sleep is key to recovery.", "Consistency beats perfection."]
-    };
-    
-    let msgId = 1;
-    for (let week = 1; week <= Math.min(weeksNum, 4); week++) {
-      selectedTypes.forEach((type, typeIdx) => {
-        const dayOffset = typeIdx * (7 / selectedTypes.length);
-        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        const dayName = days[Math.floor(dayOffset) % 7];
-        const contents = typeContents[type];
-        messages.push({
-          id: msgId++,
-          week,
-          day: dayName,
-          time: `${9 + typeIdx * 3}:00 AM`,
-          type: messageTypes.find(t => t.id === type)?.label,
-          typeId: type,
-          content: `Hey ${name}! ${contents[week % contents.length]}`,
-          status: "scheduled"
-        });
-      });
+  // Mock data for workflow gaps
+  const workflowGaps = [
+    { 
+      id: 1, 
+      audience: "Clients inactive 7+ days",
+      count: 12,
+      priority: "high",
+      suggestion: "Re-engagement sequence with check-in + motivation",
+      color: C.coral500,
+      colorBg: C.coral50
+    },
+    { 
+      id: 2, 
+      audience: "New clients (first 2 weeks)",
+      count: 8,
+      priority: "medium",
+      suggestion: "Onboarding drip with tips + expectations",
+      color: C.amber500,
+      colorBg: C.amber50
+    },
+    { 
+      id: 3, 
+      audience: "Clients nearing goal",
+      count: 5,
+      priority: "low",
+      suggestion: "Celebration + next phase planning",
+      color: C.teal500,
+      colorBg: C.teal50
     }
-    return messages;
+  ];
+  
+  // Active workflows
+  const activeWorkflows = [
+    { id: 101, name: "Weekly check-in", audience: "All active clients", status: "running", sent: 156, opened: 142 },
+    { id: 102, name: "Missed session follow-up", audience: "No-shows", status: "running", sent: 23, opened: 19 }
+  ];
+  
+  // Bundle triggers for design screen
+  const bundleTriggers = [
+    { id: 1, type: "Day 1", action: "Welcome message + what to expect", enabled: true },
+    { id: 2, type: "Day 3", action: "Check-in: How are you feeling?", enabled: true },
+    { id: 3, type: "Day 5", action: "Tip: Recovery importance", enabled: true },
+    { id: 4, type: "Day 7", action: "First week celebration", enabled: true },
+    { id: 5, type: "Day 10", action: "Progress check + adjust", enabled: false }
+  ];
+  
+  // Watch mode stats
+  const watchStats = {
+    sent: 24,
+    delivered: 23,
+    opened: 18,
+    replied: 4,
+    hoursActive: 36
   };
   
-  // Keep refs updated
-  handleClientSelectRef.current = handleClientSelect;
-  handleTypesSelectRef.current = handleTypesSelect;
-  handleFrequencySelectRef.current = handleFrequencySelect;
-  handleDurationSelectRef.current = handleDurationSelect;
-  
-// Initialize with first question - starts fresh chat, runs once on mount
+  // Initialize chat
   useEffect(() => {
-  if (setChatMessages) {
-  // Start fresh chat with just the message builder question
-  setChatMessages([{
-  type: "ai",
-  text: "Let's set up your automated message sequence. Who should receive these messages?",
-  options: clients.map(c => c.name),
-  onSelect: (val) => handleClientSelectRef.current?.(val)
-  }]);
-  }
+    if (setChatMessages) {
+      setChatMessages([{
+        type: "ai",
+        text: "I found 3 client groups that could benefit from automated workflows. Take a look at the gaps I've identified."
+      }]);
+    }
   }, []);
   
+  const navigateTo = (screen, audience = null) => {
+    setActiveScreen(screen);
+    if (audience) setSelectedAudience(audience);
+    
+    // Update chat based on screen
+    if (setChatMessages) {
+      if (screen === "design" && audience) {
+        setChatMessages([{
+          type: "ai",
+          text: `I've drafted a 5-trigger bundle for "${audience.audience}". Review the sequence below — you can toggle individual triggers on or off.`
+        }]);
+      } else if (screen === "watch") {
+        setChatMessages([{
+          type: "ai",
+          text: "Bundle activated! I'm watching how clients respond. You'll see real-time stats here. I'll alert you if anything looks off."
+        }]);
+      } else if (screen === "steady") {
+        setChatMessages([{
+          type: "ai",
+          text: "This workflow is now running steadily. 94% delivery rate, 78% open rate. No action needed — I'll flag anomalies."
+        }]);
+      } else if (screen === "landing") {
+        setChatMessages([{
+          type: "ai",
+          text: "I found 3 client groups that could benefit from automated workflows. Take a look at the gaps I've identified."
+        }]);
+      }
+    }
+  };
+
   return (
-    <div style={{ display: "flex", height: "100%", background: "#fafcfb", position: "relative" }}>
-{/* Back button - top left */}
-      <div
-        onClick={onHome || onClose}
-        style={{
-          position: "absolute", top: 16, left: 16, zIndex: 10,
-          width: 32, height: 32, borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-          background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15,18 9,12 15,6"/>
-        </svg>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.bg }}>
+      {/* Top nav rail */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 4, padding: "12px 20px",
+        borderBottom: `0.5px solid ${C.border}`, background: C.surface
+      }}>
+        <div
+          onClick={onHome || onClose}
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: C.muted,
+            transition: "all 0.15s ease"
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 500, color: C.ink, marginRight: 16 }}>AI Workflows</span>
+        
+        {/* Screen tabs */}
+        {["landing", "design", "watch", "steady"].map(screen => (
+          <button
+            key={screen}
+            onClick={() => navigateTo(screen, selectedAudience)}
+            style={{
+              padding: "6px 12px", borderRadius: 6, border: "none",
+              background: activeScreen === screen ? C.teal50 : "transparent",
+              color: activeScreen === screen ? C.teal700 : C.muted,
+              fontSize: 12, fontWeight: 500, cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
+          >
+            {screen === "landing" ? "Workflows" : screen === "design" ? "Design" : screen === "watch" ? "Watch" : "Steady"}
+          </button>
+        ))}
       </div>
       
-      {/* Timeline Preview Panel */}
-      <div style={{ 
-        flex: 1,
-        display: "flex", flexDirection: "column", background: WHITE 
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: "16px 24px 16px 60px", borderBottom: `1px solid ${BORDER}`,
-          display: "flex", alignItems: "center", justifyContent: "space-between"
-        }}>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: 0 }}>Message Sequence</h2>
-            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "4px 0 0" }}>
-              {chatStep < 5 ? "Building..." : `${generatedMessages.length} messages scheduled`}
-            </p>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
-          {chatStep < 5 ? (
-            <div style={{ 
-              display: "flex", flexDirection: "column", alignItems: "center", 
-              justifyContent: "center", height: "100%", textAlign: "center", padding: 20 
-            }}>
-              <div style={{ 
-                width: 56, height: 56, borderRadius: 16, background: `${GREEN}15`,
-                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
-                {chatStep === 0 && "Select Recipients"}
-                {chatStep === 1 && "Choose Message Types"}
-                {chatStep === 2 && "Set Frequency"}
-                {chatStep === 3 && "Choose Duration"}
-                {chatStep === 4 && "Generating Messages..."}
-              </h3>
-              <p style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5 }}>
-                Answer the questions in chat to build your automated message sequence.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {generatedMessages.map((msg, idx) => (
-                <div
-                  key={msg.id}
-                  onClick={() => setExpandedMessage(expandedMessage === idx ? null : idx)}
-                  style={{
-                    padding: "12px 14px", borderRadius: 10,
-                    background: expandedMessage === idx ? `${typeColors[msg.typeId]}08` : "#f8f8f8",
-                    border: `1px solid ${expandedMessage === idx ? typeColors[msg.typeId] : "transparent"}`,
-                    cursor: "pointer", transition: "all 0.15s ease"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ 
-                      fontSize: 10, fontWeight: 600, color: typeColors[msg.typeId],
-                      textTransform: "uppercase", letterSpacing: "0.03em"
-                    }}>
-                      {msg.type}
-                    </span>
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>
-                      Week {msg.week} • {msg.day}
-                    </span>
-                  </div>
-                  <p style={{ 
-                    fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.4,
-                    overflow: expandedMessage === idx ? "visible" : "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: expandedMessage === idx ? "normal" : "nowrap"
-                  }}>
-                    {msg.content}
-                  </p>
-                  {expandedMessage === idx && (
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
-                      <span style={{ fontSize: 11, color: TEXT_SEC }}>Scheduled: {msg.time}</span>
-                    </div>
-                  )}
+      {/* Main content */}
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        
+        {/* LANDING SCREEN - Gaps + Active Workflows */}
+        {activeScreen === "landing" && (
+          <div style={{ maxWidth: 800 }}>
+            {/* Gaps section */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 500, color: C.ink, margin: 0 }}>Workflow gaps</h2>
+                  <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Client groups that could benefit from automation</p>
                 </div>
-              ))}
+                <span style={{ 
+                  padding: "4px 10px", borderRadius: 20, 
+                  background: C.coral50, color: C.coral700,
+                  fontSize: 11, fontWeight: 500
+                }}>3 opportunities</span>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {workflowGaps.map(gap => (
+                  <div
+                    key={gap.id}
+                    onMouseEnter={() => setHoveredCard(gap.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    style={{
+                      padding: "16px 20px", borderRadius: 12,
+                      background: C.surface, border: `0.5px solid ${hoveredCard === gap.id ? C.border2 : C.border}`,
+                      display: "flex", alignItems: "center", gap: 16,
+                      cursor: "pointer", transition: "all 0.15s ease"
+                    }}
+                    onClick={() => navigateTo("design", gap)}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, background: gap.colorBg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: gap.color, fontWeight: 500, fontSize: 14
+                    }}>
+                      {gap.count}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{gap.audience}</div>
+                      <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{gap.suggestion}</div>
+                    </div>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      color: C.teal700, fontSize: 13, fontWeight: 500
+                    }}>
+                      Design
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polyline points="9,6 15,12 9,18"/>
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-
-        {chatStep === 5 && (
-          <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
-            <button style={{
-              width: "100%", padding: "12px 16px", borderRadius: 10,
-              background: GREEN, color: WHITE, border: "none",
-              fontSize: 14, fontWeight: 600, cursor: "pointer"
-            }}>
-              Activate Sequence
+            
+            {/* Active workflows section */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 500, color: C.ink, margin: 0 }}>Active workflows</h2>
+                  <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Currently running automations</p>
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {activeWorkflows.map(wf => (
+                  <div
+                    key={wf.id}
+                    style={{
+                      padding: "14px 16px", borderRadius: 8,
+                      background: C.surface, border: `0.5px solid ${C.border}`,
+                      display: "flex", alignItems: "center", gap: 14
+                    }}
+                  >
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%", background: C.teal500
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{wf.name}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{wf.audience}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: C.muted }}>
+                      <span>{wf.sent} sent</span>
+                      <span>{wf.opened} opened</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* DESIGN SCREEN - Bundle configuration */}
+        {activeScreen === "design" && selectedAudience && (
+          <div style={{ maxWidth: 600 }}>
+            <button
+              onClick={() => navigateTo("landing")}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
+                background: "none", border: "none", color: C.muted,
+                fontSize: 13, cursor: "pointer", padding: 0
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              All workflows
             </button>
+            
+            <div style={{
+              padding: 20, borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`
+            }}>
+              <div style={{ marginBottom: 20 }}>
+                <span style={{
+                  padding: "4px 10px", borderRadius: 20,
+                  background: selectedAudience.colorBg, color: selectedAudience.color,
+                  fontSize: 11, fontWeight: 500
+                }}>{selectedAudience.count} clients</span>
+                <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "12px 0 4px" }}>
+                  {selectedAudience.audience}
+                </h2>
+                <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>{selectedAudience.suggestion}</p>
+              </div>
+              
+              <div style={{ 
+                fontSize: 11, fontWeight: 500, color: C.muted2, 
+                textTransform: "uppercase", letterSpacing: "0.04em",
+                marginBottom: 12
+              }}>Trigger sequence</div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {bundleTriggers.map((trigger, idx) => (
+                  <div
+                    key={trigger.id}
+                    style={{
+                      padding: "12px 14px", borderRadius: 8,
+                      background: trigger.enabled ? C.surface : C.surface2,
+                      border: `0.5px solid ${trigger.enabled ? C.border : C.border}`,
+                      display: "flex", alignItems: "center", gap: 12,
+                      opacity: trigger.enabled ? 1 : 0.6
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 4,
+                      background: trigger.enabled ? C.teal500 : C.surface,
+                      border: `1.5px solid ${trigger.enabled ? C.teal500 : C.border2}`,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {trigger.enabled && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.surface} strokeWidth="3" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span style={{ 
+                      fontSize: 12, fontWeight: 500, color: C.teal700,
+                      minWidth: 50
+                    }}>{trigger.type}</span>
+                    <span style={{ fontSize: 13, color: C.ink }}>{trigger.action}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <button
+                onClick={() => navigateTo("watch")}
+                style={{
+                  width: "100%", marginTop: 20, padding: "12px 20px",
+                  borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 14, fontWeight: 500, cursor: "pointer"
+                }}
+              >
+                Activate bundle
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* WATCH SCREEN - 48hr monitoring */}
+        {activeScreen === "watch" && (
+          <div style={{ maxWidth: 600 }}>
+            <button
+              onClick={() => navigateTo("landing")}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
+                background: "none", border: "none", color: C.muted,
+                fontSize: 13, cursor: "pointer", padding: 0
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              All workflows
+            </button>
+            
+            <div style={{
+              padding: 20, borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: "50%", background: C.amber500,
+                  animation: "pulse 2s infinite"
+                }} />
+                <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Watch mode active</span>
+                <span style={{ fontSize: 12, color: C.muted }}>{watchStats.hoursActive}h of 48h</span>
+              </div>
+              
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+                marginBottom: 20
+              }}>
+                {[
+                  { label: "Sent", value: watchStats.sent },
+                  { label: "Delivered", value: watchStats.delivered },
+                  { label: "Opened", value: watchStats.opened },
+                  { label: "Replied", value: watchStats.replied }
+                ].map(stat => (
+                  <div key={stat.label} style={{
+                    padding: "14px 12px", borderRadius: 8, background: C.surface2,
+                    textAlign: "center"
+                  }}>
+                    <div style={{ fontSize: 20, fontWeight: 500, color: C.ink }}>{stat.value}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{
+                padding: "12px 14px", borderRadius: 8, background: C.teal50,
+                display: "flex", alignItems: "center", gap: 10
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                <span style={{ fontSize: 13, color: C.teal900 }}>All metrics within normal range</span>
+              </div>
+              
+              <button
+                onClick={() => navigateTo("steady")}
+                style={{
+                  width: "100%", marginTop: 16, padding: "10px 16px",
+                  borderRadius: 8, background: "transparent",
+                  border: `0.5px solid ${C.border2}`, color: C.muted,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer"
+                }}
+              >
+                Exit watch mode now
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* STEADY SCREEN - Ongoing view */}
+        {activeScreen === "steady" && (
+          <div style={{ maxWidth: 600 }}>
+            <button
+              onClick={() => navigateTo("landing")}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
+                background: "none", border: "none", color: C.muted,
+                fontSize: 13, cursor: "pointer", padding: 0
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              All workflows
+            </button>
+            
+            <div style={{
+              padding: 20, borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: "50%", background: C.teal500
+                }} />
+                <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Running steadily</span>
+                <span style={{
+                  padding: "3px 8px", borderRadius: 20, background: C.teal50,
+                  fontSize: 11, color: C.teal700, fontWeight: 500
+                }}>Healthy</span>
+              </div>
+              
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12,
+                marginBottom: 20
+              }}>
+                {[
+                  { label: "Delivery rate", value: "94%" },
+                  { label: "Open rate", value: "78%" },
+                  { label: "Reply rate", value: "17%" }
+                ].map(stat => (
+                  <div key={stat.label} style={{
+                    padding: "14px 12px", borderRadius: 8, background: C.surface2,
+                    textAlign: "center"
+                  }}>
+                    <div style={{ fontSize: 18, fontWeight: 500, color: C.ink }}>{stat.value}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                This workflow has been running for 2 weeks with no issues. Milton will alert you if any metrics drop below normal thresholds.
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -7052,11 +7237,11 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       number: 2
     },
 {
-  id: "messages",
-  icon: "send",
-  title: "Automated Messages",
-  desc: "Schedule check-ins, reminders, and motivational messages",
-      color: "#5CDB95",
+  id: "workflows",
+  icon: "workflow",
+  title: "AI Workflows",
+  desc: "Automate client check-ins, reminders, and engagement triggers",
+      color: "#1D9E75",
       available: true,
       number: 3
     },
@@ -10935,8 +11120,8 @@ export default function MiltonDashboard() {
   programName: "Custom Program",
   weeks: 4
   });
-  } else if (templateType === "messages") {
-  setCanvasType("messages");
+  } else if (templateType === "workflows") {
+  setCanvasType("workflows");
   setCanvasData({});
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
