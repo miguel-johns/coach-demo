@@ -5836,7 +5836,7 @@ function MessagesCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       
       {/* Timeline Preview Panel */}
       <div style={{ 
-        width: 320, borderRight: `1px solid ${BORDER}`, 
+        flex: 1,
         display: "flex", flexDirection: "column", background: WHITE 
       }}>
         {/* Header */}
@@ -5932,27 +5932,6 @@ function MessagesCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             </button>
           </div>
         )}
-      </div>
-
-      {/* Main content area */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
-          <div style={{ 
-            width: 64, height: 64, borderRadius: 16, background: `${GREEN}10`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 20px"
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-            </svg>
-          </div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
-            Automated Messages
-          </h2>
-          <p style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.6 }}>
-            Use the chat to build your message sequence. Milton will guide you through selecting recipients, message types, frequency, and duration.
-          </p>
-        </div>
       </div>
     </div>
   );
