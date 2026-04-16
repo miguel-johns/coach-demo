@@ -3284,8 +3284,10 @@ function DataCardPeriods({ periods, color, isMobile }) {
                 </>
               )}
             </div>
-);
-                  })}
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
