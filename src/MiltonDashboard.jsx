@@ -2239,10 +2239,10 @@ function MobileCanvasSheet({
                 } else if (templateType === "workout") {
                   setCanvasType("workout");
                   setCanvasData({
-                    clientName: "New Client",
-                    programName: "Custom Program",
-                    weeks: 4
-});
+clientName: "New Client",
+  programName: "Custom Program",
+  weeks: 4
+  });
   } else if (templateType === "messages") {
   setCanvasType("messages");
   setCanvasData({});
