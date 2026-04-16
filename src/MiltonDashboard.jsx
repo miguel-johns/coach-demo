@@ -6410,7 +6410,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   display: "flex", flexDirection: "column"
   }}>
   {/* Render actual dashboard component based on template */}
-  <div style={{ flex: 1, overflow: "auto", background: "#f0f0f0", paddingTop: 20 }}>
+  <div style={{ flex: 1, overflow: "auto", background: "#f0f0f0", paddingTop: 60 }}>
             {selectedTemplate.id === "morning" && <MorningDashboard />}
             {selectedTemplate.id === "workout" && <WorkoutDashboard />}
             {selectedTemplate.id === "recovery" && <ProgressDashboard />}
