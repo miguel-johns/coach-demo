@@ -2260,12 +2260,14 @@ function MobileCanvasSheet({
   {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
   onClose={onClose}
+  onHome={() => setCanvasType("templates")}
   isMobile={true}
   />
   )}
   {canvasType === "aiEngine" && (
             <AIEngineCanvas
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
               brainDocuments={brainDocuments}
               setBrainDocuments={setBrainDocuments}
               isMobile={true}
@@ -2274,6 +2276,7 @@ function MobileCanvasSheet({
           {canvasType === "messages" && (
             <MessagesCanvas
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
               setChatMessages={setChatMessages}
               setChatTyping={setChatTyping}
             />
@@ -2282,6 +2285,7 @@ function MobileCanvasSheet({
             <MealPlanCanvas
               data={canvasData}
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "workout" && (
@@ -2289,17 +2293,20 @@ function MobileCanvasSheet({
               data={canvasData}
               clients={clients}
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "messageSequence" && (
             <MessageSequenceCanvas 
               data={canvasData}
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "report" && (
             <ReportsCanvas
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
               setChatMessages={setChatMessages}
               setChatTyping={setChatTyping}
             />
@@ -2308,12 +2315,14 @@ function MobileCanvasSheet({
             <InboxCanvas
               isMobile={true}
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
             />
           )}
           {canvasType === "schedule" && (
             <ScheduleCanvas
               isMobile={true}
               onClose={onClose}
+              onHome={() => setCanvasType("templates")}
             />
           )}
         </div>
@@ -4933,7 +4942,7 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   );
 }
 
-function InboxCanvas({ onClose, isMobile }) {
+function InboxCanvas({ onClose, onHome, isMobile }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -5336,7 +5345,7 @@ function InboxCanvas({ onClose, isMobile }) {
   );
 }
 
-function ScheduleCanvas({ onClose, isMobile }) {
+function ScheduleCanvas({ onClose, onHome, isMobile }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("week"); // week or month
@@ -5624,7 +5633,7 @@ function ScheduleCanvas({ onClose, isMobile }) {
   );
 }
 
-function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
+function MessagesCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const [chatStep, setChatStep] = useState(0); // 0: who, 1: types, 2: frequency, 3: duration, 4: generating, 5: done
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -6010,7 +6019,7 @@ function MessagesCanvas({ onClose, setChatMessages, setChatTyping }) {
 /* ═════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Creative builder tool for client dashboards
    ═════════════════════════════════════════════ */
-function AIDashboardsCanvas({ onClose, isMobile }) {
+function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
@@ -6129,22 +6138,38 @@ const dashboardTemplates = [
           background: WHITE, 
           borderBottom: `1px solid ${BORDER}`
         }}>
-          {/* Left side */}
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
-            <button
-              onClick={() => setSelectedTemplate(null)}
-              style={{
-                display: "flex", alignItems: "center", gap: 4,
-                padding: isMobile ? "8px" : "8px 12px", borderRadius: 8, border: "none",
-                background: "transparent", color: TEXT_SEC, fontSize: 13,
-                fontWeight: 500, cursor: "pointer"
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-              {!isMobile && "Back"}
-            </button>
+{/* Left side */}
+  <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
+  {/* Home button */}
+  {onHome && (
+  <button
+  onClick={onHome}
+  style={{
+  display: "flex", alignItems: "center", justifyContent: "center",
+  width: 32, height: 32, borderRadius: 8, border: "none",
+  background: "transparent", color: TEXT_SEC, cursor: "pointer"
+  }}
+  title="All Canvases"
+  >
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+  </button>
+  )}
+  <button
+  onClick={() => setSelectedTemplate(null)}
+  style={{
+  display: "flex", alignItems: "center", gap: 4,
+  padding: isMobile ? "8px" : "8px 12px", borderRadius: 8, border: "none",
+  background: "transparent", color: TEXT_SEC, fontSize: 13,
+  fontWeight: 500, cursor: "pointer"
+  }}
+  >
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <polyline points="15,18 9,12 15,6"/>
+  </svg>
+  {!isMobile && "Back"}
+  </button>
             
             {/* Template name + status */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -6438,29 +6463,52 @@ const dashboardTemplates = [
       display: "flex", flexDirection: "column", height: "100%",
       background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
     }}>
-      {/* Close button */}
-      {!isMobile && (
-        <div 
-          onClick={onClose}
-          style={{ 
-            position: "absolute", top: 16, right: 16, zIndex: 10,
-            width: 32, height: 32, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
-            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
-            transition: "all 0.15s ease"
-          }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </div>
-      )}
+{/* Top bar with home button - mobile only */}
+  {isMobile && onHome && (
+  <div style={{
+  display: "flex", alignItems: "center", padding: "12px 16px",
+  borderBottom: `1px solid ${BORDER}`
+  }}>
+  <button
+  onClick={onHome}
+  style={{
+  display: "flex", alignItems: "center", gap: 6,
+  padding: "8px 12px", borderRadius: 8, border: "none",
+  background: "transparent", color: TEXT_SEC, fontSize: 13,
+  fontWeight: 500, cursor: "pointer"
+  }}
+  >
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+  All Canvases
+  </button>
+  </div>
+  )}
 
-      {/* Content */}
-      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "32px 20px" : "48px 40px" }}>
+  {/* Close button - desktop only */}
+  {!isMobile && (
+  <div
+  onClick={onClose}
+  style={{
+  position: "absolute", top: 16, right: 16, zIndex: 10,
+  width: 32, height: 32, borderRadius: 10,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+  background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+  transition: "all 0.15s ease"
+  }}
+  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+  >
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+  </div>
+  )}
+  
+  {/* Content */}
+  <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 20px" : "48px 40px" }}>
         {/* Header */}
         <h1 style={{ 
           fontSize: isMobile ? 24 : 30, fontWeight: 700, color: TEXT, margin: 0,
@@ -6591,7 +6639,7 @@ background: WHITE,
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-function AIEngineCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
+function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile }) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -6685,7 +6733,30 @@ function AIEngineCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }
       display: "flex", flexDirection: "column", height: "100%",
       position: "relative", background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
     }}>
-      {/* Close button */}
+      {/* Top bar with home button - mobile only */}
+      {isMobile && onHome && (
+        <div style={{
+          display: "flex", alignItems: "center", padding: "12px 16px",
+          borderBottom: `1px solid ${BORDER}`
+        }}>
+          <button
+            onClick={onHome}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 12px", borderRadius: 8, border: "none",
+              background: "transparent", color: TEXT_SEC, fontSize: 13,
+              fontWeight: 500, cursor: "pointer"
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            All Canvases
+          </button>
+        </div>
+      )}
+
+      {/* Close button - desktop only */}
       {!isMobile && (
         <div 
           onClick={onClose}
@@ -7333,7 +7404,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   );
 }
 
-function MealPlanCanvas({ data, onClose }) {
+function MealPlanCanvas({ data, onClose, onHome }) {
   const [isLoading, setIsLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState(null);
   const [error, setError] = useState(null);
@@ -7819,7 +7890,7 @@ function getFallbackMealPlan() {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
+function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const isMobile = useIsMobile();
   const [weekView, setWeekView] = useState(4); // Always 4 weeks
   const [expandedDay, setExpandedDay] = useState(null); // { weekNum, dayIdx, workout, dayLabel, date }
@@ -9361,7 +9432,7 @@ function WorkoutCanvas({ data, onClose, onSave, clients = [] }) {
   );
 }
 
-function MessageSequenceCanvas({ data, onClose }) {
+function MessageSequenceCanvas({ data, onClose, onHome }) {
   if (!data) return null;
   
   return (
@@ -9475,7 +9546,7 @@ function MessageSequenceCanvas({ data, onClose }) {
   );
 }
 
-function ReportsCanvas({ onClose, setChatMessages, setChatTyping }) {
+function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const [viewMode, setViewMode] = useState("mobile"); // mobile | desktop
   const [chatStep, setChatStep] = useState(0); // 0: client, 1: timeframe, 2: generating, 3: done
   const [selectedClient, setSelectedClient] = useState(null);
