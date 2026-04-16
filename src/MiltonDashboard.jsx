@@ -6915,7 +6915,6 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                       </div>
                     );
                   })}
-                </div>
               </div>
             )}
           </div>
