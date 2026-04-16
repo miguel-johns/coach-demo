@@ -2242,10 +2242,10 @@ function MobileCanvasSheet({
                     clientName: "New Client",
                     programName: "Custom Program",
                     weeks: 4
-                  });
-                } else if (templateType === "messages") {
-                  setCanvasType("messages");
-                  setCanvasData({});
+});
+  } else if (templateType === "messages") {
+  setCanvasType("messages");
+  setCanvasData({});
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
   setCanvasData({});
@@ -2271,14 +2271,14 @@ function MobileCanvasSheet({
               brainDocuments={brainDocuments}
               setBrainDocuments={setBrainDocuments}
               isMobile={true}
-            />
-          )}
-          {canvasType === "messages" && (
-            <MessagesCanvas
-              onClose={onClose}
-              onHome={() => setCanvasType("templates")}
-              setChatMessages={setChatMessages}
-              setChatTyping={setChatTyping}
+  />
+  )}
+  {canvasType === "messages" && (
+  <MessagesCanvas
+  onClose={onClose}
+  onHome={() => setCanvasType("templates")}
+  setChatMessages={setChatMessages}
+  setChatTyping={setChatTyping}
             />
           )}
           {canvasType === "mealPlan" && (
@@ -6814,11 +6814,11 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                           {[
-                            { id: "coaching", label: "Coaching Advice", desc: "Use in AI coaching responses" },
-                            { id: "nutrition", label: "Meal Plans", desc: "Reference for nutrition guidance" },
-                            { id: "workouts", label: "Workout Programs", desc: "Influence exercise recommendations" },
-                            { id: "messages", label: "Automated Messages", desc: "Include in client communications" }
-                          ].map(rule => (
+{ id: "coaching", label: "Coaching Advice", desc: "Use in AI coaching responses" },
+  { id: "nutrition", label: "Meal Plans", desc: "Reference for nutrition guidance" },
+  { id: "workouts", label: "Workout Programs", desc: "Influence exercise recommendations" },
+  { id: "messages", label: "Automated Messages", desc: "Include in client communications" }
+  ].map(rule => (
                             <div 
                               key={rule.id}
                               onClick={() => updateUsageRule(doc.id, rule.id, !validation.usageRules?.[rule.id])}
@@ -7007,11 +7007,11 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       available: true,
       number: 2
     },
-    { 
-      id: "messages",
-      icon: "send", 
-      title: "Automated Messages", 
-      desc: "Schedule check-ins, reminders, and motivational messages",
+{
+  id: "messages",
+  icon: "send",
+  title: "Automated Messages",
+  desc: "Schedule check-ins, reminders, and motivational messages",
       color: "#5CDB95",
       available: true,
       number: 3
@@ -10920,8 +10920,8 @@ export default function MiltonDashboard() {
     setBrainDocuments={setBrainDocuments}
     isMobile={isMobile}
   />
-)}
-{canvasType === "messages" && (
+  )}
+  {canvasType === "messages" && (
   <MessagesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
