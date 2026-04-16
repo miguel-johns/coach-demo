@@ -6712,111 +6712,251 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
-                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 4 }}>All content validated</div>
+                <div style={{ fontSize: 16, fontWeight: 500, color: TEXT, marginBottom: 4 }}>All content validated</div>
                 <div style={{ fontSize: 14 }}>Upload new content to see it here for review</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {pendingValidation.map(doc => {
-                  const typeInfo = getFileTypeInfo(doc.name);
-                  const validation = validationStatus[doc.id] || { usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } };
+              <div style={{ display: "flex", gap: 16 }}>
+                {/* Left sidebar - Chat placeholder */}
+                <div style={{
+                  width: 260, background: "#f8fafc", borderRadius: 12, padding: 16,
+                  alignSelf: "flex-start", flexShrink: 0
+                }}>
+                  {/* Chat header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: "50%", background: "#0d9488",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#134e4a", fontSize: 12, fontWeight: 600
+                      }}>M</div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>Milton</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>v1.0</span>
+                  </div>
                   
-                  return (
-                    <div key={doc.id} style={{
-                      background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                      overflow: "hidden"
-                    }}>
-                      {/* Document Header */}
-                      <div style={{ 
-                        padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-                        borderBottom: `1px solid ${BORDER}`
-                      }}>
-                        <div style={{
-                          width: 44, height: 44, borderRadius: 12, background: typeInfo.bg,
-                          display: "flex", alignItems: "center", justifyContent: "center"
-                        }}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={typeInfo.color} strokeWidth="1.8" strokeLinecap="round">
-                            {typeInfo.label === "Video" ? (
-                              <><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16"/></>
-                            ) : (
-                              <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></>
-                            )}
-                          </svg>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{doc.name}</div>
-                          <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.size} - {doc.date}</div>
-                        </div>
-                        <div style={{
-                          padding: "4px 12px", borderRadius: 8, background: "#fef3c7", color: "#d97706",
-                          fontSize: 11, fontWeight: 600
-                        }}>Pending Review</div>
-                      </div>
+                  {/* Assistant message */}
+                  <div style={{
+                    background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8,
+                    padding: "10px 12px", fontSize: 13, color: TEXT, lineHeight: 1.5, marginBottom: 14
+                  }}>
+                    I pulled 4 rules from Training Philosophy.pdf. Review the list — once it looks right, activate to go live.
+                  </div>
+                  
+                  {/* Disabled chat input */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "10px 14px", borderRadius: 20, border: `1px solid ${BORDER}`,
+                    background: "#f8fafc", opacity: 0.7
+                  }}>
+                    <span style={{ flex: 1, fontSize: 12, color: TEXT_SEC }}>Chat editing coming soon...</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                    </svg>
+                  </div>
+                </div>
 
-                      {/* Validation Content */}
-                      <div style={{ padding: "20px" }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
-                          Configure Usage Permissions
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                          {[
-{ id: "coaching", label: "Coaching Advice", desc: "Use in AI coaching responses" },
-  { id: "nutrition", label: "Meal Plans", desc: "Reference for nutrition guidance" },
-  { id: "workouts", label: "Workout Programs", desc: "Influence exercise recommendations" },
-  { id: "messages", label: "Automated Messages", desc: "Include in client communications" }
-  ].map(rule => (
-                            <div 
-                              key={rule.id}
-                              onClick={() => updateUsageRule(doc.id, rule.id, !validation.usageRules?.[rule.id])}
-                              style={{
-                                padding: "14px 16px", borderRadius: 12, cursor: "pointer",
-                                background: validation.usageRules?.[rule.id] ? `${GREEN}10` : "#f7faf9",
-                                border: `1px solid ${validation.usageRules?.[rule.id] ? GREEN : BORDER}`,
-                                display: "flex", alignItems: "center", gap: 12,
-                                transition: "all 0.15s ease"
-                              }}
-                            >
-                              <div style={{
-                                width: 22, height: 22, borderRadius: 6,
-                                background: validation.usageRules?.[rule.id] ? GREEN : WHITE,
-                                border: `2px solid ${validation.usageRules?.[rule.id] ? GREEN : BORDER}`,
-                                display: "flex", alignItems: "center", justifyContent: "center"
-                              }}>
-                                {validation.usageRules?.[rule.id] && (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                                    <polyline points="20,6 9,17 4,12"/>
-                                  </svg>
-                                )}
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{rule.label}</div>
-                                <div style={{ fontSize: 11, color: TEXT_SEC }}>{rule.desc}</div>
+                {/* Right main content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {pendingValidation.map(doc => {
+                    const typeInfo = getFileTypeInfo(doc.name);
+                    const validation = validationStatus[doc.id] || { usageRules: { coaching: true, nutrition: true, workouts: true, messages: false } };
+                    
+                    // Mock extracted rules for demo
+                    const extractedRules = [
+                      { id: 1, title: "Prioritize compound lifts for strength clients", desc: "Squat, deadlift, bench, and overhead press as the anchor of every strength block. Isolation work only supplements.", category: "Coaching", categoryColor: "#0d9488", conflict: false },
+                      { id: 2, title: "Progress by small overload, not session variety", desc: "Repeat the same movements across 4–6 week blocks. Add 2.5–5 lbs or 1 rep per session before changing the exercise.", category: "Programming", categoryColor: "#0d9488", conflict: false },
+                      { id: 3, title: "Avoid barbell deadlifts for clients over 50", desc: "Injury risk increases sharply past age 50. Substitute hip thrusts, RDLs with dumbbells, or sled pulls for posterior chain work.", category: "Safety", categoryColor: "#f97316", conflict: true, conflictText: "Contradicts Nutrition Guidelines.docx (active), which allows trap bar deadlifts for older clients after screening." },
+                      { id: 4, title: "Tone: direct, accountability-forward", desc: "Speak plainly. Celebrate effort, call out missed sessions without softening. No hedging language like 'try to' or 'maybe.'", category: "Voice", categoryColor: "#8b5cf6", conflict: false }
+                    ];
+                    const hasConflict = extractedRules.some(r => r.conflict);
+                    
+                    return (
+                      <div key={doc.id}>
+                        {/* Main content card */}
+                        <div style={{
+                          background: WHITE, borderRadius: 12, border: `0.5px solid ${BORDER}`,
+                          padding: 20
+                        }}>
+                          {/* File header row */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
+                            <div style={{
+                              width: 36, height: 36, borderRadius: 10, background: "#fed7aa",
+                              display: "flex", alignItems: "center", justifyContent: "center"
+                            }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="1.8" strokeLinecap="round">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                              </svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{doc.name}</div>
+                              <div style={{ fontSize: 12, color: TEXT_SEC }}>12 pages · uploaded {doc.date}</div>
+                            </div>
+                            <div style={{
+                              padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#d97706",
+                              fontSize: 11, fontWeight: 500
+                            }}>Pending review</div>
+                          </div>
+
+                          {/* What Milton learned section */}
+                          <div style={{ marginBottom: 24 }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em" }}>What Milton learned</span>
+                              <span style={{ fontSize: 12, color: TEXT_SEC }}>{extractedRules.length} rules extracted</span>
+                            </div>
+                            
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {extractedRules.map(rule => (
+                                <div key={rule.id} style={{
+                                  padding: "14px 16px", borderRadius: 10,
+                                  background: rule.conflict ? "#fff7ed" : WHITE,
+                                  border: `1px solid ${rule.conflict ? "#fed7aa" : BORDER}`,
+                                  display: "flex", alignItems: "flex-start", gap: 12
+                                }}>
+                                  <span style={{ fontSize: 12, color: TEXT_SEC, minWidth: 16, paddingTop: 2 }}>{rule.id}</span>
+                                  <div style={{
+                                    width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                                    background: rule.conflict ? "#fff7ed" : "#f0fdfa",
+                                    display: "flex", alignItems: "center", justifyContent: "center"
+                                  }}>
+                                    {rule.conflict ? (
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.5" strokeLinecap="round">
+                                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                      </svg>
+                                    ) : (
+                                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0f766e" }} />
+                                    )}
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                                      <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{rule.title}</span>
+                                      {rule.conflict && (
+                                        <span style={{ padding: "2px 8px", borderRadius: 6, background: "#ffedd5", color: "#ea580c", fontSize: 10, fontWeight: 500 }}>Conflict</span>
+                                      )}
+                                    </div>
+                                    <p style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, margin: 0 }}>{rule.desc}</p>
+                                    {rule.conflict && rule.conflictText && (
+                                      <p style={{ fontSize: 12, color: "#c2410c", fontStyle: "italic", lineHeight: 1.5, margin: "8px 0 0" }}>{rule.conflictText}</p>
+                                    )}
+                                  </div>
+                                  <span style={{
+                                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 500, flexShrink: 0,
+                                    background: rule.conflict ? "#ffedd5" : (rule.categoryColor === "#8b5cf6" ? "#f3e8ff" : "#f0fdfa"),
+                                    color: rule.categoryColor
+                                  }}>{rule.category}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Preview response section */}
+                          <div style={{
+                            background: "#f8fafc", borderRadius: 10, padding: "14px 16px", marginBottom: 24
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em" }}>Preview response</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ fontSize: 12, color: TEXT_SEC }}>Test with</span>
+                                <select style={{
+                                  padding: "4px 8px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                                  fontSize: 12, color: TEXT, background: WHITE, cursor: "pointer"
+                                }}>
+                                  <option>Sarah Chen</option>
+                                  <option>Marcus Johnson</option>
+                                  <option>Emily Rodriguez</option>
+                                </select>
                               </div>
                             </div>
-                          ))}
-                        </div>
+                            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>
+                              Scenario: Sarah asks about her squat progression.
+                            </div>
+                            <div style={{
+                              background: WHITE, borderRadius: 8, borderLeft: "2px solid #0d9488",
+                              padding: "12px 14px"
+                            }}>
+                              <p style={{ fontSize: 13, color: TEXT, lineHeight: 1.6, margin: "0 0 10px" }}>
+                                Sarah — you hit 135x5 last Tuesday. Stick with back squats, bump to 140x5 this session. No accessory swaps yet. You've got two more weeks in this block before we change anything.
+                              </p>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <span style={{ padding: "3px 8px", borderRadius: 4, background: "#f0fdfa", color: "#0d9488", fontSize: 10, fontWeight: 500 }}>Compound lifts</span>
+                                <span style={{ padding: "3px 8px", borderRadius: 4, background: "#f0fdfa", color: "#0d9488", fontSize: 10, fontWeight: 500 }}>Small overload</span>
+                                <span style={{ padding: "3px 8px", borderRadius: 4, background: "#f3e8ff", color: "#8b5cf6", fontSize: 10, fontWeight: 500 }}>Direct tone</span>
+                              </div>
+                            </div>
+                          </div>
 
-                        {/* Validate Button */}
-                        <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                          <button 
-                            onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))}
-                            style={{
-                              padding: "10px 20px", borderRadius: 10, border: `1px solid ${BORDER}`,
-                              background: WHITE, color: TEXT_SEC, fontSize: 13, fontWeight: 600, cursor: "pointer"
-                            }}
-                          >Reject</button>
-                          <button 
-                            onClick={() => validateDocument(doc.id)}
-                            style={{
-                              padding: "10px 24px", borderRadius: 10, border: "none",
-                              background: GREEN, color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer"
-                            }}
-                          >Validate & Activate</button>
+                          {/* Where these rules apply */}
+                          <div style={{ marginBottom: 24 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 12 }}>
+                              Where these rules apply
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+                              {[
+                                { id: "coaching", label: "Coaching responses", checked: true },
+                                { id: "workouts", label: "Workout programming", checked: true },
+                                { id: "nutrition", label: "Meal plan guidance", checked: false },
+                                { id: "messages", label: "Automated messages", checked: false }
+                              ].map(rule => (
+                                <div 
+                                  key={rule.id}
+                                  onClick={() => updateUsageRule(doc.id, rule.id, !validation.usageRules?.[rule.id])}
+                                  style={{
+                                    padding: "8px 10px", borderRadius: 8, cursor: "pointer",
+                                    border: `0.5px solid ${BORDER}`,
+                                    display: "flex", alignItems: "center", gap: 10,
+                                    background: WHITE
+                                  }}
+                                >
+                                  <div style={{
+                                    width: 18, height: 18, borderRadius: 4,
+                                    background: (validation.usageRules?.[rule.id] ?? rule.checked) ? "#0d9488" : WHITE,
+                                    border: `1.5px solid ${(validation.usageRules?.[rule.id] ?? rule.checked) ? "#0d9488" : BORDER}`,
+                                    display: "flex", alignItems: "center", justifyContent: "center"
+                                  }}>
+                                    {(validation.usageRules?.[rule.id] ?? rule.checked) && (
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                        <polyline points="20,6 9,17 4,12"/>
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <span style={{ fontSize: 13, color: TEXT }}>{rule.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Footer row */}
+                          <div style={{
+                            borderTop: `0.5px solid ${BORDER}`, paddingTop: 16,
+                            display: "flex", alignItems: "center", justifyContent: "space-between"
+                          }}>
+                            <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                              {hasConflict ? "1 conflict to resolve before activating" : "Ready to activate"}
+                            </span>
+                            <div style={{ display: "flex", gap: 10 }}>
+                              <button 
+                                onClick={() => setBrainDocuments(prev => prev.filter(d => d.id !== doc.id))}
+                                style={{
+                                  padding: "10px 18px", borderRadius: 8, border: `1px solid ${BORDER}`,
+                                  background: WHITE, color: TEXT_SEC, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                                }}
+                              >Reject file</button>
+                              <button 
+                                onClick={() => !hasConflict && validateDocument(doc.id)}
+                                style={{
+                                  padding: "10px 20px", borderRadius: 8, border: "none",
+                                  background: "#0d9488", color: WHITE, fontSize: 13, fontWeight: 500,
+                                  cursor: hasConflict ? "not-allowed" : "pointer",
+                                  opacity: hasConflict ? 0.6 : 1
+                                }}
+                              >{hasConflict ? "Activate (1 conflict)" : "Activate"}</button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -11428,7 +11568,7 @@ isMobile={isMobile}
             ); })}
           </div>
         ) : (
-          /* ──��� Desktop: Table ─── */
+          /* ──��� Desktop: Table ─���─ */
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1,
