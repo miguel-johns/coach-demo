@@ -6393,24 +6393,24 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Preview area */}
-      <div style={{ 
-        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 24, overflow: "auto"
-      }}>
-        <div style={{
-          width: deviceSize === "mobile" ? 375 : 768,
-          height: deviceSize === "mobile" ? 667 : 500,
-          background: WHITE,
-          borderRadius: 24,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-          overflow: "hidden",
-          display: "flex", flexDirection: "column"
-        }}>
-          {/* Render actual dashboard component based on template */}
-          <div style={{ flex: 1, overflow: "auto" }}>
+)}
+  
+  {/* Preview area */}
+  <div style={{
+  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+  padding: 24, overflow: "auto"
+  }}>
+  <div style={{
+  width: deviceSize === "mobile" ? 375 : 768,
+  height: deviceSize === "mobile" ? 667 : 500,
+  background: WHITE,
+  borderRadius: 24,
+  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+  overflow: "hidden",
+  display: "flex", flexDirection: "column"
+  }}>
+  {/* Render actual dashboard component based on template */}
+  <div style={{ flex: 1, overflow: "auto", paddingTop: 12 }}>
             {selectedTemplate.id === "morning" && <MorningDashboard />}
             {selectedTemplate.id === "workout" && <WorkoutDashboard />}
             {selectedTemplate.id === "recovery" && <ProgressDashboard />}
