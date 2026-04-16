@@ -5962,6 +5962,521 @@ background: WHITE,
     </div>
   );
 }
+
+/* ═════════════════════════════════════════════
+   AI DASHBOARDS CANVAS - Dashboard template builder
+═════════════════════════════════════════════ */
+function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
+  // Publish state
+  const [published, setPublished] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [publishModal, setPublishModal] = useState(false);
+  const CANVAS_TEAL = "#2BBFAA";
+
+  const handlePublish = () => {
+    setPublished(true);
+    setHasChanges(false);
+    setPublishModal(true);
+  };
+
+  const handleUnpublish = () => {
+    setPublished(false);
+    setHasChanges(false);
+    setPublishModal(false);
+  };
+
+  const getPublishButtonState = () => {
+    if (!published) return "publish";
+    if (published && hasChanges) return "republish";
+    return "live";
+  };
+  const publishButtonState = getPublishButtonState();
+
+  const dashboardTemplates = [
+    {
+      id: "morning",
+      name: "Morning Brief",
+      desc: "Daily check-in with today's focus, habits, and motivation",
+      number: 1,
+      color: "#f59e0b",
+      bg: "#fef3c7"
+    },
+    {
+      id: "workout",
+      name: "Workout Dashboard",
+      desc: "Interactive workout logging with rest timers and set tracking",
+      number: 2,
+      color: "#ef4444",
+      bg: "#fee2e2"
+    },
+    {
+      id: "recovery",
+      name: "Recovery Check",
+      desc: "Sleep, stress, soreness tracking with recovery recommendations",
+      number: 3,
+      color: "#8b5cf6",
+      bg: "#ede9fe"
+    },
+    {
+      id: "weekly",
+      name: "Weekly Review",
+      desc: "Progress summary with wins, insights, and next week planning",
+      number: 4,
+      color: "#3b82f6",
+      bg: "#dbeafe"
+    },
+    {
+      id: "nutrition",
+      name: "Nutrition Log",
+      desc: "Meal tracking with macro breakdowns and hydration goals",
+      number: 5,
+      color: "#10b981",
+      bg: "#d1fae5"
+    },
+    {
+      id: "mindset",
+      name: "Mindset Check",
+      desc: "Daily mindset and gratitude prompts with motivation tracking",
+      number: 6,
+      color: "#ec4899",
+      bg: "#fce7f3"
+    }
+  ];
+
+  // Template picker view
+  if (!selectedTemplate) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column", height: "100%",
+        position: "relative", background: "#fafcfb", fontFamily: "'DM Sans', sans-serif"
+      }}>
+        {/* Back button - top left */}
+        <div
+          onClick={onHome || onClose}
+          style={{
+            position: "absolute", top: 16, left: 16, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+            background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+            transition: "all 0.15s ease"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 20px" : "48px 40px" }}>
+          {/* Header */}
+          <div style={{ marginBottom: 32, paddingTop: 32 }}>
+            <div style={{ 
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "6px 12px", borderRadius: 20,
+              background: `rgba(43,191,170,0.08)`, marginBottom: 16
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={CANVAS_TEAL} strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: CANVAS_TEAL }}>AI Dashboards</span>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+              What would you like to create?
+            </h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, lineHeight: 1.5 }}>
+              Choose a template to get started. Milton will help you build and customize it.
+            </p>
+          </div>
+
+          {/* Template Grid */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
+            gap: 16 
+          }}>
+            {dashboardTemplates.map((template) => (
+              <div
+                key={template.id}
+                onClick={() => setSelectedTemplate(template)}
+                onMouseEnter={() => setHoveredTemplate(template.id)}
+                onMouseLeave={() => setHoveredTemplate(null)}
+                style={{
+                  padding: 20, borderRadius: 16,
+                  border: `1px solid ${hoveredTemplate === template.id ? template.color : BORDER}`,
+                  background: WHITE,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  transform: hoveredTemplate === template.id ? "translateY(-2px)" : "none",
+                  boxShadow: hoveredTemplate === template.id ? "0 8px 24px rgba(0,0,0,0.08)" : "none"
+                }}
+              >
+                {/* Icon */}
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  background: template.bg,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 16
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={template.color} strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                  </svg>
+                </div>
+
+                {/* Title with number badge */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: "50%",
+                    background: template.color, color: WHITE,
+                    fontSize: 11, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {template.number}
+                  </span>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
+                    {template.name}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 16px", lineHeight: 1.5 }}>
+                  {template.desc}
+                </p>
+
+                {/* Get started link */}
+                <div style={{ 
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 13, fontWeight: 600, color: template.color
+                }}>
+                  Get started
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/>
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Builder view (when template is selected)
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      position: "relative", background: "#f5f5f5", fontFamily: "'DM Sans', sans-serif"
+    }}>
+      <style>{`
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        .slot-tabs::-webkit-scrollbar { display: none; }
+      `}</style>
+
+      {/* Top toolbar */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: isMobile ? "10px 12px" : "12px 20px",
+        background: WHITE, borderBottom: `1px solid ${BORDER}`,
+        gap: 12
+      }}>
+        {/* Left side */}
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
+          <div
+            onClick={() => setSelectedTemplate(null)}
+            style={{
+              width: 32, height: 32, borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: TEXT_SEC, opacity: 0.6,
+              background: "rgba(255,255,255,0.9)", border: `1px solid ${BORDER}`,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = TEXT; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = TEXT_SEC; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </div>
+
+          {/* Template name */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: TEXT }}>
+              {selectedTemplate.name}
+            </span>
+            <span style={{ 
+              fontSize: 10, fontWeight: 600, 
+              color: published ? "#16a34a" : TEXT_SEC,
+              padding: "2px 6px", borderRadius: 4, 
+              background: published ? "#dcfce7" : "#f0f0f0"
+            }}>
+              {published ? "Live" : "Draft"}
+            </span>
+          </div>
+        </div>
+
+        {/* Right side - device toggle & publish */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Device toggle */}
+          <div style={{
+            display: "flex", background: "#f0f0f0", borderRadius: 8, padding: 2
+          }}>
+            {["mobile", "tablet"].map(size => (
+              <button
+                key={size}
+                onClick={() => setDeviceSize(size)}
+                style={{
+                  padding: "6px 10px", borderRadius: 6, border: "none",
+                  background: deviceSize === size ? WHITE : "transparent",
+                  color: deviceSize === size ? TEXT : TEXT_SEC,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  boxShadow: deviceSize === size ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+                }}
+              >
+                {size === "mobile" ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/><line x1="12" y1="16" x2="12" y2="16"/>
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Publish button - 3 states */}
+          <button
+            onClick={handlePublish}
+            style={{
+              padding: isMobile ? "8px 14px" : "8px 16px", borderRadius: 8, border: "none",
+              background: publishButtonState === "live" ? "#4caf50" : "#0B1628",
+              color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            {publishButtonState === "live" ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                Live
+              </>
+            ) : publishButtonState === "republish" ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                </svg>
+                Republish
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16,6 12,2 8,6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                Publish
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Publish Status Modal */}
+      {publishModal && (
+        <div 
+          onClick={() => setPublishModal(false)}
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+            background: "rgba(11,22,40,0.5)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20
+          }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: "100%", maxWidth: 420, background: WHITE, borderRadius: 20,
+              overflow: "hidden", animation: "slideUp 0.25s ease"
+            }}
+          >
+            {/* Green status header */}
+            <div style={{
+              background: "linear-gradient(180deg, #f0faf0 0%, #ffffff 100%)",
+              padding: "32px 24px 24px", textAlign: "center"
+            }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: "50%", background: "#4caf50",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px"
+              }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, marginBottom: 6 }}>
+                {selectedTemplate?.name} is Live
+              </div>
+              <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                Your dashboard is published and ready to deliver.
+              </div>
+            </div>
+
+            {/* Preview link section */}
+            <div style={{ padding: "20px 24px" }}>
+              <div style={{ 
+                fontSize: 11, fontWeight: 700, color: TEXT_SEC, 
+                textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 
+              }}>
+                Preview Link
+              </div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 14px", background: "#f5f5f5", borderRadius: 10
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                </svg>
+                <span style={{ 
+                  flex: 1, fontSize: 12, fontFamily: "monospace", color: TEXT_SEC,
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                }}>
+                  app.miltonai.com/d/{selectedTemplate?.id}-preview
+                </span>
+                <button 
+                  onClick={() => navigator.clipboard.writeText(`app.miltonai.com/d/${selectedTemplate?.id}-preview`)}
+                  style={{
+                    padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                    background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 8 }}>
+                This is what your clients will see when they open the link.
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: BORDER, margin: "0 24px" }} />
+
+            {/* Milton CTA card */}
+            <div style={{ padding: "20px 24px" }}>
+              <div style={{
+                display: "flex", gap: 14, padding: 16, borderRadius: 12,
+                background: "rgba(43,191,170,0.04)", border: "1px solid rgba(43,191,170,0.12)"
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, background: "#0B1628",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                    Talk to Milton to configure delivery
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.45 }}>
+                    Set who receives it, when it sends, how often, and which channel - just describe what you want in the chat.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div style={{ display: "flex", gap: 10, padding: "16px 24px 24px" }}>
+              <button 
+                onClick={handleUnpublish}
+                style={{
+                  flex: 1, padding: "12px 16px", borderRadius: 10,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  color: TEXT_SEC, fontSize: 14, fontWeight: 600, cursor: "pointer"
+                }}
+              >
+                Unpublish
+              </button>
+              <button 
+                onClick={() => setPublishModal(false)}
+                style={{
+                  flex: 2, padding: "12px 16px", borderRadius: 10, border: "none",
+                  background: "#1a1a1a", color: WHITE,
+                  fontSize: 14, fontWeight: 600, cursor: "pointer"
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview area */}
+      <div style={{ 
+        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24, overflow: "auto"
+      }}>
+        <div style={{
+          width: deviceSize === "mobile" ? 375 : 768,
+          height: deviceSize === "mobile" ? 667 : 500,
+          background: WHITE,
+          borderRadius: 24,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          overflow: "hidden",
+          display: "flex", flexDirection: "column"
+        }}>
+          {/* Mock phone header */}
+          <div style={{
+            padding: "12px 20px",
+            background: selectedTemplate.bg,
+            display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: selectedTemplate.color }}>
+              {selectedTemplate.name}
+            </span>
+            <span style={{ fontSize: 11, color: selectedTemplate.color, opacity: 0.7 }}>
+              Preview
+            </span>
+          </div>
+
+          {/* Mock content */}
+          <div style={{ flex: 1, padding: 20, background: "#fafafa" }}>
+            <div style={{
+              padding: 16, background: WHITE, borderRadius: 12,
+              border: `1px solid ${BORDER}`, marginBottom: 12
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
+                Dashboard Preview
+              </div>
+              <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5 }}>
+                This is a preview of your {selectedTemplate.name.toLowerCase()}. Use the chat to customize blocks, colors, and content.
+              </div>
+            </div>
+
+            {/* Placeholder blocks */}
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{
+                height: 60, background: `${selectedTemplate.bg}40`,
+                borderRadius: 8, marginBottom: 8,
+                border: `1px dashed ${selectedTemplate.color}40`
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
   
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
