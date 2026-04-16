@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import WorkoutDashboard from "./dashboards/WorkoutDashboard";
+import NutritionDashboard from "./dashboards/NutritionDashboard";
+import ProgressDashboard from "./dashboards/ProgressDashboard";
+import ProgramDashboard from "./dashboards/ProgramDashboard";
+import RecipeDashboard from "./dashboards/RecipeDashboard";
+import MorningDashboard from "./dashboards/MorningDashboard";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -6006,11 +6012,22 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   const [activeTab, setActiveTab] = useState("templates"); // templates | active | customize
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [previewingDashboard, setPreviewingDashboard] = useState(null);
   const [activeDashboards, setActiveDashboards] = useState([
     { id: 1, templateId: "workout", name: "Workout Dashboard", trigger: "workout_assigned", status: "active", clients: 12, lastUsed: "2 hours ago" },
   ]);
   const [customizing, setCustomizing] = useState(null);
   const DASHBOARD_TEAL = "#45818e";
+
+  // Dashboard preview components map
+  const DashboardComponents = {
+    workout: WorkoutDashboard,
+    nutrition: NutritionDashboard,
+    progress: ProgressDashboard,
+    program: ProgramDashboard,
+    recipe: RecipeDashboard,
+    morning: MorningDashboard,
+  };
 
   const dashboardTemplates = [
     {
@@ -6111,6 +6128,61 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   const deactivateDashboard = (id) => {
     setActiveDashboards(prev => prev.filter(d => d.id !== id));
   };
+
+  // Full preview modal
+  if (previewingDashboard) {
+    const PreviewComponent = DashboardComponents[previewingDashboard];
+    const template = dashboardTemplates.find(t => t.id === previewingDashboard);
+    return (
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.9)", display: "flex", flexDirection: "column"
+      }}>
+        <div style={{
+          padding: "16px 24px", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottom: "1px solid rgba(255,255,255,0.1)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button onClick={() => setPreviewingDashboard(null)} style={{
+              padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)",
+              background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+              Back
+            </button>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{template?.name}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Preview Mode</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button style={{
+              padding: "8px 16px", borderRadius: 8, border: "none",
+              background: "rgba(255,255,255,0.1)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Customize with Milton
+            </button>
+            <button onClick={() => { activateDashboard(template); setPreviewingDashboard(null); }} style={{
+              padding: "8px 20px", borderRadius: 8, border: "none",
+              background: DASHBOARD_TEAL, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+              Activate
+            </button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", display: "flex", justifyContent: "center", padding: "24px" }}>
+          <div style={{ width: "100%", maxWidth: 480, background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+            {PreviewComponent && <PreviewComponent />}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -6340,39 +6412,35 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
               <p style={{ fontSize: 14, opacity: 0.8, margin: 0, lineHeight: 1.5 }}>{selectedTemplate.desc}</p>
             </div>
 
-            {/* Preview mockup */}
-            <div style={{
-              background: "#f0f0f0", borderRadius: 16, padding: 16, marginBottom: 24,
-              border: `1px solid ${BORDER}`
-            }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Preview
-              </div>
-              <div style={{
-                background: WHITE, borderRadius: 12, padding: 20,
-                minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center",
-                border: `1px solid ${BORDER}`
-              }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{
-                    width: 64, height: 64, borderRadius: 16, background: `${selectedTemplate.color}15`,
-                    display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
-                  }}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={selectedTemplate.color} strokeWidth="1.8" strokeLinecap="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2"/>
-                      <line x1="3" y1="9" x2="21" y2="9"/>
-                      <line x1="9" y1="21" x2="9" y2="9"/>
-                    </svg>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
-                    {selectedTemplate.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                    Ask Milton to customize this dashboard
-                  </div>
-                </div>
-              </div>
-            </div>
+{/* Preview section */}
+  <div style={{ marginBottom: 24 }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+  Preview
+  </div>
+  <button
+  onClick={() => setPreviewingDashboard(selectedTemplate.id)}
+  style={{
+  padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
+  background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, cursor: "pointer",
+  display: "flex", alignItems: "center", gap: 6
+  }}
+  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <path d="M15 3h6v6M14 10l6.1-6.1M9 21H3v-6M10 14l-6.1 6.1"/>
+  </svg>
+  Full Preview
+  </button>
+  </div>
+  <div style={{
+  background: "#f0f0f0", borderRadius: 16, overflow: "hidden",
+  border: `1px solid ${BORDER}`, height: 320
+  }}>
+  <div style={{ transform: "scale(0.6)", transformOrigin: "top center", width: "166.67%", marginLeft: "-33.33%" }}>
+  {DashboardComponents[selectedTemplate.id] && React.createElement(DashboardComponents[selectedTemplate.id])}
+  </div>
+  </div>
+  </div>
 
             {/* Trigger selection */}
             <div style={{ marginBottom: 24 }}>
