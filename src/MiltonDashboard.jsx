@@ -6014,7 +6014,10 @@ function AIDashboardsCanvas({ onClose, isMobile }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
-  const [publishStatus, setPublishStatus] = useState("draft"); // draft | publishing | live
+  // Publish state
+  const [published, setPublished] = useState(false);       // has been published at least once
+  const [hasChanges, setHasChanges] = useState(false);     // edits made since last publish
+  const [publishModal, setPublishModal] = useState(false); // modal open/closed
   const CANVAS_TEAL = "#2BBFAA";
 
   // Dashboard preview components map
@@ -6090,9 +6093,24 @@ const dashboardTemplates = [
   ];
 
   const handlePublish = () => {
-    setPublishStatus("publishing");
-    // Publishing will happen through chat conversation
+    setPublished(true);
+    setHasChanges(false);
+    setPublishModal(true);
   };
+
+  const handleUnpublish = () => {
+    setPublished(false);
+    setHasChanges(false);
+    setPublishModal(false);
+  };
+
+  // Determine button state
+  const getPublishButtonState = () => {
+    if (!published) return "publish";           // navy "Publish"
+    if (published && hasChanges) return "republish"; // navy "Republish"
+    return "live";                              // green "Live ✓"
+  };
+  const publishButtonState = getPublishButtonState();
 
   // ═══ BUILDER VIEW - When a template is selected ═══
   if (selectedTemplate) {
@@ -6132,10 +6150,12 @@ const dashboardTemplates = [
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: isMobile ? 15 : 14, fontWeight: 600, color: TEXT }}>{selectedTemplate.name}</span>
               <span style={{ 
-                fontSize: 10, fontWeight: 600, color: TEXT_SEC,
-                padding: "2px 6px", borderRadius: 4, background: "#f0f0f0"
+                fontSize: 10, fontWeight: 600, 
+                color: published ? "#16a34a" : TEXT_SEC,
+                padding: "2px 6px", borderRadius: 4, 
+                background: published ? "#dcfce7" : "#f0f0f0"
               }}>
-                {publishStatus === "live" ? "Live" : "Draft"}
+                {published ? "Live" : "Draft"}
               </span>
             </div>
           </div>
@@ -6177,33 +6197,174 @@ const dashboardTemplates = [
               </div>
             )}
             
-            {/* Publish button */}
+            {/* Publish button - 3 states */}
             <button
               onClick={handlePublish}
-              disabled={publishStatus === "publishing"}
               style={{
                 padding: isMobile ? "8px 14px" : "8px 16px", borderRadius: 8, border: "none",
-                background: publishStatus === "live" ? "#16a34a" : "#0B1628",
+                background: publishButtonState === "live" ? "#4caf50" : "#0B1628",
                 color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 6,
-                opacity: publishStatus === "publishing" ? 0.6 : 1
+                display: "flex", alignItems: "center", gap: 6
               }}
             >
-              {publishStatus === "live" ? (
+              {publishButtonState === "live" ? (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <polyline points="20,6 9,17 4,12"/>
                   </svg>
                   Live
                 </>
-              ) : publishStatus === "publishing" ? (
-                "..."
+              ) : publishButtonState === "republish" ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                  </svg>
+                  Republish
+                </>
               ) : (
-                "Publish"
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16,6 12,2 8,6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                  </svg>
+                  Publish
+                </>
               )}
             </button>
           </div>
         </div>
+
+        {/* Publish Status Modal */}
+        {publishModal && (
+          <div 
+            onClick={() => setPublishModal(false)}
+            style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+              background: "rgba(11,22,40,0.5)", backdropFilter: "blur(4px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 20
+            }}
+          >
+            <div 
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: "100%", maxWidth: 420, background: WHITE, borderRadius: 20,
+                overflow: "hidden", animation: "slideUp 0.25s ease"
+              }}
+            >
+              <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }`}</style>
+              
+              {/* Green status header */}
+              <div style={{
+                background: "linear-gradient(180deg, #f0faf0 0%, #ffffff 100%)",
+                padding: "32px 24px 24px", textAlign: "center"
+              }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: "50%", background: "#4caf50",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 16px"
+                }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, marginBottom: 6 }}>
+                  {selectedTemplate?.name} is Live
+                </div>
+                <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                  Your dashboard is published and ready to deliver.
+                </div>
+              </div>
+
+              {/* Preview link section */}
+              <div style={{ padding: "20px 24px" }}>
+                <div style={{ 
+                  fontSize: 11, fontWeight: 700, color: TEXT_SEC, 
+                  textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 
+                }}>
+                  Preview Link
+                </div>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 14px", background: "#f5f5f5", borderRadius: 10
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span style={{ 
+                    flex: 1, fontSize: 12, fontFamily: "monospace", color: TEXT_SEC,
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                  }}>
+                    app.miltonai.com/d/{selectedTemplate?.id}-preview
+                  </span>
+                  <button 
+                    onClick={() => navigator.clipboard.writeText(`app.miltonai.com/d/${selectedTemplate?.id}-preview`)}
+                    style={{
+                      padding: "6px 12px", borderRadius: 6, border: `1px solid ${BORDER}`,
+                      background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, cursor: "pointer"
+                    }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 8 }}>
+                  This is what your clients will see when they open the link.
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: BORDER, margin: "0 24px" }} />
+
+              {/* Milton CTA card */}
+              <div style={{ padding: "20px 24px" }}>
+                <div style={{
+                  display: "flex", gap: 14, padding: 16, borderRadius: 12,
+                  background: "rgba(43,191,170,0.04)", border: "1px solid rgba(43,191,170,0.12)"
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, background: "#0B1628",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                      Talk to Milton to configure delivery
+                    </div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.45 }}>
+                      Set who receives it, when it sends, how often, and which channel — just describe what you want in the chat.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer buttons */}
+              <div style={{ display: "flex", gap: 10, padding: "16px 24px 24px" }}>
+                <button 
+                  onClick={handleUnpublish}
+                  style={{
+                    flex: 1, padding: "12px 16px", borderRadius: 10,
+                    border: `1px solid ${BORDER}`, background: WHITE,
+                    color: TEXT_SEC, fontSize: 14, fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  Unpublish
+                </button>
+                <button 
+                  onClick={() => setPublishModal(false)}
+                  style={{
+                    flex: 2, padding: "12px 16px", borderRadius: 10, border: "none",
+                    background: "#1a1a1a", color: WHITE,
+                    fontSize: 14, fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Preview area */}
         <div style={{
