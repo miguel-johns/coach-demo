@@ -5879,62 +5879,83 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
     }
   }, []);
   
-  const navigateTo = (screen, audience = null) => {
+  const navigateTo = (screen, workflow = null) => {
     setActiveScreen(screen);
-    if (audience) setSelectedAudience(audience);
+    if (workflow) setSelectedAudience(workflow);
     
-    // Update chat based on screen
+    const wfName = workflow?.name || "this workflow";
+    const isClient = workflow?.type === "client";
+    
+    // Update chat based on screen and workflow
     if (setChatMessages) {
-      if (screen === "design" && audience) {
-        setChatMessages([{
-          type: "ai",
-          text: "Drafted 7 triggers for New PT Sign Up based on your 6-week onboarding framework, direct-tone rule, and $4,800/year price point. Scan the bundle — tell me what to change.",
-          suggestions: ["Make trigger 3 less frequent", "Remove the renewal nudge, I handle that", "Show me a simulated week for a new client", "Add a milestone message at week 6"]
-        }]);
+      if (screen === "design") {
+        if (isClient) {
+          setChatMessages([{
+            type: "ai",
+            text: `Drafted triggers for ${wfName}. I pulled in their history, recent attendance, and goals. Tell me what to change before activating.`,
+            suggestions: ["Skip trigger 2, I'll handle that myself", "Move the final nudge to 1 week out", "Add a personalized offer", "Show me their full history"]
+          }]);
+        } else {
+          setChatMessages([{
+            type: "ai",
+            text: `Drafted triggers for ${wfName} based on your business model. Scan the bundle — tell me what to change.`,
+            suggestions: ["Make trigger 3 less frequent", "Remove the renewal nudge, I handle that", "Show me a simulated week for a new client", "Add a milestone message"]
+          }]);
+        }
       } else if (screen === "watch") {
         setChatMessages([{
           type: "ai",
-          text: "New PT Sign Up is live. I'm watching the first 48 hours with you. 3 welcome messages fired cleanly. I'll flag anything that looks off ��� you can pause any trigger with one word.",
-          suggestions: ["Show me what Sarah actually received", "Pause trigger 5 for this weekend", "Why did Kaylee get that message?", "Extend watch mode another 48h"]
+          text: `${wfName} is live. I'm watching the first 48 hours with you. ${workflow?.watchTimeLeft || "46h"} remaining. I'll flag anything that looks off — you can pause any trigger with one word.`,
+          suggestions: ["Show me what clients actually received", "Pause a trigger for this weekend", "Why did that message fire?", "Extend watch mode another 48h"]
         }]);
       } else if (screen === "steady") {
-        setChatMessages([{
-          type: "ai",
-          text: "New PT Sign Up has been running clean for 3 weeks. 82% of clients are engaging with messages. One thing worth your eyes — see the anomaly below.",
-          suggestions: ["Why is trigger 5 underperforming?", "Rewrite the weekly report, feels flat", "Watch the next 10 fires", "Who's not engaging and why"]
-        }]);
+        const hasAttention = workflow?.health === "attention";
+        if (hasAttention) {
+          setChatMessages([{
+            type: "ai",
+            text: `${wfName} needs attention. ${workflow?.signals?.find(s => s.type === "flag")?.text || "Something's drifting."}. Want me to dig in?`,
+            suggestions: ["Why is engagement dropping?", "Show me who's not responding", "Rewrite the underperforming trigger", "Pause this workflow for now"]
+          }]);
+        } else {
+          setChatMessages([{
+            type: "ai",
+            text: `${wfName} has been running smoothly. Clients are engaging well. Anything you want to adjust?`,
+            suggestions: ["Show me detailed metrics", "Watch the next 10 fires", "Who's engaging most?", "I want to edit a trigger"]
+          }]);
+        }
       } else if (screen === "landing") {
         setChatMessages([{
           type: "ai",
           text: "You've got 3 new leads with no nurture sequence, and Marcus Johnson's renewal is 5 weeks out with no workflow. Want me to build either? Or keep scanning your workflows?",
           suggestions: ["Build the New Lead nurture sequence", "Design Marcus's renewal workflow", "What other gaps do you see?", "Create a custom audience workflow"]
         }]);
-} else if (screen === "client-detail") {
-  setChatMessages([{
-  type: "ai",
-  text: "Drafted 4 triggers for Marcus's renewal. I pulled in his 11-month history, recent attendance, and PR progression. Tell me what to change before activating.",
-  suggestions: ["Skip trigger 2, I don't do progress reports", "Move the final nudge to 1 week out", "Add a loyalty discount offer", "Show me Marcus's full history"]
-  }]);
-  } else if (screen === "paused") {
-  setChatMessages([{
-  type: "ai",
-  text: "This workflow is paused. 4 clients would be in it right now if you resumed. Want me to walk through what's changed since you paused it, or resume as-is?",
-  suggestions: ["Who would enter if I resume?", "Why did I pause this?", "Update trigger 2 before resuming", "Archive this workflow instead"]
-  }]);
-  } else if (screen === "empty") {
-  setChatMessages([{
-  type: "ai",
-  text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
-  suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
-  }]);
-  } else if (screen === "create") {
-  setChatMessages([{
-  type: "ai",
-  text: "Pick a template to get started, or describe what you want to build and I'll draft it from scratch.",
-  suggestions: ["Walk me through New PT Sign Up", "Build something for a specific client", "I want to customize a template", "What template fits my business best?"]
-  }]);
-  }
-  }
+      } else if (screen === "client-detail") {
+        const clientName = wfName.replace(" renewal", "").replace(" workflow", "");
+        setChatMessages([{
+          type: "ai",
+          text: `Drafted triggers for ${clientName}'s workflow. I pulled in their history, recent sessions, and goals. Tell me what to change before activating.`,
+          suggestions: ["Skip trigger 2, I'll handle that", "Move the final nudge to 1 week out", "Add a personalized offer", `Show me ${clientName}'s full history`]
+        }]);
+      } else if (screen === "paused") {
+        setChatMessages([{
+          type: "ai",
+          text: `${wfName} is paused. 4 clients would be in it right now if you resumed. Want me to walk through what's changed since you paused it, or resume as-is?`,
+          suggestions: ["Who would enter if I resume?", "Why did I pause this?", "Update triggers before resuming", "Archive this workflow instead"]
+        }]);
+      } else if (screen === "empty") {
+        setChatMessages([{
+          type: "ai",
+          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
+          suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
+        }]);
+      } else if (screen === "create") {
+        setChatMessages([{
+          type: "ai",
+          text: "Pick a template to get started, or describe what you want to build and I'll draft it from scratch.",
+          suggestions: ["Walk me through New PT Sign Up", "Build something for a specific client", "I want to customize a template", "What template fits my business best?"]
+        }]);
+      }
+    }
   };
 
   return (
@@ -6204,30 +6225,43 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 </svg>
                 All workflows
               </button>
-              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · gap detected</span>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · {selectedAudience?.state === "draft" ? "draft" : "editing"}</span>
             </div>
             
             {/* Header row */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 24 }}>
               <div style={{
-                width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.teal50,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                border: `1.5px solid ${C.teal700}20`
+                border: `1.5px solid ${selectedAudience?.iconColor || C.teal700}20`
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
+                {selectedAudience?.type === "client" ? (
+                  <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.teal700 }}>
+                    {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                )}
               </div>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
-                    background: C.teal50, color: C.teal700
-                  }}>Audience</span>
+                    background: selectedAudience?.type === "client" ? C.blue50 : C.teal50,
+                    color: selectedAudience?.type === "client" ? C.blue700 : C.teal700
+                  }}>{selectedAudience?.type === "client" ? "Specific client" : "Audience"}</span>
+                  {selectedAudience?.state === "draft" && (
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Draft</span>
+                  )}
                 </div>
                 <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                  Onboarding workflow for clients who just signed up. 3 new clients would enter this workflow immediately if activated.
+                  {selectedAudience?.meta || "Onboarding workflow for clients who just signed up. 3 new clients would enter this workflow immediately if activated."}
                 </p>
               </div>
             </div>
@@ -6385,17 +6419,23 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.purple50,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  border: `1.5px solid ${C.teal700}20`
+                  border: `1.5px solid ${selectedAudience?.iconColor || C.purple500}20`
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  {selectedAudience?.type === "client" ? (
+                    <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.purple700 }}>
+                      {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.purple500} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.teal50, color: C.teal700
@@ -6403,10 +6443,10 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.purple50, color: C.purple700
-                    }}>Watch mode · 46h left</span>
+                    }}>Watch mode · {selectedAudience?.watchTimeLeft || "46h left"}</span>
                   </div>
                   <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                    {"Activated 2 hours ago. 3 clients in the workflow. I'll exit watch mode in 46 hours unless you want me to stay on longer."}
+                    {selectedAudience?.meta || "Activated 2 hours ago. 3 clients in the workflow. I'll exit watch mode in 46 hours unless you want me to stay on longer."}
                   </p>
                 </div>
               </div>
@@ -6643,28 +6683,41 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.teal50,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  border: `1.5px solid ${C.teal700}20`
+                  border: `1.5px solid ${selectedAudience?.iconColor || C.teal700}20`
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  {selectedAudience?.type === "client" ? (
+                    <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.teal700 }}>
+                      {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
-                      background: C.teal50, color: C.teal700,
+                      background: selectedAudience?.health === "attention" ? C.amber50 : C.teal50,
+                      color: selectedAudience?.health === "attention" ? C.amber700 : C.teal700,
                       display: "flex", alignItems: "center", gap: 6
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.teal500 }} />
-                      Active · healthy
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: selectedAudience?.health === "attention" ? C.amber500 : C.teal500 }} />
+                      {selectedAudience?.health === "attention" ? "Active · needs attention" : "Active · healthy"}
                     </span>
+                    {selectedAudience?.type === "client" && (
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.blue50, color: C.blue700
+                      }}>Specific client</span>
+                    )}
                   </div>
                   <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                    Running 3 weeks · 11 clients in the workflow · 47 messages sent
+                    {selectedAudience?.meta || "Running 3 weeks · 11 clients in the workflow · 47 messages sent"}
                   </p>
                 </div>
               </div>
@@ -6895,23 +6948,25 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
               {/* Initials avatar - rounded-md to match icon squares */}
               <div style={{
-                width: 44, height: 44, borderRadius: 8, background: C.coral50,
+                width: 44, height: 44, borderRadius: 8, background: selectedAudience?.iconBg || C.coral50,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: C.coral700 }}>MJ</span>
+                <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.coral700 }}>
+                  {(selectedAudience?.name || "MJ").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                </span>
               </div>
               
               {/* Middle content */}
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: 0 }}>Marcus renewal</h2>
+                  <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: 0 }}>{selectedAudience?.name || "Marcus renewal"}</h2>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                     background: C.surface2, color: C.muted,
                     display: "flex", alignItems: "center", gap: 4
                   }}>
                     <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.muted2 }} />
-                    Draft
+                    {selectedAudience?.state === "draft" ? "Draft" : "Active"}
                   </span>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
@@ -6919,7 +6974,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   }}>Specific client</span>
                 </div>
                 <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                  Renewal workflow for Marcus Johnson · annual renewal May 20 · 5 weeks out
+                  {selectedAudience?.meta || "Renewal workflow for Marcus Johnson · annual renewal May 20 · 5 weeks out"}
                 </p>
               </div>
               
@@ -7108,7 +7163,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   {/* Middle content */}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <h2 style={{ fontSize: 20, fontWeight: 500, color: C.muted, margin: 0 }}>Inactive client win-back</h2>
+                      <h2 style={{ fontSize: 20, fontWeight: 500, color: C.muted, margin: 0 }}>{selectedAudience?.name || "Inactive client win-back"}</h2>
                       <span style={{
                         padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                         background: C.surface2, color: C.muted,
@@ -7120,10 +7175,10 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                       <span style={{
                         padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                         background: C.surface2, color: C.muted
-                      }}>Audience</span>
+                      }}>{selectedAudience?.type === "client" ? "Specific client" : "Audience"}</span>
                     </div>
                     <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                      Clients with no session in 30+ days · 4 triggers · paused by you 2 weeks ago
+                      {selectedAudience?.meta || "Clients with no session in 30+ days · 4 triggers · paused by you 2 weeks ago"}
                     </p>
                   </div>
                 </div>
@@ -7622,7 +7677,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               {/* 2-column template grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {[
-                  { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience · 7 triggers" },
+                  { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience �� 7 triggers" },
                   { name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call.", meta: "Audience · 5 triggers" },
                   { name: "Session reminders", iconBg: C.blue50, iconColor: C.blue700, desc: "24h before every session. Simplest workflow, biggest attendance impact.", meta: "Audience · 1 trigger" },
                   { name: "Annual renewal", iconBg: C.coral50, iconColor: C.coral700, desc: "Pre-renewal sequence starting 4 weeks out through renewal date.", meta: "Audience · 4 triggers" },
