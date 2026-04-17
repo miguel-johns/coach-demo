@@ -5578,10 +5578,9 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
 }
 
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused, empty
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused, empty, create
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
-  const [showPicker, setShowPicker] = useState(false);
   
 // Design tokens - aligned with platform palette
   const C = {
@@ -5895,7 +5894,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "watch") {
         setChatMessages([{
           type: "ai",
-          text: "New PT Sign Up is live. I'm watching the first 48 hours with you. 3 welcome messages fired cleanly. I'll flag anything that looks off — you can pause any trigger with one word.",
+          text: "New PT Sign Up is live. I'm watching the first 48 hours with you. 3 welcome messages fired cleanly. I'll flag anything that looks off ��� you can pause any trigger with one word.",
           suggestions: ["Show me what Sarah actually received", "Pause trigger 5 for this weekend", "Why did Kaylee get that message?", "Extend watch mode another 48h"]
         }]);
       } else if (screen === "steady") {
@@ -5927,6 +5926,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   type: "ai",
   text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
   suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
+  }]);
+  } else if (screen === "create") {
+  setChatMessages([{
+  type: "ai",
+  text: "Pick a template to get started, or describe what you want to build and I'll draft it from scratch.",
+  suggestions: ["Walk me through New PT Sign Up", "Build something for a specific client", "I want to customize a template", "What template fits my business best?"]
   }]);
   }
   }
@@ -5980,7 +5985,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 </p>
               </div>
               <button
-                onClick={() => setShowPicker(true)}
+                onClick={() => navigateTo("create")}
                 style={{
                   padding: "10px 16px", borderRadius: 8, border: "none",
                   background: C.teal700, color: C.surface,
@@ -7027,7 +7032,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               paddingTop: 16, borderTop: `0.5px solid ${C.border}`,
               display: "flex", alignItems: "center", justifyContent: "space-between"
             }}>
-              <span style={{ fontSize: 12, color: C.muted }}>Marcus enters this workflow on activation · no cross-bundle conflicts</span>
+              <span style={{ fontSize: 12, color: C.muted }}>Marcus enters this workflow on activation �� no cross-bundle conflicts</span>
               <div style={{ display: "flex", gap: 10 }}>
                 <button
                   onClick={() => navigateTo("landing")}
@@ -7514,7 +7519,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 32 }}>
               {/* Card A - For an audience */}
               <div
-                onClick={() => setShowPicker(true)}
+                onClick={() => navigateTo("create")}
                 style={{
                   padding: "16px 18px", borderRadius: 12, background: C.surface,
                   border: `0.5px dashed ${C.border2}`, cursor: "pointer"
@@ -7540,7 +7545,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               
               {/* Card B - For a specific client */}
               <div
-                onClick={() => setShowPicker(true)}
+                onClick={() => navigateTo("create")}
                 style={{
                   padding: "16px 18px", borderRadius: 12, background: C.surface,
                   border: `0.5px dashed ${C.border2}`, cursor: "pointer"
@@ -7574,49 +7579,18 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
               }}>i</div>
-              <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+<p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
                 {"Not sure where to start? Ask Milton 'which template fits my business best' in chat and we'll figure it out together."}
               </p>
             </div>
           </div>
-)}
-      </div>
-      
-      {/* CREATE WORKFLOW PICKER MODAL */}
-      {showPicker && (
-        <div
-          onClick={() => setShowPicker(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(11, 22, 40, 0.35)",
-            display: "flex", justifyContent: "center",
-            paddingTop: 40
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              position: "relative",
-              width: "100%", maxWidth: 720,
-              background: C.surface, borderRadius: 12,
-              border: `0.5px solid ${C.border}`,
-              padding: 24, height: "fit-content"
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowPicker(false)}
-              style={{
-                position: "absolute", top: 14, right: 14,
-                width: 28, height: 28, borderRadius: "50%",
-                background: "transparent", border: `0.5px solid ${C.border}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: C.muted, fontSize: 16
-              }}
-            >×</button>
-            
+        )}
+        
+        {/* CREATE SCREEN - Template picker */}
+        {activeScreen === "create" && (
+          <div style={{ maxWidth: 720 }}>
             {/* Header section */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 24 }}>
               <div style={{ 
                 display: "inline-flex", alignItems: "center", gap: 5,
                 padding: "3px 9px", borderRadius: 20, background: C.teal50,
@@ -7627,7 +7601,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 </svg>
                 <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>Create workflow</span>
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>
+              <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>
                 What should Milton build?
               </h2>
               <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
@@ -7636,17 +7610,17 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             </div>
             
             {/* Start with a template section */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 24 }}>
               <div style={{ 
                 fontSize: 11, fontWeight: 500, color: C.muted, 
                 textTransform: "uppercase", letterSpacing: "0.04em",
-                marginBottom: 10
+                marginBottom: 12
               }}>
                 Start with a template
               </div>
               
               {/* 2-column template grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {[
                   { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience · 7 triggers" },
                   { name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call.", meta: "Audience · 5 triggers" },
@@ -7657,9 +7631,9 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 ].map(t => (
                   <div
                     key={t.name}
-                    onClick={() => { setShowPicker(false); navigateTo("design", t); }}
+                    onClick={() => navigateTo("design", t)}
                     style={{
-                      padding: "12px 14px", borderRadius: 8,
+                      padding: "14px 16px", borderRadius: 10,
                       background: C.surface, border: `0.5px solid ${C.border}`,
                       cursor: "pointer", transition: "border-color 0.15s ease"
                     }}
@@ -7667,31 +7641,31 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
                   >
                     {/* Row 1: icon + title */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                       <div style={{
-                        width: 24, height: 24, borderRadius: 6, background: t.iconBg,
+                        width: 26, height: 26, borderRadius: 6, background: t.iconBg,
                         display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
                       }}>
-                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: t.iconColor }} />
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: t.iconColor }} />
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{t.name}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{t.name}</span>
                     </div>
                     {/* Row 2: description */}
                     <p style={{ 
-                      fontSize: 11, color: C.muted, margin: "0 0 6px", 
+                      fontSize: 12, color: C.muted, margin: "0 0 8px", 
                       lineHeight: 1.5,
                       display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
                     }}>
                       {t.desc}
                     </p>
                     {/* Row 3: meta */}
-                    <div style={{ fontSize: 10, color: C.muted2 }}>{t.meta}</div>
+                    <div style={{ fontSize: 11, color: C.muted2 }}>{t.meta}</div>
                   </div>
                 ))}
               </div>
               
               {/* See more link */}
-              <div style={{ paddingTop: 10 }}>
+              <div style={{ paddingTop: 12 }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: C.blue700, cursor: "pointer" }}>
                   See 4 more templates →
                 </span>
@@ -7700,20 +7674,21 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             
             {/* Custom path section */}
             <div style={{
-              paddingTop: 20, borderTop: `0.5px solid ${C.border}`,
+              padding: "16px 18px", borderRadius: 10,
+              background: C.surface, border: `0.5px solid ${C.border}`,
               display: "flex", alignItems: "center", gap: 14
             }}>
               {/* Milton avatar */}
               <div style={{
-                width: 36, height: 36, borderRadius: "50%", background: C.teal50,
+                width: 40, height: 40, borderRadius: "50%", background: C.teal50,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
-                <span style={{ fontSize: 14, fontWeight: 500, color: C.teal700 }}>M</span>
+                <span style={{ fontSize: 15, fontWeight: 500, color: C.teal700 }}>M</span>
               </div>
               
               {/* Text content */}
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.ink, marginBottom: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.ink, marginBottom: 2 }}>
                   Or describe something custom
                 </div>
                 <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
@@ -7724,7 +7699,6 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               {/* Start in chat button */}
               <button
                 onClick={() => {
-                  setShowPicker(false);
                   if (setChatMessages) {
                     setChatMessages([{
                       type: "ai",
@@ -7734,7 +7708,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   }
                 }}
                 style={{
-                  padding: "8px 14px", borderRadius: 8, border: "none",
+                  padding: "10px 16px", borderRadius: 8, border: "none",
                   background: C.teal700, color: C.surface,
                   fontSize: 13, fontWeight: 500, cursor: "pointer",
                   flexShrink: 0, whiteSpace: "nowrap"
@@ -7742,8 +7716,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               >Start in chat →</button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
