@@ -5819,7 +5819,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "watch") {
         setChatMessages([{
           type: "ai",
-          text: "Bundle activated! I'm watching how clients respond. You'll see real-time stats here. I'll alert you if anything looks off."
+          text: "New PT Sign Up is live. I'm watching the first 48 hours with you. 3 welcome messages fired cleanly. I'll flag anything that looks off — you can pause any trigger with one word.",
+          suggestions: ["Show me what Sarah actually received", "Pause trigger 5 for this weekend", "Why did Kaylee get that message?", "Extend watch mode another 48h"]
         }]);
       } else if (screen === "steady") {
         setChatMessages([{
@@ -6206,75 +6207,255 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
         
         {/* WATCH SCREEN - 48hr monitoring */}
         {activeScreen === "watch" && (
-          <div style={{ maxWidth: 600 }}>
-            <button
-              onClick={() => navigateTo("landing")}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
-                background: "none", border: "none", color: C.muted,
-                fontSize: 13, cursor: "pointer", padding: 0
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-              All workflows
-            </button>
-            
-            <div style={{
-              padding: 20, borderRadius: 12, background: C.surface,
-              border: `0.5px solid ${C.border}`
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <div style={{
-                  width: 10, height: 10, borderRadius: "50%", background: C.amber500,
-                  animation: "pulse 2s infinite"
-                }} />
-                <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Watch mode active</span>
-                <span style={{ fontSize: 12, color: C.muted }}>{watchStats.hoursActive}h of 48h</span>
-              </div>
-              
-              <div style={{
-                display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
-                marginBottom: 20
-              }}>
-                {[
-                  { label: "Sent", value: watchStats.sent },
-                  { label: "Delivered", value: watchStats.delivered },
-                  { label: "Opened", value: watchStats.opened },
-                  { label: "Replied", value: watchStats.replied }
-                ].map(stat => (
-                  <div key={stat.label} style={{
-                    padding: "14px 12px", borderRadius: 8, background: C.surface2,
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: 20, fontWeight: 500, color: C.ink }}>{stat.value}</div>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-              
-              <div style={{
-                padding: "12px 14px", borderRadius: 8, background: C.teal50,
-                display: "flex", alignItems: "center", gap: 10
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round">
-                  <polyline points="20,6 9,17 4,12"/>
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
                 </svg>
-                <span style={{ fontSize: 13, color: C.teal900 }}>All metrics within normal range</span>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · live</span>
+            </div>
+            
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+              <div style={{ display: "flex", gap: 14 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10, background: C.amber50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.amber700 }} />
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
+                      background: C.teal50, color: C.teal700
+                    }}>Live</span>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
+                      background: C.purple50, color: C.purple700
+                    }}>Watch mode · 46h left</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    {"Activated 2 hours ago. 3 clients in the workflow. I'll exit watch mode in 46 hours unless you want me to stay on longer."}
+                  </p>
+                </div>
               </div>
-              
               <button
                 onClick={() => navigateTo("steady")}
                 style={{
-                  width: "100%", marginTop: 16, padding: "10px 16px",
-                  borderRadius: 8, background: "transparent",
-                  border: `0.5px solid ${C.border2}`, color: C.muted,
-                  fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  display: "flex", alignItems: "center", gap: 4,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0
                 }}
               >
-                Exit watch mode now
+                Jump to steady state
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="9,6 15,12 9,18"/>
+                </svg>
               </button>
+            </div>
+            
+            {/* 4-column metric grid */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+              marginBottom: 24
+            }}>
+              {[
+                { label: "Fired so far", value: "3", footer: "of 11 expected in watch period" },
+                { label: "Clients engaged", value: "2", valueSuffix: " of 3", footer: "replied or tapped a link" },
+                { label: "Flags for review", value: "1", valueColor: C.amber700, footer: "Milton wants your eyes on it" },
+                { label: "Next fire", value: "5h", footer: "24h reminder · Sarah Chen" }
+              ].map(stat => (
+                <div key={stat.label} style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface2
+                }}>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>{stat.label}</div>
+                  <div style={{ fontSize: 24, fontWeight: 500, color: stat.valueColor || C.ink }}>
+                    {stat.value}
+                    {stat.valueSuffix && <span style={{ fontSize: 14, color: C.muted }}>{stat.valueSuffix}</span>}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted2, marginTop: 4 }}>{stat.footer}</div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Kaylee flag callout */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 12, background: C.amber50,
+              border: `0.5px solid ${C.amber200}`, marginBottom: 24,
+              display: "flex", gap: 14
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%", background: C.amber500,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.surface} strokeWidth="3" strokeLinecap="round">
+                  <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "#78350f", marginBottom: 6 }}>
+                  Kaylee Martinez got the welcome message, but she signed up 3 weeks ago
+                </div>
+                <p style={{ fontSize: 13, color: C.amber700, margin: "0 0 12px", lineHeight: 1.5 }}>
+                  {"She was added to the audience retroactively when the workflow activated. She's past her first session — the welcome message probably felt weird. Want me to skip her through to trigger 4, or pause her out of the workflow entirely?"}
+                </p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button style={{
+                    padding: "8px 14px", borderRadius: 6, border: "none",
+                    background: C.amber700, color: C.surface,
+                    fontSize: 12, fontWeight: 500, cursor: "pointer"
+                  }}>Skip Kaylee to trigger 4</button>
+                  <button style={{
+                    padding: "8px 14px", borderRadius: 6,
+                    background: "transparent", border: `0.5px solid ${C.amber700}`,
+                    color: C.amber700, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                  }}>Remove from workflow</button>
+                  <button style={{
+                    padding: "8px 14px", borderRadius: 6, border: "none",
+                    background: "transparent", color: C.amber700,
+                    fontSize: 12, fontWeight: 500, cursor: "pointer"
+                  }}>Show me what she got</button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Fire log section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Fire log</span>
+                <span style={{ fontSize: 12, color: C.muted }}>Newest first</span>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Sarah Chen */}
+                <div style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface,
+                  border: `0.5px solid ${C.border}`
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: C.teal50,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: 600, color: C.teal700
+                    }}>SC</div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Sarah Chen</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: C.teal50, color: C.teal700
+                    }}>Welcome</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>SMS · delivered · replied 4 min later</span>
+                    <span style={{ fontSize: 11, color: C.muted2, marginLeft: "auto" }}>2h ago</span>
+                  </div>
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 6, background: C.surface2,
+                    fontSize: 12, color: C.ink, lineHeight: 1.5, marginBottom: 8
+                  }}>
+                    Welcome to the work. Your first session is Thursday at 6am. Fill out your intake here before then: [link]. Bring water and something you can squat in. — Miguel
+                  </div>
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 6, background: C.blue50,
+                    fontSize: 12, lineHeight: 1.5
+                  }}>
+                    <span style={{ color: C.blue700, fontWeight: 500 }}>Sarah replied</span>
+                    <span style={{ color: C.ink, fontStyle: "italic", marginLeft: 8 }}>On it! Excited.</span>
+                  </div>
+                </div>
+                
+                {/* Jake Ramirez */}
+                <div style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface,
+                  border: `0.5px solid ${C.border}`
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: C.blue50,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: 600, color: C.blue700
+                    }}>JR</div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Jake Ramirez</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: C.teal50, color: C.teal700
+                    }}>Welcome</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>SMS · delivered · tapped intake link</span>
+                    <span style={{ fontSize: 11, color: C.muted2, marginLeft: "auto" }}>2h ago</span>
+                  </div>
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 6, background: C.surface2,
+                    fontSize: 12, color: C.ink, lineHeight: 1.5
+                  }}>
+                    Welcome to the work. Your first session is Monday at 7am. Fill out your intake here before then: [link]. Bring water and something you can squat in. — Miguel
+                  </div>
+                </div>
+                
+                {/* Kaylee Martinez - flagged */}
+                <div style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface,
+                  border: `0.5px solid ${C.amber500}`
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: C.amber50,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: 600, color: C.amber700
+                    }}>KM</div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Kaylee Martinez</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: C.teal50, color: C.teal700
+                    }}>Welcome</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: C.amber50, color: C.amber700
+                    }}>Flagged</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>SMS · delivered · no response</span>
+                    <span style={{ fontSize: 11, color: C.muted2, marginLeft: "auto" }}>2h ago</span>
+                  </div>
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 6, background: C.surface2,
+                    fontSize: 12, color: C.ink, lineHeight: 1.5, marginBottom: 8
+                  }}>
+                    Welcome to the work. Your first session is Thursday at 6am. Fill out your intake here before then: [link]. Bring water and something you can squat in. — Miguel
+                  </div>
+                  <div style={{ fontSize: 12, color: C.amber700, fontStyle: "italic" }}>
+                    Kaylee already had her first session 3 weeks ago. See flag above.
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer row */}
+            <div style={{
+              paddingTop: 16, borderTop: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Watch mode exits automatically in 46 hours</span>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{
+                  padding: "10px 18px", borderRadius: 8, border: `0.5px solid ${C.border}`,
+                  background: C.surface, color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                }}>Extend watch mode</button>
+                <button
+                  onClick={() => navigateTo("steady")}
+                  style={{
+                    padding: "10px 18px", borderRadius: 8, border: `0.5px solid ${C.border}`,
+                    background: C.surface, color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  }}
+                >Exit watch mode now</button>
+              </div>
             </div>
           </div>
         )}
