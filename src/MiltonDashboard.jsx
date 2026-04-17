@@ -4348,7 +4348,7 @@ return (
         );
       })()}
 
-      {/* ��─�� DAILY BREAKDOWN CARDS ─── */}
+      {/* ��─���� DAILY BREAKDOWN CARDS ─── */}
       {(() => {
         const cards = [
           {
@@ -5671,37 +5671,50 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const workflowGaps = [
     { 
       id: 1, 
-      audience: "Clients inactive 7+ days",
-      count: 12,
-      priority: "high",
-      suggestion: "Re-engagement sequence with check-in + motivation",
-      color: C.coral500,
-      colorBg: C.coral50
-    },
-    { 
-      id: 2, 
-      audience: "New clients (first 2 weeks)",
-      count: 8,
-      priority: "medium",
-      suggestion: "Onboarding drip with tips + expectations",
-      color: C.amber500,
+      title: "New PT Sign Up",
+      type: "audience",
+      meta: "3 clients would benefit now",
+      body: "No onboarding workflow. New clients aren't getting welcome messages, session prep, or week-1 check-ins. Most coaches bundle 6-8 triggers here.",
+      chips: ["Welcome", "Session prep", "Week 1 check-in", "+ 5 more"],
+      color: C.amber700,
       colorBg: C.amber50
     },
     { 
+      id: 2, 
+      title: "Marcus Johnson",
+      type: "client",
+      meta: "renewal in 5 weeks",
+      body: "No renewal workflow. Renewal on May 20. He's also missed 2 sessions in the last 3 weeks without a re-engagement message going out.",
+      chips: ["Renewal nudge", "Re-engagement", "Progress report"],
+      color: "#b91c1c",
+      colorBg: "#fef2f2"
+    },
+    { 
       id: 3, 
-      audience: "Clients nearing goal",
-      count: 5,
-      priority: "low",
-      suggestion: "Celebration + next phase planning",
-      color: C.teal500,
+      title: "New Lead",
+      type: "audience",
+      meta: "7 leads this week, 0 nurtured",
+      body: "No nurture sequence. Leads from your landing page and HFA follow-ups sit cold for 5+ days. Most coaches convert 3x more with a same-day workflow.",
+      chips: ["Same-day welcome", "Day 2 value drop", "Day 5 offer"],
+      color: C.purple700,
+      colorBg: C.purple50
+    },
+    { 
+      id: 4, 
+      title: "Active PT Clients",
+      type: "audience",
+      meta: "14 clients",
+      body: "Session reminders are on, but no weekly progress reports or milestone celebrations. Bethany mentioned this was a gap at Optimal Performance too.",
+      chips: ["Weekly report", "Milestone celebrations", "Post-session recap"],
+      color: C.teal700,
       colorBg: C.teal50
     }
   ];
   
   // Active workflows
   const activeWorkflows = [
-    { id: 101, name: "Weekly check-in", audience: "All active clients", status: "running", sent: 156, opened: 142 },
-    { id: 102, name: "Missed session follow-up", audience: "No-shows", status: "running", sent: 23, opened: 19 }
+    { id: 101, name: "Session reminders", audience: "All active PT clients", schedule: "24h before every session", lastFired: "2h ago", stat: "89% open rate" },
+    { id: 102, name: "Monthly check-in", audience: "Active PT clients", schedule: "first of the month", lastFired: "Next fires: May 1", stat: "76% reply rate" }
   ];
   
   // Bundle triggers for design screen
@@ -5727,7 +5740,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
     if (setChatMessages) {
       setChatMessages([{
         type: "ai",
-        text: "I found 3 client groups that could benefit from automated workflows. Take a look at the gaps I've identified."
+        text: "I looked at your client list and spotted 4 gaps where you're missing workflows. Want to fix one, or see what's already running?",
+        suggestions: ["Build the New PT Sign Up workflow", "Show me what's running for Marcus", "Create a workflow for a new audience"]
       }]);
     }
   }, []);
@@ -5756,7 +5770,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "landing") {
         setChatMessages([{
           type: "ai",
-          text: "I found 3 client groups that could benefit from automated workflows. Take a look at the gaps I've identified."
+          text: "I looked at your client list and spotted 4 gaps where you're missing workflows. Want to fix one, or see what's already running?",
+          suggestions: ["Build the New PT Sign Up workflow", "Show me what's running for Marcus", "Create a workflow for a new audience"]
         }]);
       }
     }
@@ -5808,18 +5823,31 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
         {/* LANDING SCREEN - Gaps + Active Workflows */}
         {activeScreen === "landing" && (
           <div style={{ maxWidth: 800 }}>
-            {/* Gaps section */}
+            {/* Header with pill badge */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", borderRadius: 20, background: C.teal50,
+                marginBottom: 12
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill={C.teal700}>
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>AI workflows</span>
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "0 0 8px" }}>
+                {"Here's where your coaching ops are leaking"}
+              </h2>
+              <p style={{ fontSize: 14, color: C.muted, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
+                {"I flagged audiences and clients that don't have the workflows most coaches run. Pick one to design, or jump to what's already active."}
+              </p>
+            </div>
+            
+            {/* Gaps I spotted section */}
             <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 500, color: C.ink, margin: 0 }}>Workflow gaps</h2>
-                  <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Client groups that could benefit from automation</p>
-                </div>
-                <span style={{ 
-                  padding: "4px 10px", borderRadius: 20, 
-                  background: C.coral50, color: C.coral700,
-                  fontSize: 11, fontWeight: 500
-                }}>3 opportunities</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Gaps I spotted</span>
+                <span style={{ fontSize: 12, color: C.muted }}>4 audiences · 2 specific clients</span>
               </div>
               
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -5829,70 +5857,121 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     onMouseEnter={() => setHoveredCard(gap.id)}
                     onMouseLeave={() => setHoveredCard(null)}
                     style={{
-                      padding: "16px 20px", borderRadius: 12,
+                      padding: "14px 16px", borderRadius: 12,
                       background: C.surface, border: `0.5px solid ${hoveredCard === gap.id ? C.border2 : C.border}`,
-                      display: "flex", alignItems: "center", gap: 16,
+                      display: "flex", gap: 14,
                       cursor: "pointer", transition: "all 0.15s ease"
                     }}
                     onClick={() => navigateTo("design", gap)}
                   >
+                    {/* Icon square */}
                     <div style={{
-                      width: 40, height: 40, borderRadius: 10, background: gap.colorBg,
+                      width: 36, height: 36, borderRadius: 8, background: gap.colorBg,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      color: gap.color, fontWeight: 500, fontSize: 14
+                      flexShrink: 0
                     }}>
-                      {gap.count}
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: gap.color }} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{gap.audience}</div>
-                      <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{gap.suggestion}</div>
+                    
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Title row with badges */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{gap.title}</span>
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                          background: gap.type === "client" ? C.blue50 : C.amber50,
+                          color: gap.type === "client" ? C.blue700 : C.amber700
+                        }}>
+                          {gap.type === "client" ? "Specific client" : "Audience"}
+                        </span>
+                        <span style={{ fontSize: 12, color: C.muted }}>· {gap.meta}</span>
+                      </div>
+                      
+                      {/* Body text */}
+                      <p style={{ fontSize: 13, color: C.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
+                        {gap.body}
+                      </p>
+                      
+                      {/* Chips */}
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {gap.chips.map((chip, i) => (
+                          <span key={i} style={{
+                            padding: "3px 8px", borderRadius: 4, fontSize: 11,
+                            background: C.surface2, color: C.muted
+                          }}>{chip}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      color: C.teal700, fontSize: 13, fontWeight: 500
-                    }}>
+                    
+                    {/* Design button */}
+                    <button
+                      style={{
+                        padding: "8px 14px", borderRadius: 8, border: "none",
+                        background: C.teal700, color: C.surface,
+                        fontSize: 13, fontWeight: 500, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 4,
+                        alignSelf: "flex-start", flexShrink: 0
+                      }}
+                    >
                       Design
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <polyline points="9,6 15,12 9,18"/>
                       </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Already running section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Already running</span>
+                <span style={{ fontSize: 12, color: C.muted }}>2 active workflows</span>
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {activeWorkflows.map(wf => (
+                  <div
+                    key={wf.id}
+                    style={{
+                      padding: "14px 16px", borderRadius: 12,
+                      background: C.surface, border: `0.5px solid ${C.border}`
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.teal500 }} />
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{wf.name}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
+                      {wf.audience} · {wf.schedule}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.muted2 }}>
+                      {wf.lastFired} · {wf.stat}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
             
-            {/* Active workflows section */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 500, color: C.ink, margin: 0 }}>Active workflows</h2>
-                  <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>Currently running automations</p>
-                </div>
+            {/* Custom audience CTA */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 8, background: C.surface2,
+              display: "flex", alignItems: "center", gap: 14, cursor: "pointer"
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%", background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
               </div>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {activeWorkflows.map(wf => (
-                  <div
-                    key={wf.id}
-                    style={{
-                      padding: "14px 16px", borderRadius: 8,
-                      background: C.surface, border: `0.5px solid ${C.border}`,
-                      display: "flex", alignItems: "center", gap: 14
-                    }}
-                  >
-                    <div style={{
-                      width: 8, height: 8, borderRadius: "50%", background: C.teal500
-                    }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{wf.name}</div>
-                      <div style={{ fontSize: 12, color: C.muted }}>{wf.audience}</div>
-                    </div>
-                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: C.muted }}>
-                      <span>{wf.sent} sent</span>
-                      <span>{wf.opened} opened</span>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Create a workflow for a custom audience</div>
+                <div style={{ fontSize: 12, color: C.muted }}>{"Group Coaching, Semi-Private, Online-only — describe who it's for in chat."}</div>
               </div>
             </div>
           </div>
