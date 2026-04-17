@@ -5237,180 +5237,50 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
                 
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                   <div>
-<div style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
-              }}>i</div>
-              <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
-                {"Not sure where to start? Ask Milton 'which template fits my business best' in chat and we'll figure it out together."}
-              </p>
+                    <div style={{
+                      background: TEAL, padding: "12px 16px", borderRadius: "16px 4px 16px 16px",
+                      maxWidth: 320
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, color: WHITE, lineHeight: 1.5 }}>
+                        Great progress! Keep up the consistency.
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>10:35 AM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Input area */}
+            <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", borderRadius: 12,
+                background: "#f8faf9", border: `1px solid ${BORDER}`
+              }}>
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  style={{
+                    flex: 1, border: "none", background: "transparent",
+                    fontSize: 14, color: TEXT, outline: "none"
+                  }}
+                />
+                <button style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: TEAL, border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer"
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
-      
-      {/* CREATE WORKFLOW PICKER MODAL */}
-      {showPicker && (
-        <div
-          onClick={() => setShowPicker(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(11, 22, 40, 0.35)",
-            display: "flex", justifyContent: "center",
-            paddingTop: 40
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              position: "relative",
-              width: "100%", maxWidth: 720,
-              background: C.surface, borderRadius: 12,
-              border: `0.5px solid ${C.border}`,
-              padding: 24, height: "fit-content"
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowPicker(false)}
-              style={{
-                position: "absolute", top: 14, right: 14,
-                width: 28, height: 28, borderRadius: "50%",
-                background: "transparent", border: `0.5px solid ${C.border}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: C.muted, fontSize: 16
-              }}
-            >×</button>
-            
-            {/* Header section */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ 
-                display: "inline-flex", alignItems: "center", gap: 5,
-                padding: "3px 9px", borderRadius: 20, background: C.teal50,
-                marginBottom: 10
-              }}>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill={C.teal700}>
-                  <polygon points="5,3 19,12 5,21"/>
-                </svg>
-                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>Create workflow</span>
-              </div>
-              <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>
-                What should Milton build?
-              </h2>
-              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
-                Pick a template to start, or tell Milton what you want in chat.
-              </p>
-            </div>
-            
-            {/* Start with a template section */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ 
-                fontSize: 11, fontWeight: 500, color: C.muted, 
-                textTransform: "uppercase", letterSpacing: "0.04em",
-                marginBottom: 10
-              }}>
-                Start with a template
-              </div>
-              
-              {/* 2-column template grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {[
-                  { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience · 7 triggers" },
-                  { name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call.", meta: "Audience · 5 triggers" },
-                  { name: "Session reminders", iconBg: C.blue50, iconColor: C.blue700, desc: "24h before every session. Simplest workflow, biggest attendance impact.", meta: "Audience · 1 trigger" },
-                  { name: "Annual renewal", iconBg: C.coral50, iconColor: C.coral700, desc: "Pre-renewal sequence starting 4 weeks out through renewal date.", meta: "Audience · 4 triggers" },
-                  { name: "Morning briefing", iconBg: C.teal50, iconColor: C.teal700, desc: "Daily 6am summary for you — sessions, flags, client pulse.", meta: "Coach-facing · 1 trigger" },
-                  { name: "Inactive win-back", iconBg: "#fef2f2", iconColor: "#b91c1c", desc: "30 / 45 / 60 / 90-day touches for clients who've gone quiet.", meta: "Audience · 4 triggers" }
-                ].map(t => (
-                  <div
-                    key={t.name}
-                    onClick={() => { setShowPicker(false); navigateTo("design", t); }}
-                    style={{
-                      padding: "12px 14px", borderRadius: 8,
-                      background: C.surface, border: `0.5px solid ${C.border}`,
-                      cursor: "pointer", transition: "border-color 0.15s ease"
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = C.border2}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-                  >
-                    {/* Row 1: icon + title */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <div style={{
-                        width: 24, height: 24, borderRadius: 6, background: t.iconBg,
-                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                      }}>
-                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: t.iconColor }} />
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{t.name}</span>
-                    </div>
-                    {/* Row 2: description */}
-                    <p style={{ 
-                      fontSize: 11, color: C.muted, margin: "0 0 6px", 
-                      lineHeight: 1.5,
-                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
-                    }}>
-                      {t.desc}
-                    </p>
-                    {/* Row 3: meta */}
-                    <div style={{ fontSize: 10, color: C.muted2 }}>{t.meta}</div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* See more link */}
-              <div style={{ paddingTop: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: C.blue700, cursor: "pointer" }}>
-                  See 4 more templates →
-                </span>
-              </div>
-            </div>
-            
-            {/* Custom path section */}
-            <div style={{
-              paddingTop: 20, borderTop: `0.5px solid ${C.border}`,
-              display: "flex", alignItems: "center", gap: 14
-            }}>
-              {/* Milton avatar */}
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%", background: C.teal50,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <span style={{ fontSize: 14, fontWeight: 500, color: C.teal700 }}>M</span>
-              </div>
-              
-              {/* Text content */}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.ink, marginBottom: 2 }}>
-                  Or describe something custom
-                </div>
-                <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
-                  {"Tell Milton who it's for and what you want in the chat — I'll draft it from there."}
-                </p>
-              </div>
-              
-              {/* Start in chat button */}
-              <button
-                onClick={() => {
-                  setShowPicker(false);
-                  if (setChatMessages) {
-                    setChatMessages([{
-                      type: "ai",
-                      text: "Let's build a custom workflow. Who's this for — an audience, a specific client, or an event?",
-                      suggestions: ["For an audience (like all new PT clients)", "For a specific client", "For an event or date"]
-                    }]);
-                  }
-                }}
-                style={{
-                  padding: "8px 14px", borderRadius: 8, border: "none",
-                  background: C.teal700, color: C.surface,
-                  fontSize: 13, fontWeight: 500, cursor: "pointer",
-                  flexShrink: 0, whiteSpace: "nowrap"
-                }}
-              >Start in chat →</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -5962,7 +5832,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       title: "Missed session re-engagement", 
       tag: "Re-engagement", tagColor: "#b91c1c", tagBg: "#fef2f2",
       channel: "SMS",
-      desc: "Fires 48 hours after a no-show. Direct, no softening — lines up with your accountability-forward tone.",
+      desc: "Fires 48 hours after a no-show. Direct, no softening �� lines up with your accountability-forward tone.",
       sample: "Missed Thursday. What happened? Let's get you back on Saturday — reply with a time and I'll lock it in.",
       meta: "Trigger: 48h after no-show · Max 1 per week"
     },
@@ -7705,13 +7575,176 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               </p>
             </div>
           </div>
-        )}
+)}
       </div>
+      
+      {/* CREATE WORKFLOW PICKER MODAL */}
+      {showPicker && (
+        <div
+          onClick={() => setShowPicker(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(11, 22, 40, 0.35)",
+            display: "flex", justifyContent: "center",
+            paddingTop: 40
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: "relative",
+              width: "100%", maxWidth: 720,
+              background: C.surface, borderRadius: 12,
+              border: `0.5px solid ${C.border}`,
+              padding: 24, height: "fit-content"
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowPicker(false)}
+              style={{
+                position: "absolute", top: 14, right: 14,
+                width: 28, height: 28, borderRadius: "50%",
+                background: "transparent", border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: C.muted, fontSize: 16
+              }}
+            >×</button>
+            
+            {/* Header section */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "3px 9px", borderRadius: 20, background: C.teal50,
+                marginBottom: 10
+              }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill={C.teal700}>
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>Create workflow</span>
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>
+                What should Milton build?
+              </h2>
+              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+                Pick a template to start, or tell Milton what you want in chat.
+              </p>
+            </div>
+            
+            {/* Start with a template section */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ 
+                fontSize: 11, fontWeight: 500, color: C.muted, 
+                textTransform: "uppercase", letterSpacing: "0.04em",
+                marginBottom: 10
+              }}>
+                Start with a template
+              </div>
+              
+              {/* 2-column template grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {[
+                  { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience · 7 triggers" },
+                  { name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call.", meta: "Audience · 5 triggers" },
+                  { name: "Session reminders", iconBg: C.blue50, iconColor: C.blue700, desc: "24h before every session. Simplest workflow, biggest attendance impact.", meta: "Audience · 1 trigger" },
+                  { name: "Annual renewal", iconBg: C.coral50, iconColor: C.coral700, desc: "Pre-renewal sequence starting 4 weeks out through renewal date.", meta: "Audience · 4 triggers" },
+                  { name: "Morning briefing", iconBg: C.teal50, iconColor: C.teal700, desc: "Daily 6am summary for you — sessions, flags, client pulse.", meta: "Coach-facing · 1 trigger" },
+                  { name: "Inactive win-back", iconBg: "#fef2f2", iconColor: "#b91c1c", desc: "30 / 45 / 60 / 90-day touches for clients who've gone quiet.", meta: "Audience · 4 triggers" }
+                ].map(t => (
+                  <div
+                    key={t.name}
+                    onClick={() => { setShowPicker(false); navigateTo("design", t); }}
+                    style={{
+                      padding: "12px 14px", borderRadius: 8,
+                      background: C.surface, border: `0.5px solid ${C.border}`,
+                      cursor: "pointer", transition: "border-color 0.15s ease"
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = C.border2}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+                  >
+                    {/* Row 1: icon + title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: 6, background: t.iconBg,
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                      }}>
+                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: t.iconColor }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{t.name}</span>
+                    </div>
+                    {/* Row 2: description */}
+                    <p style={{ 
+                      fontSize: 11, color: C.muted, margin: "0 0 6px", 
+                      lineHeight: 1.5,
+                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                    }}>
+                      {t.desc}
+                    </p>
+                    {/* Row 3: meta */}
+                    <div style={{ fontSize: 10, color: C.muted2 }}>{t.meta}</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* See more link */}
+              <div style={{ paddingTop: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: C.blue700, cursor: "pointer" }}>
+                  See 4 more templates →
+                </span>
+              </div>
+            </div>
+            
+            {/* Custom path section */}
+            <div style={{
+              paddingTop: 20, borderTop: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", gap: 14
+            }}>
+              {/* Milton avatar */}
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", background: C.teal50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: C.teal700 }}>M</span>
+              </div>
+              
+              {/* Text content */}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: C.ink, marginBottom: 2 }}>
+                  Or describe something custom
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                  {"Tell Milton who it's for and what you want in the chat — I'll draft it from there."}
+                </p>
+              </div>
+              
+              {/* Start in chat button */}
+              <button
+                onClick={() => {
+                  setShowPicker(false);
+                  if (setChatMessages) {
+                    setChatMessages([{
+                      type: "ai",
+                      text: "Let's build a custom workflow. Who's this for — an audience, a specific client, or an event?",
+                      suggestions: ["For an audience (like all new PT clients)", "For a specific client", "For an event or date"]
+                    }]);
+                  }
+                }}
+                style={{
+                  padding: "8px 14px", borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  flexShrink: 0, whiteSpace: "nowrap"
+                }}
+              >Start in chat →</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ══════��══════════════════════════════════════
+/* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════════════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
