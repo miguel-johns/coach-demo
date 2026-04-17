@@ -8350,9 +8350,9 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
             </div>
           </div>
         </div>
-)}
-  
-  {/* Preview area */}
+      )}
+
+      {/* Preview area */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "auto" }}>
           <div style={{
             width: deviceSize === "mobile" ? 375 : 768,
