@@ -2095,7 +2095,9 @@ function MobileCanvasSheet({
   onChatSend,
   clients,
   brainDocuments,
-  setBrainDocuments
+  setBrainDocuments,
+  pendingDashboardEdit,
+  onDashboardEditProcessed
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2263,6 +2265,8 @@ clientName: "New Client",
   onClose={onClose}
   onHome={() => setCanvasType("templates")}
   isMobile={true}
+  pendingEdit={pendingDashboardEdit}
+  onEditProcessed={onDashboardEditProcessed}
   />
   )}
   {canvasType === "aiEngine" && (
@@ -7780,7 +7784,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 /* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════════════════ */
-function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
+function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
@@ -7789,11 +7793,6 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [publishModal, setPublishModal] = useState(false);
   const CANVAS_TEAL = "#2BBFAA";
-  
-  // Chat state for editing dashboards
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [miltonTyping, setMiltonTyping] = useState(false);
   
   // Config state per template
   const [configs, setConfigs] = useState({});
@@ -7830,42 +7829,32 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
     if (!configs[template.id]) {
       setConfigs(prev => ({ ...prev, [template.id]: { ...DEFAULT_CONFIGS[template.id] } }));
     }
-    setChatMessages([{
-      role: "milton",
-      content: `I'm ready to help you customize the ${template.name} dashboard. Try:\n\n• "Make the header blue"\n• "Hide the coach notes"\n• "Use a dark theme"\n\nWhat would you like to change?`
-    }]);
   };
   
-  const handleChatEdit = async (userMessage) => {
-    if (!userMessage.trim() || !selectedTemplate) return;
+  // Process edit from external chat
+  const processEdit = async (userMessage) => {
+    if (!userMessage.trim() || !selectedTemplate) {
+      return { success: false, response: "Please select a dashboard template first." };
+    }
     const currentConfig = getCurrentConfig();
-    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
-    setChatInput("");
-    setMiltonTyping(true);
-    
     const lowerMsg = userMessage.toLowerCase().trim();
+    
     if (lowerMsg === "undo" || lowerMsg === "go back") {
       const history = configHistory[selectedTemplate.id] || [];
       if (history.length > 0) {
         setConfigs(prev => ({ ...prev, [selectedTemplate.id]: history[history.length - 1] }));
         setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: history.slice(0, -1) }));
-        setMiltonTyping(false);
-        setChatMessages(prev => [...prev, { role: "milton", content: "Undone — reverted to the previous version." }]);
         if (published) setHasChanges(true);
-        return;
+        return { success: true, response: "Undone — reverted to the previous version." };
       }
-      setMiltonTyping(false);
-      setChatMessages(prev => [...prev, { role: "milton", content: "Nothing to undo." }]);
-      return;
+      return { success: true, response: "Nothing to undo — this is the original state." };
     }
     
     if (lowerMsg === "reset") {
       setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...DEFAULT_CONFIGS[selectedTemplate.id] } }));
       setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [] }));
-      setMiltonTyping(false);
-      setChatMessages(prev => [...prev, { role: "milton", content: "Reset — restored the default configuration." }]);
       if (published) setHasChanges(true);
-      return;
+      return { success: true, response: "Reset — restored the default configuration." };
     }
     
     try {
@@ -7875,21 +7864,28 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
         body: JSON.stringify({ message: userMessage, currentConfig, templateId: selectedTemplate.id })
       });
       const data = await response.json();
-      setMiltonTyping(false);
       
       if (data.success && data.changedKeys?.length > 0) {
         setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [...(prev[selectedTemplate.id] || []), currentConfig] }));
         setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...currentConfig, ...data.updates } }));
-        setChatMessages(prev => [...prev, { role: "milton", content: `Done — updated ${data.changedKeys.length} setting${data.changedKeys.length > 1 ? "s" : ""}. See the preview!` }]);
         if (published) setHasChanges(true);
+        return { success: true, response: `Done — updated ${data.changedKeys.length} setting${data.changedKeys.length > 1 ? "s" : ""}. Check the preview!` };
       } else {
-        setChatMessages(prev => [...prev, { role: "milton", content: "I couldn't figure that out. Try being more specific, like \"make the background darker\" or \"hide the rest timers.\"" }]);
+        return { success: false, response: "I couldn't figure that out. Try being more specific, like \"make the background darker\" or \"hide the rest timers.\"" };
       }
     } catch (error) {
-      setMiltonTyping(false);
-      setChatMessages(prev => [...prev, { role: "milton", content: "Something went wrong. Try again?" }]);
+      return { success: false, response: "Something went wrong. Try again?" };
     }
   };
+  
+  // Handle pending edits from parent chat
+  useEffect(() => {
+    if (pendingEdit && selectedTemplate) {
+      processEdit(pendingEdit).then(result => {
+        if (onEditProcessed) onEditProcessed(result);
+      });
+    }
+  }, [pendingEdit]);
 
   const handlePublish = () => {
     setPublished(true);
@@ -8356,89 +8352,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
         </div>
 )}
   
-  {/* Main content: Chat + Preview */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        
-        {/* Chat panel */}
-        {!isMobile && (
-        <div style={{
-          width: 340, flexShrink: 0, display: "flex", flexDirection: "column",
-          background: WHITE, borderRight: `1px solid ${BORDER}`
-        }}>
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Milton</div>
-              <div style={{ fontSize: 11, color: TEXT_SEC }}>Edit with natural language</div>
-            </div>
-          </div>
-          
-          <div style={{ flex: 1, overflow: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} style={{ display: "flex", gap: 10, alignItems: "flex-start", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
-                {msg.role === "milton" && (
-                  <div style={{ width: 26, height: 26, borderRadius: 7, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
-                  </div>
-                )}
-                <div style={{
-                  maxWidth: "85%", padding: "10px 14px", borderRadius: 12,
-                  background: msg.role === "user" ? "#0B1628" : "#f5f5f5",
-                  color: msg.role === "user" ? WHITE : TEXT,
-                  fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap"
-                }}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {miltonTyping && (
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ width: 26, height: 26, borderRadius: 7, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
-                </div>
-                <div style={{ padding: "12px 16px", borderRadius: 12, background: "#f5f5f5", display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div style={{ padding: "12px 16px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10 }}>
-            <input
-              type="text"
-              placeholder="Try: 'make the header blue'..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleChatEdit(chatInput)}
-              style={{
-                flex: 1, padding: "10px 14px", borderRadius: 10,
-                border: `1px solid ${BORDER}`, fontSize: 13, outline: "none",
-                fontFamily: "'DM Sans', sans-serif"
-              }}
-            />
-            <button
-              onClick={() => handleChatEdit(chatInput)}
-              disabled={!chatInput.trim() || miltonTyping}
-              style={{
-                width: 40, height: 40, borderRadius: 10, border: "none",
-                background: chatInput.trim() && !miltonTyping ? "#0B1628" : "#e0e0e0",
-                color: WHITE, cursor: chatInput.trim() && !miltonTyping ? "pointer" : "not-allowed",
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        )}
-        
-        {/* Preview area */}
+  {/* Preview area */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "auto" }}>
           <div style={{
             width: deviceSize === "mobile" ? 375 : 768,
@@ -8461,7 +8375,6 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
@@ -12358,6 +12271,15 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
+  
+  // Dashboard editing state (for AI Dashboards canvas)
+  const [pendingDashboardEdit, setPendingDashboardEdit] = useState(null);
+  const handleDashboardEditResult = (result) => {
+    setPendingDashboardEdit(null);
+    setChatMessages(prev => [...prev, { type: "ai", text: result.response }]);
+    setChatTyping(false);
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   const clientNames = clients.map(c => c.name);
 
@@ -12367,6 +12289,12 @@ export default function MiltonDashboard() {
     setChatTyping(true);
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     const delay = 300;
+    
+    // If AI Dashboards canvas is open, route edit messages to it
+    if (canvasType === "aiDashboards") {
+      setPendingDashboardEdit(text);
+      return;
+    }
 
     // Report customization commands (keep local for instant response)
     const low = text.toLowerCase();
@@ -12993,9 +12921,11 @@ export default function MiltonDashboard() {
 )}
   {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   onHome={() => setCanvasType("templates")}
     isMobile={isMobile}
+    pendingEdit={pendingDashboardEdit}
+    onEditProcessed={handleDashboardEditResult}
   />
 )}
 {canvasType === "aiEngine" && (
@@ -13641,7 +13571,7 @@ isMobile={isMobile}
   {isMobile && (
 <MobileCanvasSheet
   isOpen={canvasMode}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   canvasType={canvasType}
   canvasData={canvasData}
   setCanvasType={setCanvasType}
@@ -13653,6 +13583,8 @@ isMobile={isMobile}
   clients={clients}
   brainDocuments={brainDocuments}
   setBrainDocuments={setBrainDocuments}
+  pendingDashboardEdit={pendingDashboardEdit}
+  onDashboardEditProcessed={handleDashboardEditResult}
   />
   )}
 
