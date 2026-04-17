@@ -1334,7 +1334,7 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — Lower body today. Squat hit 120x6 last session, ready to test progression\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
+  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — **GOAL REACHED** Hit 135 lb squat yesterday! Time to celebrate and set her next goal\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
 ];
 
 const suggestedPrompts = [
@@ -12239,7 +12239,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
-   ═════════════════════════════════════════════ */
+   ════════════════════════════════��════════════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
