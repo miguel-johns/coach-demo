@@ -2095,7 +2095,9 @@ function MobileCanvasSheet({
   onChatSend,
   clients,
   brainDocuments,
-  setBrainDocuments
+  setBrainDocuments,
+  pendingDashboardEdit,
+  onDashboardEditProcessed
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2263,6 +2265,8 @@ clientName: "New Client",
   onClose={onClose}
   onHome={() => setCanvasType("templates")}
   isMobile={true}
+  pendingEdit={pendingDashboardEdit}
+  onEditProcessed={onDashboardEditProcessed}
   />
   )}
   {canvasType === "aiEngine" && (
@@ -5242,103 +5246,46 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
                       maxWidth: 320
                     }}>
                       <p style={{ margin: 0, fontSize: 14, color: WHITE, lineHeight: 1.5 }}>
-                        {selectedConvo.lastMessage}
+                        Great progress! Keep up the consistency.
                       </p>
                     </div>
-                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>Just now</span>
+                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>10:35 AM</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Input */}
+            {/* Input area */}
             <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", borderRadius: 12,
+                background: "#f8faf9", border: `1px solid ${BORDER}`
+              }}>
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  style={{
+                    flex: 1, border: "none", background: "transparent",
+                    fontSize: 14, color: TEXT, outline: "none"
+                  }}
+                />
                 <button style={{
-                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
-                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
+                  width: 36, height: 36, borderRadius: 8,
+                  background: TEAL, border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer"
                 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                </button>
-                <div style={{
-                  flex: 1, background: "#f5f7f6", borderRadius: 12,
-                  display: "flex", alignItems: "flex-end", padding: "4px 4px 4px 16px"
-                }}>
-                  <textarea
-                    value={messageInput}
-                    onChange={e => setMessageInput(e.target.value)}
-                    placeholder="Type a message..."
-                    rows={1}
-                    style={{
-                      flex: 1, border: "none", background: "transparent", outline: "none",
-                      fontSize: 14, color: TEXT, resize: "none", padding: "8px 0",
-                      maxHeight: 120
-                    }}
-                  />
-                  <button style={{
-                    width: 36, height: 36, borderRadius: 10, border: "none",
-                    background: messageInput.trim() ? TEAL : "transparent",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: messageInput.trim() ? "pointer" : "default",
-                    color: messageInput.trim() ? WHITE : TEXT_SEC,
-                    transition: "all 0.15s ease"
-                  }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
-                    </svg>
-                  </button>
-                </div>
-                <button style={{
-                  width: 40, height: 40, borderRadius: 10, border: `1px solid ${BORDER}`,
-                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", color: TEXT_SEC, flexShrink: 0
-                }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
                   </svg>
                 </button>
               </div>
             </div>
           </>
         ) : (
-          /* Empty state */
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", padding: 48, position: "relative"
-          }}>
-            <button 
-              onClick={onClose}
-              style={{
-                position: "absolute", top: 16, right: 16,
-                width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
-                background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-            <div style={{
-              width: 80, height: 80, borderRadius: 20, background: "#f0f4f3",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 24, color: TEXT_SEC
-            }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
-              Select a conversation
-            </h3>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, textAlign: "center", maxWidth: 280 }}>
-              Choose a chat from the sidebar or start a new conversation
-            </p>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+            Select a conversation to start messaging
           </div>
         )}
       </div>
@@ -5635,7 +5582,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
 }
 
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused, empty, create
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   
@@ -5668,54 +5615,185 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   blue700: "#1d4ed8"
   };
   
-  // Mock data for workflow gaps
-  const workflowGaps = [
-    { 
-      id: 1, 
-      title: "New PT Sign Up",
+  // All workflows data
+  const [activeFilter, setActiveFilter] = useState("all");
+  
+  const allWorkflows = [
+    {
+      id: 1,
+      name: "New PT Sign Up",
+      state: "watch", // watch, active, draft, paused
+      health: "attention", // healthy, attention
       type: "audience",
-      meta: "3 clients would benefit now",
-      body: "No onboarding workflow. New clients aren't getting welcome messages, session prep, or week-1 check-ins. Most coaches bundle 6-8 triggers here.",
-      chips: ["Welcome", "Session prep", "Week 1 check-in", "+ 5 more"],
-      color: C.amber700,
-      colorBg: C.amber50
+      iconBg: C.purple50,
+      iconColor: C.purple500,
+      meta: "7 triggers · 3 clients in workflow · activated 2 hours ago",
+      signals: [{ type: "flag", text: "1 flag to review" }, { text: "3 fired · 2 engaged" }],
+      watchTimeLeft: "46h left",
+      needsAttention: true,
+      navigateTo: "watch"
     },
-    { 
-      id: 2, 
-      title: "Marcus Johnson",
+    {
+      id: 2,
+      name: "Session reminders",
+      state: "active",
+      health: "healthy",
+      type: "audience",
+      iconBg: C.teal50,
+      iconColor: C.teal500,
+      meta: "All active PT clients · 24h before every session",
+      signals: [{ text: "Last fired: 2h ago" }, { text: "89% open rate" }, { text: "14 clients" }],
+      navigateTo: "steady"
+    },
+    {
+      id: 3,
+      name: "Monthly check-in",
+      state: "active",
+      health: "healthy",
+      type: "audience",
+      iconBg: C.teal50,
+      iconColor: C.teal500,
+      meta: "Active PT clients · first of the month",
+      signals: [{ text: "Next fires: May 1" }, { text: "76% reply rate" }, { text: "14 clients" }],
+      navigateTo: "steady"
+    },
+    {
+      id: 4,
+      name: "Post-session recaps",
+      state: "active",
+      health: "attention",
+      type: "audience",
+      iconBg: C.teal50,
+      iconColor: C.teal500,
+      meta: "Active PT clients · 2h after each session",
+      signals: [{ type: "flag", text: "Reply rate ↓ 15% this week" }, { text: "18 fired" }],
+      needsAttention: true,
+      navigateTo: "steady"
+    },
+    {
+      id: 5,
+      name: "Morning briefing",
+      state: "active",
+      health: "healthy",
       type: "client",
-      meta: "renewal in 5 weeks",
-      body: "No renewal workflow. Renewal on May 20. He's also missed 2 sessions in the last 3 weeks without a re-engagement message going out.",
-      chips: ["Renewal nudge", "Re-engagement", "Progress report"],
-      color: "#b91c1c",
-      colorBg: "#fef2f2"
+      iconBg: C.teal50,
+      iconColor: C.teal500,
+      meta: "Miguel (coach view) · 6am daily with day's sessions and flags",
+      signals: [{ text: "Last fired: this morning" }, { text: "Running 6 weeks" }],
+      navigateTo: "steady"
     },
-    { 
-      id: 3, 
-      title: "New Lead",
+    {
+      id: 6,
+      name: "New Lead nurture",
+      state: "draft",
+      health: null,
       type: "audience",
-      meta: "7 leads this week, 0 nurtured",
-      body: "No nurture sequence. Leads from your landing page and HFA follow-ups sit cold for 5+ days. Most coaches convert 3x more with a same-day workflow.",
-      chips: ["Same-day welcome", "Day 2 value drop", "Day 5 offer"],
-      color: C.purple700,
-      colorBg: C.purple50
+      iconBg: C.amber50,
+      iconColor: C.amber700,
+      meta: "5 triggers drafted · 7 leads waiting to enter",
+      signals: [{ text: "Created yesterday · not yet activated" }],
+      navigateTo: "design"
     },
-    { 
-      id: 4, 
-      title: "Active PT Clients",
+    {
+      id: 7,
+      name: "Marcus renewal",
+      state: "draft",
+      health: null,
+      type: "client",
+      iconBg: C.coral50,
+      iconColor: C.coral700,
+      meta: "4 triggers drafted · renewal May 20, 5 weeks out",
+      signals: [{ text: "Created 2d ago · not yet activated" }],
+      navigateTo: "client-detail"
+    },
+    {
+      id: 8,
+      name: "Inactive client win-back",
+      state: "paused",
+      health: null,
       type: "audience",
-      meta: "14 clients",
-      body: "Session reminders are on, but no weekly progress reports or milestone celebrations. Bethany mentioned this was a gap at Optimal Performance too.",
-      chips: ["Weekly report", "Milestone celebrations", "Post-session recap"],
-      color: C.teal700,
-      colorBg: C.teal50
+      iconBg: C.surface2,
+      iconColor: C.muted2,
+      meta: "Clients with no session in 30+ days · paused by you 2 weeks ago",
+      signals: [{ text: "4 triggers · last ran 2 weeks ago" }],
+      navigateTo: "paused"
     }
   ];
   
-  // Active workflows
-  const activeWorkflows = [
-    { id: 101, name: "Session reminders", audience: "All active PT clients", schedule: "24h before every session", lastFired: "2h ago", stat: "89% open rate" },
-    { id: 102, name: "Monthly check-in", audience: "Active PT clients", schedule: "first of the month", lastFired: "Next fires: May 1", stat: "76% reply rate" }
+  const workflowTemplates = [
+    { id: "t1", name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients." },
+    { id: "t2", name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call." },
+    { id: "t3", name: "Annual renewal", iconBg: C.coral50, iconColor: C.coral700, desc: "Pre-renewal nudge sequence starting 4 weeks out." }
+  ];
+  
+  const filterCounts = {
+    all: allWorkflows.length,
+    active: allWorkflows.filter(w => w.state === "active").length,
+    watch: allWorkflows.filter(w => w.state === "watch").length,
+    draft: allWorkflows.filter(w => w.state === "draft").length,
+    paused: allWorkflows.filter(w => w.state === "paused").length
+  };
+  
+  const filteredWorkflows = activeFilter === "all" 
+    ? allWorkflows 
+    : allWorkflows.filter(w => w.state === activeFilter);
+  
+  // Marcus renewal triggers for client-detail screen
+  const marcusTriggers = [
+    {
+      id: 1,
+      title: "Year-in-review highlight",
+      tag: "Milestone", tagColor: C.purple700, tagBg: C.purple50,
+      channel: "SMS",
+      desc: "Fires 4 weeks before renewal. Celebrates the year's progress before the renewal conversation happens.",
+      sample: "Marcus — a year in. 47 sessions, squat +85, deadlift +120, every major lift up double-digits. You've shown up. Proud of the work.",
+      meta: "Trigger: Apr 22 (4 weeks before May 20) · Uses your direct-tone rule"
+    },
+    {
+      id: 2,
+      title: "Detailed progress report",
+      tag: "Report", tagColor: C.amber700, tagBg: C.amber50,
+      channel: "Email",
+      desc: "Fires 3 weeks out. Full year of lift data, session attendance charts, and what the next year of training could look like.",
+      sample: "Subject: Your year with me — and what's next · Body opens with the PRs, week-by-week session chart, then a sketch of next year's training block focused on intensity and conditioning.",
+      meta: "Trigger: Apr 29 (3 weeks before May 20) · Email — detail-heavy format"
+    },
+    {
+      id: 3,
+      title: "Renewal conversation opener",
+      tag: "Renewal", tagColor: C.coral700, tagBg: C.coral50,
+      channel: "SMS",
+      desc: "Fires 2 weeks out. Direct ask with continuity pricing offer. SMS because Marcus replies 4x more on text.",
+      sample: "Your renewal's up May 20. Want to lock in another year at the same rate? Year 2 we push intensity — you've earned it.",
+      meta: "Trigger: May 6 (2 weeks before May 20) · $4,800/year continuity pricing"
+    },
+    {
+      id: 4,
+      title: "Final nudge (conditional)",
+      tag: "Renewal", tagColor: C.coral700, tagBg: C.coral50,
+      channel: "SMS",
+      desc: "Fires 3 days before renewal — only if Marcus hasn't responded to trigger 3. Short, accountable, offers a quick call.",
+      sample: "Marcus — 3 days out on renewal. Want to hop on a call this week? 15 min, I'll walk you through year 2.",
+      meta: "Trigger: May 17 if no renewal yet · Skipped if he renews earlier"
+    }
+  ];
+  
+  // Paused workflow triggers
+  const pausedTriggers = [
+    { id: 1, title: "30-day check-in", tag: "Check-in", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 2, title: "45-day \"what's changed\" nudge", tag: "Re-engagement", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 3, title: "60-day coach note", tag: "Re-engagement", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 4, title: "90-day final outreach", tag: "Win-back", tagColor: "#b91c1c", tagBg: "#fef2f2" }
+  ];
+  
+  // Marcus context bullets for "What I know" section
+  const marcusContext = [
+    ["Client 11 months", "signed up June 2025 at $4,800/year"],
+    ["47 sessions completed", "94% show rate through month 9"],
+    ["Missed 2 sessions last 3 weeks", "travel for work, has rescheduled both"],
+    ["Squat +85 lbs, deadlift +120 lbs", "every major lift up double-digits"],
+    ["Prefers SMS over email", "4x reply rate on text vs email"],
+    ["Direct tone works for him", "responds well to accountability framing"]
   ];
   
   // Bundle triggers for design screen
@@ -5761,7 +5839,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       title: "Missed session re-engagement", 
       tag: "Re-engagement", tagColor: "#b91c1c", tagBg: "#fef2f2",
       channel: "SMS",
-      desc: "Fires 48 hours after a no-show. Direct, no softening — lines up with your accountability-forward tone.",
+      desc: "Fires 48 hours after a no-show. Direct, no softening �� lines up with your accountability-forward tone.",
       sample: "Missed Thursday. What happened? Let's get you back on Saturday — reply with a time and I'll lock it in.",
       meta: "Trigger: 48h after no-show · Max 1 per week"
     },
@@ -5799,41 +5877,86 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
     if (setChatMessages) {
       setChatMessages([{
         type: "ai",
-        text: "I looked at your client list and spotted 4 gaps where you're missing workflows. Want to fix one, or see what's already running?",
-        suggestions: ["Build the New PT Sign Up workflow", "Show me what's running for Marcus", "Create a workflow for a new audience"]
+        text: "You've got 3 new leads with no nurture sequence, and Marcus Johnson's renewal is 5 weeks out with no workflow. Want me to build either? Or keep scanning your workflows?",
+        suggestions: ["Build the New Lead nurture sequence", "Design Marcus's renewal workflow", "What other gaps do you see?", "Create a custom audience workflow"]
       }]);
     }
   }, []);
   
-  const navigateTo = (screen, audience = null) => {
+  const navigateTo = (screen, workflow = null) => {
     setActiveScreen(screen);
-    if (audience) setSelectedAudience(audience);
+    if (workflow) setSelectedAudience(workflow);
     
-    // Update chat based on screen
+    const wfName = workflow?.name || "this workflow";
+    const isClient = workflow?.type === "client";
+    
+    // Update chat based on screen and workflow
     if (setChatMessages) {
-      if (screen === "design" && audience) {
-        setChatMessages([{
-          type: "ai",
-          text: "Drafted 7 triggers for New PT Sign Up based on your 6-week onboarding framework, direct-tone rule, and $4,800/year price point. Scan the bundle — tell me what to change.",
-          suggestions: ["Make trigger 3 less frequent", "Remove the renewal nudge, I handle that", "Show me a simulated week for a new client", "Add a milestone message at week 6"]
-        }]);
+      if (screen === "design") {
+        if (isClient) {
+          setChatMessages([{
+            type: "ai",
+            text: `Drafted triggers for ${wfName}. I pulled in their history, recent attendance, and goals. Tell me what to change before activating.`,
+            suggestions: ["Skip trigger 2, I'll handle that myself", "Move the final nudge to 1 week out", "Add a personalized offer", "Show me their full history"]
+          }]);
+        } else {
+          setChatMessages([{
+            type: "ai",
+            text: `Drafted triggers for ${wfName} based on your business model. Scan the bundle — tell me what to change.`,
+            suggestions: ["Make trigger 3 less frequent", "Remove the renewal nudge, I handle that", "Show me a simulated week for a new client", "Add a milestone message"]
+          }]);
+        }
       } else if (screen === "watch") {
         setChatMessages([{
           type: "ai",
-          text: "New PT Sign Up is live. I'm watching the first 48 hours with you. 3 welcome messages fired cleanly. I'll flag anything that looks off — you can pause any trigger with one word.",
-          suggestions: ["Show me what Sarah actually received", "Pause trigger 5 for this weekend", "Why did Kaylee get that message?", "Extend watch mode another 48h"]
+          text: `${wfName} is live. I'm watching the first 48 hours with you. ${workflow?.watchTimeLeft || "46h"} remaining. I'll flag anything that looks off — you can pause any trigger with one word.`,
+          suggestions: ["Show me what clients actually received", "Pause a trigger for this weekend", "Why did that message fire?", "Extend watch mode another 48h"]
         }]);
       } else if (screen === "steady") {
-        setChatMessages([{
-          type: "ai",
-          text: "New PT Sign Up has been running clean for 3 weeks. 82% of clients are engaging with messages. One thing worth your eyes — see the anomaly below.",
-          suggestions: ["Why is trigger 5 underperforming?", "Rewrite the weekly report, feels flat", "Watch the next 10 fires", "Who's not engaging and why"]
-        }]);
+        const hasAttention = workflow?.health === "attention";
+        if (hasAttention) {
+          setChatMessages([{
+            type: "ai",
+            text: `${wfName} needs attention. ${workflow?.signals?.find(s => s.type === "flag")?.text || "Something's drifting."}. Want me to dig in?`,
+            suggestions: ["Why is engagement dropping?", "Show me who's not responding", "Rewrite the underperforming trigger", "Pause this workflow for now"]
+          }]);
+        } else {
+          setChatMessages([{
+            type: "ai",
+            text: `${wfName} has been running smoothly. Clients are engaging well. Anything you want to adjust?`,
+            suggestions: ["Show me detailed metrics", "Watch the next 10 fires", "Who's engaging most?", "I want to edit a trigger"]
+          }]);
+        }
       } else if (screen === "landing") {
         setChatMessages([{
           type: "ai",
-          text: "I looked at your client list and spotted 4 gaps where you're missing workflows. Want to fix one, or see what's already running?",
-          suggestions: ["Build the New PT Sign Up workflow", "Show me what's running for Marcus", "Create a workflow for a new audience"]
+          text: "You've got 3 new leads with no nurture sequence, and Marcus Johnson's renewal is 5 weeks out with no workflow. Want me to build either? Or keep scanning your workflows?",
+          suggestions: ["Build the New Lead nurture sequence", "Design Marcus's renewal workflow", "What other gaps do you see?", "Create a custom audience workflow"]
+        }]);
+      } else if (screen === "client-detail") {
+        const clientName = wfName.replace(" renewal", "").replace(" workflow", "");
+        setChatMessages([{
+          type: "ai",
+          text: `Drafted triggers for ${clientName}'s workflow. I pulled in their history, recent sessions, and goals. Tell me what to change before activating.`,
+          suggestions: ["Skip trigger 2, I'll handle that", "Move the final nudge to 1 week out", "Add a personalized offer", `Show me ${clientName}'s full history`]
+        }]);
+      } else if (screen === "paused") {
+        setChatMessages([{
+          type: "ai",
+          text: `${wfName} is paused. 4 clients would be in it right now if you resumed. Want me to walk through what's changed since you paused it, or resume as-is?`,
+          suggestions: ["Who would enter if I resume?", "Why did I pause this?", "Update triggers before resuming", "Archive this workflow instead"]
+        }]);
+      } else if (screen === "empty") {
+        setChatMessages([{
+          type: "ai",
+          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
+          suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
+        }]);
+      } else if (screen === "create") {
+        setChatMessages([{
+          type: "ai",
+          text: "Pick a template to get started, or describe what you want to build and I'll draft it from scratch.",
+          suggestions: ["Walk me through New PT Sign Up", "Build something for a specific client", "I want to customize a template", "What template fits my business best?"]
         }]);
       }
     }
@@ -5841,9 +5964,9 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.bg }}>
-      {/* Top nav rail */}
+      {/* Top nav rail - simplified, no tabs */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 4, padding: "12px 20px",
+        display: "flex", alignItems: "center", gap: 8, padding: "12px 20px",
         borderBottom: `0.5px solid ${C.border}`, background: C.surface
       }}>
         <div
@@ -5859,191 +5982,230 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <polyline points="15,18 9,12 15,6"/>
           </svg>
         </div>
-        <span style={{ fontSize: 14, fontWeight: 500, color: C.ink, marginRight: 16 }}>AI Workflows</span>
-        
-        {/* Screen tabs */}
-        {["landing", "design", "watch", "steady"].map(screen => (
-          <button
-            key={screen}
-            onClick={() => navigateTo(screen, selectedAudience)}
-            style={{
-              padding: "6px 12px", borderRadius: 6, border: "none",
-              background: activeScreen === screen ? C.teal50 : "transparent",
-              color: activeScreen === screen ? C.teal700 : C.muted,
-              fontSize: 12, fontWeight: 500, cursor: "pointer",
-              transition: "all 0.15s ease"
-            }}
-          >
-            {screen === "landing" ? "Workflows" : screen === "design" ? "Design" : screen === "watch" ? "Watch" : "Steady"}
-          </button>
-        ))}
+        <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>AI Workflows</span>
       </div>
       
       {/* Main content */}
       <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
         
-        {/* LANDING SCREEN - Gaps + Active Workflows */}
+        {/* LANDING SCREEN - Workflow Index */}
         {activeScreen === "landing" && (
           <div style={{ maxWidth: 800 }}>
-            {/* Header with icon badge */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ 
-                display: "inline-flex", alignItems: "center", gap: 6,
-                marginBottom: 12
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
-                </svg>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.teal700 }}>AI Workflows</span>
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ 
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px", borderRadius: 20, background: C.teal50,
+                  marginBottom: 10
+                }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill={C.teal700}>
+                    <polygon points="5,3 19,12 5,21"/>
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>AI workflows</span>
+                </div>
+                <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>Your workflows</h2>
+                <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+                  {filterCounts.active} active · {filterCounts.watch} in watch mode · {filterCounts.draft} drafts · {filterCounts.paused} paused
+                </p>
               </div>
-              <h1 style={{ fontSize: 24, fontWeight: 700, color: C.ink, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
-                {"Here's where your coaching ops are leaking"}
-              </h1>
-              <p style={{ fontSize: 14, color: C.muted, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
-                {"I flagged audiences and clients that don't have the workflows most coaches run. Pick one to design, or jump to what's already active."}
-              </p>
-            </div>
-            
-            {/* Gaps I spotted section */}
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Gaps I spotted</span>
-                <span style={{ fontSize: 12, color: C.muted }}>4 audiences · 2 specific clients</span>
-              </div>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {workflowGaps.map(gap => (
-                  <div
-                    key={gap.id}
-                    onMouseEnter={() => setHoveredCard(gap.id)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                    style={{
-                      padding: "16px 18px", borderRadius: 16,
-                      background: C.surface, 
-                      border: `1px solid ${hoveredCard === gap.id ? C.teal700 : C.border}`,
-                      display: "flex", gap: 14,
-                      cursor: "pointer", transition: "all 0.2s ease",
-                      transform: hoveredCard === gap.id ? "translateY(-2px)" : "none",
-                      boxShadow: hoveredCard === gap.id ? "0 8px 24px rgba(0,0,0,0.08)" : "none"
-                    }}
-                    onClick={() => navigateTo("design", gap)}
-                  >
-                    {/* Icon circle */}
-                    <div style={{
-                      width: 40, height: 40, borderRadius: "50%", background: gap.colorBg,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0, border: `1.5px solid ${gap.color}20`
-                    }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={gap.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        {gap.type === "audience" && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
-                        {gap.type === "client" && <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}
-                      </svg>
-                    </div>
-                    
-                    {/* Content */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Title row with badges */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{gap.title}</span>
-                        <span style={{
-                          padding: "2px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500,
-                          background: gap.type === "client" ? C.blue50 : C.teal50,
-                          color: gap.type === "client" ? C.blue700 : C.teal700
-                        }}>
-                          {gap.type === "client" ? "Specific client" : "Audience"}
-                        </span>
-                        <span style={{ fontSize: 12, color: C.muted }}>· {gap.meta}</span>
-                      </div>
-                      
-                      {/* Body text */}
-                      <p style={{ fontSize: 13, color: C.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
-                        {gap.body}
-                      </p>
-                      
-                      {/* Chips */}
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {gap.chips.map((chip, i) => (
-                          <span key={i} style={{
-                            padding: "4px 10px", borderRadius: 20, fontSize: 11,
-                            background: C.surface2, color: C.muted
-                          }}>{chip}</span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Design button */}
-                    <button
-                      style={{
-                        padding: "8px 16px", borderRadius: 20, border: "none",
-                        background: `linear-gradient(135deg, ${C.teal700}, ${C.teal500})`,
-                        color: C.surface,
-                        fontSize: 13, fontWeight: 500, cursor: "pointer",
-                        display: "flex", alignItems: "center", gap: 6,
-                        alignSelf: "flex-start", flexShrink: 0,
-                        boxShadow: `0 2px 8px ${C.teal700}30`
-                      }}
-                    >
-                      Design
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <polyline points="9,6 15,12 9,18"/>
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Already running section */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Already running</span>
-                <span style={{ fontSize: 12, color: C.muted }}>2 active workflows</span>
-              </div>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {activeWorkflows.map(wf => (
-                  <div
-                    key={wf.id}
-                    style={{
-                      padding: "16px", borderRadius: 16,
-                      background: C.surface, border: `1px solid ${C.border}`,
-                      transition: "all 0.2s ease"
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.teal500 }} />
-                      <span style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>{wf.name}</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, lineHeight: 1.4 }}>
-                      {wf.audience} · {wf.schedule}
-                    </div>
-                    <div style={{ fontSize: 12, color: C.muted2 }}>
-                      {wf.lastFired} · {wf.stat}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Custom audience CTA */}
-            <div style={{
-              padding: "16px", borderRadius: 16, background: C.surface,
-              border: `1px dashed ${C.border}`,
-              display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
-              transition: "all 0.2s ease"
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: "50%", background: C.teal50,
-                border: `1.5px solid ${C.teal700}20`,
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round">
+              <button
+                onClick={() => navigateTo("create")}
+                style={{
+                  padding: "10px 16px", borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
+                Create workflow
+              </button>
+            </div>
+            
+            {/* Filter chip row */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {[
+                { key: "all", label: `All · ${filterCounts.all}` },
+                { key: "active", label: `Active · ${filterCounts.active}` },
+                { key: "watch", label: `Watch mode · ${filterCounts.watch}` },
+                { key: "draft", label: `Drafts · ${filterCounts.draft}` },
+                { key: "paused", label: `Paused · ${filterCounts.paused}` }
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setActiveFilter(f.key)}
+                  style={{
+                    padding: "5px 11px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+                    background: activeFilter === f.key ? C.teal50 : "transparent",
+                    border: `0.5px solid ${activeFilter === f.key ? C.teal700 : C.border2}`,
+                    color: activeFilter === f.key ? C.teal900 : C.muted,
+                    cursor: "pointer", transition: "all 0.15s ease"
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Workflow rows */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filteredWorkflows.map(wf => (
+                <div
+                  key={wf.id}
+                  onClick={() => navigateTo(wf.navigateTo, wf)}
+                  style={{
+                    padding: "14px 16px", borderRadius: 12, background: C.surface,
+                    border: `0.5px solid ${wf.needsAttention ? C.amber200 : C.border}`,
+                    display: "flex", alignItems: "center", gap: 14,
+                    cursor: "pointer", transition: "all 0.15s ease",
+                    opacity: wf.state === "paused" ? 0.7 : 1
+                  }}
+                >
+                  {/* Icon square */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8, background: wf.iconBg,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    {wf.state === "paused" ? (
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: wf.iconColor }} />
+                    ) : (
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: wf.iconColor }} />
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Title row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{wf.name}</span>
+                      
+                      {/* State pill */}
+                      {wf.state === "watch" && (
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: C.purple50, color: C.purple700,
+                          display: "flex", alignItems: "center", gap: 4
+                        }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.purple500 }} />
+                          Watch mode · {wf.watchTimeLeft}
+                        </span>
+                      )}
+                      {wf.state === "active" && wf.health === "healthy" && (
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: C.teal50, color: C.teal900,
+                          display: "flex", alignItems: "center", gap: 4
+                        }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.teal500 }} />
+                          Active · healthy
+                        </span>
+                      )}
+                      {wf.state === "active" && wf.health === "attention" && (
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: C.amber50, color: C.amber700,
+                          display: "flex", alignItems: "center", gap: 4
+                        }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.amber500 }} />
+                          Active · needs attention
+                        </span>
+                      )}
+                      {wf.state === "draft" && (
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: C.surface2, color: C.muted,
+                          display: "flex", alignItems: "center", gap: 4
+                        }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.muted2 }} />
+                          Draft
+                        </span>
+                      )}
+                      {wf.state === "paused" && (
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: C.surface2, color: C.muted,
+                          display: "flex", alignItems: "center", gap: 4
+                        }}>
+                          <div style={{ width: 5, height: 5, borderRadius: 1, background: C.muted2 }} />
+                          Paused
+                        </span>
+                      )}
+                      
+                      {/* Audience/client pill */}
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                        background: wf.type === "client" ? C.blue50 : C.teal50,
+                        color: wf.type === "client" ? C.blue700 : C.teal700
+                      }}>
+                        {wf.type === "client" ? "Specific client" : "Audience"}
+                      </span>
+                    </div>
+                    
+                    {/* Meta line */}
+                    <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5, marginBottom: 4 }}>
+                      {wf.meta}
+                    </div>
+                    
+                    {/* Signals row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 11, color: C.muted2 }}>
+                      {wf.signals.map((sig, i) => (
+                        <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          {sig.type === "flag" && (
+                            <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.amber500 }} />
+                          )}
+                          {sig.text}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Open/Continue link */}
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.teal700, flexShrink: 0 }}>
+                    {wf.state === "draft" ? "Continue →" : "Open →"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Templates section */}
+            <div style={{ marginTop: 24 }}>
+              <div style={{ 
+                fontSize: 10, fontWeight: 600, color: C.muted2, 
+                textTransform: "uppercase", letterSpacing: "0.05em",
+                marginBottom: 12
+              }}>
+                Ready to turn on — templates Milton suggests for your business
               </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>Create a workflow for a custom audience</div>
-                <div style={{ fontSize: 13, color: C.muted }}>{"Group Coaching, Semi-Private, Online-only — describe who it's for in chat."}</div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                {workflowTemplates.map(t => (
+                  <div
+                    key={t.id}
+                    onClick={() => navigateTo("design", t)}
+                    style={{
+                      padding: "14px 16px", borderRadius: 12, background: C.surface,
+                      border: `0.5px dashed ${C.border2}`,
+                      cursor: "pointer", transition: "all 0.15s ease"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: 6, background: t.iconBg,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.iconColor }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{t.name}</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: C.muted, margin: "0 0 8px", lineHeight: 1.4 }}>
+                      {t.desc}
+                    </p>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>Turn on →</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -6067,30 +6229,43 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 </svg>
                 All workflows
               </button>
-              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · gap detected</span>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · {selectedAudience?.state === "draft" ? "draft" : "editing"}</span>
             </div>
             
             {/* Header row */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 24 }}>
               <div style={{
-                width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.teal50,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                border: `1.5px solid ${C.teal700}20`
+                border: `1.5px solid ${selectedAudience?.iconColor || C.teal700}20`
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
+                {selectedAudience?.type === "client" ? (
+                  <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.teal700 }}>
+                    {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                )}
               </div>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
-                    background: C.teal50, color: C.teal700
-                  }}>Audience</span>
+                    background: selectedAudience?.type === "client" ? C.blue50 : C.teal50,
+                    color: selectedAudience?.type === "client" ? C.blue700 : C.teal700
+                  }}>{selectedAudience?.type === "client" ? "Specific client" : "Audience"}</span>
+                  {selectedAudience?.state === "draft" && (
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Draft</span>
+                  )}
                 </div>
                 <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                  Onboarding workflow for clients who just signed up. 3 new clients would enter this workflow immediately if activated.
+                  {selectedAudience?.meta || "Onboarding workflow for clients who just signed up. 3 new clients would enter this workflow immediately if activated."}
                 </p>
               </div>
             </div>
@@ -6248,17 +6423,23 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.purple50,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  border: `1.5px solid ${C.teal700}20`
+                  border: `1.5px solid ${selectedAudience?.iconColor || C.purple500}20`
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  {selectedAudience?.type === "client" ? (
+                    <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.purple700 }}>
+                      {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.purple500} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.teal50, color: C.teal700
@@ -6266,10 +6447,10 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.purple50, color: C.purple700
-                    }}>Watch mode · 46h left</span>
+                    }}>Watch mode · {selectedAudience?.watchTimeLeft || "46h left"}</span>
                   </div>
                   <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                    {"Activated 2 hours ago. 3 clients in the workflow. I'll exit watch mode in 46 hours unless you want me to stay on longer."}
+                    {selectedAudience?.meta || "Activated 2 hours ago. 3 clients in the workflow. I'll exit watch mode in 46 hours unless you want me to stay on longer."}
                   </p>
                 </div>
               </div>
@@ -6506,28 +6687,41 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  width: 44, height: 44, borderRadius: "50%", background: selectedAudience?.iconBg || C.teal50,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  border: `1.5px solid ${C.teal700}20`
+                  border: `1.5px solid ${selectedAudience?.iconColor || C.teal700}20`
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  {selectedAudience?.type === "client" ? (
+                    <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.teal700 }}>
+                      {(selectedAudience?.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience?.iconColor || C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>{selectedAudience?.name || "New PT sign up"}</h2>
                     <span style={{
                       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
-                      background: C.teal50, color: C.teal700,
+                      background: selectedAudience?.health === "attention" ? C.amber50 : C.teal50,
+                      color: selectedAudience?.health === "attention" ? C.amber700 : C.teal700,
                       display: "flex", alignItems: "center", gap: 6
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.teal500 }} />
-                      Active · healthy
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: selectedAudience?.health === "attention" ? C.amber500 : C.teal500 }} />
+                      {selectedAudience?.health === "attention" ? "Active · needs attention" : "Active · healthy"}
                     </span>
+                    {selectedAudience?.type === "client" && (
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.blue50, color: C.blue700
+                      }}>Specific client</span>
+                    )}
                   </div>
                   <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
-                    Running 3 weeks · 11 clients in the workflow · 47 messages sent
+                    {selectedAudience?.meta || "Running 3 weeks · 11 clients in the workflow · 47 messages sent"}
                   </p>
                 </div>
               </div>
@@ -6732,15 +6926,865 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             </div>
           </div>
         )}
+        
+        {/* CLIENT-DETAIL SCREEN - Specific client workflow draft */}
+        {activeScreen === "client-detail" && (
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · draft</span>
+            </div>
+            
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+              {/* Initials avatar - rounded-md to match icon squares */}
+              <div style={{
+                width: 44, height: 44, borderRadius: 8, background: selectedAudience?.iconBg || C.coral50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: selectedAudience?.iconColor || C.coral700 }}>
+                  {(selectedAudience?.name || "MJ").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+              
+              {/* Middle content */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: 0 }}>{selectedAudience?.name || "Marcus renewal"}</h2>
+                  <span style={{
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: C.surface2, color: C.muted,
+                    display: "flex", alignItems: "center", gap: 4
+                  }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.muted2 }} />
+                    {selectedAudience?.state === "draft" ? "Draft" : "Active"}
+                  </span>
+                  <span style={{
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: C.blue50, color: C.blue700
+                  }}>Specific client</span>
+                </div>
+                <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                  {selectedAudience?.meta || "Renewal workflow for Marcus Johnson · annual renewal May 20 · 5 weeks out"}
+                </p>
+              </div>
+              
+              {/* Discard button */}
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0, flexShrink: 0
+                }}
+              >
+                Discard draft
+              </button>
+            </div>
+            
+            {/* What I know about Marcus box */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 8, background: C.purple50, marginBottom: 20
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: "50%", background: C.purple500,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 10, fontWeight: 600, color: C.surface
+                }}>M</div>
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.purple700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  What I know about Marcus
+                </span>
+              </div>
+              
+              {/* 2-column grid of context bullets */}
+              <div style={{ 
+                display: "grid", gridTemplateColumns: "1fr 1fr", 
+                rowGap: 10, columnGap: 20, marginBottom: 12 
+              }}>
+                {marcusContext.map(([label, detail], i) => (
+                  <div key={i} style={{ display: "flex", gap: 8 }}>
+                    <div style={{ 
+                      width: 4, height: 4, borderRadius: "50%", background: C.purple500,
+                      marginTop: 7, flexShrink: 0 
+                    }} />
+                    <span style={{ fontSize: 12, color: C.purple700, lineHeight: 1.5 }}>
+                      <strong>{label}</strong> — {detail}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              <p style={{ fontSize: 12, color: C.purple700, fontStyle: "italic", margin: 0 }}>
+                {"If anything here is wrong, tell me in chat and I'll redraft."}
+              </p>
+            </div>
+            
+            {/* Proposed trigger bundle section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Proposed trigger bundle</span>
+                <span style={{ fontSize: 12, color: C.muted }}>4 triggers · 4-week window before renewal</span>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {marcusTriggers.map((trigger) => (
+                  <div
+                    key={trigger.id}
+                    style={{
+                      padding: "14px 16px", borderRadius: 12,
+                      background: C.surface, border: `0.5px solid ${C.border}`
+                    }}
+                  >
+                    {/* Title row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: C.muted2, minWidth: 16 }}>{trigger.id}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{trigger.title}</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: trigger.tagBg, color: trigger.tagColor
+                      }}>{trigger.tag}</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>{trigger.channel}</span>
+                    </div>
+                    
+                    {/* Description */}
+                    <p style={{ fontSize: 13, color: C.muted, margin: "0 0 12px", lineHeight: 1.5 }}>
+                      {trigger.desc}
+                    </p>
+                    
+                    {/* Sample message */}
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 6, background: C.surface2,
+                      borderLeft: `2px solid ${C.teal700}`, marginBottom: 10
+                    }}>
+                      <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                        "{trigger.sample}"
+                      </p>
+                    </div>
+                    
+                    {/* Meta footer */}
+                    <div style={{ fontSize: 11, color: C.muted2 }}>
+                      {trigger.meta}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Footer row */}
+            <div style={{
+              paddingTop: 16, borderTop: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Marcus enters this workflow on activation �� no cross-bundle conflicts</span>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => navigateTo("landing")}
+                  style={{
+                    padding: "10px 18px", borderRadius: 8, border: `0.5px solid ${C.border}`,
+                    background: C.surface, color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  }}
+                >Save draft</button>
+                <button
+                  onClick={() => navigateTo("watch")}
+                  style={{
+                    padding: "10px 20px", borderRadius: 8, border: "none",
+                    background: C.teal700, color: C.surface,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  }}
+                >Activate bundle</button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* PAUSED SCREEN - Paused workflow detail */}
+        {activeScreen === "paused" && (
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · paused</span>
+            </div>
+            
+            {/* Main card with pinstripe background */}
+            <div style={{
+              position: "relative",
+              padding: 20, borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`, overflow: "hidden"
+            }}>
+              {/* Pinstripe overlay */}
+              <div style={{
+                position: "absolute", inset: 0, pointerEvents: "none",
+                background: `repeating-linear-gradient(
+                  45deg,
+                  transparent,
+                  transparent 20px,
+                  rgba(136, 135, 128, 0.025) 20px,
+                  rgba(136, 135, 128, 0.025) 40px
+                )`
+              }} />
+              
+              {/* Content wrapper */}
+              <div style={{ position: "relative" }}>
+                {/* Header row */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+                  {/* Icon square with square indicator */}
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 8, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 2, background: C.muted2 }} />
+                  </div>
+                  
+                  {/* Middle content */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <h2 style={{ fontSize: 20, fontWeight: 500, color: C.muted, margin: 0 }}>{selectedAudience?.name || "Inactive client win-back"}</h2>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.surface2, color: C.muted,
+                        display: "flex", alignItems: "center", gap: 4
+                      }}>
+                        <div style={{ width: 5, height: 5, borderRadius: 1, background: C.muted2 }} />
+                        Paused
+                      </span>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>{selectedAudience?.type === "client" ? "Specific client" : "Audience"}</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                      {selectedAudience?.meta || "Clients with no session in 30+ days · 4 triggers · paused by you 2 weeks ago"}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Why this is paused section */}
+                <div style={{
+                  padding: "14px 16px", borderRadius: 8, background: C.surface2, marginBottom: 20
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    {/* Pause icon */}
+                    <div style={{
+                      width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 2
+                    }}>
+                      <div style={{ width: 3, height: 7, background: C.muted2, borderRadius: 0.5 }} />
+                      <div style={{ width: 3, height: 7, background: C.muted2, borderRadius: 0.5 }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: C.ink, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                      Why this is paused
+                    </span>
+                  </div>
+                  
+                  <p style={{ fontSize: 13, color: C.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
+                    You paused this on <strong style={{ color: C.ink }}>April 3</strong> with the note:
+                  </p>
+                  
+                  {/* Quote card */}
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 8, background: C.surface,
+                    borderLeft: `2px solid ${C.muted2}`
+                  }}>
+                    <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                      "Messages felt too pushy after 30 days. Want to rework the tone before this goes back on."
+                    </p>
+                  </div>
+                  
+                  <p style={{ fontSize: 11, color: C.muted, margin: "10px 0 0", lineHeight: 1.5 }}>
+                    {"I haven't changed anything since — the triggers and messages are exactly as they were when you paused."}
+                  </p>
+                </div>
+                
+                {/* 3-column metric grid */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 24
+                }}>
+                  {[
+                    { label: "Would enter on resume", value: "4", footer: "inactive 30+ days right now" },
+                    { label: "Suppressed while paused", value: "~23", footer: "messages that would've fired" },
+                    { label: "Last ran", value: "2 weeks", footer: "ago · lifetime 19 clients reached" }
+                  ].map(stat => (
+                    <div key={stat.label} style={{
+                      padding: "12px 14px", borderRadius: 8, background: C.surface2
+                    }}>
+                      <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>{stat.label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 500, color: C.ink }}>{stat.value}</div>
+                      <div style={{ fontSize: 11, color: C.muted2, marginTop: 4 }}>{stat.footer}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Triggers (paused) section */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.muted }}>Triggers (paused)</span>
+                    <span style={{ fontSize: 12, color: C.muted }}>4 triggers · all silent</span>
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {pausedTriggers.map(trigger => (
+                      <div
+                        key={trigger.id}
+                        style={{
+                          padding: "10px 14px", borderRadius: 8, background: C.surface,
+                          border: `0.5px solid ${C.border}`,
+                          display: "flex", alignItems: "center", gap: 10,
+                          opacity: 0.75
+                        }}
+                      >
+                        <span style={{ fontSize: 11, color: C.muted2, minWidth: 14 }}>{trigger.id}</span>
+                        {/* Square status indicator */}
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: C.muted2 }} />
+                        <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{trigger.title}</span>
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                          background: trigger.tagBg, color: trigger.tagColor
+                        }}>{trigger.tag}</span>
+                        <span style={{ fontSize: 11, color: C.muted2, marginLeft: "auto" }}>Paused 2 weeks ago</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* What happens when you resume info box */}
+                <div style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface2,
+                  display: "flex", gap: 12
+                }}>
+                  {/* Info icon */}
+                  <div style={{
+                    width: 18, height: 18, borderRadius: "50%", background: C.surface,
+                    border: `0.5px solid ${C.muted}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
+                  }}>i</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: C.ink, marginBottom: 4 }}>
+                      What happens when you resume
+                    </div>
+                    <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                      {"The 4 inactive clients enter the workflow immediately and get whichever trigger matches their inactivity window. Past members who were already messaged won't get re-messaged — they're recorded as complete."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer action row */}
+            <div style={{
+              paddingTop: 20,
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12
+            }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button
+                  onClick={() => navigateTo("landing")}
+                  style={{
+                    background: "none", border: "none", color: C.muted,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0
+                  }}
+                >Archive workflow</button>
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    background: "none", border: "none", color: C.muted,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0
+                  }}
+                >Edit before resuming</button>
+              </div>
+              <button
+                onClick={() => navigateTo("watch")}
+                style={{
+                  padding: "8px 16px", borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8
+                }}
+              >
+                {/* Play triangle */}
+                <div style={{
+                  width: 0, height: 0,
+                  borderLeft: "7px solid white",
+                  borderTop: "5px solid transparent",
+                  borderBottom: "5px solid transparent"
+                }} />
+                Resume workflow
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* EMPTY STATE SCREEN - First-time onboarding */}
+        {activeScreen === "empty" && (
+          <div style={{ maxWidth: 800 }}>
+            {/* Page header - no Create workflow button */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", borderRadius: 20, background: C.teal50,
+                marginBottom: 10
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill={C.teal700}>
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>AI workflows</span>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>Your workflows</h2>
+              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+                {"You don't have any workflows yet — let's fix that."}
+              </p>
+            </div>
+            
+            {/* Welcome/explainer card - hero element */}
+            <div style={{
+              padding: "28px 24px", borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`, marginBottom: 20,
+              display: "flex", gap: 20
+            }}>
+              {/* Large Milton avatar */}
+              <div style={{
+                width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 500, color: C.teal700 }}>M</span>
+              </div>
+              
+              {/* Content paragraphs */}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 15, fontWeight: 500, color: C.ink, margin: "0 0 8px", lineHeight: 1.5 }}>
+                  A workflow is a bundle of automated messages that run in the background for a group or specific client.
+                </p>
+                <p style={{ fontSize: 14, color: C.muted, margin: "0 0 8px", lineHeight: 1.6 }}>
+                  {"Session reminders. Welcome sequences. Renewal nudges. You design the bundle once, I run it quietly, and I flag you if anything drifts."}
+                </p>
+                <p style={{ fontSize: 13, color: C.muted2, margin: 0, lineHeight: 1.6 }}>
+                  Most coaches start with 1-2 workflows and grow from there. Takes about 5 minutes to set up your first.
+                </p>
+              </div>
+            </div>
+            
+            {/* Start with a template section */}
+            <div style={{ marginTop: 32, marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Start with a template</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{"Ready to turn on — pulled for your business from conversations we've had."}</div>
+                </div>
+                <span style={{ fontSize: 11, color: C.muted2 }}>4 suggested</span>
+              </div>
+            </div>
+            
+            {/* Template list */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+              {/* Card 1 - RECOMMENDED */}
+              <div style={{
+                position: "relative",
+                padding: "16px 18px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.teal700}`
+              }}>
+                {/* Recommended badge */}
+                <div style={{
+                  position: "absolute", top: -8, left: 14,
+                  padding: "2px 8px", borderRadius: 20,
+                  background: C.teal700, color: C.surface,
+                  fontSize: 10, fontWeight: 500
+                }}>RECOMMENDED FOR YOU</div>
+                
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  {/* Icon square */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8, background: C.amber50,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.amber700 }} />
+                  </div>
+                  
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>New PT Sign Up</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>Audience · 7 triggers</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: C.muted, margin: "0 0 8px", lineHeight: 1.5 }}>
+                      Onboard new PT clients over 6 weeks: welcome, session reminders, post-session recaps, weekly progress reports, missed-session re-engagement, week 6 milestone, and annual renewal nudge.
+                    </p>
+                    <p style={{ fontSize: 11, color: "#085041", margin: 0, fontStyle: "italic" }}>
+                      Milton matched this because you run a 6-week onboarding framework and price at $4,800/year annual.
+                    </p>
+                  </div>
+                  
+                  {/* Primary button */}
+                  <button
+                    onClick={() => navigateTo("design")}
+                    style={{
+                      padding: "8px 14px", borderRadius: 8, border: "none",
+                      background: C.teal700, color: C.surface,
+                      fontSize: 13, fontWeight: 500, cursor: "pointer",
+                      alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                    }}
+                  >Start here →</button>
+                </div>
+              </div>
+              
+              {/* Card 2 - New Lead nurture */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.purple50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.purple700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>New Lead nurture</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 5 triggers</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    5-touch sequence from first contact through discovery call: same-day welcome, day 2 value drop, day 5 case study, day 8 offer, day 12 re-engagement.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+              
+              {/* Card 3 - Session reminders */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.blue50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.blue700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Session reminders</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 1 trigger</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    24h before every session. Simplest workflow to start with — lowest risk, highest show-rate impact. Most coaches see +7 points on attendance.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+              
+              {/* Card 4 - Annual renewal */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.coral50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.coral700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Annual renewal</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 4 triggers</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    Pre-renewal sequence starting 4 weeks out: year-in-review, detailed progress report, renewal conversation, conditional final nudge.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+            </div>
+            
+            {/* Or build something custom section */}
+            <div style={{ marginTop: 32, marginBottom: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Or build something custom</div>
+              <div style={{ fontSize: 12, color: C.muted }}>{"For audiences or clients the templates don't cover."}</div>
+            </div>
+            
+            {/* 2-column custom-build cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 32 }}>
+              {/* Card A - For an audience */}
+              <div
+                onClick={() => navigateTo("create")}
+                style={{
+                  padding: "16px 18px", borderRadius: 12, background: C.surface,
+                  border: `0.5px dashed ${C.border2}`, cursor: "pointer"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  {/* Three dots icon */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 2
+                  }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>For an audience</span>
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: "0 0 10px", lineHeight: 1.55 }}>
+                  {"Group Coaching, Semi-Private, Online-only, or any other segment of your business. Describe who it's for in chat."}
+                </p>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.blue700 }}>Start in chat →</span>
+              </div>
+              
+              {/* Card B - For a specific client */}
+              <div
+                onClick={() => navigateTo("create")}
+                style={{
+                  padding: "16px 18px", borderRadius: 12, background: C.surface,
+                  border: `0.5px dashed ${C.border2}`, cursor: "pointer"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  {/* Single circle icon */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.muted }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>For a specific client</span>
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: "0 0 10px", lineHeight: 1.55 }}>
+                  {"One-on-one workflows tailored to a single client's goals, renewal date, or history. Pick the client in chat."}
+                </p>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.blue700 }}>Start in chat →</span>
+              </div>
+            </div>
+            
+            {/* Bottom nudge info box */}
+            <div style={{
+              padding: "12px 16px", borderRadius: 8, background: C.surface2,
+              display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: "50%", background: C.surface,
+                border: `0.5px solid ${C.muted}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
+              }}>i</div>
+<p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                {"Not sure where to start? Ask Milton 'which template fits my business best' in chat and we'll figure it out together."}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* CREATE SCREEN - Template picker */}
+        {activeScreen === "create" && (
+          <div style={{ maxWidth: 720 }}>
+            {/* Header section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "3px 9px", borderRadius: 20, background: C.teal50,
+                marginBottom: 10
+              }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill={C.teal700}>
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>Create workflow</span>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>
+                What should Milton build?
+              </h2>
+              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+                Pick a template to start, or tell Milton what you want in chat.
+              </p>
+            </div>
+            
+            {/* Start with a template section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ 
+                fontSize: 11, fontWeight: 500, color: C.muted, 
+                textTransform: "uppercase", letterSpacing: "0.04em",
+                marginBottom: 12
+              }}>
+                Start with a template
+              </div>
+              
+              {/* 2-column template grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {[
+                  { name: "New PT Sign Up", iconBg: C.amber50, iconColor: C.amber700, desc: "7-trigger onboarding bundle for new personal training clients over 6 weeks.", meta: "Audience �� 7 triggers" },
+                  { name: "New Lead nurture", iconBg: C.purple50, iconColor: C.purple700, desc: "5-touch sequence from first contact through discovery call.", meta: "Audience · 5 triggers" },
+                  { name: "Session reminders", iconBg: C.blue50, iconColor: C.blue700, desc: "24h before every session. Simplest workflow, biggest attendance impact.", meta: "Audience · 1 trigger" },
+                  { name: "Annual renewal", iconBg: C.coral50, iconColor: C.coral700, desc: "Pre-renewal sequence starting 4 weeks out through renewal date.", meta: "Audience · 4 triggers" },
+                  { name: "Morning briefing", iconBg: C.teal50, iconColor: C.teal700, desc: "Daily 6am summary for you — sessions, flags, client pulse.", meta: "Coach-facing · 1 trigger" },
+                  { name: "Inactive win-back", iconBg: "#fef2f2", iconColor: "#b91c1c", desc: "30 / 45 / 60 / 90-day touches for clients who've gone quiet.", meta: "Audience · 4 triggers" }
+                ].map(t => (
+                  <div
+                    key={t.name}
+                    onClick={() => navigateTo("design", t)}
+                    style={{
+                      padding: "14px 16px", borderRadius: 10,
+                      background: C.surface, border: `0.5px solid ${C.border}`,
+                      cursor: "pointer", transition: "border-color 0.15s ease"
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = C.border2}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+                  >
+                    {/* Row 1: icon + title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 6, background: t.iconBg,
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                      }}>
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: t.iconColor }} />
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{t.name}</span>
+                    </div>
+                    {/* Row 2: description */}
+                    <p style={{ 
+                      fontSize: 12, color: C.muted, margin: "0 0 8px", 
+                      lineHeight: 1.5,
+                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                    }}>
+                      {t.desc}
+                    </p>
+                    {/* Row 3: meta */}
+                    <div style={{ fontSize: 11, color: C.muted2 }}>{t.meta}</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* See more link */}
+              <div style={{ paddingTop: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: C.blue700, cursor: "pointer" }}>
+                  See 4 more templates →
+                </span>
+              </div>
+            </div>
+            
+            {/* Custom path section */}
+            <div style={{
+              padding: "16px 18px", borderRadius: 10,
+              background: C.surface, border: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", gap: 14
+            }}>
+              {/* Milton avatar */}
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%", background: C.teal50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: C.teal700 }}>M</span>
+              </div>
+              
+              {/* Text content */}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.ink, marginBottom: 2 }}>
+                  Or describe something custom
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                  {"Tell Milton who it's for and what you want in the chat — I'll draft it from there."}
+                </p>
+              </div>
+              
+              {/* Start in chat button */}
+              <button
+                onClick={() => {
+                  if (setChatMessages) {
+                    setChatMessages([{
+                      type: "ai",
+                      text: "Let's build a custom workflow. Who's this for — an audience, a specific client, or an event?",
+                      suggestions: ["For an audience (like all new PT clients)", "For a specific client", "For an event or date"]
+                    }]);
+                  }
+                }}
+                style={{
+                  padding: "10px 16px", borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  flexShrink: 0, whiteSpace: "nowrap"
+                }}
+              >Start in chat →</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ══════��══════════════════════════════════════
+/* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════════════════ */
-function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
+function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [deviceSize, setDeviceSize] = useState("mobile"); // mobile | tablet
@@ -6749,6 +7793,99 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [publishModal, setPublishModal] = useState(false);
   const CANVAS_TEAL = "#2BBFAA";
+  
+  // Config state per template
+  const [configs, setConfigs] = useState({});
+  const [configHistory, setConfigHistory] = useState({});
+  
+  // Default configs for each dashboard template
+  const DEFAULT_CONFIGS = {
+    workout: {
+      headerBg: "#1a1a1a", headerTextColor: "#ffffff", bodyBg: "#ffffff", accentColor: "#4caf50",
+      titleSize: 28, showCoachNote: true, showVideoLinks: true, showRestTimers: true, showTempoChips: true,
+      showProgressBar: true, coachNote: "Focus on controlled negatives today."
+    },
+    morning: {
+      headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#111111", cardDarkBg: "#1a1a1a",
+      showSchedule: true, showProtocolCard: true, showChallengeCard: true, showActionButton: true, showWeekGlance: true
+    },
+    nutrition: {
+      headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#111111",
+      showCaloriesCard: true, showMacrosCard: true, showFiberWater: true, showFoodLog: true, showAiInsights: true
+    },
+    mindset: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#10b981", showHeroImage: true, showAiReasoning: true },
+    recovery: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#8b5cf6", showHeroStats: true, showAiSummary: true },
+    weekly: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#3b82f6", showProgressBar: true },
+    mealselection: { headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#14b8a6" }
+  };
+  
+  const getCurrentConfig = () => {
+    if (!selectedTemplate) return {};
+    return configs[selectedTemplate.id] || DEFAULT_CONFIGS[selectedTemplate.id] || {};
+  };
+  
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    if (!configs[template.id]) {
+      setConfigs(prev => ({ ...prev, [template.id]: { ...DEFAULT_CONFIGS[template.id] } }));
+    }
+  };
+  
+  // Process edit from external chat
+  const processEdit = async (userMessage) => {
+    if (!userMessage.trim() || !selectedTemplate) {
+      return { success: false, response: "Please select a dashboard template first." };
+    }
+    const currentConfig = getCurrentConfig();
+    const lowerMsg = userMessage.toLowerCase().trim();
+    
+    if (lowerMsg === "undo" || lowerMsg === "go back") {
+      const history = configHistory[selectedTemplate.id] || [];
+      if (history.length > 0) {
+        setConfigs(prev => ({ ...prev, [selectedTemplate.id]: history[history.length - 1] }));
+        setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: history.slice(0, -1) }));
+        if (published) setHasChanges(true);
+        return { success: true, response: "Undone — reverted to the previous version." };
+      }
+      return { success: true, response: "Nothing to undo — this is the original state." };
+    }
+    
+    if (lowerMsg === "reset") {
+      setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...DEFAULT_CONFIGS[selectedTemplate.id] } }));
+      setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [] }));
+      if (published) setHasChanges(true);
+      return { success: true, response: "Reset — restored the default configuration." };
+    }
+    
+    try {
+      const response = await fetch("/api/dashboard-edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, currentConfig, templateId: selectedTemplate.id })
+      });
+      const data = await response.json();
+      
+      if (data.success && data.changedKeys?.length > 0) {
+        setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [...(prev[selectedTemplate.id] || []), currentConfig] }));
+        setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...currentConfig, ...data.updates } }));
+        if (published) setHasChanges(true);
+        return { success: true, response: `Done — updated ${data.changedKeys.length} setting${data.changedKeys.length > 1 ? "s" : ""}. Check the preview!` };
+      } else {
+        return { success: false, response: "I couldn't figure that out. Try being more specific, like \"make the background darker\" or \"hide the rest timers.\"" };
+      }
+    } catch (error) {
+      return { success: false, response: "Something went wrong. Try again?" };
+    }
+  };
+  
+  // Handle pending edits from parent chat
+  useEffect(() => {
+    if (pendingEdit && selectedTemplate) {
+      processEdit(pendingEdit).then(result => {
+        if (onEditProcessed) onEditProcessed(result);
+      });
+    }
+  }, [pendingEdit]);
 
   const handlePublish = () => {
     setPublished(true);
@@ -6893,7 +8030,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
             {dashboardTemplates.map((template) => (
               <div
                 key={template.id}
-                onClick={() => setSelectedTemplate(template)}
+                onClick={() => handleSelectTemplate(template)}
                 onMouseEnter={() => setHoveredTemplate(template.id)}
                 onMouseLeave={() => setHoveredTemplate(null)}
                 style={{
@@ -7216,31 +8353,28 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
 )}
   
   {/* Preview area */}
-  <div style={{
-  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-  padding: 24, overflow: "auto"
-  }}>
-  <div style={{
-  width: deviceSize === "mobile" ? 375 : 768,
-  height: deviceSize === "mobile" ? 667 : 500,
-  background: WHITE,
-  borderRadius: 24,
-  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-  overflow: "hidden",
-  display: "flex", flexDirection: "column"
-  }}>
-  {/* Render actual dashboard component based on template */}
-  <div style={{ flex: 1, overflow: "auto" }}>
-            {selectedTemplate.id === "morning" && <MorningDashboard />}
-            {selectedTemplate.id === "workout" && <WorkoutDashboard />}
-            {selectedTemplate.id === "recovery" && <ProgressDashboard />}
-            {selectedTemplate.id === "weekly" && <ProgramDashboard />}
-            {selectedTemplate.id === "nutrition" && <NutritionDashboard />}
-            {selectedTemplate.id === "mindset" && <RecipeDashboard />}
-            {selectedTemplate.id === "mealselection" && <WeeklyRecipePicker />}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "auto" }}>
+          <div style={{
+            width: deviceSize === "mobile" ? 375 : 768,
+            height: deviceSize === "mobile" ? 667 : 500,
+            background: WHITE,
+            borderRadius: 24,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+            display: "flex", flexDirection: "column"
+          }}>
+            {/* Render actual dashboard component based on template */}
+            <div style={{ flex: 1, overflow: "auto" }}>
+              {selectedTemplate.id === "morning" && <MorningDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "workout" && <WorkoutDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "recovery" && <ProgressDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "weekly" && <ProgramDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "nutrition" && <NutritionDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "mindset" && <RecipeDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "mealselection" && <WeeklyRecipePicker config={getCurrentConfig()} />}
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
@@ -11137,6 +12271,15 @@ export default function MiltonDashboard() {
   const [canvasHistory, setCanvasHistory] = useState([]);
   const [canvasHistoryIndex, setCanvasHistoryIndex] = useState(-1);
   const [canvasSelectedDay, setCanvasSelectedDay] = useState(null); // For calendar day zoom
+  
+  // Dashboard editing state (for AI Dashboards canvas)
+  const [pendingDashboardEdit, setPendingDashboardEdit] = useState(null);
+  const handleDashboardEditResult = (result) => {
+    setPendingDashboardEdit(null);
+    setChatMessages(prev => [...prev, { type: "ai", text: result.response }]);
+    setChatTyping(false);
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   const clientNames = clients.map(c => c.name);
 
@@ -11146,6 +12289,12 @@ export default function MiltonDashboard() {
     setChatTyping(true);
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     const delay = 300;
+    
+    // If AI Dashboards canvas is open, route edit messages to it
+    if (canvasType === "aiDashboards") {
+      setPendingDashboardEdit(text);
+      return;
+    }
 
     // Report customization commands (keep local for instant response)
     const low = text.toLowerCase();
@@ -11772,9 +12921,11 @@ export default function MiltonDashboard() {
 )}
   {canvasType === "aiDashboards" && (
   <AIDashboardsCanvas
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   onHome={() => setCanvasType("templates")}
     isMobile={isMobile}
+    pendingEdit={pendingDashboardEdit}
+    onEditProcessed={handleDashboardEditResult}
   />
 )}
 {canvasType === "aiEngine" && (
@@ -12420,7 +13571,7 @@ isMobile={isMobile}
   {isMobile && (
 <MobileCanvasSheet
   isOpen={canvasMode}
-  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   canvasType={canvasType}
   canvasData={canvasData}
   setCanvasType={setCanvasType}
@@ -12432,6 +13583,8 @@ isMobile={isMobile}
   clients={clients}
   brainDocuments={brainDocuments}
   setBrainDocuments={setBrainDocuments}
+  pendingDashboardEdit={pendingDashboardEdit}
+  onDashboardEditProcessed={handleDashboardEditResult}
   />
   )}
 

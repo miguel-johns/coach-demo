@@ -112,7 +112,7 @@ function TimerChip({ minutes }) {
   );
 }
 
-export default function RecipeDashboard() {
+export default function RecipeDashboard({ config = {} }) {
   const r = RECIPE;
   const [checkedIngredients, setCheckedIngredients] = useState({});
   const [completedSteps, setCompletedSteps] = useState({});

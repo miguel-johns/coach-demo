@@ -459,7 +459,7 @@ function MealRow({ meal, onEdit, onDelete, expanded, onExpand }) {
   );
 }
 
-export default function NutritionDashboard() {
+export default function NutritionDashboard({ config = {} }) {
   const [data] = useState(SAMPLE_DATA);
   const [view, setView] = useState("today");
   const [meals, setMeals] = useState(SAMPLE_DATA.meals);

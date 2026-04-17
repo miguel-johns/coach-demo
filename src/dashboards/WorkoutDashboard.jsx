@@ -180,12 +180,25 @@ function ExerciseRow({ exercise, showTempo, showRest, setLogs, onSetUpdate, onTo
   );
 }
 
-export default function WorkoutDashboard() {
+export default function WorkoutDashboard({ config = {} }) {
   const [workout] = useState(WORKOUT);
   const [setLogs, setSetLogs] = useState(() => initSetLogs(WORKOUT.exercises));
   const [expandedId, setExpandedId] = useState(null);
   const [saved, setSaved] = useState(false);
   const [started, setStarted] = useState(false);
+  
+  // Config-driven values with defaults
+  const headerBg = config.headerBg || C.dark;
+  const headerTextColor = config.headerTextColor || "#ffffff";
+  const bodyBg = config.bodyBg || C.bg;
+  const accentColor = config.accentColor || C.done;
+  const titleSize = config.titleSize || 28;
+  const showCoachNote = config.showCoachNote !== false;
+  const showVideoLinks = config.showVideoLinks !== false;
+  const showRestTimers = config.showRestTimers !== false;
+  const showTempoChips = config.showTempoChips !== false;
+  const showProgressBar = config.showProgressBar !== false;
+  const coachNote = config.coachNote || workout.coachNote;
 
   const handleSetUpdate = (exId, setIndex, updated) => {
     setSaved(false);
@@ -208,7 +221,7 @@ export default function WorkoutDashboard() {
   // ---- NOT STARTED STATE ----
   if (!started) {
     return (
-      <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, maxWidth: 480, margin: "0 auto" }}>
+      <div style={{ minHeight: "100vh", background: bodyBg, fontFamily: FONT, maxWidth: 480, margin: "0 auto" }}>
         <style>{`
           @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
           @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
@@ -217,13 +230,13 @@ export default function WorkoutDashboard() {
 
         {/* Hero */}
         <div style={{
-          padding: "52px 20px 28px", background: C.dark, color: "#fff",
+          padding: "52px 20px 28px", background: headerBg, color: headerTextColor,
           animation: "fadeIn 0.5s ease",
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: headerBg === "#ffffff" || headerBg === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
             {workout.coachName} · {workout.date}
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.15, marginBottom: 4 }}>
+          <div style={{ fontSize: titleSize, fontWeight: 800, lineHeight: 1.15, marginBottom: 4 }}>
             {workout.dayLabel}
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>
