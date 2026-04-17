@@ -2273,7 +2273,7 @@ clientName: "New Client",
 isMobile={true}
   />
   )}
-  {canvasType === "workflows" && (
+{canvasType === "workflows" && (
   <WorkflowsCanvas
   onClose={onClose}
   onHome={() => setCanvasType("templates")}
@@ -4348,7 +4348,7 @@ return (
         );
       })()}
 
-      {/* ��── DAILY BREAKDOWN CARDS ─── */}
+      {/* ��─�� DAILY BREAKDOWN CARDS ─── */}
       {(() => {
         const cards = [
           {
