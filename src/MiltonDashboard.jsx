@@ -5825,7 +5825,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "steady") {
         setChatMessages([{
           type: "ai",
-          text: "This workflow is now running steadily. 94% delivery rate, 78% open rate. No action needed — I'll flag anomalies."
+          text: "New PT Sign Up has been running clean for 3 weeks. 82% of clients are engaging with messages. One thing worth your eyes — see the anomaly below.",
+          suggestions: ["Why is trigger 5 underperforming?", "Rewrite the weekly report, feels flat", "Watch the next 10 fires", "Who's not engaging and why"]
         }]);
       } else if (screen === "landing") {
         setChatMessages([{
@@ -6462,58 +6463,249 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
         
         {/* STEADY SCREEN - Ongoing view */}
         {activeScreen === "steady" && (
-          <div style={{ maxWidth: 600 }}>
-            <button
-              onClick={() => navigateTo("landing")}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
-                background: "none", border: "none", color: C.muted,
-                fontSize: 13, cursor: "pointer", padding: 0
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-              All workflows
-            </button>
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · active</span>
+            </div>
             
-            <div style={{
-              padding: 20, borderRadius: 12, background: C.surface,
-              border: `0.5px solid ${C.border}`
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+              <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 10, height: 10, borderRadius: "50%", background: C.teal500
-                }} />
-                <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Running steadily</span>
+                  width: 44, height: 44, borderRadius: 10, background: C.amber50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.amber700 }} />
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
+                      background: C.teal50, color: C.teal900,
+                      display: "flex", alignItems: "center", gap: 6
+                    }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.teal500 }} />
+                      Active · healthy
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    Running 3 weeks · 11 clients in the workflow · 47 messages sent
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 6, border: `0.5px solid ${C.border}`,
+                  background: C.surface, color: C.muted, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>Edit in chat</button>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 6, border: `0.5px solid ${C.border}`,
+                  background: C.surface, color: C.muted, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>Pause</button>
+              </div>
+            </div>
+            
+            {/* 4-column sparkline metric grid */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+              marginBottom: 24
+            }}>
+              {[
+                { 
+                  label: "Messages sent", value: "47", delta: "↑ 12", deltaColor: C.teal500,
+                  points: "0,22 14,20 28,18 42,15 56,12 70,10 84,7 100,4", lineColor: C.teal500,
+                  footer: "last 8 weeks"
+                },
+                { 
+                  label: "Engagement rate", value: "82%", delta: "↑ 7pt", deltaColor: C.teal500,
+                  points: "0,18 14,16 28,17 42,14 56,12 70,11 84,8 100,6", lineColor: C.teal500,
+                  baseline: true, footer: "75% baseline · dashed line"
+                },
+                { 
+                  label: "Session show rate", value: "94%", delta: "↑ 7pt", deltaColor: C.teal500,
+                  points: "0,12 14,13 28,11 42,9 56,8 70,6 84,4 100,3", lineColor: C.teal500,
+                  footer: "was 87% pre-workflow"
+                },
+                { 
+                  label: "Trigger 5 reply rate", value: "22%", valueColor: C.amber700, delta: "↓ 40%", deltaColor: C.amber700,
+                  points: "0,8 14,7 28,6 42,7 56,8 70,10 84,14 100,20", lineColor: C.amber700,
+                  footer: "needs investigation"
+                }
+              ].map(stat => (
+                <div key={stat.label} style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface2
+                }}>
+                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>{stat.label}</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 22, fontWeight: 500, color: stat.valueColor || C.ink }}>{stat.value}</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: stat.deltaColor }}>{stat.delta}</span>
+                  </div>
+                  <svg viewBox="0 0 100 24" preserveAspectRatio="none" style={{ width: "100%", height: 24, marginBottom: 6 }}>
+                    {stat.baseline && (
+                      <line x1="0" y1="14" x2="100" y2="14" stroke={C.border2} strokeWidth="1" strokeDasharray="2,2" />
+                    )}
+                    <polyline fill="none" stroke={stat.lineColor} strokeWidth="1.5" points={stat.points} />
+                    <circle cx="100" cy={stat.points.split(" ").pop().split(",")[1]} r="2.5" fill={stat.lineColor} />
+                  </svg>
+                  <div style={{ fontSize: 10, color: C.muted2 }}>{stat.footer}</div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Anomaly callout */}
+            <div style={{
+              padding: "12px 14px", borderRadius: 12, background: C.amber50,
+              border: `0.5px solid ${C.amber200}`, marginBottom: 24
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: "#78350f" }}>
+                  Trigger 5 (re-engagement) reply rate dropped 40% this week
+                </span>
                 <span style={{
-                  padding: "3px 8px", borderRadius: 20, background: C.teal50,
-                  fontSize: 11, color: C.teal700, fontWeight: 500
-                }}>Healthy</span>
+                  padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                  background: C.amber200, color: C.amber700
+                }}>Anomaly</span>
+              </div>
+              <p style={{ fontSize: 13, color: C.amber700, margin: "0 0 12px", lineHeight: 1.5 }}>
+                {"3 of 4 missed-session messages got no reply. Previous weeks averaged 62% reply rate. Could be the message, the timing (Sunday evening), or just a rough week for this cohort. Want me to dig in?"}
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 6, border: "none",
+                  background: C.amber700, color: C.surface,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>Investigate</button>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 6,
+                  background: "transparent", border: `0.5px solid ${C.amber700}`,
+                  color: C.amber700, fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>Show me the 3 messages</button>
+                <button style={{
+                  padding: "8px 14px", borderRadius: 6, border: "none",
+                  background: "transparent", color: C.amber700,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer"
+                }}>{"Dismiss, it's a fluke"}</button>
+              </div>
+            </div>
+            
+            {/* Trigger health section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Trigger health</span>
+                <span style={{ fontSize: 12, color: C.muted }}>7 triggers · 1 needs attention</span>
               </div>
               
-              <div style={{
-                display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12,
-                marginBottom: 20
-              }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {[
-                  { label: "Delivery rate", value: "94%" },
-                  { label: "Open rate", value: "78%" },
-                  { label: "Reply rate", value: "17%" }
-                ].map(stat => (
-                  <div key={stat.label} style={{
-                    padding: "14px 12px", borderRadius: 8, background: C.surface2,
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: 18, fontWeight: 500, color: C.ink }}>{stat.value}</div>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{stat.label}</div>
+                  { num: 1, status: "green", title: "Welcome + first session prep", tag: "Welcome", tagColor: C.teal700, tagBg: C.teal50, meta: "11 fired · 91% engaged · Last: 2d ago" },
+                  { num: 2, status: "green", title: "24-hour session reminder", tag: "Reminder", tagColor: C.blue700, tagBg: C.blue50, meta: "22 fired · 88% engaged · Next: 5h" },
+                  { num: 3, status: "green", title: "Post-session recap", tag: "Recap", tagColor: C.teal700, tagBg: C.teal50, meta: "19 fired · 76% engaged · Next: tomorrow" },
+                  { num: 4, status: "green", title: "Weekly progress report", tag: "Report", tagColor: C.amber700, tagBg: C.amber50, meta: "9 fired · 67% engaged · Next: Sun 6pm" },
+                  { num: 5, status: "amber", title: "Missed session re-engagement", tag: "Re-engagement", tagColor: "#b91c1c", tagBg: "#fef2f2", badge: "↓ 40%", meta: "4 fired · 22% engaged", metaColor: C.amber700, metaSuffix: " · Last: yesterday" },
+                  { num: 6, status: "gray", title: "Week 6 milestone", tag: "Milestone", tagColor: C.purple700, tagBg: C.purple50, meta: "0 fired yet · First fire: in 3 weeks" },
+                  { num: 7, status: "gray", title: "Renewal nudge", tag: "Renewal", tagColor: C.coral700, tagBg: C.coral50, meta: "0 fired yet · First fire: in 45 weeks" }
+                ].map(trigger => (
+                  <div
+                    key={trigger.num}
+                    style={{
+                      padding: "10px 14px", borderRadius: 8, background: C.surface,
+                      border: `0.5px solid ${trigger.status === "amber" ? C.amber200 : C.border}`,
+                      display: "flex", alignItems: "center", gap: 10
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: C.muted, minWidth: 14 }}>{trigger.num}</span>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: trigger.status === "green" ? C.teal500 : trigger.status === "amber" ? C.amber500 : C.muted2
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{trigger.title}</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: trigger.tagBg, color: trigger.tagColor
+                    }}>{trigger.tag}</span>
+                    {trigger.badge && (
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: C.amber50, color: C.amber700
+                      }}>{trigger.badge}</span>
+                    )}
+                    <span style={{ fontSize: 11, color: trigger.metaColor || C.muted, marginLeft: "auto" }}>
+                      {trigger.meta}{trigger.metaSuffix && <span style={{ color: C.muted }}>{trigger.metaSuffix}</span>}
+                    </span>
                   </div>
                 ))}
               </div>
-              
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-                This workflow has been running for 2 weeks with no issues. Milton will alert you if any metrics drop below normal thresholds.
+            </div>
+            
+            {/* Recent activity section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Recent activity</span>
+                <button style={{
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 11, cursor: "pointer", padding: 0
+                }}>View full log</button>
               </div>
+              
+              <div style={{
+                background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 12,
+                overflow: "hidden"
+              }}>
+                {[
+                  { time: "5h ago", avatar: "SC", avatarBg: C.teal50, avatarColor: C.teal700, text: "Sarah Chen replied to weekly report — 'this is great, hitting the numbers'", pill: "Engaged", pillBg: C.teal50, pillColor: C.teal700 },
+                  { time: "9h ago", avatar: "JR", avatarBg: C.blue50, avatarColor: C.blue700, text: "Jake Ramirez session reminder delivered · tapped reschedule link", pill: "Delivered", pillBg: C.surface2, pillColor: C.muted },
+                  { time: "Yesterday", avatar: "DT", avatarBg: "#fef2f2", avatarColor: "#b91c1c", text: "Derek Tran got re-engagement message · no reply after 24h", pill: "Silent", pillBg: C.amber50, pillColor: C.amber700 },
+                  { time: "2d ago", avatar: "AP", avatarBg: C.purple50, avatarColor: C.purple700, text: "Alicia Park entered workflow · welcome message sent", pill: "New", pillBg: C.surface2, pillColor: C.muted }
+                ].map((activity, idx, arr) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "10px 14px",
+                      borderBottom: idx < arr.length - 1 ? `0.5px solid ${C.border}` : "none",
+                      display: "flex", alignItems: "center", gap: 12
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: C.muted, minWidth: 60 }}>{activity.time}</span>
+                    <div style={{
+                      width: 24, height: 24, borderRadius: "50%", background: activity.avatarBg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, fontWeight: 600, color: activity.avatarColor, flexShrink: 0
+                    }}>{activity.avatar}</div>
+                    <span style={{ fontSize: 12, color: C.ink, flex: 1 }}>{activity.text}</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                      background: activity.pillBg, color: activity.pillColor, flexShrink: 0
+                    }}>{activity.pill}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Footer row */}
+            <div style={{
+              paddingTop: 16, borderTop: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Milton is watching quietly · flags appear here when something drifts</span>
+              <button style={{
+                padding: "8px 14px", borderRadius: 6, border: `0.5px solid ${C.border}`,
+                background: C.surface, color: C.muted, fontSize: 12, fontWeight: 500, cursor: "pointer"
+              }}>Workflow settings</button>
             </div>
           </div>
         )}
