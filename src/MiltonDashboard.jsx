@@ -11150,8 +11150,8 @@ export default function MiltonDashboard() {
 isMobile={isMobile}
   />
   )}
-  {canvasType === "messages" && (
-  <MessagesCanvas
+  {canvasType === "workflows" && (
+  <WorkflowsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
