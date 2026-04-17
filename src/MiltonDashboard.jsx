@@ -5279,6 +5279,10 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
               </div>
             </div>
           </>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+            Select a conversation to start messaging
+          </div>
         )}
       </div>
     </div>
