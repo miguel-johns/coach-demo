@@ -5639,33 +5639,33 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   
-  // Design tokens
+// Design tokens - aligned with platform palette
   const C = {
-    ink: "#0B1628",
-    muted: "#5F5E5A",
-    muted2: "#888780",
-    border: "#E5E5E0",
-    border2: "#D3D1C7",
-    bg: "#FAFAF7",
-    surface: "#FFFFFF",
-    surface2: "#F1EFE8",
-    teal50: "#E1F5EE",
-    teal500: "#1D9E75",
-    teal700: "#0F6E56",
-    teal900: "#04342C",
-    amber50: "#FAEEDA",
-    amber200: "#FAC775",
-    amber500: "#EF9F27",
-    amber700: "#854F0B",
-    coral50: "#FAECE7",
-    coral500: "#D85A30",
-    coral700: "#712B13",
-    purple50: "#EEEDFE",
-    purple500: "#7F77DD",
-    purple700: "#3C3489",
-    blue50: "#E6F1FB",
-    blue500: "#378ADD",
-    blue700: "#0C447C"
+  ink: TEXT,
+  muted: TEXT_SEC,
+  muted2: "#8aa3a0",
+  border: BORDER,
+  border2: "#c9dad6",
+  bg: BG,
+  surface: WHITE,
+  surface2: "#f7faf9",
+  teal50: TEAL_LIGHT,
+  teal500: SAGE,
+  teal700: TEAL,
+  teal900: "#1a3a38",
+  amber50: "#fef7e0",
+  amber200: "#fcd97d",
+  amber500: "#f59e0b",
+  amber700: "#b45309",
+  coral50: "#fef2f2",
+  coral500: "#ef4444",
+  coral700: "#b91c1c",
+  purple50: "#f3e8ff",
+  purple500: "#a855f7",
+  purple700: "#7c3aed",
+  blue50: "#eff6ff",
+  blue500: "#3b82f6",
+  blue700: "#1d4ed8"
   };
   
   // Mock data for workflow gaps
@@ -5885,21 +5885,20 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
         {/* LANDING SCREEN - Gaps + Active Workflows */}
         {activeScreen === "landing" && (
           <div style={{ maxWidth: 800 }}>
-            {/* Header with pill badge */}
+            {/* Header with icon badge */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ 
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "4px 10px", borderRadius: 20, background: C.teal50,
                 marginBottom: 12
               }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill={C.teal700}>
-                  <polygon points="5,3 19,12 5,21"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
                 </svg>
-                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>AI workflows</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.teal700 }}>AI Workflows</span>
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: "0 0 8px" }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: C.ink, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
                 {"Here's where your coaching ops are leaking"}
-              </h2>
+              </h1>
               <p style={{ fontSize: 14, color: C.muted, margin: 0, maxWidth: 700, lineHeight: 1.5 }}>
                 {"I flagged audiences and clients that don't have the workflows most coaches run. Pick one to design, or jump to what's already active."}
               </p>
@@ -5919,20 +5918,26 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     onMouseEnter={() => setHoveredCard(gap.id)}
                     onMouseLeave={() => setHoveredCard(null)}
                     style={{
-                      padding: "14px 16px", borderRadius: 12,
-                      background: C.surface, border: `0.5px solid ${hoveredCard === gap.id ? C.border2 : C.border}`,
+                      padding: "16px 18px", borderRadius: 16,
+                      background: C.surface, 
+                      border: `1px solid ${hoveredCard === gap.id ? C.teal700 : C.border}`,
                       display: "flex", gap: 14,
-                      cursor: "pointer", transition: "all 0.15s ease"
+                      cursor: "pointer", transition: "all 0.2s ease",
+                      transform: hoveredCard === gap.id ? "translateY(-2px)" : "none",
+                      boxShadow: hoveredCard === gap.id ? "0 8px 24px rgba(0,0,0,0.08)" : "none"
                     }}
                     onClick={() => navigateTo("design", gap)}
                   >
-                    {/* Icon square */}
+                    {/* Icon circle */}
                     <div style={{
-                      width: 36, height: 36, borderRadius: 8, background: gap.colorBg,
+                      width: 40, height: 40, borderRadius: "50%", background: gap.colorBg,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0
+                      flexShrink: 0, border: `1.5px solid ${gap.color}20`
                     }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: gap.color }} />
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={gap.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {gap.type === "audience" && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
+                        {gap.type === "client" && <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>}
+                      </svg>
                     </div>
                     
                     {/* Content */}
@@ -5941,9 +5946,9 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{gap.title}</span>
                         <span style={{
-                          padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
-                          background: gap.type === "client" ? C.blue50 : C.amber50,
-                          color: gap.type === "client" ? C.blue700 : C.amber700
+                          padding: "2px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                          background: gap.type === "client" ? C.blue50 : C.teal50,
+                          color: gap.type === "client" ? C.blue700 : C.teal700
                         }}>
                           {gap.type === "client" ? "Specific client" : "Audience"}
                         </span>
@@ -5959,7 +5964,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {gap.chips.map((chip, i) => (
                           <span key={i} style={{
-                            padding: "3px 8px", borderRadius: 4, fontSize: 11,
+                            padding: "4px 10px", borderRadius: 20, fontSize: 11,
                             background: C.surface2, color: C.muted
                           }}>{chip}</span>
                         ))}
@@ -5969,11 +5974,13 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     {/* Design button */}
                     <button
                       style={{
-                        padding: "8px 14px", borderRadius: 8, border: "none",
-                        background: C.teal700, color: C.surface,
+                        padding: "8px 16px", borderRadius: 20, border: "none",
+                        background: `linear-gradient(135deg, ${C.teal700}, ${C.teal500})`,
+                        color: C.surface,
                         fontSize: 13, fontWeight: 500, cursor: "pointer",
-                        display: "flex", alignItems: "center", gap: 4,
-                        alignSelf: "flex-start", flexShrink: 0
+                        display: "flex", alignItems: "center", gap: 6,
+                        alignSelf: "flex-start", flexShrink: 0,
+                        boxShadow: `0 2px 8px ${C.teal700}30`
                       }}
                     >
                       Design
@@ -5998,18 +6005,19 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   <div
                     key={wf.id}
                     style={{
-                      padding: "14px 16px", borderRadius: 12,
-                      background: C.surface, border: `0.5px solid ${C.border}`
+                      padding: "16px", borderRadius: 16,
+                      background: C.surface, border: `1px solid ${C.border}`,
+                      transition: "all 0.2s ease"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.teal500 }} />
-                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{wf.name}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>{wf.name}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, lineHeight: 1.4 }}>
                       {wf.audience} · {wf.schedule}
                     </div>
-                    <div style={{ fontSize: 11, color: C.muted2 }}>
+                    <div style={{ fontSize: 12, color: C.muted2 }}>
                       {wf.lastFired} · {wf.stat}
                     </div>
                   </div>
@@ -6019,21 +6027,23 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             
             {/* Custom audience CTA */}
             <div style={{
-              padding: "14px 16px", borderRadius: 8, background: C.surface2,
-              display: "flex", alignItems: "center", gap: 14, cursor: "pointer"
+              padding: "16px", borderRadius: 16, background: C.surface,
+              border: `1px dashed ${C.border}`,
+              display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
+              transition: "all 0.2s ease"
             }}>
               <div style={{
-                width: 28, height: 28, borderRadius: "50%", background: C.surface,
-                border: `0.5px solid ${C.border}`,
+                width: 40, height: 40, borderRadius: "50%", background: C.teal50,
+                border: `1.5px solid ${C.teal700}20`,
                 display: "flex", alignItems: "center", justifyContent: "center"
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Create a workflow for a custom audience</div>
-                <div style={{ fontSize: 12, color: C.muted }}>{"Group Coaching, Semi-Private, Online-only — describe who it's for in chat."}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>Create a workflow for a custom audience</div>
+                <div style={{ fontSize: 13, color: C.muted }}>{"Group Coaching, Semi-Private, Online-only — describe who it's for in chat."}</div>
               </div>
             </div>
           </div>
@@ -6063,17 +6073,20 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             {/* Header row */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 24 }}>
               <div style={{
-                width: 44, height: 44, borderRadius: 10, background: C.amber50,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                border: `1.5px solid ${C.teal700}20`
               }}>
-                <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.amber700 }} />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
               </div>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
                   <span style={{
-                    padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
-                    background: C.amber50, color: C.amber700
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: C.teal50, color: C.teal700
                   }}>Audience</span>
                 </div>
                 <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
@@ -6084,15 +6097,16 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             
             {/* What I'm working from box */}
             <div style={{
-              padding: "14px 16px", borderRadius: 8, background: C.purple50, marginBottom: 24
+              padding: "14px 16px", borderRadius: 12, background: C.teal50, marginBottom: 24,
+              border: `1px solid ${C.teal700}15`
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <div style={{
-                  width: 18, height: 18, borderRadius: "50%", background: C.purple500,
+                  width: 20, height: 20, borderRadius: "50%", background: C.teal700,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 10, fontWeight: 600, color: C.surface
                 }}>M</div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.purple700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.teal700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   What I'm working from
                 </span>
               </div>
@@ -6103,12 +6117,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   ["$4,800/year pricing, annual renewal", "renewal nudge lands at week 48, not month 1"],
                   ["Twilio SMS + email", "reminders via SMS, reports via email"]
                 ].map(([label, detail], i) => (
-                  <li key={i} style={{ fontSize: 13, color: C.purple700, marginBottom: 6 }}>
-                    <strong>{label}</strong> — {detail}
+                  <li key={i} style={{ fontSize: 13, color: C.ink, marginBottom: 6 }}>
+                    <strong style={{ color: C.teal700 }}>{label}</strong> — {detail}
                   </li>
                 ))}
               </ul>
-              <p style={{ fontSize: 12, color: C.purple700, fontStyle: "italic", margin: 0 }}>
+              <p style={{ fontSize: 12, color: C.muted, fontStyle: "italic", margin: 0 }}>
                 {"If anything here is wrong, tell me in chat and I'll redraft the bundle."}
               </p>
             </div>
@@ -6197,9 +6211,11 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 <button
                   onClick={() => navigateTo("watch")}
                   style={{
-                    padding: "10px 20px", borderRadius: 8, border: "none",
-                    background: C.teal700, color: C.surface,
-                    fontSize: 13, fontWeight: 500, cursor: "pointer"
+                    padding: "10px 20px", borderRadius: 20, border: "none",
+                    background: `linear-gradient(135deg, ${C.teal700}, ${C.teal500})`,
+                    color: C.surface,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    boxShadow: `0 2px 8px ${C.teal700}30`
                   }}
                 >Activate bundle</button>
               </div>
@@ -6232,20 +6248,23 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: 10, background: C.amber50,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  border: `1.5px solid ${C.teal700}20`
                 }}>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.amber700 }} />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
                     <span style={{
-                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
+                      padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.teal50, color: C.teal700
                     }}>Live</span>
                     <span style={{
-                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
+                      padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
                       background: C.purple50, color: C.purple700
                     }}>Watch mode · 46h left</span>
                   </div>
@@ -6487,17 +6506,20 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: 10, background: C.amber50,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  border: `1.5px solid ${C.teal700}20`
                 }}>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.amber700 }} />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.teal700} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 500, color: C.ink, margin: 0 }}>New PT sign up</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: 0 }}>New PT sign up</h2>
                     <span style={{
-                      padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500,
-                      background: C.teal50, color: C.teal900,
+                      padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                      background: C.teal50, color: C.teal700,
                       display: "flex", alignItems: "center", gap: 6
                     }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.teal500 }} />
@@ -12067,7 +12089,7 @@ isMobile={isMobile}
             </div>
           </div>
 
-          {/* ── Card 3: Client Growth - Progressive Bar Chart ���─ */}
+          {/* ── Card 3: Client Growth - Progressive Bar Chart �����─ */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
