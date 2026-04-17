@@ -5278,7 +5278,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
                 </button>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
