@@ -5635,7 +5635,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
 }
 
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused, empty
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   
@@ -5977,6 +5977,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   type: "ai",
   text: "This workflow is paused. 4 clients would be in it right now if you resumed. Want me to walk through what's changed since you paused it, or resume as-is?",
   suggestions: ["Who would enter if I resume?", "Why did I pause this?", "Update trigger 2 before resuming", "Archive this workflow instead"]
+  }]);
+  } else if (screen === "empty") {
+  setChatMessages([{
+  type: "ai",
+  text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
+  suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
   }]);
   }
   }
@@ -7323,6 +7329,304 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 }} />
                 Resume workflow
               </button>
+            </div>
+          </div>
+        )}
+        
+        {/* EMPTY STATE SCREEN - First-time onboarding */}
+        {activeScreen === "empty" && (
+          <div style={{ maxWidth: 800 }}>
+            {/* Page header - no Create workflow button */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", borderRadius: 20, background: C.teal50,
+                marginBottom: 10
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill={C.teal700}>
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.teal700 }}>AI workflows</span>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: "0 0 6px" }}>Your workflows</h2>
+              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
+                {"You don't have any workflows yet — let's fix that."}
+              </p>
+            </div>
+            
+            {/* Welcome/explainer card - hero element */}
+            <div style={{
+              padding: "28px 24px", borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`, marginBottom: 20,
+              display: "flex", gap: 20
+            }}>
+              {/* Large Milton avatar */}
+              <div style={{
+                width: 44, height: 44, borderRadius: "50%", background: C.teal50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 500, color: C.teal700 }}>M</span>
+              </div>
+              
+              {/* Content paragraphs */}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 15, fontWeight: 500, color: C.ink, margin: "0 0 8px", lineHeight: 1.5 }}>
+                  A workflow is a bundle of automated messages that run in the background for a group or specific client.
+                </p>
+                <p style={{ fontSize: 14, color: C.muted, margin: "0 0 8px", lineHeight: 1.6 }}>
+                  {"Session reminders. Welcome sequences. Renewal nudges. You design the bundle once, I run it quietly, and I flag you if anything drifts."}
+                </p>
+                <p style={{ fontSize: 13, color: C.muted2, margin: 0, lineHeight: 1.6 }}>
+                  Most coaches start with 1-2 workflows and grow from there. Takes about 5 minutes to set up your first.
+                </p>
+              </div>
+            </div>
+            
+            {/* Start with a template section */}
+            <div style={{ marginTop: 32, marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Start with a template</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{"Ready to turn on — pulled for your business from conversations we've had."}</div>
+                </div>
+                <span style={{ fontSize: 11, color: C.muted2 }}>4 suggested</span>
+              </div>
+            </div>
+            
+            {/* Template list */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+              {/* Card 1 - RECOMMENDED */}
+              <div style={{
+                position: "relative",
+                padding: "16px 18px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.teal700}`
+              }}>
+                {/* Recommended badge */}
+                <div style={{
+                  position: "absolute", top: -8, left: 14,
+                  padding: "2px 8px", borderRadius: 20,
+                  background: C.teal700, color: C.surface,
+                  fontSize: 10, fontWeight: 500
+                }}>RECOMMENDED FOR YOU</div>
+                
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  {/* Icon square */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8, background: C.amber50,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.amber700 }} />
+                  </div>
+                  
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>New PT Sign Up</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>Audience · 7 triggers</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: C.muted, margin: "0 0 8px", lineHeight: 1.5 }}>
+                      Onboard new PT clients over 6 weeks: welcome, session reminders, post-session recaps, weekly progress reports, missed-session re-engagement, week 6 milestone, and annual renewal nudge.
+                    </p>
+                    <p style={{ fontSize: 11, color: "#085041", margin: 0, fontStyle: "italic" }}>
+                      Milton matched this because you run a 6-week onboarding framework and price at $4,800/year annual.
+                    </p>
+                  </div>
+                  
+                  {/* Primary button */}
+                  <button
+                    onClick={() => navigateTo("design")}
+                    style={{
+                      padding: "8px 14px", borderRadius: 8, border: "none",
+                      background: C.teal700, color: C.surface,
+                      fontSize: 13, fontWeight: 500, cursor: "pointer",
+                      alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                    }}
+                  >Start here →</button>
+                </div>
+              </div>
+              
+              {/* Card 2 - New Lead nurture */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.purple50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.purple700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>New Lead nurture</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 5 triggers</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    5-touch sequence from first contact through discovery call: same-day welcome, day 2 value drop, day 5 case study, day 8 offer, day 12 re-engagement.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+              
+              {/* Card 3 - Session reminders */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.blue50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.blue700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Session reminders</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 1 trigger</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    24h before every session. Simplest workflow to start with — lowest risk, highest show-rate impact. Most coaches see +7 points on attendance.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+              
+              {/* Card 4 - Annual renewal */}
+              <div style={{
+                padding: "14px 16px", borderRadius: 12, background: C.surface,
+                border: `0.5px solid ${C.border}`,
+                display: "flex", alignItems: "flex-start", gap: 14
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: C.coral50,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.coral700 }} />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Annual renewal</span>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 500,
+                      background: C.surface2, color: C.muted
+                    }}>Audience · 4 triggers</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                    Pre-renewal sequence starting 4 weeks out: year-in-review, detailed progress report, renewal conversation, conditional final nudge.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8,
+                    background: "transparent", border: `0.5px solid ${C.border2}`,
+                    color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    alignSelf: "flex-start", flexShrink: 0, whiteSpace: "nowrap"
+                  }}
+                >Turn on →</button>
+              </div>
+            </div>
+            
+            {/* Or build something custom section */}
+            <div style={{ marginTop: 32, marginBottom: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>Or build something custom</div>
+              <div style={{ fontSize: 12, color: C.muted }}>{"For audiences or clients the templates don't cover."}</div>
+            </div>
+            
+            {/* 2-column custom-build cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 32 }}>
+              {/* Card A - For an audience */}
+              <div style={{
+                padding: "16px 18px", borderRadius: 12, background: C.surface,
+                border: `0.5px dashed ${C.border2}`, cursor: "pointer"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  {/* Three dots icon */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 2
+                  }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.muted }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>For an audience</span>
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: "0 0 10px", lineHeight: 1.55 }}>
+                  {"Group Coaching, Semi-Private, Online-only, or any other segment of your business. Describe who it's for in chat."}
+                </p>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.blue700 }}>Start in chat →</span>
+              </div>
+              
+              {/* Card B - For a specific client */}
+              <div style={{
+                padding: "16px 18px", borderRadius: 12, background: C.surface,
+                border: `0.5px dashed ${C.border2}`, cursor: "pointer"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  {/* Single circle icon */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.muted }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>For a specific client</span>
+                </div>
+                <p style={{ fontSize: 12, color: C.muted, margin: "0 0 10px", lineHeight: 1.55 }}>
+                  {"One-on-one workflows tailored to a single client's goals, renewal date, or history. Pick the client in chat."}
+                </p>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.blue700 }}>Start in chat →</span>
+              </div>
+            </div>
+            
+            {/* Bottom nudge info box */}
+            <div style={{
+              padding: "12px 16px", borderRadius: 8, background: C.surface2,
+              display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: "50%", background: C.surface,
+                border: `0.5px solid ${C.muted}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
+              }}>i</div>
+              <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                {"Not sure where to start? Ask Milton 'which template fits my business best' in chat and we'll figure it out together."}
+              </p>
             </div>
           </div>
         )}
