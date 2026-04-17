@@ -6157,35 +6157,39 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   const dashboardTemplates = [
     {
       id: "morning",
-      name: "Morning Brief",
+      name: "Daily Brief",
       desc: "Daily check-in with today's focus, habits, and motivation",
       number: 1,
       color: "#f59e0b",
-      bg: "#fef3c7"
+      bg: "#fef3c7",
+      icon: "sun"
     },
     {
       id: "workout",
-      name: "Workout Dashboard",
+      name: "Today's Workout",
       desc: "Interactive workout logging with rest timers and set tracking",
       number: 2,
       color: "#ef4444",
-      bg: "#fee2e2"
+      bg: "#fee2e2",
+      icon: "dumbbell"
     },
     {
       id: "recovery",
-      name: "Recovery Check",
-      desc: "Sleep, stress, soreness tracking with recovery recommendations",
+      name: "Progress Report",
+      desc: "Track progress with body metrics, strength gains, and milestones",
       number: 3,
       color: "#8b5cf6",
-      bg: "#ede9fe"
+      bg: "#ede9fe",
+      icon: "trending-up"
     },
     {
       id: "weekly",
-      name: "Weekly Review",
-      desc: "Progress summary with wins, insights, and next week planning",
+      name: "Exercise Program",
+      desc: "Full training program overview with weekly schedule and phases",
       number: 4,
       color: "#3b82f6",
-      bg: "#dbeafe"
+      bg: "#dbeafe",
+      icon: "calendar"
     },
     {
       id: "nutrition",
@@ -6193,15 +6197,26 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
       desc: "Meal tracking with macro breakdowns and hydration goals",
       number: 5,
       color: "#10b981",
-      bg: "#d1fae5"
+      bg: "#d1fae5",
+      icon: "apple"
     },
     {
       id: "mindset",
-      name: "Mindset Check",
-      desc: "Daily mindset and gratitude prompts with motivation tracking",
+      name: "Recipe View",
+      desc: "Browse and save recipes with nutritional info and prep instructions",
       number: 6,
       color: "#ec4899",
-      bg: "#fce7f3"
+      bg: "#fce7f3",
+      icon: "book-open"
+    },
+    {
+      id: "mealselection",
+      name: "Meal Selection",
+      desc: "Choose meals for the week from personalized recipe recommendations",
+      number: 7,
+      color: "#14b8a6",
+      bg: "#ccfbf1",
+      icon: "utensils"
     }
   ];
 
@@ -6283,9 +6298,14 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   marginBottom: 16
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={template.color} strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={template.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {template.icon === "sun" && <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>}
+                    {template.icon === "dumbbell" && <><path d="M6.5 6.5h11v11h-11z" fill="none"/><path d="M3 6.5a1 1 0 011-1h1v12H4a1 1 0 01-1-1v-10z"/><path d="M20 6.5a1 1 0 011 1v10a1 1 0 01-1 1h-1v-12h1z"/><rect x="5" y="9" width="14" height="6" rx="1"/></>}
+                    {template.icon === "trending-up" && <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>}
+                    {template.icon === "calendar" && <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>}
+                    {template.icon === "apple" && <><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 12 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></>}
+                    {template.icon === "book-open" && <><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></>}
+                    {template.icon === "utensils" && <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></>}
                   </svg>
                 </div>
 
@@ -6602,6 +6622,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
             {selectedTemplate.id === "weekly" && <ProgramDashboard />}
             {selectedTemplate.id === "nutrition" && <NutritionDashboard />}
             {selectedTemplate.id === "mindset" && <RecipeDashboard />}
+            {selectedTemplate.id === "mealselection" && <WeeklyRecipePicker />}
           </div>
         </div>
       </div>
