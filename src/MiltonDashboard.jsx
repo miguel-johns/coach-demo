@@ -6887,11 +6887,11 @@ function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
               </div>
             </div>
           </div>
-        )}
-
-        {/* Review Tab - Pending Validation */}
-        {activeTab === "review" && (
-          <div>
+)}
+  
+  {/* Review Tab - Pending Validation */}
+  {activeTab === "review" && (
+  <div>
             {pendingValidation.length === 0 ? (
               <div style={{ textAlign: "center", padding: "48px 24px", color: TEXT_SEC }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
