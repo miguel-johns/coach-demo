@@ -174,6 +174,41 @@ function RecipeCard({ recipe, onSave, onSkip, isTop }) {
   );
 }
 
+// Generate grocery list from recipes
+const generateGroceryList = (savedRecipes) => {
+  const allRecipes = Object.values(savedRecipes).flat();
+  // Simulated grocery items based on recipe types
+  const groceryItems = {
+    "Proteins": [
+      { name: "Chicken breast", qty: "2 lbs", checked: false },
+      { name: "Salmon fillets", qty: "1 lb", checked: false },
+      { name: "Ground turkey", qty: "1 lb", checked: false },
+      { name: "Eggs", qty: "1 dozen", checked: false },
+      { name: "Greek yogurt", qty: "32 oz", checked: false },
+    ],
+    "Produce": [
+      { name: "Mixed berries", qty: "2 cups", checked: false },
+      { name: "Spinach", qty: "1 bag", checked: false },
+      { name: "Bell peppers", qty: "4", checked: false },
+      { name: "Avocados", qty: "3", checked: false },
+      { name: "Lemons", qty: "3", checked: false },
+      { name: "Garlic", qty: "1 head", checked: false },
+    ],
+    "Grains & Carbs": [
+      { name: "Rolled oats", qty: "1 lb", checked: false },
+      { name: "Brown rice", qty: "2 cups", checked: false },
+      { name: "Whole wheat tortillas", qty: "1 pack", checked: false },
+    ],
+    "Pantry": [
+      { name: "Olive oil", qty: "1 bottle", checked: false },
+      { name: "Honey", qty: "1 jar", checked: false },
+      { name: "Almond butter", qty: "1 jar", checked: false },
+      { name: "Soy sauce", qty: "1 bottle", checked: false },
+    ],
+  };
+  return groceryItems;
+};
+
 export default function WeeklyRecipePicker() {
   const data = WEEKLY_RECIPES;
   const [currentSlotIdx, setCurrentSlotIdx] = useState(0);
@@ -184,6 +219,10 @@ export default function WeeklyRecipePicker() {
     Object.fromEntries(MEAL_SLOTS.map((s) => [s, []]))
   );
   const [showSummary, setShowSummary] = useState(false);
+  const [showGroceryList, setShowGroceryList] = useState(false);
+  const [groceryList, setGroceryList] = useState(null);
+  const [savedToNotes, setSavedToNotes] = useState(false);
+  const [sentToStore, setSentToStore] = useState(false);
 
   const currentSlot = MEAL_SLOTS[currentSlotIdx];
   const recipes = data.slots[currentSlot] || [];
@@ -272,7 +311,10 @@ export default function WeeklyRecipePicker() {
             fontFamily: FONT, cursor: "pointer", marginBottom: 8,
           }}>Edit Picks</button>
 
-          <button style={{
+          <button onClick={() => {
+            setGroceryList(generateGroceryList(saved));
+            setShowGroceryList(true);
+          }} style={{
             width: "100%", padding: "14px", borderRadius: 12, border: "none",
             background: C.dark, color: "#fff", fontSize: 15, fontWeight: 700,
             fontFamily: FONT, cursor: "pointer",
@@ -282,13 +324,175 @@ export default function WeeklyRecipePicker() {
     );
   }
 
+  // Grocery List View
+  if (showGroceryList && groceryList) {
+    const totalItems = Object.values(groceryList).flat().length;
+    
+    return (
+      <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, maxWidth: 480, margin: "0 auto" }}>
+        <style>{`
+          @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+          @keyframes checkmark { from { transform: scale(0); } to { transform: scale(1); } }
+          * { box-sizing:border-box; margin:0; padding:0; }
+        `}</style>
+        
+        <div style={{ padding: "52px 20px 20px", animation: "fadeIn 0.5s ease" }}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <button onClick={() => setShowGroceryList(false)} style={{
+              background: "none", border: "none", padding: 0, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 4, color: C.sub, fontSize: 13, fontFamily: FONT,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Back
+            </button>
+          </div>
+          
+          <div style={{ fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 4 }}>Grocery List</div>
+          <div style={{ fontSize: 14, color: C.muted, marginBottom: 24 }}>{totalItems} items for your week</div>
+
+          {/* Grocery categories */}
+          {Object.entries(groceryList).map(([category, items]) => (
+            <div key={category} style={{ marginBottom: 24 }}>
+              <div style={{ 
+                fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", 
+                letterSpacing: "0.05em", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 
+              }}>
+                {category}
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.border }}>({items.length})</span>
+              </div>
+              {items.map((item, idx) => (
+                <div key={idx} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                  background: C.chip, borderRadius: 10, marginBottom: 6, border: `1px solid ${C.borderLight}`,
+                }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6, border: `2px solid ${C.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{item.name}</div>
+                  </div>
+                  <div style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>{item.qty}</div>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* Action buttons */}
+          <div style={{ 
+            position: "sticky", bottom: 0, left: 0, right: 0, 
+            background: C.bg, paddingTop: 16, paddingBottom: 20,
+            borderTop: `1px solid ${C.borderLight}`, marginTop: 16
+          }}>
+            {/* Success states */}
+            {(savedToNotes || sentToStore) && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
+                background: "#dcfce7", borderRadius: 10, marginBottom: 12,
+                animation: "fadeIn 0.3s ease"
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="#16a34a"/>
+                  <path d="M8 12l2.5 2.5L16 9" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#16a34a" }}>
+                  {savedToNotes && sentToStore 
+                    ? "Saved to notes & sent to store!" 
+                    : savedToNotes 
+                    ? "Saved to your notes!" 
+                    : "Sent to your grocery store!"}
+                </span>
+              </div>
+            )}
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              {/* Save to Notes */}
+              <button 
+                onClick={() => setSavedToNotes(true)}
+                disabled={savedToNotes}
+                style={{
+                  flex: 1, padding: "14px 16px", borderRadius: 12, 
+                  border: savedToNotes ? "none" : `1px solid ${C.border}`,
+                  background: savedToNotes ? "#dcfce7" : C.bg, 
+                  color: savedToNotes ? "#16a34a" : C.text,
+                  fontSize: 14, fontWeight: 600, fontFamily: FONT, cursor: savedToNotes ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  opacity: savedToNotes ? 0.8 : 1,
+                }}
+              >
+                {savedToNotes ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+                {savedToNotes ? "Saved" : "Save to Notes"}
+              </button>
+
+              {/* Send to Store */}
+              <button 
+                onClick={() => setSentToStore(true)}
+                disabled={sentToStore}
+                style={{
+                  flex: 1, padding: "14px 16px", borderRadius: 12, border: "none",
+                  background: sentToStore ? "#16a34a" : C.dark, 
+                  color: "#fff",
+                  fontSize: 14, fontWeight: 600, fontFamily: FONT, cursor: sentToStore ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}
+              >
+                {sentToStore ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+                {sentToStore ? "Sent" : "Send to Store"}
+              </button>
+            </div>
+
+            {/* Done button - shows after at least one action */}
+            {(savedToNotes || sentToStore) && (
+              <button 
+                onClick={() => {
+                  // Reset everything for demo purposes
+                  setShowGroceryList(false);
+                  setShowSummary(false);
+                  setSavedToNotes(false);
+                  setSentToStore(false);
+                }}
+                style={{
+                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                  background: C.dark, color: "#fff", fontSize: 15, fontWeight: 700,
+                  fontFamily: FONT, cursor: "pointer", marginTop: 10,
+                }}
+              >
+                Done
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, maxWidth: 480, margin: "0 auto" }}>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        * { box-sizing:border-box; margin:0; padding:0; }
-      `}</style>
+<style>{`
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  .slot-tabs::-webkit-scrollbar { display: none; }
+  `}</style>
 
       {/* Header */}
       <div style={{ padding: "48px 20px 12px" }}>
@@ -308,7 +512,7 @@ export default function WeeklyRecipePicker() {
         </div>
 
         {/* Slot tabs */}
-        <div style={{ display: "flex", gap: 4, overflowX: "auto" }}>
+        <div className="slot-tabs" style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {MEAL_SLOTS.map((slot, i) => {
             const slotDone = cardIndices[slot] >= (data.slots[slot]?.length || 0);
             const slotSaved = saved[slot].length;
