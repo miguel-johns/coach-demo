@@ -7789,6 +7789,107 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [publishModal, setPublishModal] = useState(false);
   const CANVAS_TEAL = "#2BBFAA";
+  
+  // Chat state for editing dashboards
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [miltonTyping, setMiltonTyping] = useState(false);
+  
+  // Config state per template
+  const [configs, setConfigs] = useState({});
+  const [configHistory, setConfigHistory] = useState({});
+  
+  // Default configs for each dashboard template
+  const DEFAULT_CONFIGS = {
+    workout: {
+      headerBg: "#1a1a1a", headerTextColor: "#ffffff", bodyBg: "#ffffff", accentColor: "#4caf50",
+      titleSize: 28, showCoachNote: true, showVideoLinks: true, showRestTimers: true, showTempoChips: true,
+      showProgressBar: true, coachNote: "Focus on controlled negatives today."
+    },
+    morning: {
+      headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#111111", cardDarkBg: "#1a1a1a",
+      showSchedule: true, showProtocolCard: true, showChallengeCard: true, showActionButton: true, showWeekGlance: true
+    },
+    nutrition: {
+      headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#111111",
+      showCaloriesCard: true, showMacrosCard: true, showFiberWater: true, showFoodLog: true, showAiInsights: true
+    },
+    mindset: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#10b981", showHeroImage: true, showAiReasoning: true },
+    recovery: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#8b5cf6", showHeroStats: true, showAiSummary: true },
+    weekly: { headerBg: "#1a1a1a", bodyBg: "#ffffff", accentColor: "#3b82f6", showProgressBar: true },
+    mealselection: { headerBg: "#ffffff", bodyBg: "#ffffff", accentColor: "#14b8a6" }
+  };
+  
+  const getCurrentConfig = () => {
+    if (!selectedTemplate) return {};
+    return configs[selectedTemplate.id] || DEFAULT_CONFIGS[selectedTemplate.id] || {};
+  };
+  
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    if (!configs[template.id]) {
+      setConfigs(prev => ({ ...prev, [template.id]: { ...DEFAULT_CONFIGS[template.id] } }));
+    }
+    setChatMessages([{
+      role: "milton",
+      content: `I'm ready to help you customize the ${template.name} dashboard. Try:\n\n• "Make the header blue"\n• "Hide the coach notes"\n• "Use a dark theme"\n\nWhat would you like to change?`
+    }]);
+  };
+  
+  const handleChatEdit = async (userMessage) => {
+    if (!userMessage.trim() || !selectedTemplate) return;
+    const currentConfig = getCurrentConfig();
+    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setChatInput("");
+    setMiltonTyping(true);
+    
+    const lowerMsg = userMessage.toLowerCase().trim();
+    if (lowerMsg === "undo" || lowerMsg === "go back") {
+      const history = configHistory[selectedTemplate.id] || [];
+      if (history.length > 0) {
+        setConfigs(prev => ({ ...prev, [selectedTemplate.id]: history[history.length - 1] }));
+        setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: history.slice(0, -1) }));
+        setMiltonTyping(false);
+        setChatMessages(prev => [...prev, { role: "milton", content: "Undone — reverted to the previous version." }]);
+        if (published) setHasChanges(true);
+        return;
+      }
+      setMiltonTyping(false);
+      setChatMessages(prev => [...prev, { role: "milton", content: "Nothing to undo." }]);
+      return;
+    }
+    
+    if (lowerMsg === "reset") {
+      setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...DEFAULT_CONFIGS[selectedTemplate.id] } }));
+      setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [] }));
+      setMiltonTyping(false);
+      setChatMessages(prev => [...prev, { role: "milton", content: "Reset — restored the default configuration." }]);
+      if (published) setHasChanges(true);
+      return;
+    }
+    
+    try {
+      const response = await fetch("/api/dashboard-edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, currentConfig, templateId: selectedTemplate.id })
+      });
+      const data = await response.json();
+      setMiltonTyping(false);
+      
+      if (data.success && data.changedKeys?.length > 0) {
+        setConfigHistory(prev => ({ ...prev, [selectedTemplate.id]: [...(prev[selectedTemplate.id] || []), currentConfig] }));
+        setConfigs(prev => ({ ...prev, [selectedTemplate.id]: { ...currentConfig, ...data.updates } }));
+        setChatMessages(prev => [...prev, { role: "milton", content: `Done — updated ${data.changedKeys.length} setting${data.changedKeys.length > 1 ? "s" : ""}. See the preview!` }]);
+        if (published) setHasChanges(true);
+      } else {
+        setChatMessages(prev => [...prev, { role: "milton", content: "I couldn't figure that out. Try being more specific, like \"make the background darker\" or \"hide the rest timers.\"" }]);
+      }
+    } catch (error) {
+      setMiltonTyping(false);
+      setChatMessages(prev => [...prev, { role: "milton", content: "Something went wrong. Try again?" }]);
+    }
+  };
 
   const handlePublish = () => {
     setPublished(true);
@@ -7933,7 +8034,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
             {dashboardTemplates.map((template) => (
               <div
                 key={template.id}
-                onClick={() => setSelectedTemplate(template)}
+                onClick={() => handleSelectTemplate(template)}
                 onMouseEnter={() => setHoveredTemplate(template.id)}
                 onMouseLeave={() => setHoveredTemplate(null)}
                 style={{
@@ -8255,29 +8356,109 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile }) {
         </div>
 )}
   
-  {/* Preview area */}
-  <div style={{
-  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-  padding: 24, overflow: "auto"
-  }}>
-  <div style={{
-  width: deviceSize === "mobile" ? 375 : 768,
-  height: deviceSize === "mobile" ? 667 : 500,
-  background: WHITE,
-  borderRadius: 24,
-  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-  overflow: "hidden",
-  display: "flex", flexDirection: "column"
-  }}>
-  {/* Render actual dashboard component based on template */}
-  <div style={{ flex: 1, overflow: "auto" }}>
-            {selectedTemplate.id === "morning" && <MorningDashboard />}
-            {selectedTemplate.id === "workout" && <WorkoutDashboard />}
-            {selectedTemplate.id === "recovery" && <ProgressDashboard />}
-            {selectedTemplate.id === "weekly" && <ProgramDashboard />}
-            {selectedTemplate.id === "nutrition" && <NutritionDashboard />}
-            {selectedTemplate.id === "mindset" && <RecipeDashboard />}
-            {selectedTemplate.id === "mealselection" && <WeeklyRecipePicker />}
+  {/* Main content: Chat + Preview */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        
+        {/* Chat panel */}
+        {!isMobile && (
+        <div style={{
+          width: 340, flexShrink: 0, display: "flex", flexDirection: "column",
+          background: WHITE, borderRight: `1px solid ${BORDER}`
+        }}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Milton</div>
+              <div style={{ fontSize: 11, color: TEXT_SEC }}>Edit with natural language</div>
+            </div>
+          </div>
+          
+          <div style={{ flex: 1, overflow: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+            {chatMessages.map((msg, idx) => (
+              <div key={idx} style={{ display: "flex", gap: 10, alignItems: "flex-start", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+                {msg.role === "milton" && (
+                  <div style={{ width: 26, height: 26, borderRadius: 7, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
+                  </div>
+                )}
+                <div style={{
+                  maxWidth: "85%", padding: "10px 14px", borderRadius: 12,
+                  background: msg.role === "user" ? "#0B1628" : "#f5f5f5",
+                  color: msg.role === "user" ? WHITE : TEXT,
+                  fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap"
+                }}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {miltonTyping && (
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 7, background: "#0B1628", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: CANVAS_TEAL }}>M</span>
+                </div>
+                <div style={{ padding: "12px 16px", borderRadius: 12, background: "#f5f5f5", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC, opacity: 0.6 }} />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div style={{ padding: "12px 16px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10 }}>
+            <input
+              type="text"
+              placeholder="Try: 'make the header blue'..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleChatEdit(chatInput)}
+              style={{
+                flex: 1, padding: "10px 14px", borderRadius: 10,
+                border: `1px solid ${BORDER}`, fontSize: 13, outline: "none",
+                fontFamily: "'DM Sans', sans-serif"
+              }}
+            />
+            <button
+              onClick={() => handleChatEdit(chatInput)}
+              disabled={!chatInput.trim() || miltonTyping}
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: "none",
+                background: chatInput.trim() && !miltonTyping ? "#0B1628" : "#e0e0e0",
+                color: WHITE, cursor: chatInput.trim() && !miltonTyping ? "pointer" : "not-allowed",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        )}
+        
+        {/* Preview area */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "auto" }}>
+          <div style={{
+            width: deviceSize === "mobile" ? 375 : 768,
+            height: deviceSize === "mobile" ? 667 : 500,
+            background: WHITE,
+            borderRadius: 24,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+            display: "flex", flexDirection: "column"
+          }}>
+            {/* Render actual dashboard component based on template */}
+            <div style={{ flex: 1, overflow: "auto" }}>
+              {selectedTemplate.id === "morning" && <MorningDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "workout" && <WorkoutDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "recovery" && <ProgressDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "weekly" && <ProgramDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "nutrition" && <NutritionDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "mindset" && <RecipeDashboard config={getCurrentConfig()} />}
+              {selectedTemplate.id === "mealselection" && <WeeklyRecipePicker config={getCurrentConfig()} />}
+            </div>
           </div>
         </div>
       </div>

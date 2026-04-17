@@ -262,7 +262,7 @@ function WeightChart({ actual, projected, goalWeight }) {
   );
 }
 
-export default function ProgressDashboard() {
+export default function ProgressDashboard({ config = {} }) {
   const d = PROGRESS;
   const [showAllMilestones, setShowAllMilestones] = useState(false);
   const visibleMilestones = showAllMilestones ? d.milestones : d.milestones.slice(-4);

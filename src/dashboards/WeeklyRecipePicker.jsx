@@ -209,7 +209,7 @@ const generateGroceryList = (savedRecipes) => {
   return groceryItems;
 };
 
-export default function WeeklyRecipePicker() {
+export default function WeeklyRecipePicker({ config = {} }) {
   const data = WEEKLY_RECIPES;
   const [currentSlotIdx, setCurrentSlotIdx] = useState(0);
   const [cardIndices, setCardIndices] = useState(
