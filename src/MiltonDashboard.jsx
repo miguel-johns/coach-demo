@@ -5635,7 +5635,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
 }
 
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail, paused
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   
@@ -5769,7 +5769,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       iconColor: C.muted2,
       meta: "Clients with no session in 30+ days · paused by you 2 weeks ago",
       signals: [{ text: "4 triggers · last ran 2 weeks ago" }],
-      navigateTo: "steady"
+      navigateTo: "paused"
     }
   ];
   
@@ -5829,6 +5829,14 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       sample: "Marcus — 3 days out on renewal. Want to hop on a call this week? 15 min, I'll walk you through year 2.",
       meta: "Trigger: May 17 if no renewal yet · Skipped if he renews earlier"
     }
+  ];
+  
+  // Paused workflow triggers
+  const pausedTriggers = [
+    { id: 1, title: "30-day check-in", tag: "Check-in", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 2, title: "45-day \"what's changed\" nudge", tag: "Re-engagement", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 3, title: "60-day coach note", tag: "Re-engagement", tagColor: C.muted, tagBg: C.surface2 },
+    { id: 4, title: "90-day final outreach", tag: "Win-back", tagColor: "#b91c1c", tagBg: "#fef2f2" }
   ];
   
   // Marcus context bullets for "What I know" section
@@ -5958,14 +5966,20 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
           text: "You've got 3 new leads with no nurture sequence, and Marcus Johnson's renewal is 5 weeks out with no workflow. Want me to build either? Or keep scanning your workflows?",
           suggestions: ["Build the New Lead nurture sequence", "Design Marcus's renewal workflow", "What other gaps do you see?", "Create a custom audience workflow"]
         }]);
-      } else if (screen === "client-detail") {
-        setChatMessages([{
-          type: "ai",
-          text: "Drafted 4 triggers for Marcus's renewal. I pulled in his 11-month history, recent attendance, and PR progression. Tell me what to change before activating.",
-          suggestions: ["Skip trigger 2, I don't do progress reports", "Move the final nudge to 1 week out", "Add a loyalty discount offer", "Show me Marcus's full history"]
-        }]);
-      }
-    }
+} else if (screen === "client-detail") {
+  setChatMessages([{
+  type: "ai",
+  text: "Drafted 4 triggers for Marcus's renewal. I pulled in his 11-month history, recent attendance, and PR progression. Tell me what to change before activating.",
+  suggestions: ["Skip trigger 2, I don't do progress reports", "Move the final nudge to 1 week out", "Add a loyalty discount offer", "Show me Marcus's full history"]
+  }]);
+  } else if (screen === "paused") {
+  setChatMessages([{
+  type: "ai",
+  text: "This workflow is paused. 4 clients would be in it right now if you resumed. Want me to walk through what's changed since you paused it, or resume as-is?",
+  suggestions: ["Who would enter if I resume?", "Why did I pause this?", "Update trigger 2 before resuming", "Archive this workflow instead"]
+  }]);
+  }
+  }
   };
 
   return (
@@ -7081,6 +7095,234 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   }}
                 >Activate bundle</button>
               </div>
+            </div>
+          </div>
+        )}
+        
+        {/* PAUSED SCREEN - Paused workflow detail */}
+        {activeScreen === "paused" && (
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · paused</span>
+            </div>
+            
+            {/* Main card with pinstripe background */}
+            <div style={{
+              position: "relative",
+              padding: 20, borderRadius: 12, background: C.surface,
+              border: `0.5px solid ${C.border}`, overflow: "hidden"
+            }}>
+              {/* Pinstripe overlay */}
+              <div style={{
+                position: "absolute", inset: 0, pointerEvents: "none",
+                background: `repeating-linear-gradient(
+                  45deg,
+                  transparent,
+                  transparent 20px,
+                  rgba(136, 135, 128, 0.025) 20px,
+                  rgba(136, 135, 128, 0.025) 40px
+                )`
+              }} />
+              
+              {/* Content wrapper */}
+              <div style={{ position: "relative" }}>
+                {/* Header row */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+                  {/* Icon square with square indicator */}
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 8, background: C.surface2,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 2, background: C.muted2 }} />
+                  </div>
+                  
+                  {/* Middle content */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <h2 style={{ fontSize: 20, fontWeight: 500, color: C.muted, margin: 0 }}>Inactive client win-back</h2>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.surface2, color: C.muted,
+                        display: "flex", alignItems: "center", gap: 4
+                      }}>
+                        <div style={{ width: 5, height: 5, borderRadius: 1, background: C.muted2 }} />
+                        Paused
+                      </span>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>Audience</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                      Clients with no session in 30+ days · 4 triggers · paused by you 2 weeks ago
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Why this is paused section */}
+                <div style={{
+                  padding: "14px 16px", borderRadius: 8, background: C.surface2, marginBottom: 20
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    {/* Pause icon */}
+                    <div style={{
+                      width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 2
+                    }}>
+                      <div style={{ width: 3, height: 7, background: C.muted2, borderRadius: 0.5 }} />
+                      <div style={{ width: 3, height: 7, background: C.muted2, borderRadius: 0.5 }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: C.ink, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                      Why this is paused
+                    </span>
+                  </div>
+                  
+                  <p style={{ fontSize: 13, color: C.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
+                    You paused this on <strong style={{ color: C.ink }}>April 3</strong> with the note:
+                  </p>
+                  
+                  {/* Quote card */}
+                  <div style={{
+                    padding: "10px 12px", borderRadius: 8, background: C.surface,
+                    borderLeft: `2px solid ${C.muted2}`
+                  }}>
+                    <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                      "Messages felt too pushy after 30 days. Want to rework the tone before this goes back on."
+                    </p>
+                  </div>
+                  
+                  <p style={{ fontSize: 11, color: C.muted, margin: "10px 0 0", lineHeight: 1.5 }}>
+                    {"I haven't changed anything since — the triggers and messages are exactly as they were when you paused."}
+                  </p>
+                </div>
+                
+                {/* 3-column metric grid */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 24
+                }}>
+                  {[
+                    { label: "Would enter on resume", value: "4", footer: "inactive 30+ days right now" },
+                    { label: "Suppressed while paused", value: "~23", footer: "messages that would've fired" },
+                    { label: "Last ran", value: "2 weeks", footer: "ago · lifetime 19 clients reached" }
+                  ].map(stat => (
+                    <div key={stat.label} style={{
+                      padding: "12px 14px", borderRadius: 8, background: C.surface2
+                    }}>
+                      <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>{stat.label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 500, color: C.ink }}>{stat.value}</div>
+                      <div style={{ fontSize: 11, color: C.muted2, marginTop: 4 }}>{stat.footer}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Triggers (paused) section */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.muted }}>Triggers (paused)</span>
+                    <span style={{ fontSize: 12, color: C.muted }}>4 triggers · all silent</span>
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {pausedTriggers.map(trigger => (
+                      <div
+                        key={trigger.id}
+                        style={{
+                          padding: "10px 14px", borderRadius: 8, background: C.surface,
+                          border: `0.5px solid ${C.border}`,
+                          display: "flex", alignItems: "center", gap: 10,
+                          opacity: 0.75
+                        }}
+                      >
+                        <span style={{ fontSize: 11, color: C.muted2, minWidth: 14 }}>{trigger.id}</span>
+                        {/* Square status indicator */}
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: C.muted2 }} />
+                        <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>{trigger.title}</span>
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                          background: trigger.tagBg, color: trigger.tagColor
+                        }}>{trigger.tag}</span>
+                        <span style={{ fontSize: 11, color: C.muted2, marginLeft: "auto" }}>Paused 2 weeks ago</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* What happens when you resume info box */}
+                <div style={{
+                  padding: "12px 14px", borderRadius: 8, background: C.surface2,
+                  display: "flex", gap: 12
+                }}>
+                  {/* Info icon */}
+                  <div style={{
+                    width: 18, height: 18, borderRadius: "50%", background: C.surface,
+                    border: `0.5px solid ${C.muted}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 500, color: C.muted, flexShrink: 0
+                  }}>i</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: C.ink, marginBottom: 4 }}>
+                      What happens when you resume
+                    </div>
+                    <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55 }}>
+                      {"The 4 inactive clients enter the workflow immediately and get whichever trigger matches their inactivity window. Past members who were already messaged won't get re-messaged — they're recorded as complete."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer action row */}
+            <div style={{
+              paddingTop: 20,
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12
+            }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button
+                  onClick={() => navigateTo("landing")}
+                  style={{
+                    background: "none", border: "none", color: C.muted,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0
+                  }}
+                >Archive workflow</button>
+                <button
+                  onClick={() => navigateTo("design")}
+                  style={{
+                    background: "none", border: "none", color: C.muted,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0
+                  }}
+                >Edit before resuming</button>
+              </div>
+              <button
+                onClick={() => navigateTo("watch")}
+                style={{
+                  padding: "8px 16px", borderRadius: 8, border: "none",
+                  background: C.teal700, color: C.surface,
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8
+                }}
+              >
+                {/* Play triangle */}
+                <div style={{
+                  width: 0, height: 0,
+                  borderLeft: "7px solid white",
+                  borderTop: "5px solid transparent",
+                  borderBottom: "5px solid transparent"
+                }} />
+                Resume workflow
+              </button>
             </div>
           </div>
         )}
