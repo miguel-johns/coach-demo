@@ -5635,7 +5635,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
 }
 
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
-  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady
+  const [activeScreen, setActiveScreen] = useState("landing"); // landing, design, watch, steady, client-detail
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   
@@ -5757,7 +5757,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       iconColor: C.coral700,
       meta: "4 triggers drafted · renewal May 20, 5 weeks out",
       signals: [{ text: "Created 2d ago · not yet activated" }],
-      navigateTo: "design"
+      navigateTo: "client-detail"
     },
     {
       id: 8,
@@ -5790,6 +5790,56 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const filteredWorkflows = activeFilter === "all" 
     ? allWorkflows 
     : allWorkflows.filter(w => w.state === activeFilter);
+  
+  // Marcus renewal triggers for client-detail screen
+  const marcusTriggers = [
+    {
+      id: 1,
+      title: "Year-in-review highlight",
+      tag: "Milestone", tagColor: C.purple700, tagBg: C.purple50,
+      channel: "SMS",
+      desc: "Fires 4 weeks before renewal. Celebrates the year's progress before the renewal conversation happens.",
+      sample: "Marcus — a year in. 47 sessions, squat +85, deadlift +120, every major lift up double-digits. You've shown up. Proud of the work.",
+      meta: "Trigger: Apr 22 (4 weeks before May 20) · Uses your direct-tone rule"
+    },
+    {
+      id: 2,
+      title: "Detailed progress report",
+      tag: "Report", tagColor: C.amber700, tagBg: C.amber50,
+      channel: "Email",
+      desc: "Fires 3 weeks out. Full year of lift data, session attendance charts, and what the next year of training could look like.",
+      sample: "Subject: Your year with me — and what's next · Body opens with the PRs, week-by-week session chart, then a sketch of next year's training block focused on intensity and conditioning.",
+      meta: "Trigger: Apr 29 (3 weeks before May 20) · Email — detail-heavy format"
+    },
+    {
+      id: 3,
+      title: "Renewal conversation opener",
+      tag: "Renewal", tagColor: C.coral700, tagBg: C.coral50,
+      channel: "SMS",
+      desc: "Fires 2 weeks out. Direct ask with continuity pricing offer. SMS because Marcus replies 4x more on text.",
+      sample: "Your renewal's up May 20. Want to lock in another year at the same rate? Year 2 we push intensity — you've earned it.",
+      meta: "Trigger: May 6 (2 weeks before May 20) · $4,800/year continuity pricing"
+    },
+    {
+      id: 4,
+      title: "Final nudge (conditional)",
+      tag: "Renewal", tagColor: C.coral700, tagBg: C.coral50,
+      channel: "SMS",
+      desc: "Fires 3 days before renewal — only if Marcus hasn't responded to trigger 3. Short, accountable, offers a quick call.",
+      sample: "Marcus — 3 days out on renewal. Want to hop on a call this week? 15 min, I'll walk you through year 2.",
+      meta: "Trigger: May 17 if no renewal yet · Skipped if he renews earlier"
+    }
+  ];
+  
+  // Marcus context bullets for "What I know" section
+  const marcusContext = [
+    ["Client 11 months", "signed up June 2025 at $4,800/year"],
+    ["47 sessions completed", "94% show rate through month 9"],
+    ["Missed 2 sessions last 3 weeks", "travel for work, has rescheduled both"],
+    ["Squat +85 lbs, deadlift +120 lbs", "every major lift up double-digits"],
+    ["Prefers SMS over email", "4x reply rate on text vs email"],
+    ["Direct tone works for him", "responds well to accountability framing"]
+  ];
   
   // Bundle triggers for design screen
   const bundleTriggers = [
@@ -5907,6 +5957,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
           type: "ai",
           text: "You've got 3 new leads with no nurture sequence, and Marcus Johnson's renewal is 5 weeks out with no workflow. Want me to build either? Or keep scanning your workflows?",
           suggestions: ["Build the New Lead nurture sequence", "Design Marcus's renewal workflow", "What other gaps do you see?", "Create a custom audience workflow"]
+        }]);
+      } else if (screen === "client-detail") {
+        setChatMessages([{
+          type: "ai",
+          text: "Drafted 4 triggers for Marcus's renewal. I pulled in his 11-month history, recent attendance, and PR progression. Tell me what to change before activating.",
+          suggestions: ["Skip trigger 2, I don't do progress reports", "Move the final nudge to 1 week out", "Add a loyalty discount offer", "Show me Marcus's full history"]
         }]);
       }
     }
@@ -6841,6 +6897,190 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 padding: "8px 14px", borderRadius: 6, border: `0.5px solid ${C.border}`,
                 background: C.surface, color: C.muted, fontSize: 12, fontWeight: 500, cursor: "pointer"
               }}>Workflow settings</button>
+            </div>
+          </div>
+        )}
+        
+        {/* CLIENT-DETAIL SCREEN - Specific client workflow draft */}
+        {activeScreen === "client-detail" && (
+          <div style={{ maxWidth: 720 }}>
+            {/* Breadcrumb row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 13, cursor: "pointer", padding: 0
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                All workflows
+              </button>
+              <span style={{ fontSize: 13, color: C.muted2 }}>AI workflows · draft</span>
+            </div>
+            
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+              {/* Initials avatar - rounded-md to match icon squares */}
+              <div style={{
+                width: 44, height: 44, borderRadius: 8, background: C.coral50,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: C.coral700 }}>MJ</span>
+              </div>
+              
+              {/* Middle content */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 500, color: C.ink, margin: 0 }}>Marcus renewal</h2>
+                  <span style={{
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: C.surface2, color: C.muted,
+                    display: "flex", alignItems: "center", gap: 4
+                  }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.muted2 }} />
+                    Draft
+                  </span>
+                  <span style={{
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: C.blue50, color: C.blue700
+                  }}>Specific client</span>
+                </div>
+                <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                  Renewal workflow for Marcus Johnson · annual renewal May 20 · 5 weeks out
+                </p>
+              </div>
+              
+              {/* Discard button */}
+              <button
+                onClick={() => navigateTo("landing")}
+                style={{
+                  background: "none", border: "none", color: C.muted,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0, flexShrink: 0
+                }}
+              >
+                Discard draft
+              </button>
+            </div>
+            
+            {/* What I know about Marcus box */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 8, background: C.purple50, marginBottom: 20
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: "50%", background: C.purple500,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 10, fontWeight: 600, color: C.surface
+                }}>M</div>
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.purple700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  What I know about Marcus
+                </span>
+              </div>
+              
+              {/* 2-column grid of context bullets */}
+              <div style={{ 
+                display: "grid", gridTemplateColumns: "1fr 1fr", 
+                rowGap: 10, columnGap: 20, marginBottom: 12 
+              }}>
+                {marcusContext.map(([label, detail], i) => (
+                  <div key={i} style={{ display: "flex", gap: 8 }}>
+                    <div style={{ 
+                      width: 4, height: 4, borderRadius: "50%", background: C.purple500,
+                      marginTop: 7, flexShrink: 0 
+                    }} />
+                    <span style={{ fontSize: 12, color: C.purple700, lineHeight: 1.5 }}>
+                      <strong>{label}</strong> — {detail}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              <p style={{ fontSize: 12, color: C.purple700, fontStyle: "italic", margin: 0 }}>
+                {"If anything here is wrong, tell me in chat and I'll redraft."}
+              </p>
+            </div>
+            
+            {/* Proposed trigger bundle section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: C.ink }}>Proposed trigger bundle</span>
+                <span style={{ fontSize: 12, color: C.muted }}>4 triggers · 4-week window before renewal</span>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {marcusTriggers.map((trigger) => (
+                  <div
+                    key={trigger.id}
+                    style={{
+                      padding: "14px 16px", borderRadius: 12,
+                      background: C.surface, border: `0.5px solid ${C.border}`
+                    }}
+                  >
+                    {/* Title row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: C.muted2, minWidth: 16 }}>{trigger.id}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{trigger.title}</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: trigger.tagBg, color: trigger.tagColor
+                      }}>{trigger.tag}</span>
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: C.surface2, color: C.muted
+                      }}>{trigger.channel}</span>
+                    </div>
+                    
+                    {/* Description */}
+                    <p style={{ fontSize: 13, color: C.muted, margin: "0 0 12px", lineHeight: 1.5 }}>
+                      {trigger.desc}
+                    </p>
+                    
+                    {/* Sample message */}
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 6, background: C.surface2,
+                      borderLeft: `2px solid ${C.teal700}`, marginBottom: 10
+                    }}>
+                      <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                        "{trigger.sample}"
+                      </p>
+                    </div>
+                    
+                    {/* Meta footer */}
+                    <div style={{ fontSize: 11, color: C.muted2 }}>
+                      {trigger.meta}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Footer row */}
+            <div style={{
+              paddingTop: 16, borderTop: `0.5px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Marcus enters this workflow on activation · no cross-bundle conflicts</span>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => navigateTo("landing")}
+                  style={{
+                    padding: "10px 18px", borderRadius: 8, border: `0.5px solid ${C.border}`,
+                    background: C.surface, color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  }}
+                >Save draft</button>
+                <button
+                  onClick={() => navigateTo("watch")}
+                  style={{
+                    padding: "10px 20px", borderRadius: 8, border: "none",
+                    background: C.teal700, color: C.surface,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer"
+                  }}
+                >Activate bundle</button>
+              </div>
             </div>
           </div>
         )}
