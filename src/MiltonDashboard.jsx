@@ -4588,7 +4588,7 @@ return (
 
 /* ═════════════════════════════════�����═══════════
    SEND REPORT MODAL
-   ═════════════════════════════════════════════ */
+   ══════════════════════════���══════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -9717,6 +9717,8 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
   const [selectedClient, setSelectedClient] = useState(data?.client || "");
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
+  const [linkCopied, setLinkCopied] = useState(false);
   
   // Calendar month navigation
   const [currentDate, setCurrentDate] = useState(() => {
@@ -9845,9 +9847,36 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
       setHasChanges(false);
       setSaveStatus('saved');
       
+      // Generate shareable link and show share modal
+      const workoutId = `w-${Date.now().toString(36)}`;
+      const shareLink = `${window.location.origin}/workout/${workoutId}`;
+      const workoutName = expandedDay.workout?.name || expandedDay.dayLabel || "Workout";
+      setShareModal({
+        link: shareLink,
+        workoutName,
+        clientName: selectedClient,
+        date: expandedDay.date
+      });
+      setLinkCopied(false);
+      
       // Clear saved status after 2 seconds
       setTimeout(() => setSaveStatus(null), 2000);
     }, 500);
+  };
+  
+  const handleCopyLink = () => {
+    if (shareModal?.link) {
+      navigator.clipboard.writeText(shareModal.link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+  
+  const handleShareSMS = () => {
+    if (shareModal?.link) {
+      const message = `Hey${shareModal.clientName ? ` ${shareModal.clientName.split(' ')[0]}` : ''}! Your workout is ready: ${shareModal.link}`;
+      window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
+    }
   };
   
   // Handle adding new exercise
@@ -11266,6 +11295,113 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           </div>
         </div>
       )}
+      
+      {/* Share Modal */}
+      {shareModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20
+        }} onClick={() => setShareModal(null)}>
+          <div style={{
+            background: WHITE, borderRadius: 16, width: "100%", maxWidth: 400,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, background: "#e8f5e9",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4caf50" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>Workout Saved!</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>{shareModal.workoutName}</div>
+                  </div>
+                </div>
+                <div
+                  onClick={() => setShareModal(null)}
+                  style={{ width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: TEXT_SEC }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div style={{ padding: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: TEXT, marginBottom: 12 }}>Share with {shareModal.clientName || "your client"}</div>
+              
+              {/* Link box */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 12px", borderRadius: 10, background: "#f5f5f5",
+                border: `1px solid ${BORDER}`, marginBottom: 16
+              }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={shareModal.link}
+                  style={{
+                    flex: 1, border: "none", background: "transparent",
+                    fontSize: 13, color: TEXT, outline: "none",
+                    fontFamily: "'DM Sans', sans-serif"
+                  }}
+                />
+                <button
+                  onClick={handleCopyLink}
+                  style={{
+                    padding: "6px 12px", borderRadius: 6, border: "none",
+                    background: linkCopied ? "#4caf50" : "#e0e0e0",
+                    fontSize: 12, fontWeight: 600, color: linkCopied ? WHITE : TEXT,
+                    cursor: "pointer", transition: "all 0.15s ease",
+                    display: "flex", alignItems: "center", gap: 4
+                  }}
+                >
+                  {linkCopied ? (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                      Copied
+                    </>
+                  ) : "Copy"}
+                </button>
+              </div>
+              
+              {/* SMS Button */}
+              <button
+                onClick={handleShareSMS}
+                style={{
+                  width: "100%", padding: "14px 20px", borderRadius: 10,
+                  border: "none", background: TEAL, color: WHITE,
+                  fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "#236b69"}
+                onMouseLeave={e => e.currentTarget.style.background = TEAL}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Send via SMS
+              </button>
+              
+              <div style={{ marginTop: 12, fontSize: 12, color: TEXT_SEC, textAlign: "center" }}>
+                Link expires in 30 days
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -12239,7 +12375,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
-   ════════════════════════════════��════════════ */
+   ══════════════════════════���═════��════════════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [clients, setClients] = useState([...initialClients]);
