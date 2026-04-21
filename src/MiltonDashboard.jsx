@@ -10075,11 +10075,17 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
               {/* Save button */}
               <div 
                 onClick={() => {
-                  if (selectedClient) {
-                    alert(`Program assigned to ${selectedClient}!`);
-                  } else {
-                    alert("Please select a client first.");
-                  }
+                  // Generate shareable link and show share modal
+                  const workoutId = `w-${Date.now().toString(36)}`;
+                  const shareLink = `${window.location.origin}/workout/${workoutId}`;
+                  const workoutName = expandedDay?.workout?.name || expandedDay?.dayLabel || data?.name || "Workout";
+                  setShareModal({
+                    link: shareLink,
+                    workoutName,
+                    clientName: selectedClient,
+                    date: expandedDay?.date
+                  });
+                  setLinkCopied(false);
                 }}
                 style={{
                   width: 36, height: 36, borderRadius: 8,
@@ -10254,13 +10260,19 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           {/* Save button */}
           <div 
             onClick={() => {
-              if (selectedClient) {
-                alert(`Program assigned to ${selectedClient}!`);
-              } else {
-                alert("Please select a client first.");
-              }
+              // Generate shareable link and show share modal
+              const workoutId = `w-${Date.now().toString(36)}`;
+              const shareLink = `${window.location.origin}/workout/${workoutId}`;
+              const workoutName = expandedDay?.workout?.name || expandedDay?.dayLabel || data?.name || "Workout";
+              setShareModal({
+                link: shareLink,
+                workoutName,
+                clientName: selectedClient,
+                date: expandedDay?.date
+              });
+              setLinkCopied(false);
             }}
-            title="Save & Assign"
+            title="Save & Share"
             style={{ 
               width: 32, height: 32, borderRadius: 8,
               display: "flex", alignItems: "center", justifyContent: "center",
