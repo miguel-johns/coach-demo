@@ -4588,7 +4588,7 @@ return (
 
 /* ═════════════════════════════════�����═══════════
    SEND REPORT MODAL
-   ══════════════════════════���������══════════════════ */
+   ══════════════════════════����������══════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4948,276 +4948,1458 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
 }
 
 function InboxCanvas({ onClose, onHome, isMobile }) {
-  const [activeTab, setActiveTab] = useState("messages");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [broadcastFilter, setBroadcastFilter] = useState("all");
-  const [audienceFilter, setAudienceFilter] = useState("all");
-  const [selectedConvo, setSelectedConvo] = useState(null);
-  const [messageInput, setMessageInput] = useState("");
-  const [showNewMessage, setShowNewMessage] = useState(false);
-  const [showNewBroadcast, setShowNewBroadcast] = useState(false);
-  const [showNewAudience, setShowNewAudience] = useState(false);
-  const [selectedAudience, setSelectedAudience] = useState(null);
-  const [recipientSearch, setRecipientSearch] = useState("");
-  // New state for enhanced flows
-  const [broadcastStep, setBroadcastStep] = useState("pick"); // pick, compose, sent
-  const [selectedBroadcastAudience, setSelectedBroadcastAudience] = useState(null);
-  const [broadcastMessage, setBroadcastMessage] = useState("");
-  const [broadcastWhen, setBroadcastWhen] = useState("now"); // now, schedule, recurring
-  const [saveAsAudience, setSaveAsAudience] = useState(false);
-  const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
-  const [selectedBroadcast, setSelectedBroadcast] = useState(null);
-  const [audienceStep, setAudienceStep] = useState("create"); // create, pick-members, ready
-  const [newAudienceName, setNewAudienceName] = useState("");
-  const [newAudienceType, setNewAudienceType] = useState("manual");
-  const [newAudienceTag, setNewAudienceTag] = useState("Challenge");
-  const [selectedMembers, setSelectedMembers] = useState([]);
-  const [showScheduleCall, setShowScheduleCall] = useState(false);
-  const [showCheckInBuilder, setShowCheckInBuilder] = useState(false);
-  const [showManageMembers, setShowManageMembers] = useState(false);
-  const [swipedMessageId, setSwipedMessageId] = useState(null);
-  const [longPressMessage, setLongPressMessage] = useState(null);
-  const [conversations, setConversations] = useState([
-    { 
-      id: 1, name: "Sarah Chen", avatar: "SC", tag: "CLIENT",
-      lastMessage: "Thanks for the updated meal plan!", time: "2m",
-      unread: 2, online: true, pinned: false, muted: false, archived: false
-    },
-    { 
-      id: 2, name: "Coaching Team", avatar: "CT", tag: "TEAM", isGroup: true,
-      lastMessage: "New protocol doc is ready for review", time: "15m",
-      unread: 0, members: 5, pinned: true, muted: false, archived: false
-    },
-    { 
-      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "CLIENT",
-      lastMessage: "Can we move tomorrow's session?", time: "1h",
-      unread: 1, online: false, pinned: false, muted: false, archived: false
-    },
-    { 
-      id: 4, name: "Emily Rodriguez", avatar: "ER", tag: "CLIENT",
-      lastMessage: "Just finished week 3 of the program!", time: "5h",
-      unread: 0, online: true, pinned: false, muted: false, archived: false
-    }
-  ]);
-  const [threadMessages, setThreadMessages] = useState([
-    { id: 1, from: "client", text: "Hey! Just wanted to check in about my progress this week.", time: "10:32 AM" },
-    { id: 2, from: "coach", text: "Great progress! Keep up the consistency.", time: "10:35 AM" },
-    { id: 3, from: "client", text: "Could you send over that form video again? I want to double-check my squat.", time: "10:41 AM" }
-  ]);
+  // Navigation stack for screen management
+  const [stack, setStack] = useState([{ view: "inbox", tab: "messages" }]);
+  const [modal, setModal] = useState(null);
+  const [filters, setFilters] = useState({ messages: "all", broadcasts: "all", audiences: "all" });
   
-  const tabs = [
-    { id: "messages", label: "Messages" },
-    { id: "broadcasts", label: "Broadcasts" },
-    { id: "audiences", label: "Audiences" }
-  ];
-
-  const messageFilters = [
-    { id: "all", label: "All" },
-    { id: "unread", label: "Unread" },
-    { id: "clients", label: "Clients" },
-    { id: "pinned", label: "Pinned" }
-  ];
-
-  const broadcastFilters = [
-    { id: "all", label: "All" },
-    { id: "sent", label: "Sent" },
-    { id: "scheduled", label: "Scheduled" },
-    { id: "recurring", label: "Recurring" },
-    { id: "drafts", label: "Drafts" }
-  ];
-
-  const audienceFilters = [
-    { id: "all", label: "All" },
-    { id: "smart", label: "Smart" },
-    { id: "manual", label: "Manual" }
-  ];
+  const current = stack[stack.length - 1];
   
-  const allClients = [
-    { id: "SC", name: "Sarah Chen", frequency: "3x/wk", type: "PT", online: true },
-    { id: "MJ", name: "Marcus Johnson", frequency: "2x/wk", type: "PT", online: false },
-    { id: "ER", name: "Emily Rodriguez", frequency: "Online", type: "Online", online: true },
-    { id: "SG", name: "Samantha Gray", frequency: "1x/wk", type: "PT", online: false },
-    { id: "SA", name: "Saul Arenas", frequency: "3x/wk", type: "PT", online: false },
-    { id: "SK", name: "Sam Kowalski", frequency: "Online", type: "Online", online: true },
-    { id: "JD", name: "James Davis", frequency: "2x/wk", type: "PT", online: false },
-    { id: "LM", name: "Lisa Martinez", frequency: "Online", type: "Online", online: true },
-    { id: "TB", name: "Tom Baker", frequency: "3x/wk", type: "PT", online: false },
-    { id: "AW", name: "Amy Wilson", frequency: "1x/wk", type: "PT", online: false },
-    { id: "RJ", name: "Rachel Jones", frequency: "Online", type: "Online", online: true },
-    { id: "MB", name: "Mike Brown", frequency: "2x/wk", type: "PT", online: false }
-  ];
-
-  const broadcasts = [
-    {
-      id: 1, title: "Quick update, team - grocery list template...",
-      audience: "Online clients", count: 18, time: "2m",
-      read: 14, replied: 6, recent: true, status: "sent",
-      fullMessage: "Hey team! Just wanted to share the new grocery list template I created. It's designed to make meal prep easier and more organized. Let me know if you have any questions!",
-      replies: [
-        { name: "Sarah Chen", avatar: "SC", text: "This is exactly what I needed! Thank you!", time: "1m ago" },
-        { name: "Emily Rodriguez", avatar: "ER", text: "Love it! Can you add a section for supplements?", time: "2m ago" }
-      ]
+  // Navigation helpers
+  const nav = {
+    push: (view) => setStack([...stack, view]),
+    replace: (view) => setStack([...stack.slice(0, -1), view]),
+    back: () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)),
+    reset: () => setStack([{ view: "inbox", tab: "messages" }]),
+    resetTo: (view, newFilters) => {
+      setStack([view]);
+      if (newFilters) setFilters((f) => ({ ...f, ...newFilters }));
     },
-    {
-      id: 2, title: "Reminder: upload your Week 3 check-in",
-      audience: "Spring Challenge", count: 12, time: "Yesterday",
-      read: 12, replied: 9, status: "sent",
-      fullMessage: "Hi everyone! Just a friendly reminder to upload your Week 3 check-in by Friday. Make sure to include your progress photos and measurements.",
-      replies: []
+    setTab: (tab) => {
+      if (current.view === "inbox") {
+        setStack([...stack.slice(0, -1), { view: "inbox", tab }]);
+      } else {
+        setStack([{ view: "inbox", tab }]);
+      }
     },
-    {
-      id: 3, title: "New protein powder restock is in",
-      audience: "All PT clients", count: 32, time: "Mon",
-      read: 28, replied: 4, status: "sent",
-      fullMessage: "Good news - the chocolate and vanilla protein powder is back in stock! Stop by the front desk to grab yours.",
-      replies: []
-    },
-    {
-      id: 4, title: "Heads up - gym closed Sunday",
-      audience: "All clients", count: 54, time: "Last wk",
-      read: 51, replied: 12, status: "sent",
-      fullMessage: "Quick heads up - the gym will be closed this Sunday for maintenance. We'll reopen Monday at 5am as usual.",
-      replies: []
-    },
-    {
-      id: 5, title: "Weekly Friday Check-in",
-      audience: "Online clients", count: 18, time: "Fri 9am",
-      read: 0, replied: 0, status: "recurring", cadence: "Weekly on Fri",
-      fullMessage: "Time for your weekly check-in! How did this week go?",
-      responseForm: ["How are you feeling this week? (1-10)", "What went well?", "What was challenging?", "Goals for next week?"]
-    },
-    {
-      id: 6, title: "Monthly Progress Review",
-      audience: "Spring Challenge", count: 12, time: "Apr 1",
-      read: 0, replied: 0, status: "scheduled",
-      fullMessage: "Congratulations on completing another month! Let's review your progress together.",
-      replies: []
-    }
-  ];
-
-  const audiences = [
-    { id: 1, name: "Online clients", type: "SMART", count: 18, sub: "Auto-updates", used: "Used 2m ago - broadcast" },
-    { id: 2, name: "At-risk clients", type: "SMART", count: 6, sub: "Auto-updates - alert", used: "Flagged today", alert: true },
-    { id: 3, name: "Spring Challenge", type: "MANUAL", count: 12, sub: "Created Mar 1", used: "Weekly check-in Fri" },
-    { id: 4, name: "PT 3x/wk+", type: "SMART", count: 8, sub: "Auto-updates", used: "Used Mon" },
-    { id: 5, name: "New this month", type: "SMART", count: 4, sub: "Auto-updates", used: "Used last week" }
-  ];
-
-  const suggestedRecipients = [
-    { i: "SC", n: "Sarah Chen", sub: "Online - 2m ago", on: true },
-    { i: "SG", n: "Samantha Gray", sub: "Last message 1h ago" },
-    { i: "SA", n: "Saul Arenas", sub: "PT client - 3x/wk" },
-    { i: "SK", n: "Sam Kowalski", sub: "Online client - weekly" }
-  ];
-
-  const filteredRecipients = recipientSearch.length > 0 
-    ? suggestedRecipients.filter(r => r.n.toLowerCase().includes(recipientSearch.toLowerCase()))
-    : suggestedRecipients;
+    setTabAndReset: (tab) => setStack([{ view: "inbox", tab }]),
+    setModal,
+  };
   
-  const filteredConvos = conversations.filter(c => {
-    if (c.archived) return false;
-    if (activeFilter === "all") return true;
-    if (activeFilter === "unread") return c.unread > 0;
-    if (activeFilter === "clients") return c.tag === "CLIENT";
-    if (activeFilter === "pinned") return c.pinned;
-    return true;
+  const setFilter = (tab, filter) => setFilters((f) => ({ ...f, [tab]: filter }));
+
+  // ================================================================
+  // MOCK DATA
+  // ================================================================
+  
+  const CLIENTS = {
+    sc: { id: "sc", initials: "SC", name: "Sarah Chen", sub: "3x/wk · PT client", online: true },
+    mj: { id: "mj", initials: "MJ", name: "Marcus Johnson", sub: "2x/wk · PT client", online: false },
+    er: { id: "er", initials: "ER", name: "Emily Rodriguez", sub: "Online · weekly check-ins", online: true },
+    jt: { id: "jt", initials: "JT", name: "Jeff Turner", sub: "1x/wk · PT client", online: false },
+    kl: { id: "kl", initials: "KL", name: "Kim Lawson", sub: "Online · 6mo", online: false },
+    ap: { id: "ap", initials: "AP", name: "Ana Prieto", sub: "3x/wk · PT client", online: false },
+    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk · small group", online: false },
+  };
+
+  const [THREADS, setTHREADS] = useState({
+    sc: {
+      clientId: "sc", unread: 2, lastTime: "2m",
+      messages: [
+        { id: 1, from: "client", body: "Hey! Just wanted to check in about my progress this week.", time: "10:32 AM" },
+        { id: 2, from: "coach", body: "Great progress! Keep up the consistency.", time: "10:35 AM" },
+        { id: 3, from: "client", body: "Feeling great! Low back is a little tight after Monday though. Should I be worried?", time: "10:42 AM" },
+        { id: 4, from: "client", body: "Thanks for the updated meal plan!", time: "11:14 AM" },
+      ],
+    },
+    mj: {
+      clientId: "mj", unread: 1, lastTime: "1h",
+      messages: [
+        { id: 1, from: "client", body: "Can we move tomorrow's session? Work thing came up.", time: "9:42 AM" },
+      ],
+    },
+    er: {
+      clientId: "er", unread: 0, lastTime: "5h",
+      messages: [
+        { id: 1, from: "client", body: "Just finished week 3 of the program!", time: "Yesterday 2:14 PM" },
+        { id: 2, from: "coach", body: "That's amazing Emily — how are you feeling about next week's block?", time: "Yesterday 2:45 PM" },
+        { id: 3, from: "client", body: "Excited but a little nervous about the volume bump.", time: "Yesterday 3:01 PM" },
+      ],
+    },
+    jt: {
+      clientId: "jt", unread: 0, lastTime: "2d",
+      messages: [
+        { id: 1, from: "coach", body: "Jeff — check in? Missed you Monday.", time: "Mon 6:15 PM" },
+      ],
+    },
   });
 
-  const filteredBroadcasts = broadcasts.filter(b => {
-    if (broadcastFilter === "all") return true;
-    return b.status === broadcastFilter;
-  });
-  
-  // Helper functions for message actions
-  const handlePinMessage = (id) => {
-    setConversations(prev => prev.map(c => c.id === id ? { ...c, pinned: !c.pinned } : c));
-    setSwipedMessageId(null);
-  };
-  
-  const handleMuteMessage = (id) => {
-    setConversations(prev => prev.map(c => c.id === id ? { ...c, muted: !c.muted } : c));
-    setSwipedMessageId(null);
-  };
-  
-  const handleArchiveMessage = (id) => {
-    setConversations(prev => prev.map(c => c.id === id ? { ...c, archived: true } : c));
-    setSwipedMessageId(null);
-  };
-  
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
-    setThreadMessages(prev => [...prev, {
-      id: Date.now(),
-      from: "coach",
-      text: messageInput,
-      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    }]);
-    setMessageInput("");
+  const AUDIENCES = {
+    online: { id: "online", name: "Online clients", type: "smart", count: 18, sub: "Auto-updates", used: "Used 2m ago · broadcast", members: ["er", "kl"] },
+    atrisk: { id: "atrisk", name: "At-risk clients", type: "smart", count: 6, sub: "Auto-updates · alert", used: "Flagged today", alert: true, members: ["mj"] },
+    spring: { id: "spring", name: "Spring Challenge", type: "manual", count: 12, sub: "Created Mar 1", used: "Weekly check-in Fri", members: ["sc", "mj", "er", "jt", "ap", "rn"] },
+    pt3x: { id: "pt3x", name: "PT 3x/wk+", type: "smart", count: 8, sub: "Auto-updates", used: "Used Mon", members: ["sc", "ap"] },
+    newmonth: { id: "newmonth", name: "New this month", type: "smart", count: 4, sub: "Auto-updates", used: "Used last week", members: ["rn"] },
   };
 
-  const toggleMemberSelection = (clientId) => {
-    setSelectedMembers(prev => 
-      prev.includes(clientId) 
-        ? prev.filter(id => id !== clientId)
-        : [...prev, clientId]
+  const BROADCASTS = [
+    { id: 1, title: "Quick update, team — grocery list template is live", audienceId: "online", time: "2m", read: 14, replied: 6, status: "sent", recent: true, replies: [
+      { clientId: "sc", body: "Love this, thanks Rachel!", time: "1m" },
+      { clientId: "er", body: "Adding to my list now", time: "3m" },
+      { clientId: "kl", body: "Question — is the grain-free version available too?", time: "5m" },
+    ]},
+    { id: 2, title: "Reminder: upload your Week 3 check-in", audienceId: "spring", time: "Yesterday", read: 12, replied: 9, status: "sent" },
+    { id: 3, title: "New protein powder restock is in", audienceId: "pt3x", time: "Mon", read: 28, replied: 4, status: "sent" },
+    { id: 4, title: "Heads up — gym closed Sunday", audienceId: null, audienceName: "All clients", count: 54, time: "Last wk", read: 51, replied: 12, status: "sent" },
+  ];
+
+  const SCHEDULED = [
+    { id: 5, title: "Welcome to the Spring Challenge!", audienceId: "spring", firesIn: "in 3 days", fireTime: "Monday 7:00 AM" },
+  ];
+
+  const RECURRING = [
+    { id: 101, name: "Weekly Friday check-in", audienceId: "spring", cadence: "Every Fri · 9:00 AM", lastSent: "2d ago", responded: "10/12 replied", active: true },
+    { id: 102, name: "Monthly wellness pulse", audienceId: "online", cadence: "1st of month · 8:00 AM", lastSent: "3w ago", responded: "16/18 replied", active: true },
+    { id: 103, name: "Daily streak nudge", audienceId: "atrisk", cadence: "Every day · 8:00 AM", lastSent: "Today", responded: "4/6 replied", active: true },
+    { id: 104, name: "Post-session feedback", audienceId: "pt3x", cadence: "After each session", lastSent: "Paused", responded: "—", active: false },
+  ];
+
+  const TEMPLATES = [
+    { id: 1, name: "Weekly Friday Check-in", sub: "Response form · 4 questions", tag: "SYSTEM" },
+    { id: 2, name: "Challenge Kickoff", sub: "Broadcast · personalized", tag: "SYSTEM" },
+    { id: 3, name: "Food Examples", sub: "Broadcast · static", tag: "SYSTEM" },
+    { id: 4, name: "How to Use the App", sub: "Broadcast · with video", tag: "SYSTEM" },
+    { id: 5, name: "Missed Session Follow-up", sub: "1:1 · trigger-based", tag: "SYSTEM" },
+    { id: 6, name: "Monday Boost", sub: "Broadcast · personalized", tag: "MINE" },
+  ];
+
+  const SEARCH_RESULTS = [
+    { who: "Sarah Chen", initials: "SC", date: "Apr 21 · today", snippet: "the <b>knee's</b> feeling better, but I'm still noticing it on the descent...", type: "PAIN" },
+    { who: "Marcus Johnson", initials: "MJ", date: "Apr 18", snippet: "been getting <b>knee</b> pain when I squat deep — not sure if it's form or load", type: "PAIN" },
+    { who: "Spring Challenge · group", initials: "SP", date: "Apr 15 · cohort call", snippet: "<b>3 members</b> flagged <b>knee</b> mobility today — shared theme across the cohort", type: "PATTERN" },
+    { who: "Sarah Chen", initials: "SC", date: "Mar 15", snippet: "flagged <b>knee</b> tightness during the deadlift warmup, especially on the right", type: "PAIN" },
+    { who: "Ana Prieto", initials: "AP", date: "Feb 28", snippet: "old <b>knee</b> issue from volleyball — been clean for 6 months, wants to avoid re-injury", type: "HISTORY" },
+  ];
+
+  // ================================================================
+  // REUSABLE COMPONENTS
+  // ================================================================
+  
+  const InboxAvatar = ({ client, size = 10, dot = false }) => {
+    const sizeClasses = {
+      5: { w: 20, h: 20, fs: 8 },
+      6: { w: 24, h: 24, fs: 9 },
+      7: { w: 28, h: 28, fs: 10 },
+      8: { w: 32, h: 32, fs: 10 },
+      9: { w: 36, h: 36, fs: 10 },
+      10: { w: 40, h: 40, fs: 11 },
+    };
+    const s = sizeClasses[size] || sizeClasses[10];
+    return (
+      <div style={{ position: "relative", width: s.w, height: s.h, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <span style={{ fontWeight: 600, color: TEAL, fontSize: s.fs }}>{client.initials}</span>
+        {dot && client.online && (
+          <div style={{ position: "absolute", bottom: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "#22c55e", border: `2px solid ${WHITE}` }} />
+        )}
+      </div>
     );
   };
 
-  const filteredAudiences = audiences.filter(a => {
-    if (audienceFilter === "all") return true;
-    if (audienceFilter === "smart") return a.type === "SMART";
-    if (audienceFilter === "manual") return a.type === "MANUAL";
-    return true;
-  });
-  
-  const tagColors = { TEAM: "#6366f1", CLIENT: TEAL, ANNOUNCEMENT: "#f59e0b" };
+  const FilterChip = ({ label, active, onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        flexShrink: 0, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+        background: active ? "#1a2e2a" : WHITE, color: active ? WHITE : TEXT,
+        border: active ? "none" : `1px solid ${BORDER}`, cursor: "pointer", transition: "all 0.15s"
+      }}
+    >
+      {label}
+    </button>
+  );
 
-  // New Message Composer View
-  if (showNewMessage) {
+  const TabBar = ({ active, onChange }) => {
+    const tabs = [
+      { id: "messages", label: "Messages" },
+      { id: "broadcasts", label: "Broadcasts" },
+      { id: "audiences", label: "Audiences" },
+    ];
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
-        {/* Header */}
-        <div style={{ 
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
-        }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${BORDER}` }}>
+        {tabs.map((t) => (
           <button
-            onClick={() => setShowNewMessage(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            style={{
+              padding: "10px 8px", marginRight: 16, fontSize: 12, background: "none", border: "none", cursor: "pointer",
+              fontWeight: active === t.id ? 600 : 500, color: active === t.id ? TEAL : TEXT_SEC,
+              borderBottom: active === t.id ? `2px solid ${TEAL}` : "2px solid transparent", marginBottom: -1
+            }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
-              <polyline points="15,18 9,12 15,6"/>
-            </svg>
+            {t.label}
           </button>
-          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>New Message</span>
-          <div style={{ width: 28 }} />
+        ))}
+      </div>
+    );
+  };
+
+  const InboxHeader = ({ tab, onCompose, onLongPressCompose }) => {
+    const composeIcons = {
+      messages: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4Z"/></svg>,
+      broadcasts: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+      audiences: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>,
+    };
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Inbox</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={onCompose}
+            onContextMenu={(e) => { e.preventDefault(); onLongPressCompose && onLongPressCompose(); }}
+            style={{ width: 28, height: 28, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+          >
+            {composeIcons[tab]}
+          </button>
+          <button
+            onClick={onLongPressCompose}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: TEXT_SEC }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const ScreenHeader = ({ title, onBack, right, subtitle }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 9, color: TEXT_SEC }}>{subtitle}</div>}
+      </div>
+      <div style={{ minWidth: 20, textAlign: "right" }}>{right || <div style={{ width: 20 }} />}</div>
+    </div>
+  );
+
+  // ================================================================
+  // MESSAGES TAB
+  // ================================================================
+  
+  const MessagesTab = ({ filter, setFilter }) => {
+    const [rowMenuFor, setRowMenuFor] = useState(null);
+    const threadList = Object.values(THREADS);
+    const filtered = threadList.filter((t) => {
+      if (filter === "unread") return t.unread > 0;
+      return true;
+    });
+
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Unread" active={filter === "unread"} onClick={() => setFilter("unread")} />
+          <FilterChip label="Clients" active={filter === "clients"} onClick={() => setFilter("clients")} />
+          <FilterChip label="Pinned" active={filter === "pinned"} onClick={() => setFilter("pinned")} />
+        </div>
+        <div style={{ padding: "0 12px 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>Search messages...</span>
+          </div>
+        </div>
+        {filtered.map((thread) => {
+          const client = CLIENTS[thread.clientId];
+          const lastMsg = thread.messages[thread.messages.length - 1];
+          const preview = lastMsg ? lastMsg.body : "";
+          const isMenuOpen = rowMenuFor === thread.clientId;
+          return (
+            <div key={thread.clientId} style={{ position: "relative", overflow: "hidden", borderBottom: `1px solid #f5f7f6` }}>
+              {isMenuOpen && (
+                <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, display: "flex", zIndex: 10 }}>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#f59e0b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="17" x2="12" y2="3"/><path d="M5 10l7-7 7 7"/><path d="M19 21H5"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>PIN</span>
+                  </button>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#6b7280", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>MUTE</span>
+                  </button>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#ef4444", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>ARCHIVE</span>
+                  </button>
+                </div>
+              )}
+              <div
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: WHITE, cursor: "pointer",
+                  transform: isMenuOpen ? "translateX(-168px)" : "translateX(0)", transition: "transform 0.2s"
+                }}
+                onClick={() => !isMenuOpen && nav.push({ view: "thread", clientId: thread.clientId })}
+              >
+                <InboxAvatar client={client} dot />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</span>
+                    <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: TEAL_LIGHT, color: TEAL }}>CLIENT</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: TEXT_SEC, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "2px 0 0" }}>{preview}</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontSize: 9, color: TEXT_SEC }}>{thread.lastTime}</span>
+                  {thread.unread > 0 ? (
+                    <div style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", color: WHITE, fontSize: 9, fontWeight: 700 }}>
+                      {thread.unread}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRowMenuFor(thread.clientId); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#d1d5db" }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
+  // ================================================================
+  // BROADCASTS TAB
+  // ================================================================
+  
+  const BroadcastsTab = ({ filter, setFilter }) => {
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Sent" active={filter === "sent"} onClick={() => setFilter("sent")} />
+          <FilterChip label="Scheduled" active={filter === "scheduled"} onClick={() => setFilter("scheduled")} />
+          <FilterChip label="Recurring" active={filter === "recurring"} onClick={() => setFilter("recurring")} />
+          <FilterChip label="Drafts" active={filter === "drafts"} onClick={() => setFilter("drafts")} />
         </div>
 
-        {/* To Field */}
-        <div style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+        {(filter === "all" || filter === "scheduled") && SCHEDULED.length > 0 && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Going out soon</div>
+            </div>
+            {SCHEDULED.map((s) => {
+              const aud = AUDIENCES[s.audienceId];
+              return (
+                <div key={s.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, background: "rgba(245, 158, 11, 0.1)" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                      <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: "#fef3c7", color: "#b45309" }}>SCHEDULED</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{aud?.name} · {aud?.count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span style={{ fontSize: 9, color: "#b45309", fontWeight: 500 }}>{s.fireTime} · {s.firesIn}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {(filter === "all" || filter === "recurring") && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {filter === "recurring" ? "Active check-ins · 3 running" : "Recurring"}
+              </div>
+            </div>
+            {RECURRING.map((r) => {
+              const aud = AUDIENCES[r.audienceId];
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => nav.push({ view: "check-in-builder", recurringId: r.id })}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: r.active ? "#ede9fe" : "#f5f7f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={r.active ? "#6d28d9" : TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                      {!r.active && <span style={{ padding: "2px 4px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: "#f5f7f6", color: TEXT_SEC }}>PAUSED</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{aud?.name} · {aud?.count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{r.cadence}</span>
+                      </div>
+                      {r.active && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                          <span style={{ fontSize: 9, fontWeight: 500, color: TEAL }}>{r.responded}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, color: TEXT_SEC }}>{r.lastSent}</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
+
+        {(filter === "all" || filter === "sent") && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Recently sent</div>
+            </div>
+            {BROADCASTS.map((b) => {
+              const aud = b.audienceId ? AUDIENCES[b.audienceId] : null;
+              const name = aud?.name || b.audienceName;
+              const count = aud?.count || b.count;
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => nav.push({ view: "broadcast-detail", broadcastId: b.id })}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left",
+                    background: b.recent ? "rgba(245, 158, 11, 0.1)" : "none", border: "none", cursor: "pointer"
+                  }}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{name} · {count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{b.read}/{count}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEAL }}>{b.replied} replied</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, color: TEXT_SEC }}>{b.time}</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </>
+    );
+  };
+
+  // ================================================================
+  // AUDIENCES TAB
+  // ================================================================
+  
+  const AudiencesTab = ({ filter, setFilter }) => {
+    const items = Object.values(AUDIENCES).filter((a) => {
+      if (filter === "smart") return a.type === "smart";
+      if (filter === "manual") return a.type === "manual";
+      return true;
+    });
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Smart" active={filter === "smart"} onClick={() => setFilter("smart")} />
+          <FilterChip label="Manual" active={filter === "manual"} onClick={() => setFilter("manual")} />
+        </div>
+        <div style={{ padding: "4px 16px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Your audiences · {items.length}</div>
+        </div>
+        {items.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => nav.push({ view: "audience-detail", audienceId: a.id })}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: a.alert ? "#fef3c7" : TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={a.alert ? "#b45309" : TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
+                <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: a.type === "smart" ? "#ede9fe" : "#f5f7f6", color: a.type === "smart" ? "#6d28d9" : TEXT_SEC }}>{a.type.toUpperCase()}</span>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{a.count} members · {a.sub}</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>{a.used}</div>
+            </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+      </>
+    );
+  };
+
+  // ================================================================
+  // THREAD SCREEN
+  // ================================================================
+  
+  const ThreadScreen = ({ clientId }) => {
+    const client = CLIENTS[clientId];
+    const thread = THREADS[clientId];
+    const [messages, setMessages] = useState(thread?.messages || []);
+    const [draft, setDraft] = useState("");
+
+    function send() {
+      if (!draft.trim()) return;
+      setMessages([...messages, { id: Date.now(), from: "coach", body: draft, time: "Now" }]);
+      setDraft("");
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+          <button onClick={nav.back} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <InboxAvatar client={client} size={7} />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</div>
+              <div style={{ fontSize: 9, color: client.online ? "#22c55e" : TEXT_SEC, fontWeight: client.online ? 500 : 400 }}>
+                {client.online ? "Online" : "Last seen 3h ago"}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button
+              onClick={() => nav.setModal({ type: "video-menu", clientId })}
+              style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            </button>
+            <button style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: "100%", gap: 8 }}>
+            {messages.map((m) => (
+              <div key={m.id}>
+                {m.from === "client" ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+                      <InboxAvatar client={client} size={5} />
+                      <button
+                        onClick={() => nav.setModal({ type: "message-long-press", messageId: m.id, clientId })}
+                        style={{ background: "#f5f7f6", color: TEXT, fontSize: 11, padding: "8px 12px", borderRadius: 16, borderBottomLeftRadius: 6, maxWidth: 220, border: "none", cursor: "pointer", textAlign: "left" }}
+                      >
+                        {m.body}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 8, color: TEXT_SEC, paddingLeft: 28, marginTop: 2 }}>{m.time}</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => nav.setModal({ type: "message-long-press", messageId: m.id, clientId })}
+                        style={{ background: TEAL, color: WHITE, fontSize: 11, padding: "8px 12px", borderRadius: 16, borderBottomRightRadius: 6, maxWidth: 220, border: "none", cursor: "pointer", textAlign: "left" }}
+                      >
+                        {m.body}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 8, color: TEXT_SEC, textAlign: "right", paddingRight: 4, marginTop: 2 }}>{m.time}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: "8px 12px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 20, background: WHITE, border: `1px solid ${BORDER}` }}>
+            <button
+              onClick={() => nav.setModal("attachment-sheet")}
+              style={{ padding: 4, background: "none", border: "none", cursor: "pointer" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Message"
+              style={{ flex: 1, fontSize: 11, border: "none", outline: "none", background: "transparent" }}
+            />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <button
+              onClick={send}
+              disabled={!draft.trim()}
+              style={{ width: 28, height: 28, borderRadius: "50%", background: draft.trim() ? TEAL : "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: draft.trim() ? "pointer" : "default" }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={draft.trim() ? WHITE : TEXT_SEC} strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // COMPOSE MESSAGE SCREEN
+  // ================================================================
+  
+  const ComposeMessageScreen = () => {
+    const [query, setQuery] = useState("");
+    const suggested = Object.values(CLIENTS).filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    return (
+      <>
+        <ScreenHeader title="New Message" onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>To:</span>
             <input
               type="text"
-              value={recipientSearch}
-              onChange={(e) => setRecipientSearch(e.target.value)}
-              placeholder="Search clients..."
-              style={{
-                flex: 1, border: "none", outline: "none", fontSize: 12,
-                color: TEXT, background: "transparent"
-              }}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Type a name..."
+              autoFocus
+              style={{ flex: 1, fontSize: 12, color: TEXT, border: "none", outline: "none", background: "transparent" }}
             />
           </div>
         </div>
-
-        {/* Matching Clients */}
-        <div style={{ padding: "12px 16px 8px" }}>
+        <div style={{ padding: "12px 16px 4px" }}>
           <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Matching clients
+            {query ? "Matching clients" : "Suggested"}
+          </div>
+        </div>
+        {suggested.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => nav.replace({ view: "thread", clientId: c.id })}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <InboxAvatar client={c} size={9} dot />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{c.name}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>{c.sub}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+        <div style={{ padding: "12px 16px 4px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick add</div>
+        </div>
+        <div style={{ padding: "0 16px" }}>
+          <button style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6", border: "none", cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>New client (not in system)</span>
+          </button>
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // COMPOSE BROADCAST SCREEN
+  // ================================================================
+  
+  const ComposeBroadcastScreen = ({ audienceId }) => {
+    const [selected, setSelected] = useState(audienceId || null);
+    const [body, setBody] = useState("Quick update, team — dropping the new grocery list template in the app today.");
+    const [when, setWhen] = useState("now");
+
+    const aud = selected ? AUDIENCES[selected] : null;
+
+    function sendIt() {
+      nav.push({ view: "broadcast-detail", broadcastId: 1, justSent: true });
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Broadcast" onBack={nav.back} right={<span style={{ fontSize: 12, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Save draft</span>} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>To</label>
+            {aud ? (
+              <button
+                onClick={() => nav.push({ view: "broadcast-audiences", selected })}
+                style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `1px solid ${TEAL}`, width: "100%", cursor: "pointer" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEAL }}>{aud.name}</span>
+                <span style={{ marginLeft: "auto", fontSize: 10, color: TEAL }}>{aud.count} people</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => nav.push({ view: "broadcast-audiences" })}
+                style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px dashed ${BORDER}`, background: WHITE, width: "100%", cursor: "pointer" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span style={{ fontSize: 11, color: TEXT_SEC }}>Pick recipients</span>
+              </button>
+            )}
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Message</label>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={3}
+              style={{ marginTop: 4, width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, fontSize: 11, color: TEXT, lineHeight: 1.5, resize: "none", outline: "none" }}
+            />
+            <button
+              onClick={() => nav.setModal("attachment-sheet")}
+              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"/></svg>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 4, background: "#f5f7f6" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span style={{ fontSize: 9, color: TEXT }}>grocery-list.pdf</span>
+              </div>
+            </button>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>When</label>
+            <div style={{ marginTop: 4, display: "flex", gap: 4, padding: 4, borderRadius: 8, background: "#f5f7f6" }}>
+              {["now", "schedule", "recurring"].map((w) => (
+                <button
+                  key={w}
+                  onClick={() => {
+                    if (w === "recurring") nav.push({ view: "check-in-builder", audienceId: selected });
+                    else setWhen(w);
+                  }}
+                  style={{
+                    flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 10, border: "none", cursor: "pointer",
+                    fontWeight: when === w ? 600 : 500, background: when === w ? WHITE : "transparent",
+                    boxShadow: when === w ? "0 1px 2px rgba(0,0,0,0.1)" : "none", color: when === w ? TEXT : TEXT_SEC
+                  }}
+                >
+                  {w === "now" ? "Send now" : w === "schedule" ? "Schedule" : "Recurring →"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={sendIt}
+            disabled={!selected}
+            style={{
+              width: "100%", fontWeight: 600, fontSize: 12, padding: "10px 0", borderRadius: 20, border: "none", cursor: selected ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              background: selected ? TEAL : "#e5e7eb", color: selected ? WHITE : TEXT_SEC
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9"/></svg>
+            Send now
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // BROADCAST AUDIENCE PICKER
+  // ================================================================
+  
+  const BroadcastAudiencePicker = () => {
+    return (
+      <>
+        <ScreenHeader title="Pick recipients" onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>Search...</span>
+          </div>
+        </div>
+
+        <div style={{ padding: "0 16px 4px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Smart audiences · auto-updating</div>
+        </div>
+        <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.values(AUDIENCES).filter((a) => a.type === "smart").map((a) => (
+            <button
+              key={a.id}
+              onClick={() => nav.replace({ view: "compose-broadcast", audienceId: a.id })}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>{a.name}</span>
+              </div>
+              <span style={{ fontSize: 10, color: a.alert ? "#b45309" : TEXT_SEC, fontWeight: a.alert ? 600 : 400 }}>{a.count}</span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: "0 16px 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Your audiences</span>
+            <span onClick={() => nav.push({ view: "new-audience-config" })} style={{ fontSize: 10, fontWeight: 500, color: TEAL, display: "flex", alignItems: "center", gap: 2, cursor: "pointer" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New
+            </span>
+          </div>
+        </div>
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.values(AUDIENCES).filter((a) => a.type === "manual").map((a) => (
+            <button
+              key={a.id}
+              onClick={() => nav.replace({ view: "compose-broadcast", audienceId: a.id })}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>{a.name}</div>
+                  <div style={{ fontSize: 9, color: TEXT_SEC }}>{a.sub}</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 10, color: TEXT_SEC }}>{a.count}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // BROADCAST DETAIL SCREEN
+  // ================================================================
+  
+  const BroadcastDetailScreen = ({ broadcastId, justSent }) => {
+    const b = BROADCASTS.find((x) => x.id === broadcastId) || BROADCASTS[0];
+    const aud = b.audienceId ? AUDIENCES[b.audienceId] : null;
+    const name = aud?.name || b.audienceName;
+    const count = aud?.count || b.count;
+
+    return (
+      <>
+        <ScreenHeader title={justSent ? "Broadcast sent" : "Broadcast"} onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ borderRadius: 12, padding: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Sent to {name}</span>
+            </div>
+            <p style={{ fontSize: 10, color: TEXT, lineHeight: 1.4, margin: 0 }}>{b.title}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span style={{ fontSize: 9, color: TEXT_SEC }}>{justSent ? "Sent just now" : `Sent ${b.time}`} · {count} recipients</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "16px 16px 8px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Delivery</div>
+        </div>
+        <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{count}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Delivered</div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{b.read}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Read</div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{b.replied}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Replied</div>
+          </div>
+        </div>
+
+        {b.replies && b.replies.length > 0 && (
+          <>
+            <div style={{ padding: "16px 16px 4px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Replies ({b.replies.length})</div>
+              <span style={{ fontSize: 10, fontWeight: 500, color: TEAL }}>View all</span>
+            </div>
+            {b.replies.map((r) => {
+              const c = CLIENTS[r.clientId];
+              return (
+                <button
+                  key={r.clientId}
+                  onClick={() => nav.push({ view: "thread", clientId: r.clientId })}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <InboxAvatar client={c} size={8} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{c.name}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{r.body}</div>
+                  </div>
+                  <span style={{ fontSize: 9, color: TEXT_SEC, flexShrink: 0 }}>{r.time}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </>
+    );
+  };
+
+  // ================================================================
+  // AUDIENCE DETAIL SCREEN
+  // ================================================================
+  
+  const AudienceDetailScreen = ({ audienceId }) => {
+    const a = AUDIENCES[audienceId];
+    return (
+      <>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+          <button onClick={nav.back} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: a.alert ? "#fef3c7" : TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={a.alert ? "#b45309" : TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{a.name}</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC }}>{a.count} members · {a.type === "smart" ? "Smart" : "Manual"}</div>
+            </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_SEC, textAlign: "center", marginTop: 4, lineHeight: 1.4, maxWidth: 260 }}>
+            {a.type === "smart" ? "Auto-updating based on rules." : "Hand-picked set of clients."} {a.used}
+          </div>
+
+          <div style={{ marginTop: 20, width: "100%", maxWidth: 280, display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              onClick={() => nav.push({ view: "compose-broadcast", audienceId })}
+              style={{ width: "100%", background: TEAL, color: WHITE, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Send a broadcast
+            </button>
+            <button
+              onClick={() => nav.push({ view: "check-in-builder", audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Schedule recurring check-in
+            </button>
+            <button
+              onClick={() => nav.push({ view: "schedule-call", targetType: "audience", targetId: audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              Schedule video call
+            </button>
+            <button
+              onClick={() => nav.push({ view: "audience-members", audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Manage members
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // CHECK-IN BUILDER SCREEN
+  // ================================================================
+  
+  const CheckInBuilderScreen = ({ audienceId }) => {
+    const aud = audienceId ? AUDIENCES[audienceId] : AUDIENCES.spring;
+    const [autoSend, setAutoSend] = useState(false);
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Check-in" onBack={nav.back} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={() => nav.push({ view: "templates" })} style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Template</label>
+            <div style={{ marginTop: 6, padding: 10, borderRadius: 8, border: `1px solid ${TEXT}`, background: WHITE }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>Weekly Friday Check-in</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}><polyline points="9,18 15,12 9,6"/></svg>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>
+                How did this week go? Any wins, stuck points, or adjustments for next week?
+              </div>
+            </div>
+          </button>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Response form</label>
+            <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 6 }}>
+              {["How did this week go? (1-10)", "Biggest win", "Where you struggled", "Intentions for next week"].map((q) => (
+                <div key={q} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 6, background: "#f5f7f6" }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/></svg>
+                  <span style={{ fontSize: 11, color: TEXT }}>{q}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Recipients</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+              <span style={{ fontSize: 12, color: TEXT }}>{aud?.name}</span>
+              <span style={{ marginLeft: "auto", fontSize: 10, color: TEXT_SEC }}>{aud?.count} clients</span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cadence</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Every Friday</span>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>·</span>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>9:00 AM</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setAutoSend(!autoSend)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: "#f5f7f6", width: "100%", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Auto-send drafts</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC }}>Review first for 2 weeks, then auto</div>
+            </div>
+            <div style={{ width: 32, height: 16, borderRadius: 8, display: "flex", alignItems: "center", padding: "0 2px", background: autoSend ? TEAL : "#d1d5db", justifyContent: autoSend ? "flex-end" : "flex-start" }}>
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: WHITE, boxShadow: "0 1px 2px rgba(0,0,0,0.15)" }} />
+            </div>
+          </button>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.resetTo({ view: "inbox", tab: "broadcasts" }, { broadcasts: "recurring" })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Activate check-in
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // TEMPLATES SCREEN
+  // ================================================================
+  
+  const TemplatesScreen = () => {
+    return (
+      <>
+        <ScreenHeader title="Templates" onBack={nav.back} right={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>Search templates...</span>
+          </div>
+        </div>
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            onClick={nav.back}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{t.name}</span>
+                <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: t.tag === "MINE" ? TEAL_LIGHT : "#f5f7f6", color: t.tag === "MINE" ? TEAL : TEXT_SEC }}>{t.tag}</span>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{t.sub}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+      </>
+    );
+  };
+
+  // ================================================================
+  // NEW AUDIENCE CONFIG SCREEN
+  // ================================================================
+  
+  const NewAudienceConfigScreen = () => {
+    const [name, setName] = useState("Spring Nutrition Challenge");
+    const [audType, setAudType] = useState("manual");
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Audience" onBack={nav.back} right={<span style={{ fontSize: 12, fontWeight: 600, color: "#d1d5db" }}>Next</span>} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "16px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ marginTop: 6, width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${TEXT}`, background: WHITE, fontSize: 13, color: TEXT, outline: "none" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>How it&apos;s built</label>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { id: "manual", label: "Manual", desc: "Hand-pick the clients in the next step" },
+                { id: "smart", label: "Smart (rule-based)", desc: "Auto-updates as clients meet the rules" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setAudType(t.id)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 8, cursor: "pointer",
+                    border: audType === t.id ? `1px solid ${TEAL}` : `1px solid ${BORDER}`,
+                    background: audType === t.id ? TEAL_LIGHT : WHITE
+                  }}
+                >
+                  <div style={{
+                    width: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: audType === t.id ? TEAL : "transparent", border: audType === t.id ? "none" : `1px solid ${BORDER}`
+                  }}>
+                    {audType === t.id && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{t.label}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{t.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tag (optional)</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["Challenge", "Cohort", "Program", "Custom"].map((t, i) => (
+                <div key={t} style={{ padding: "6px 12px", borderRadius: 20, fontSize: 11, background: i === 0 ? TEAL : WHITE, color: i === 0 ? WHITE : TEXT, border: i === 0 ? "none" : `1px solid ${BORDER}`, fontWeight: i === 0 ? 500 : 400 }}>{t}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.push({ view: "new-audience-members", audienceName: name, audType })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Next: Pick members
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // SCHEDULE CALL SCREEN
+  // ================================================================
+  
+  const ScheduleCallScreen = ({ targetType, targetId }) => {
+    const target = targetType === "client" ? CLIENTS[targetId] : AUDIENCES[targetId];
+    const isAud = targetType === "audience";
+    const [milton, setMilton] = useState(true);
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="Schedule Call" onBack={nav.back} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>With</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `1px solid ${TEAL}` }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {isAud ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                ) : (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: WHITE }}>{target?.initials}</span>
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: TEAL }}>{target?.name}</div>
+                <div style={{ fontSize: 9, color: "#0d6d6d" }}>{isAud ? `${target?.count} members · group call` : target?.sub}</div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d6d6d" strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Type</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["Check-in", "Consult", "Session", "Form check"].map((t, i) => (
+                <div key={t} style={{ padding: "6px 12px", borderRadius: 20, fontSize: 10, background: i === 0 ? TEAL : WHITE, color: i === 0 ? WHITE : TEXT, border: i === 0 ? "none" : `1px solid ${BORDER}`, fontWeight: i === 0 ? 500 : 400 }}>{t}</div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>When</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Thu, Apr 23</span>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>·</span>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>3:00 PM</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Duration</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6 }}>
+              {[15, 30, 45, 60].map((d) => (
+                <div key={d} style={{ flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 10, fontWeight: 500, background: d === 30 ? TEAL : WHITE, color: d === 30 ? WHITE : TEXT, border: d === 30 ? "none" : `1px solid ${BORDER}` }}>{d}m</div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setMilton(!milton)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, width: "100%", cursor: "pointer",
+              background: milton ? TEAL_LIGHT : WHITE, border: `1px solid ${milton ? "#9fd3d1" : BORDER}`
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={milton ? TEAL : TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginTop: 2 }}><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: milton ? "#0d6d6d" : TEXT }}>Milton attends &amp; transcribes</div>
+                <div style={{ fontSize: 9, marginTop: 2, color: milton ? "#0d6d6d" : TEXT_SEC }}>Auto-summary + action items in thread</div>
+              </div>
+            </div>
+            <div style={{ width: 32, height: 16, borderRadius: 8, display: "flex", alignItems: "center", padding: "0 2px", background: milton ? TEAL : "#d1d5db", justifyContent: milton ? "flex-end" : "flex-start" }}>
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: WHITE, boxShadow: "0 1px 2px rgba(0,0,0,0.15)" }} />
+            </div>
+          </button>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.push({ view: "pre-call-brief", targetType, targetId })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Schedule call
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // MODALS
+  // ================================================================
+
+  const AttachmentSheet = ({ onClose }) => {
+    const items = [
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>, label: "Camera", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, label: "Photo", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>, label: "Video", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>, label: "Voice", color: "#f5f7f6", textColor: TEXT },
+    ];
+    const miltonItems = [
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>, label: "Workout", color: TEAL_LIGHT, textColor: TEAL },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>, label: "Meal plan", color: TEAL_LIGHT, textColor: TEAL },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>, label: "Protocol", color: TEAL_LIGHT, textColor: TEAL },
+    ];
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-end" }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: WHITE, borderRadius: "16px 16px 0 0", borderTop: `1px solid ${BORDER}`, paddingBottom: 64, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#d1d5db" }} />
+          </div>
+          <div style={{ padding: "8px 16px 4px" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Attach</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "12px" }}>
+            {items.map((item) => (
+              <button key={item.label} onClick={onClose} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: item.color, color: item.textColor, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</div>
+                <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>From Milton</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "12px" }}>
+            {miltonItems.map((item) => (
+              <button key={item.label} onClick={onClose} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: item.color, color: item.textColor, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</div>
+                <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ComposeLongPressMenu = ({ onClose }) => {
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-start", paddingTop: 48 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ marginLeft: "auto", marginRight: 32, marginTop: 8 }}>
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: -4, right: 12, width: 8, height: 8, transform: "rotate(45deg)", background: WHITE, borderTop: `1px solid ${BORDER}`, borderLeft: `1px solid ${BORDER}` }} />
+            <div style={{ background: WHITE, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: `1px solid ${BORDER}`, overflow: "hidden", minWidth: 180 }}>
+              <button onClick={() => { onClose(); nav.push({ view: "compose-message" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>New message</span>
+              </button>
+              <button onClick={() => { onClose(); nav.push({ view: "schedule-call", targetType: "client", targetId: "sc" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: TEAL_LIGHT, border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Schedule a call</div>
+                  <div style={{ fontSize: 8, color: "#0d6d6d" }}>1:1 or audience</div>
+                </div>
+              </button>
+              <button onClick={() => { onClose(); nav.push({ view: "compose-broadcast" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>New broadcast</span>
+              </button>
+              <button onClick={onClose} style={{ width: "100%", padding: "8px 12px", display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>Quick voice note</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const VideoMenuSheet = ({ clientId, onClose }) => {
+    const c = CLIENTS[clientId];
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-end" }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: WHITE, borderRadius: "16px 16px 0 0", borderTop: `1px solid ${BORDER}`, paddingBottom: 64, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#d1d5db" }} />
+          </div>
+          <div style={{ padding: "4px 16px 8px" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Start a call with {c.name}</div>
+          </div>
+          <div style={{ padding: "0 12px 8px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <button onClick={() => { onClose(); nav.push({ view: "in-call", targetType: "client", targetId: clientId }); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Start video now</div>
+                <div style={{ fontSize: 9, color: TEXT_SEC }}>Go live · {c.name.split(" ")[0]} is {c.online ? "online" : "offline"}</div>
+              </div>
+            </button>
+            <button onClick={() => { onClose(); nav.push({ view: "schedule-call", targetType: "client", targetId: clientId }); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `2px solid ${TEAL}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Schedule for later</div>
+                <div style={{ fontSize: 9, color: "#0d6d6d" }}>Pick time + pre-call notes</div>
+              </div>
+            </button>
+            <button onClick={onClose} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f5f7f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Audio only</div>
+                <div style={{ fontSize: 9, color: TEXT_SEC }}>Voice call, no video</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // SCREEN ROUTER
+  // ================================================================
+  
+  const InboxScreen = ({ tab, filters, setFilter }) => {
+    return (
+      <>
+        <InboxHeader
+          tab={tab}
+          onCompose={() => {
+            if (tab === "messages") nav.push({ view: "compose-message" });
+            else if (tab === "broadcasts") {
+              if (filters.broadcasts === "recurring") nav.push({ view: "check-in-builder" });
+              else nav.push({ view: "compose-broadcast" });
+            }
+            else if (tab === "audiences") nav.push({ view: "new-audience-config" });
+          }}
+          onLongPressCompose={() => nav.setModal("compose-long-press")}
+        />
+        <TabBar active={tab} onChange={nav.setTab} />
+        {tab === "messages" && <MessagesTab filter={filters.messages} setFilter={(f) => setFilter("messages", f)} />}
+        {tab === "broadcasts" && <BroadcastsTab filter={filters.broadcasts} setFilter={(f) => setFilter("broadcasts", f)} />}
+        {tab === "audiences" && <AudiencesTab filter={filters.audiences} setFilter={(f) => setFilter("audiences", f)} />}
+      </>
+    );
+  };
+
+  const ScreenRouter = () => {
+    switch (current.view) {
+      case "inbox": return <InboxScreen tab={current.tab} filters={filters} setFilter={setFilter} />;
+      case "thread": return <ThreadScreen clientId={current.clientId} />;
+      case "compose-message": return <ComposeMessageScreen />;
+      case "compose-broadcast": return <ComposeBroadcastScreen audienceId={current.audienceId} />;
+      case "broadcast-audiences": return <BroadcastAudiencePicker />;
+      case "broadcast-detail": return <BroadcastDetailScreen broadcastId={current.broadcastId} justSent={current.justSent} />;
+      case "new-audience-config": return <NewAudienceConfigScreen />;
+      case "audience-detail": return <AudienceDetailScreen audienceId={current.audienceId} />;
+      case "check-in-builder": return <CheckInBuilderScreen audienceId={current.audienceId} />;
+      case "templates": return <TemplatesScreen />;
+      case "schedule-call": return <ScheduleCallScreen targetType={current.targetType} targetId={current.targetId} />;
+      default: return <div style={{ padding: 24, textAlign: "center", fontSize: 13, color: TEXT_SEC }}>Unknown view: {current.view}</div>;
+    }
+  };
+
+  // ================================================================
+  // MAIN RENDER
+  // ================================================================
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, position: "relative" }}>
+        <ScreenRouter />
+        {modal === "attachment-sheet" && <AttachmentSheet onClose={() => setModal(null)} />}
+        {modal === "compose-long-press" && <ComposeLongPressMenu onClose={() => setModal(null)} />}
+        {modal?.type === "video-menu" && <VideoMenuSheet clientId={modal.clientId} onClose={() => setModal(null)} />}
+      </div>
+    </div>
+  );
+}
           {filteredRecipients.map(r => (
             <div
               key={r.i}
