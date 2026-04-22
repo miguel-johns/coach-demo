@@ -4588,7 +4588,7 @@ return (
 
 /* ═════════════════════════════════�����═══════════
    SEND REPORT MODAL
-   ══════════════════════════�������══════════════════ */
+   ══════════════════════════���������══════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4950,7 +4950,7 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
 function InboxCanvas({ onClose, onHome, isMobile }) {
   const [activeTab, setActiveTab] = useState("messages");
   const [activeFilter, setActiveFilter] = useState("all");
-  const [broadcastFilter, setBroadcastFilter] = useState("sent");
+  const [broadcastFilter, setBroadcastFilter] = useState("all");
   const [audienceFilter, setAudienceFilter] = useState("all");
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -4959,6 +4959,51 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
   const [showNewAudience, setShowNewAudience] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [recipientSearch, setRecipientSearch] = useState("");
+  // New state for enhanced flows
+  const [broadcastStep, setBroadcastStep] = useState("pick"); // pick, compose, sent
+  const [selectedBroadcastAudience, setSelectedBroadcastAudience] = useState(null);
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastWhen, setBroadcastWhen] = useState("now"); // now, schedule, recurring
+  const [saveAsAudience, setSaveAsAudience] = useState(false);
+  const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
+  const [selectedBroadcast, setSelectedBroadcast] = useState(null);
+  const [audienceStep, setAudienceStep] = useState("create"); // create, pick-members, ready
+  const [newAudienceName, setNewAudienceName] = useState("");
+  const [newAudienceType, setNewAudienceType] = useState("manual");
+  const [newAudienceTag, setNewAudienceTag] = useState("Challenge");
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [showScheduleCall, setShowScheduleCall] = useState(false);
+  const [showCheckInBuilder, setShowCheckInBuilder] = useState(false);
+  const [showManageMembers, setShowManageMembers] = useState(false);
+  const [swipedMessageId, setSwipedMessageId] = useState(null);
+  const [longPressMessage, setLongPressMessage] = useState(null);
+  const [conversations, setConversations] = useState([
+    { 
+      id: 1, name: "Sarah Chen", avatar: "SC", tag: "CLIENT",
+      lastMessage: "Thanks for the updated meal plan!", time: "2m",
+      unread: 2, online: true, pinned: false, muted: false, archived: false
+    },
+    { 
+      id: 2, name: "Coaching Team", avatar: "CT", tag: "TEAM", isGroup: true,
+      lastMessage: "New protocol doc is ready for review", time: "15m",
+      unread: 0, members: 5, pinned: true, muted: false, archived: false
+    },
+    { 
+      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "CLIENT",
+      lastMessage: "Can we move tomorrow's session?", time: "1h",
+      unread: 1, online: false, pinned: false, muted: false, archived: false
+    },
+    { 
+      id: 4, name: "Emily Rodriguez", avatar: "ER", tag: "CLIENT",
+      lastMessage: "Just finished week 3 of the program!", time: "5h",
+      unread: 0, online: true, pinned: false, muted: false, archived: false
+    }
+  ]);
+  const [threadMessages, setThreadMessages] = useState([
+    { id: 1, from: "client", text: "Hey! Just wanted to check in about my progress this week.", time: "10:32 AM" },
+    { id: 2, from: "coach", text: "Great progress! Keep up the consistency.", time: "10:35 AM" },
+    { id: 3, from: "client", text: "Could you send over that form video again? I want to double-check my squat.", time: "10:41 AM" }
+  ]);
   
   const tabs = [
     { id: "messages", label: "Messages" },
@@ -4987,49 +5032,66 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
     { id: "manual", label: "Manual" }
   ];
   
-  const conversations = [
-    { 
-      id: 1, name: "Sarah Chen", avatar: "SC", tag: "CLIENT",
-      lastMessage: "Thanks for the updated meal plan!", time: "2m",
-      unread: 2, online: true, pinned: false
-    },
-    { 
-      id: 2, name: "Coaching Team", avatar: "CT", tag: "TEAM", isGroup: true,
-      lastMessage: "New protocol doc is ready for review", time: "15m",
-      unread: 0, members: 5, pinned: false
-    },
-    { 
-      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "CLIENT",
-      lastMessage: "Can we move tomorrow's session?", time: "1h",
-      unread: 1, online: false, pinned: false
-    },
-    { 
-      id: 4, name: "Emily Rodriguez", avatar: "ER", tag: "CLIENT",
-      lastMessage: "Just finished week 3 of the program!", time: "5h",
-      unread: 0, online: true, pinned: false
-    }
+  const allClients = [
+    { id: "SC", name: "Sarah Chen", frequency: "3x/wk", type: "PT", online: true },
+    { id: "MJ", name: "Marcus Johnson", frequency: "2x/wk", type: "PT", online: false },
+    { id: "ER", name: "Emily Rodriguez", frequency: "Online", type: "Online", online: true },
+    { id: "SG", name: "Samantha Gray", frequency: "1x/wk", type: "PT", online: false },
+    { id: "SA", name: "Saul Arenas", frequency: "3x/wk", type: "PT", online: false },
+    { id: "SK", name: "Sam Kowalski", frequency: "Online", type: "Online", online: true },
+    { id: "JD", name: "James Davis", frequency: "2x/wk", type: "PT", online: false },
+    { id: "LM", name: "Lisa Martinez", frequency: "Online", type: "Online", online: true },
+    { id: "TB", name: "Tom Baker", frequency: "3x/wk", type: "PT", online: false },
+    { id: "AW", name: "Amy Wilson", frequency: "1x/wk", type: "PT", online: false },
+    { id: "RJ", name: "Rachel Jones", frequency: "Online", type: "Online", online: true },
+    { id: "MB", name: "Mike Brown", frequency: "2x/wk", type: "PT", online: false }
   ];
 
   const broadcasts = [
     {
       id: 1, title: "Quick update, team - grocery list template...",
       audience: "Online clients", count: 18, time: "2m",
-      read: 14, replied: 6, recent: true, status: "sent"
+      read: 14, replied: 6, recent: true, status: "sent",
+      fullMessage: "Hey team! Just wanted to share the new grocery list template I created. It's designed to make meal prep easier and more organized. Let me know if you have any questions!",
+      replies: [
+        { name: "Sarah Chen", avatar: "SC", text: "This is exactly what I needed! Thank you!", time: "1m ago" },
+        { name: "Emily Rodriguez", avatar: "ER", text: "Love it! Can you add a section for supplements?", time: "2m ago" }
+      ]
     },
     {
       id: 2, title: "Reminder: upload your Week 3 check-in",
       audience: "Spring Challenge", count: 12, time: "Yesterday",
-      read: 12, replied: 9, status: "sent"
+      read: 12, replied: 9, status: "sent",
+      fullMessage: "Hi everyone! Just a friendly reminder to upload your Week 3 check-in by Friday. Make sure to include your progress photos and measurements.",
+      replies: []
     },
     {
       id: 3, title: "New protein powder restock is in",
       audience: "All PT clients", count: 32, time: "Mon",
-      read: 28, replied: 4, status: "sent"
+      read: 28, replied: 4, status: "sent",
+      fullMessage: "Good news - the chocolate and vanilla protein powder is back in stock! Stop by the front desk to grab yours.",
+      replies: []
     },
     {
       id: 4, title: "Heads up - gym closed Sunday",
       audience: "All clients", count: 54, time: "Last wk",
-      read: 51, replied: 12, status: "sent"
+      read: 51, replied: 12, status: "sent",
+      fullMessage: "Quick heads up - the gym will be closed this Sunday for maintenance. We'll reopen Monday at 5am as usual.",
+      replies: []
+    },
+    {
+      id: 5, title: "Weekly Friday Check-in",
+      audience: "Online clients", count: 18, time: "Fri 9am",
+      read: 0, replied: 0, status: "recurring", cadence: "Weekly on Fri",
+      fullMessage: "Time for your weekly check-in! How did this week go?",
+      responseForm: ["How are you feeling this week? (1-10)", "What went well?", "What was challenging?", "Goals for next week?"]
+    },
+    {
+      id: 6, title: "Monthly Progress Review",
+      audience: "Spring Challenge", count: 12, time: "Apr 1",
+      read: 0, replied: 0, status: "scheduled",
+      fullMessage: "Congratulations on completing another month! Let's review your progress together.",
+      replies: []
     }
   ];
 
@@ -5053,6 +5115,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
     : suggestedRecipients;
   
   const filteredConvos = conversations.filter(c => {
+    if (c.archived) return false;
     if (activeFilter === "all") return true;
     if (activeFilter === "unread") return c.unread > 0;
     if (activeFilter === "clients") return c.tag === "CLIENT";
@@ -5060,9 +5123,45 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
     return true;
   });
 
-  const filteredBroadcasts = broadcastFilter === "all" 
-    ? broadcasts 
-    : broadcasts.filter(b => b.status === broadcastFilter);
+  const filteredBroadcasts = broadcasts.filter(b => {
+    if (broadcastFilter === "all") return true;
+    return b.status === broadcastFilter;
+  });
+  
+  // Helper functions for message actions
+  const handlePinMessage = (id) => {
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, pinned: !c.pinned } : c));
+    setSwipedMessageId(null);
+  };
+  
+  const handleMuteMessage = (id) => {
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, muted: !c.muted } : c));
+    setSwipedMessageId(null);
+  };
+  
+  const handleArchiveMessage = (id) => {
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, archived: true } : c));
+    setSwipedMessageId(null);
+  };
+  
+  const handleSendMessage = () => {
+    if (!messageInput.trim()) return;
+    setThreadMessages(prev => [...prev, {
+      id: Date.now(),
+      from: "coach",
+      text: messageInput,
+      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    }]);
+    setMessageInput("");
+  };
+
+  const toggleMemberSelection = (clientId) => {
+    setSelectedMembers(prev => 
+      prev.includes(clientId) 
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
 
   const filteredAudiences = audiences.filter(a => {
     if (audienceFilter === "all") return true;
@@ -5192,239 +5291,1257 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
     );
   }
 
-  // New Broadcast Composer View
+  // New Broadcast Composer View - Full Flow (B1-B4)
   if (showNewBroadcast) {
+    // Step 1: Pick Recipients
+    if (broadcastStep === "pick") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => { setShowNewBroadcast(false); setBroadcastStep("pick"); setSelectedBroadcastAudience(null); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>New Broadcast</span>
+            <div style={{ width: 28 }} />
+          </div>
+
+          <div style={{ padding: 16, flex: 1, overflowY: "auto" }}>
+            {/* What is a broadcast */}
+            <div style={{
+              padding: 12, borderRadius: 12, background: "#f5f7f6", border: `1px solid ${BORDER}`, marginBottom: 16
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span style={{ fontSize: 10, fontWeight: 600, color: TEXT, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  What is a broadcast?
+                </span>
+              </div>
+              <p style={{ fontSize: 11, color: TEXT_SEC, lineHeight: 1.5, margin: 0 }}>
+                Send one message to many clients at once. Each person sees it as a 1:1 message from you - they can&apos;t see who else received it, and replies come back to you privately.
+              </p>
+            </div>
+
+            {/* Pick Recipients */}
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Pick recipients
+              </div>
+            </div>
+
+            {/* Saved Audiences */}
+            {audiences.map(a => (
+              <div
+                key={a.id}
+                onClick={() => { setSelectedBroadcastAudience(a); setBroadcastStep("compose"); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                  borderRadius: 8, marginBottom: 6, cursor: "pointer",
+                  background: WHITE, border: `1px solid ${BORDER}`
+                }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{a.name}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>{a.count} members</div>
+                </div>
+                <span style={{
+                  fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
+                  background: a.type === "SMART" ? "#ede9fe" : "#f5f7f6",
+                  color: a.type === "SMART" ? "#6d28d9" : TEXT_SEC
+                }}>{a.type}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="9,18 15,12 9,6"/>
+                </svg>
+              </div>
+            ))}
+
+            <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 12, paddingTop: 12 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Or build a new list
+              </div>
+              {[
+                { icon: "users", label: "Pick clients manually" },
+                { icon: "activity", label: "By session frequency" }
+              ].map((opt, i) => (
+                <div
+                  key={i}
+                  onClick={() => { setSelectedBroadcastAudience({ name: "Custom selection", count: 0, type: "MANUAL" }); setBroadcastStep("compose"); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
+                    borderRadius: 8, marginBottom: 6, cursor: "pointer",
+                    background: WHITE, border: `1px solid ${BORDER}`
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    {opt.icon === "users" && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
+                    {opt.icon === "activity" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
+                  </svg>
+                  <span style={{ flex: 1, fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>{opt.label}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="9,18 15,12 9,6"/>
+                  </svg>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 2: Compose Message
+    if (broadcastStep === "compose") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => setBroadcastStep("pick")}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Compose</span>
+            <button
+              onClick={() => setBroadcastStep("sent")}
+              disabled={!broadcastMessage.trim()}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 4,
+                fontSize: 12, fontWeight: 600, color: broadcastMessage.trim() ? TEAL : TEXT_SEC
+              }}
+            >
+              {broadcastWhen === "now" ? "Send" : "Schedule"}
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {/* To Field */}
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>To:</span>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "4px 10px",
+                  borderRadius: 16, background: TEAL_LIGHT
+                }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: TEAL }}>{selectedBroadcastAudience?.name}</span>
+                  <span style={{ fontSize: 10, color: TEAL }}>{selectedBroadcastAudience?.count} people</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <div style={{ padding: 16 }}>
+              <textarea
+                value={broadcastMessage}
+                onChange={(e) => setBroadcastMessage(e.target.value)}
+                placeholder="Type your message..."
+                style={{
+                  width: "100%", minHeight: 120, padding: 12, borderRadius: 12,
+                  border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT,
+                  outline: "none", resize: "none", fontFamily: "inherit", lineHeight: 1.5
+                }}
+              />
+            </div>
+
+            {/* When Segmented Control */}
+            <div style={{ padding: "0 16px 16px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                When
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {[
+                  { id: "now", label: "Send now" },
+                  { id: "schedule", label: "Schedule" },
+                  { id: "recurring", label: "Recurring" }
+                ].map(w => (
+                  <button
+                    key={w.id}
+                    onClick={() => setBroadcastWhen(w.id)}
+                    style={{
+                      flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer",
+                      background: broadcastWhen === w.id ? TEXT : WHITE,
+                      color: broadcastWhen === w.id ? WHITE : TEXT_SEC,
+                      border: broadcastWhen === w.id ? "none" : `1px solid ${BORDER}`,
+                      fontSize: 11, fontWeight: 500
+                    }}
+                  >{w.label}</button>
+                ))}
+              </div>
+              
+              {broadcastWhen === "schedule" && (
+                <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "#f5f7f6" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span style={{ fontSize: 12, color: TEXT }}>Mon, Apr 21 at 9:00 AM</span>
+                  </div>
+                </div>
+              )}
+              
+              {broadcastWhen === "recurring" && (
+                <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "#f5f7f6" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                      <polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                    </svg>
+                    <span style={{ fontSize: 12, color: TEXT }}>Every Friday at 9:00 AM</span>
+                  </div>
+                  <button
+                    onClick={() => setShowCheckInBuilder(true)}
+                    style={{
+                      width: "100%", padding: "8px 12px", borderRadius: 6,
+                      background: WHITE, border: `1px solid ${BORDER}`,
+                      fontSize: 11, color: TEAL, fontWeight: 500, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add response form (makes it a check-in)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Save as Audience Toggle */}
+            <div style={{ padding: "0 16px 16px" }}>
+              <div
+                onClick={() => setSaveAsAudience(!saveAsAudience)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: 12,
+                  borderRadius: 8, background: saveAsAudience ? TEAL_LIGHT : "#f5f7f6",
+                  border: `1px solid ${saveAsAudience ? TEAL : BORDER}`, cursor: "pointer"
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: 4, background: saveAsAudience ? TEAL : WHITE,
+                  border: saveAsAudience ? "none" : `1px solid ${BORDER}`,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {saveAsAudience && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>Save as audience</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Reuse this group for future broadcasts</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 3: Sent/Delivery Status (B4)
+    if (broadcastStep === "sent") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => { setShowNewBroadcast(false); setBroadcastStep("pick"); setBroadcastMessage(""); setSelectedBroadcastAudience(null); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Broadcast Sent</span>
+            <div style={{ width: 28 }} />
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+            {/* Success State */}
+            <div style={{ textAlign: "center", padding: "24px 0" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: "50%", background: "#dcfce7",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 12px"
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                {broadcastWhen === "now" ? "Sent!" : broadcastWhen === "schedule" ? "Scheduled!" : "Recurring check-in created!"}
+              </div>
+              <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                {broadcastWhen === "now" ? `Delivered to ${selectedBroadcastAudience?.count || 18} people` : `Will send to ${selectedBroadcastAudience?.count || 18} people`}
+              </div>
+            </div>
+
+            {/* Message Preview */}
+            <div style={{ padding: 16, borderRadius: 12, background: "#f5f7f6", marginBottom: 16 }}>
+              <p style={{ margin: 0, fontSize: 12, color: TEXT, lineHeight: 1.5 }}>
+                {broadcastMessage || "Your message preview..."}
+              </p>
+            </div>
+
+            {/* Stats (only show if sent now) */}
+            {broadcastWhen === "now" && (
+              <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{selectedBroadcastAudience?.count || 18}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Delivered</div>
+                </div>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>0</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Read</div>
+                </div>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>0</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Replied</div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => { setShowNewBroadcast(false); setBroadcastStep("pick"); setBroadcastMessage(""); setSelectedBroadcastAudience(null); setActiveTab("broadcasts"); }}
+              style={{
+                width: "100%", padding: "12px 16px", borderRadius: 24,
+                background: TEAL, color: WHITE, border: "none",
+                fontSize: 13, fontWeight: 600, cursor: "pointer"
+              }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // New Audience View - Full Flow (A2-A5)
+  if (showNewAudience) {
+    // Step 1: Configure Audience (A2)
+    if (audienceStep === "create") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => { setShowNewAudience(false); setAudienceStep("create"); setNewAudienceName(""); setSelectedMembers([]); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>New Audience</span>
+            <button
+              onClick={() => setAudienceStep("pick-members")}
+              disabled={!newAudienceName.trim()}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 4,
+                fontSize: 12, fontWeight: 600, color: newAudienceName.trim() ? TEAL : TEXT_SEC
+              }}
+            >Next</button>
+          </div>
+
+          <div style={{ padding: 16, flex: 1, overflowY: "auto" }}>
+            {/* Name */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Name
+              </label>
+              <input
+                type="text"
+                value={newAudienceName}
+                onChange={(e) => setNewAudienceName(e.target.value)}
+                placeholder="e.g. Spring Nutrition Challenge"
+                style={{
+                  width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8,
+                  border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none"
+                }}
+              />
+            </div>
+
+            {/* How it's built */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                How it&apos;s built
+              </label>
+              <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { id: "manual", label: "Manual", desc: "Hand-pick the clients in the next step" },
+                  { id: "smart", label: "Smart (rule-based)", desc: "Auto-updates as clients meet the rules" }
+                ].map(opt => (
+                  <div
+                    key={opt.id}
+                    onClick={() => setNewAudienceType(opt.id)}
+                    style={{
+                      display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
+                      borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${newAudienceType === opt.id ? TEAL : BORDER}`,
+                      background: newAudienceType === opt.id ? TEAL_LIGHT : WHITE
+                    }}
+                  >
+                    <div style={{
+                      width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                      background: newAudienceType === opt.id ? TEAL : WHITE,
+                      border: newAudienceType === opt.id ? "none" : `1px solid ${BORDER}`,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {newAudienceType === opt.id && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{opt.label}</div>
+                      <div style={{ fontSize: 10, color: TEXT_SEC }}>{opt.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tag */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Tag (optional)
+              </label>
+              <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {["Challenge", "Cohort", "Program", "Custom"].map(tag => (
+                  <div
+                    key={tag}
+                    onClick={() => setNewAudienceTag(tag)}
+                    style={{
+                      padding: "6px 12px", borderRadius: 20, cursor: "pointer",
+                      background: newAudienceTag === tag ? TEAL : WHITE,
+                      color: newAudienceTag === tag ? WHITE : TEXT_SEC,
+                      border: `1px solid ${newAudienceTag === tag ? TEAL : BORDER}`,
+                      fontSize: 11, fontWeight: 500
+                    }}
+                  >{tag}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Starts
+                </label>
+                <div style={{
+                  marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "10px 12px",
+                  borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  <span style={{ fontSize: 12, color: TEXT }}>Apr 21</span>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Ends (optional)
+                </label>
+                <div style={{
+                  marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "10px 12px",
+                  borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  <span style={{ fontSize: 12, color: TEXT }}>May 21</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom button */}
+          <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
+            <button
+              onClick={() => setAudienceStep("pick-members")}
+              disabled={!newAudienceName.trim()}
+              style={{
+                width: "100%", padding: "12px 16px", borderRadius: 24,
+                background: newAudienceName.trim() ? TEAL : TEXT_SEC, color: WHITE, border: "none",
+                fontSize: 13, fontWeight: 600, cursor: newAudienceName.trim() ? "pointer" : "not-allowed"
+              }}
+            >
+              Next: Pick members
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 2: Pick Members (A3)
+    if (audienceStep === "pick-members") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => setAudienceStep("create")}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+            </button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Pick Members</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>{selectedMembers.length} selected</div>
+            </div>
+            <button
+              onClick={() => setAudienceStep("ready")}
+              disabled={selectedMembers.length === 0}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 4,
+                fontSize: 12, fontWeight: 600, color: selectedMembers.length > 0 ? TEAL : TEXT_SEC
+              }}
+            >Done</button>
+          </div>
+
+          {/* Search */}
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+              borderRadius: 8, background: "#f0f4f3"
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search clients..."
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 12, color: TEXT }}
+              />
+            </div>
+          </div>
+
+          {/* Quick Filters */}
+          <div style={{ display: "flex", gap: 6, padding: "8px 16px", overflowX: "auto" }}>
+            {["All", "PT 3x/wk", "PT 2x/wk", "PT 1x/wk", "Online"].map((f, i) => (
+              <button
+                key={f}
+                style={{
+                  padding: "4px 12px", borderRadius: 20, whiteSpace: "nowrap",
+                  border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500,
+                  background: i === 0 ? TEXT : WHITE, color: i === 0 ? WHITE : TEXT_SEC,
+                  boxShadow: i === 0 ? "none" : `inset 0 0 0 1px ${BORDER}`
+                }}
+              >{f}</button>
+            ))}
+          </div>
+
+          {/* Client List */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {allClients.map(client => (
+              <div
+                key={client.id}
+                onClick={() => toggleMemberSelection(client.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "10px 16px",
+                  borderBottom: `1px solid #f5f7f6`, cursor: "pointer",
+                  background: selectedMembers.includes(client.id) ? TEAL_LIGHT : "transparent"
+                }}
+              >
+                <div style={{
+                  width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                  background: selectedMembers.includes(client.id) ? TEAL : WHITE,
+                  border: selectedMembers.includes(client.id) ? "none" : `1px solid ${BORDER}`,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {selectedMembers.includes(client.id) && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ position: "relative" }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, background: TEAL_LIGHT,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 600, color: TEAL
+                  }}>{client.id}</div>
+                  {client.online && (
+                    <div style={{
+                      position: "absolute", bottom: -1, right: -1,
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: "#22c55e", border: `2px solid ${WHITE}`
+                    }} />
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>{client.frequency} - {client.type}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom */}
+          <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
+            <button
+              onClick={() => setAudienceStep("ready")}
+              disabled={selectedMembers.length === 0}
+              style={{
+                width: "100%", padding: "12px 16px", borderRadius: 24,
+                background: selectedMembers.length > 0 ? TEAL : TEXT_SEC, color: WHITE, border: "none",
+                fontSize: 13, fontWeight: 600, cursor: selectedMembers.length > 0 ? "pointer" : "not-allowed"
+              }}
+            >
+              Create audience with {selectedMembers.length} members
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 3: Audience Ready (A4)
+    if (audienceStep === "ready") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+          <div style={{ 
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+          }}>
+            <button
+              onClick={() => { setShowNewAudience(false); setAudienceStep("create"); setNewAudienceName(""); setSelectedMembers([]); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{newAudienceName}</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC }}>{selectedMembers.length} members - {newAudienceType.toUpperCase()} audience</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" style={{ cursor: "pointer" }}>
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", background: "#dcfce7",
+              display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, textAlign: "center", marginBottom: 4 }}>Audience created!</div>
+            <div style={{ fontSize: 11, color: TEXT_SEC, textAlign: "center", lineHeight: 1.5, marginBottom: 20 }}>
+              Send a broadcast, schedule a recurring check-in, or manage who&apos;s in it.
+            </div>
+
+            <div style={{ width: "100%", maxWidth: 280, display: "flex", flexDirection: "column", gap: 8 }}>
+              <button
+                onClick={() => {
+                  setShowNewAudience(false);
+                  setAudienceStep("create");
+                  setShowNewBroadcast(true);
+                  setSelectedBroadcastAudience({ name: newAudienceName, count: selectedMembers.length, type: newAudienceType.toUpperCase() });
+                  setBroadcastStep("compose");
+                }}
+                style={{
+                  width: "100%", padding: "10px 16px", borderRadius: 24,
+                  background: TEAL, color: WHITE, border: "none",
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Send a broadcast
+              </button>
+              {[
+                { label: "Schedule recurring check-in", action: () => setShowCheckInBuilder(true) },
+                { label: "Schedule video call", action: () => setShowScheduleCall(true) },
+                { label: "Manage members", action: () => setAudienceStep("pick-members") }
+              ].map((item, i) => (
+                <button
+                  key={item.label}
+                  onClick={item.action}
+                  style={{
+                    width: "100%", padding: "10px 16px", borderRadius: 24,
+                    background: WHITE, color: TEXT, border: `1px solid ${BORDER}`,
+                    fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    {i === 0 && <><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7,23 3,19 7,15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></>}
+                    {i === 1 && <><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></>}
+                    {i === 2 && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
+                  </svg>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Schedule Call View (Flow 5 - V0, V1)
+  if (showScheduleCall) {
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
-        {/* Header */}
         <div style={{ 
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
         }}>
           <button
-            onClick={() => setShowNewBroadcast(false)}
+            onClick={() => setShowScheduleCall(false)}
             style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
               <polyline points="15,18 9,12 15,6"/>
             </svg>
           </button>
-          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>New Broadcast</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Send</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Schedule Call</span>
+          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 12, fontWeight: 600, color: TEAL }}>
+            Schedule
+          </button>
         </div>
 
-        <div style={{ padding: 16, flex: 1, overflowY: "auto" }}>
-          {/* To Field */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          {/* With Field */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>To:</span>
-              <span style={{ fontSize: 11, color: TEXT_SEC, fontStyle: "italic" }}>Choose who receives this</span>
-            </div>
-          </div>
-
-          {/* What is a broadcast */}
-          <div style={{
-            padding: 12, borderRadius: 12, background: "#f5f7f6", border: `1px solid ${BORDER}`, marginBottom: 16
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-              <span style={{ fontSize: 10, fontWeight: 600, color: TEXT, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                What is a broadcast?
-              </span>
-            </div>
-            <p style={{ fontSize: 11, color: TEXT_SEC, lineHeight: 1.5, margin: 0 }}>
-              Send one message to many clients at once. Each person sees it as a 1:1 message from you - they can&apos;t see who else received it, and replies come back to you privately.
-            </p>
-          </div>
-
-          {/* Pick Recipients */}
-          <div style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-              Pick recipients
-            </div>
-          </div>
-
-          {[
-            { icon: "tag", label: "A saved audience", highlight: true },
-            { icon: "users", label: "Pick clients manually" },
-            { icon: "activity", label: "By session frequency" },
-            { icon: "group", label: "An existing group", dim: true }
-          ].map((opt, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
-                borderRadius: 8, marginBottom: 6, cursor: "pointer",
-                background: opt.highlight ? TEAL_LIGHT : WHITE,
-                border: `1px solid ${opt.highlight ? TEAL : BORDER}`,
-                opacity: opt.dim ? 0.6 : 1
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={opt.highlight ? TEAL : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                {opt.icon === "tag" && <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>}
-                {opt.icon === "users" && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
-                {opt.icon === "activity" && <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>}
-                {opt.icon === "group" && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></>}
-              </svg>
-              <span style={{ flex: 1, fontSize: 11, fontWeight: 500, color: opt.highlight ? TEAL : TEXT_SEC }}>{opt.label}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={opt.highlight ? TEAL : "#d1d5db"} strokeWidth="2" strokeLinecap="round">
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              With
+            </label>
+            <div style={{
+              marginTop: 6, display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+              borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT,
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{selectedAudience?.name || newAudienceName || "Spring Challenge"}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{selectedAudience?.count || selectedMembers.length || 12} members</div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
                 <polyline points="9,18 15,12 9,6"/>
               </svg>
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // New Audience View
-  if (showNewAudience) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
-        {/* Header */}
-        <div style={{ 
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
-        }}>
-          <button
-            onClick={() => setShowNewAudience(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
-              <polyline points="15,18 9,12 15,6"/>
-            </svg>
-          </button>
-          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>New Audience</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Next</span>
-        </div>
-
-        <div style={{ padding: 16, flex: 1, overflowY: "auto" }}>
-          {/* Name */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Spring Nutrition Challenge"
-              style={{
-                width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8,
-                border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none"
-              }}
-            />
           </div>
 
-          {/* How it's built */}
+          {/* Call Type */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              How it&apos;s built
+              Call type
             </label>
-            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{
-                display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
-                borderRadius: 8, border: `1px solid ${TEAL}`, background: TEAL_LIGHT
-              }}>
-                <div style={{
-                  width: 16, height: 16, borderRadius: "50%", background: TEAL,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                    <polyline points="20,6 9,17 4,12"/>
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>Manual</div>
-                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Hand-pick the clients in the next step</div>
-                </div>
-              </div>
-              <div style={{
-                display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
-                borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE
-              }}>
-                <div style={{
-                  width: 16, height: 16, borderRadius: "50%", border: `1px solid ${BORDER}`, flexShrink: 0
-                }} />
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>Smart (rule-based)</div>
-                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Auto-updates as clients meet the rules</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tag */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Tag (optional)
-            </label>
-            <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {["Challenge", "Cohort", "Program", "Custom"].map((tag, i) => (
+            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
+              {["Check-in", "Consult", "Session", "Form check", "Other"].map((type, i) => (
                 <div
-                  key={tag}
+                  key={type}
                   style={{
                     padding: "6px 12px", borderRadius: 20, cursor: "pointer",
                     background: i === 0 ? TEAL : WHITE, color: i === 0 ? WHITE : TEXT_SEC,
                     border: `1px solid ${i === 0 ? TEAL : BORDER}`, fontSize: 11, fontWeight: 500
                   }}
-                >{tag}</div>
+                >{type}</div>
               ))}
             </div>
           </div>
 
-          {/* Dates */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {/* Date & Time */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Starts
+                Date
               </label>
               <div style={{
                 marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "10px 12px",
-                borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE
+                borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
                   <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
-                <span style={{ fontSize: 12, color: TEXT }}>Mar 4</span>
+                <span style={{ fontSize: 12, color: TEXT }}>Apr 25, 2026</span>
               </div>
             </div>
             <div>
               <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Ends (optional)
+                Time
               </label>
               <div style={{
                 marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "10px 12px",
-                borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE
+                borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
                 </svg>
-                <span style={{ fontSize: 12, color: TEXT }}>Apr 1</span>
+                <span style={{ fontSize: 12, color: TEXT }}>10:00 AM</span>
               </div>
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Duration
+            </label>
+            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
+              {["15 min", "30 min", "45 min", "60 min"].map((dur, i) => (
+                <div
+                  key={dur}
+                  style={{
+                    flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", textAlign: "center",
+                    background: i === 1 ? TEXT : WHITE, color: i === 1 ? WHITE : TEXT_SEC,
+                    border: `1px solid ${i === 1 ? TEXT : BORDER}`, fontSize: 11, fontWeight: 500
+                  }}
+                >{dur}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Milton Options */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Milton options
+            </label>
+            <div style={{ marginTop: 8 }}>
+              {[
+                { label: "Milton attends and transcribes", desc: "Searchable transcript + summary after", checked: true },
+                { label: "Generate action items", desc: "Milton extracts to-dos from the call", checked: true },
+                { label: "Send recap to participants", desc: "Email summary after call ends", checked: false }
+              ].map((opt, i) => (
+                <div
+                  key={opt.label}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0",
+                    borderBottom: i < 2 ? `1px solid ${BORDER}` : "none"
+                  }}
+                >
+                  <div style={{
+                    width: 18, height: 18, borderRadius: 4, marginTop: 1, flexShrink: 0,
+                    background: opt.checked ? TEAL : WHITE,
+                    border: opt.checked ? "none" : `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                  }}>
+                    {opt.checked && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{opt.label}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{opt.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom button */}
+        {/* Bottom */}
         <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
-          <button style={{
-            width: "100%", padding: "12px 16px", borderRadius: 24,
-            background: TEAL, color: WHITE, border: "none",
-            fontSize: 13, fontWeight: 600, cursor: "pointer"
-          }}>
-            Next: Pick members
+          <button
+            onClick={() => setShowScheduleCall(false)}
+            style={{
+              width: "100%", padding: "12px 16px", borderRadius: 24,
+              background: TEAL, color: WHITE, border: "none",
+              fontSize: 13, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Schedule call
           </button>
         </div>
       </div>
     );
   }
 
-  // Audience Detail View
-  if (selectedAudience) {
+  // Check-In Builder (Flow 4 - R1)
+  if (showCheckInBuilder) {
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
-        {/* Header */}
+        <div style={{ 
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+        }}>
+          <button
+            onClick={() => setShowCheckInBuilder(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Recurring Check-in</span>
+          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 12, fontWeight: 600, color: TEAL }}>
+            Create
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          {/* Template */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Start from template
+            </label>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+              {[
+                { name: "Weekly Friday check-in", desc: "Standard weekly progress review" },
+                { name: "Challenge kickoff", desc: "Welcome + goal setting" },
+                { name: "Food examples", desc: "Share meal ideas + macro tips" },
+                { name: "Missed session follow-up", desc: "Re-engage inactive clients" }
+              ].map((t, i) => (
+                <div
+                  key={t.name}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                    borderRadius: 8, cursor: "pointer",
+                    background: i === 0 ? TEAL_LIGHT : WHITE,
+                    border: `1px solid ${i === 0 ? TEAL : BORDER}`
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={i === 0 ? TEAL : TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{t.name}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{t.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Response Form */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Response form (2-5 questions)
+            </label>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                "How are you feeling this week? (1-10)",
+                "What went well?",
+                "What was challenging?",
+                "Goals for next week?"
+              ].map((q, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
+                    borderRadius: 8, background: "#f5f7f6"
+                  }}
+                >
+                  <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{i + 1}.</span>
+                  <span style={{ flex: 1, fontSize: 12, color: TEXT }}>{q}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ cursor: "pointer" }}>
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </div>
+              ))}
+              <button style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "10px 12px", borderRadius: 8, border: `1px dashed ${BORDER}`,
+                background: WHITE, cursor: "pointer", fontSize: 11, color: TEAL, fontWeight: 500
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add question
+              </button>
+            </div>
+          </div>
+
+          {/* Recipients */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Recipients
+            </label>
+            <div style={{
+              marginTop: 6, display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+              borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer"
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT,
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{selectedAudience?.name || newAudienceName || "Online clients"}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{selectedAudience?.count || selectedMembers.length || 18} members</div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* Cadence */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Cadence
+            </label>
+            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
+              {["Weekly", "Bi-weekly", "Monthly"].map((c, i) => (
+                <div
+                  key={c}
+                  style={{
+                    flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", textAlign: "center",
+                    background: i === 0 ? TEXT : WHITE, color: i === 0 ? WHITE : TEXT_SEC,
+                    border: `1px solid ${i === 0 ? TEXT : BORDER}`, fontSize: 11, fontWeight: 500
+                  }}
+                >{c}</div>
+              ))}
+            </div>
+            <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 4 }}>Day</div>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "8px 12px",
+                  borderRadius: 8, border: `1px solid ${BORDER}`, cursor: "pointer"
+                }}>
+                  <span style={{ fontSize: 12, color: TEXT }}>Friday</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 4 }}>Time</div>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "8px 12px",
+                  borderRadius: 8, border: `1px solid ${BORDER}`, cursor: "pointer"
+                }}>
+                  <span style={{ fontSize: 12, color: TEXT }}>9:00 AM</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Auto-send Toggle */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, padding: 12,
+            borderRadius: 8, background: "#f5f7f6", border: `1px solid ${BORDER}`
+          }}>
+            <div style={{
+              width: 36, height: 20, borderRadius: 10, background: TEAL, cursor: "pointer",
+              position: "relative", transition: "background 0.2s"
+            }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: "50%", background: WHITE,
+                position: "absolute", top: 2, right: 2, transition: "all 0.2s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+              }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>Auto-send</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>Send automatically without review</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => setShowCheckInBuilder(false)}
+            style={{
+              width: "100%", padding: "12px 16px", borderRadius: 24,
+              background: TEAL, color: WHITE, border: "none",
+              fontSize: 13, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Create recurring check-in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Broadcast Detail View (B4 - delivery status)
+  if (selectedBroadcast) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+        <div style={{ 
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+        }}>
+          <button
+            onClick={() => setSelectedBroadcast(null)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Broadcast Details</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+          </svg>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          {/* Status Badge */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{
+              padding: "4px 10px", borderRadius: 12, fontSize: 10, fontWeight: 600,
+              background: selectedBroadcast.status === "sent" ? "#dcfce7" : selectedBroadcast.status === "scheduled" ? "#fef3c7" : "#ede9fe",
+              color: selectedBroadcast.status === "sent" ? "#16a34a" : selectedBroadcast.status === "scheduled" ? "#b45309" : "#6d28d9",
+              textTransform: "uppercase"
+            }}>
+              {selectedBroadcast.status === "recurring" ? "Recurring" : selectedBroadcast.status}
+            </span>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>{selectedBroadcast.time}</span>
+          </div>
+
+          {/* Message */}
+          <div style={{ padding: 16, borderRadius: 12, background: "#f5f7f6", marginBottom: 16 }}>
+            <p style={{ margin: 0, fontSize: 13, color: TEXT, lineHeight: 1.6 }}>
+              {selectedBroadcast.fullMessage}
+            </p>
+          </div>
+
+          {/* Audience */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, padding: 12,
+            borderRadius: 8, border: `1px solid ${BORDER}`, marginBottom: 16
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{selectedBroadcast.audience}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>{selectedBroadcast.count} recipients</div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          {selectedBroadcast.status === "sent" && (
+            <>
+              <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{selectedBroadcast.count}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Delivered</div>
+                </div>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>{selectedBroadcast.read}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Read</div>
+                </div>
+                <div style={{ flex: 1, padding: 12, borderRadius: 8, background: "#f5f7f6", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: TEAL }}>{selectedBroadcast.replied}</div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC }}>Replied</div>
+                </div>
+              </div>
+
+              {/* Replies Preview */}
+              {selectedBroadcast.replies && selectedBroadcast.replies.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                    Recent replies
+                  </div>
+                  {selectedBroadcast.replies.map((r, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex", gap: 10, padding: "10px 0",
+                        borderBottom: i < selectedBroadcast.replies.length - 1 ? `1px solid ${BORDER}` : "none",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 10, fontWeight: 600, color: TEAL
+                      }}>{r.avatar}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{r.name}</span>
+                          <span style={{ fontSize: 9, color: TEXT_SEC }}>{r.time}</span>
+                        </div>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: TEXT_SEC }}>{r.text}</p>
+                      </div>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                        <polyline points="9,18 15,12 9,6"/>
+                      </svg>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Response Form (for recurring) */}
+          {selectedBroadcast.responseForm && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Response form
+              </div>
+              {selectedBroadcast.responseForm.map((q, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+                    borderRadius: 6, background: "#f5f7f6", marginBottom: 6
+                  }}
+                >
+                  <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>{i + 1}.</span>
+                  <span style={{ fontSize: 11, color: TEXT }}>{q}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Audience Detail View (A4 with actions)
+  if (selectedAudience && !showManageMembers) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
         <div style={{ 
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
@@ -5441,19 +6558,18 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
             <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{selectedAudience.name}</div>
             <div style={{ fontSize: 9, color: TEXT_SEC }}>{selectedAudience.count} members - {selectedAudience.type} audience</div>
           </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" style={{ cursor: "pointer" }}>
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
         </div>
 
-        {/* Content */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{
-            width: 48, height: 48, borderRadius: "50%", background: TEAL_LIGHT,
+            width: 48, height: 48, borderRadius: "50%", background: selectedAudience.alert ? "#fef3c7" : TEAL_LIGHT,
             display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selectedAudience.alert ? "#b45309" : TEAL} strokeWidth="2" strokeLinecap="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
             </svg>
           </div>
           <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, textAlign: "center", marginBottom: 4 }}>Audience is ready</div>
@@ -5462,33 +6578,146 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
           </div>
 
           <div style={{ width: "100%", maxWidth: 280, display: "flex", flexDirection: "column", gap: 8 }}>
-            <button style={{
-              width: "100%", padding: "10px 16px", borderRadius: 24,
-              background: TEAL, color: WHITE, border: "none",
-              fontSize: 12, fontWeight: 600, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-            }}>
+            <button
+              onClick={() => {
+                setSelectedAudience(null);
+                setShowNewBroadcast(true);
+                setSelectedBroadcastAudience(selectedAudience);
+                setBroadcastStep("compose");
+              }}
+              style={{
+                width: "100%", padding: "10px 16px", borderRadius: 24,
+                background: TEAL, color: WHITE, border: "none",
+                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+              }}
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
               Send a broadcast
             </button>
-            {["Schedule recurring check-in", "Schedule video call", "Manage members"].map((label, i) => (
-              <button key={label} style={{
-                width: "100%", padding: "10px 16px", borderRadius: 24,
-                background: WHITE, color: TEXT, border: `1px solid ${BORDER}`,
-                fontSize: 12, fontWeight: 600, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-              }}>
+            {[
+              { label: "Schedule recurring check-in", action: () => setShowCheckInBuilder(true) },
+              { label: "Schedule video call", action: () => setShowScheduleCall(true) },
+              { label: "Manage members", action: () => setShowManageMembers(true) }
+            ].map((item, i) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                style={{
+                  width: "100%", padding: "10px 16px", borderRadius: 24,
+                  background: WHITE, color: TEXT, border: `1px solid ${BORDER}`,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                }}
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   {i === 0 && <><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7,23 3,19 7,15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></>}
                   {i === 1 && <><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></>}
                   {i === 2 && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
                 </svg>
-                {label}
+                {item.label}
               </button>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Manage Members View (A5)
+  if (showManageMembers && selectedAudience) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+        <div style={{ 
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", borderBottom: `1px solid ${BORDER}`
+        }}>
+          <button
+            onClick={() => setShowManageMembers(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Manage Members</div>
+            <div style={{ fontSize: 10, color: TEXT_SEC }}>{selectedAudience.name}</div>
+          </div>
+          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 12, fontWeight: 600, color: TEAL }}>
+            Done
+          </button>
+        </div>
+
+        <div style={{ padding: "8px 16px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+            borderRadius: 8, background: "#f0f4f3"
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search members..."
+              style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 12, color: TEXT }}
+            />
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ padding: "8px 16px 4px" }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {selectedAudience.count} members
+            </div>
+          </div>
+          {allClients.slice(0, selectedAudience.count).map((client, i) => (
+            <div
+              key={client.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 16px",
+                borderBottom: `1px solid #f5f7f6`
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, background: TEAL_LIGHT,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 600, color: TEAL
+                }}>{client.id}</div>
+                {client.online && (
+                  <div style={{
+                    position: "absolute", bottom: -1, right: -1,
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: "#22c55e", border: `2px solid ${WHITE}`
+                  }} />
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</div>
+                <div style={{ fontSize: 10, color: TEXT_SEC }}>{client.frequency} - {client.type}</div>
+              </div>
+              <button style={{
+                padding: "4px 10px", borderRadius: 4,
+                background: "#fef2f2", border: "none",
+                fontSize: 10, color: "#dc2626", fontWeight: 500, cursor: "pointer"
+              }}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding: 16, borderTop: `1px solid ${BORDER}` }}>
+          <button style={{
+            width: "100%", padding: "10px 16px", borderRadius: 8,
+            background: WHITE, color: "#dc2626", border: `1px solid #fecaca`,
+            fontSize: 12, fontWeight: 600, cursor: "pointer"
+          }}>
+            Delete audience
+          </button>
         </div>
       </div>
     );
@@ -5608,62 +6837,130 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
           {activeTab === "messages" && filteredConvos.map((convo, idx) => (
             <div
               key={convo.id}
-              onClick={() => setSelectedConvo(convo)}
-              style={{
-                padding: "12px 16px", display: "flex", gap: 12, cursor: "pointer",
-                background: selectedConvo?.id === convo.id ? TEAL_LIGHT : "transparent",
-                borderBottom: `1px solid #f5f7f6`,
-                animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
-              }}
-              onMouseEnter={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "#f5f7f6"; }}
-              onMouseLeave={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "transparent"; }}
+              style={{ position: "relative", overflow: "hidden" }}
             >
-              {/* Avatar */}
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: TEAL_LIGHT,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 600, color: TEAL
-                }}>
-                  {convo.avatar}
-                </div>
-                {convo.online && (
-                  <div style={{
-                    position: "absolute", bottom: -1, right: -1,
-                    width: 10, height: 10, borderRadius: "50%",
-                    background: "#22c55e", border: `2px solid ${WHITE}`
-                  }} />
-                )}
+              {/* Swipe Actions Background */}
+              <div style={{
+                position: "absolute", top: 0, right: 0, bottom: 0,
+                display: "flex", alignItems: "stretch",
+                opacity: swipedMessageId === convo.id ? 1 : 0,
+                transition: "opacity 0.2s ease"
+              }}>
+                <button
+                  onClick={() => handlePinMessage(convo.id)}
+                  style={{
+                    width: 60, border: "none", cursor: "pointer",
+                    background: "#fbbf24", color: WHITE,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 17V3M12 3L6 9M12 3L18 9M21 21H3"/>
+                  </svg>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>{convo.pinned ? "Unpin" : "Pin"}</span>
+                </button>
+                <button
+                  onClick={() => handleMuteMessage(convo.id)}
+                  style={{
+                    width: 60, border: "none", cursor: "pointer",
+                    background: "#94a3b8", color: WHITE,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+                  </svg>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>{convo.muted ? "Unmute" : "Mute"}</span>
+                </button>
+                <button
+                  onClick={() => handleArchiveMessage(convo.id)}
+                  style={{
+                    width: 60, border: "none", cursor: "pointer",
+                    background: "#ef4444", color: WHITE,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+                  </svg>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>Archive</span>
+                </button>
               </div>
-              
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{convo.name}</span>
-                  <span style={{
-                    fontSize: 8, fontWeight: 600, color: tagColors[convo.tag] || TEAL,
-                    background: `${tagColors[convo.tag] || TEAL}15`, padding: "2px 6px",
-                    borderRadius: 4
-                  }}>{convo.tag}</span>
-                </div>
-                <p style={{
-                  fontSize: 11, color: TEXT_SEC, margin: 0,
-                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                }}>{convo.lastMessage}</p>
-              </div>
-              
-              {/* Meta */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                <span style={{ fontSize: 9, color: TEXT_SEC }}>{convo.time}</span>
-                {convo.unread > 0 && (
+
+              {/* Message Row */}
+              <div
+                onClick={() => setSelectedConvo(convo)}
+                onContextMenu={(e) => { e.preventDefault(); setSwipedMessageId(swipedMessageId === convo.id ? null : convo.id); }}
+                style={{
+                  padding: "12px 16px", display: "flex", gap: 12, cursor: "pointer",
+                  background: selectedConvo?.id === convo.id ? TEAL_LIGHT : convo.muted ? "#f8f9fa" : "transparent",
+                  borderBottom: `1px solid #f5f7f6`,
+                  transform: swipedMessageId === convo.id ? "translateX(-180px)" : "translateX(0)",
+                  transition: "transform 0.2s ease",
+                  animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
+                }}
+                onMouseEnter={e => { if (selectedConvo?.id !== convo.id && swipedMessageId !== convo.id) e.currentTarget.style.background = "#f5f7f6"; }}
+                onMouseLeave={e => { if (selectedConvo?.id !== convo.id && swipedMessageId !== convo.id) e.currentTarget.style.background = convo.muted ? "#f8f9fa" : "transparent"; }}
+              >
+                {/* Avatar */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
                   <div style={{
-                    minWidth: 16, height: 16, borderRadius: 8,
-                    background: TEAL, color: WHITE, fontSize: 9, fontWeight: 700,
+                    width: 40, height: 40, borderRadius: 10,
+                    background: TEAL_LIGHT,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: "0 4px"
-                  }}>{convo.unread}</div>
-                )}
+                    fontSize: 11, fontWeight: 600, color: TEAL,
+                    opacity: convo.muted ? 0.6 : 1
+                  }}>
+                    {convo.avatar}
+                  </div>
+                  {convo.online && (
+                    <div style={{
+                      position: "absolute", bottom: -1, right: -1,
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: "#22c55e", border: `2px solid ${WHITE}`
+                    }} />
+                  )}
+                </div>
+                
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                    {convo.pinned && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill={TEAL} stroke="none">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                      </svg>
+                    )}
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, opacity: convo.muted ? 0.6 : 1 }}>{convo.name}</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 600, color: tagColors[convo.tag] || TEAL,
+                      background: `${tagColors[convo.tag] || TEAL}15`, padding: "2px 6px",
+                      borderRadius: 4
+                    }}>{convo.tag}</span>
+                    {convo.muted && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                        <path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+                      </svg>
+                    )}
+                  </div>
+                  <p style={{
+                    fontSize: 11, color: TEXT_SEC, margin: 0,
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    opacity: convo.muted ? 0.6 : 1
+                  }}>{convo.lastMessage}</p>
+                </div>
+                
+                {/* Meta */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontSize: 9, color: TEXT_SEC }}>{convo.time}</span>
+                  {convo.unread > 0 && !convo.muted && (
+                    <div style={{
+                      minWidth: 16, height: 16, borderRadius: 8,
+                      background: TEAL, color: WHITE, fontSize: 9, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      padding: "0 4px"
+                    }}>{convo.unread}</div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -5679,6 +6976,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
               {filteredBroadcasts.map((b, idx) => (
                 <div
                   key={b.id}
+                  onClick={() => setSelectedBroadcast(b)}
                   style={{
                     padding: "10px 16px", display: "flex", gap: 12, cursor: "pointer",
                     background: b.recent ? "rgba(251, 191, 36, 0.08)" : "transparent",
@@ -5838,62 +7136,183 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
             {/* Messages */}
             <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 12 : 20 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* Client message */}
-                <div style={{ display: "flex", gap: 6 }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: 4, background: TEAL_LIGHT, flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 8, fontWeight: 600, color: TEAL
-                  }}>{selectedConvo.avatar}</div>
-                  <div>
-                    <div style={{
-                      background: "#f0f4f3", padding: "8px 12px", borderRadius: "16px 16px 16px 4px",
-                      maxWidth: 220
-                    }}>
-                      <p style={{ margin: 0, fontSize: 11, color: TEXT, lineHeight: 1.5 }}>
-                        Hey! Just wanted to check in about my progress this week.
-                      </p>
+                {threadMessages.map((msg, idx) => (
+                  <div
+                    key={msg.id}
+                    style={{ display: "flex", gap: 6, justifyContent: msg.from === "coach" ? "flex-end" : "flex-start" }}
+                    onContextMenu={(e) => { e.preventDefault(); setLongPressMessage(longPressMessage === msg.id ? null : msg.id); }}
+                  >
+                    {msg.from === "client" && (
+                      <div style={{
+                        width: 20, height: 20, borderRadius: 4, background: TEAL_LIGHT, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 8, fontWeight: 600, color: TEAL
+                      }}>{selectedConvo.avatar}</div>
+                    )}
+                    <div style={{ position: "relative" }}>
+                      <div style={{
+                        background: msg.from === "coach" ? TEAL : "#f0f4f3",
+                        padding: "8px 12px",
+                        borderRadius: msg.from === "coach" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        maxWidth: 220
+                      }}>
+                        <p style={{ margin: 0, fontSize: 11, color: msg.from === "coach" ? WHITE : TEXT, lineHeight: 1.5 }}>
+                          {msg.text}
+                        </p>
+                      </div>
+                      <span style={{
+                        fontSize: 8, color: TEXT_SEC, marginTop: 2, display: "block",
+                        marginLeft: msg.from === "client" ? 4 : 0,
+                        marginRight: msg.from === "coach" ? 4 : 0,
+                        textAlign: msg.from === "coach" ? "right" : "left"
+                      }}>{msg.time}</span>
+
+                      {/* Long-press message actions (M6) */}
+                      {longPressMessage === msg.id && (
+                        <div style={{
+                          position: "absolute", top: "100%", marginTop: 4,
+                          left: msg.from === "coach" ? "auto" : 0,
+                          right: msg.from === "coach" ? 0 : "auto",
+                          background: WHITE, borderRadius: 8, padding: 4,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)", zIndex: 10,
+                          minWidth: 140
+                        }}>
+                          {[
+                            { icon: "reply", label: "Reply" },
+                            { icon: "copy", label: "Copy" },
+                            { icon: "forward", label: "Forward" },
+                            { icon: "pin", label: "Pin" },
+                            { icon: "unread", label: "Mark unread" },
+                            { icon: "delete", label: "Delete", danger: true }
+                          ].map(action => (
+                            <button
+                              key={action.label}
+                              onClick={() => setLongPressMessage(null)}
+                              style={{
+                                width: "100%", display: "flex", alignItems: "center", gap: 8,
+                                padding: "8px 10px", border: "none", background: "transparent",
+                                cursor: "pointer", borderRadius: 4, fontSize: 11,
+                                color: action.danger ? "#dc2626" : TEXT
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#f5f7f6"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                {action.icon === "reply" && <><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></>}
+                                {action.icon === "copy" && <><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>}
+                                {action.icon === "forward" && <><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></>}
+                                {action.icon === "pin" && <path d="M12 17V3M12 3L6 9M12 3L18 9M21 21H3"/>}
+                                {action.icon === "unread" && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></>}
+                                {action.icon === "delete" && <><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>}
+                              </svg>
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span style={{ fontSize: 8, color: TEXT_SEC, marginTop: 2, display: "block", marginLeft: 4 }}>10:32 AM</span>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Attachment Sheet (M4) */}
+            {showAttachmentSheet && (
+              <div style={{
+                position: "absolute", bottom: 56, left: 0, right: 0,
+                background: WHITE, borderTop: `1px solid ${BORDER}`,
+                padding: 16, borderRadius: "16px 16px 0 0",
+                boxShadow: "0 -4px 12px rgba(0,0,0,0.1)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>Attach</span>
+                  <button
+                    onClick={() => setShowAttachmentSheet(false)}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
                 </div>
-                
-                {/* Coach message */}
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div>
-                    <div style={{
-                      background: TEAL, padding: "8px 12px", borderRadius: "16px 16px 4px 16px",
-                      maxWidth: 220
-                    }}>
-                      <p style={{ margin: 0, fontSize: 11, color: WHITE, lineHeight: 1.5 }}>
-                        Great progress! Keep up the consistency.
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 8, color: TEXT_SEC, marginTop: 2, display: "block", textAlign: "right", marginRight: 4 }}>10:35 AM</span>
+
+                {/* Standard Attachments */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                    Standard
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[
+                      { icon: "camera", label: "Camera", color: "#3b82f6" },
+                      { icon: "image", label: "Photo", color: "#22c55e" },
+                      { icon: "video", label: "Video", color: "#8b5cf6" },
+                      { icon: "mic", label: "Voice", color: "#f59e0b" },
+                      { icon: "file", label: "File", color: "#64748b" }
+                    ].map(att => (
+                      <div
+                        key={att.label}
+                        onClick={() => setShowAttachmentSheet(false)}
+                        style={{
+                          flex: 1, padding: "12px 8px", borderRadius: 10,
+                          background: `${att.color}10`, cursor: "pointer",
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 6
+                        }}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "50%", background: att.color,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+                            {att.icon === "camera" && <><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>}
+                            {att.icon === "image" && <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></>}
+                            {att.icon === "video" && <><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></>}
+                            {att.icon === "mic" && <><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></>}
+                            {att.icon === "file" && <><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13,2 13,9 20,9"/></>}
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEXT_SEC }}>{att.label}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Client message */}
-                <div style={{ display: "flex", gap: 6 }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: 4, background: TEAL_LIGHT, flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 8, fontWeight: 600, color: TEAL
-                  }}>{selectedConvo.avatar}</div>
-                  <div>
-                    <div style={{
-                      background: "#f0f4f3", padding: "8px 12px", borderRadius: "16px 16px 16px 4px",
-                      maxWidth: 220
-                    }}>
-                      <p style={{ margin: 0, fontSize: 11, color: TEXT, lineHeight: 1.5 }}>
-                        Could you send over that form video again? I want to double-check my squat.
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 8, color: TEXT_SEC, marginTop: 2, display: "block", marginLeft: 4 }}>10:41 AM</span>
+                {/* Milton-native Attachments */}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                    Milton-native
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[
+                      { icon: "dumbbell", label: "Workout", color: TEAL },
+                      { icon: "utensils", label: "Meal Plan", color: "#ec4899" },
+                      { icon: "clipboard", label: "Protocol", color: "#6366f1" }
+                    ].map(att => (
+                      <div
+                        key={att.label}
+                        onClick={() => setShowAttachmentSheet(false)}
+                        style={{
+                          flex: 1, padding: "12px 8px", borderRadius: 10,
+                          background: `${att.color}10`, border: `1px solid ${att.color}30`, cursor: "pointer",
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 6
+                        }}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "50%", background: att.color,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
+                            {att.icon === "dumbbell" && <><path d="M6.5 6.5L17.5 17.5M6.5 17.5L17.5 6.5M2 12h4M18 12h4M12 2v4M12 18v4"/></>}
+                            {att.icon === "utensils" && <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></>}
+                            {att.icon === "clipboard" && <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></>}
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: att.color }}>{att.label}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
             
             {/* Input area */}
             <div style={{ padding: isMobile ? "12px" : "12px 20px", borderTop: `1px solid ${BORDER}` }}>
@@ -5902,30 +7321,44 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
                 padding: "6px 6px 6px 12px", borderRadius: 24,
                 background: WHITE, border: `2px solid ${TEAL}`
               }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: "50%", background: TEAL_LIGHT,
-                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0
-                }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/>
+                <div
+                  onClick={() => setShowAttachmentSheet(!showAttachmentSheet)}
+                  style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: showAttachmentSheet ? TEAL : TEAL_LIGHT,
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0,
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={showAttachmentSheet ? WHITE : TEAL} strokeWidth="2" strokeLinecap="round">
+                    {showAttachmentSheet ? (
+                      <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                    ) : (
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/>
+                    )}
                   </svg>
                 </div>
                 <input
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSendMessage(); }}
                   placeholder="Type a message..."
                   style={{
                     flex: 1, border: "none", background: "transparent",
                     fontSize: 11, color: TEXT, outline: "none"
                   }}
                 />
-                <button style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: TEAL, border: "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", flexShrink: 0
-                }}>
+                <button
+                  onClick={handleSendMessage}
+                  style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: messageInput.trim() ? TEAL : TEXT_SEC, border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: messageInput.trim() ? "pointer" : "default", flexShrink: 0,
+                    transition: "background 0.2s ease"
+                  }}
+                >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
                     <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
                   </svg>
