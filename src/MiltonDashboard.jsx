@@ -12232,6 +12232,15 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       color: "#45818e",
       available: true,
       number: 5
+    },
+    { 
+      id: "aiEngine",
+      icon: "layers", 
+      title: "Your AI Engine", 
+      desc: "Upload videos, documents, and PDFs to train your AI assistant",
+      color: "#8e7cc3",
+      available: true,
+      number: 6
     }
   ];
   
