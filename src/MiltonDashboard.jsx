@@ -15199,59 +15199,6 @@ isMobile={isMobile}
                 })}
               </div>
 
-              {/* Service Type Dropdown Filter (shown when on "All" tab) */}
-              {serviceTypeTab === "All" && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap"
-                }}>
-                  <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>Service type:</span>
-                  {["PT", "Semi", "Online", "Hybrid"].map((type) => {
-                    const isSelected = serviceTypeDropdown.includes(type);
-                    const config = CLIENT_TYPES[type];
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setServiceTypeDropdown(prev => 
-                            isSelected ? prev.filter(t => t !== type) : [...prev, type]
-                          );
-                        }}
-                        style={{
-                          padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 500,
-                          background: isSelected ? config.bg : "#f5f7f6",
-                          color: isSelected ? config.color : TEXT_SEC,
-                          border: isSelected ? `1px solid ${config.color}30` : `1px solid ${BORDER}`,
-                          cursor: "pointer", transition: "all 0.15s",
-                          display: "flex", alignItems: "center", gap: 4
-                        }}
-                      >
-                        {isSelected && (
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        )}
-                        {type}
-                      </button>
-                    );
-                  })}
-                  {serviceTypeDropdown.length > 0 && (
-                    <button
-                      onClick={() => setServiceTypeDropdown([])}
-                      style={{
-                        padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600,
-                        background: "transparent", color: TEAL, border: "none",
-                        cursor: "pointer", display: "flex", alignItems: "center", gap: 2
-                      }}
-                    >
-                      Clear
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
-
               {/* Alert Type Filter Banner */}
               {clientFilter && (
                 <div style={{
