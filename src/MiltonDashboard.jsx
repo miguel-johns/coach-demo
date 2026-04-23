@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����═══════════════════════════════
+// ═══════════════════════════════�������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -4139,7 +4139,7 @@ function MobileCanvasSheet({
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
-  case "aiEngine": return "Your AI Engine";
+  case "playbook": return "Playbook";
   case "aiDashboards": return "AI Dashboards";
   default: return "Canvas";
     }
@@ -4243,8 +4243,8 @@ clientName: "New Client",
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
   setCanvasData({});
-  } else if (templateType === "aiEngine") {
-  setCanvasType("aiEngine");
+  } else if (templateType === "playbook") {
+  setCanvasType("playbook");
   setCanvasData({});
   }
   }}
@@ -11581,6 +11581,899 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK CANVAS - The gym's operating system with 7 chapters
+// ═══════════════════════════════════════════════════════════════
+function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
+  const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadTargetChapter, setUploadTargetChapter] = useState(null);
+  
+  const gymName = "Optimal Performance"; // Could be from config
+  
+  // Chapter definitions with icons, colors, and default rules
+  const chapterDefs = {
+    programming: {
+      id: "programming",
+      title: "Programming",
+      icon: "dumbbell",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
+      description: "How your gym programs training — blocks, patterns, progressions, and exercise standards.",
+      defaultRules: [
+        { title: "Pattern-based programming", description: "Program at the movement pattern level, not the exercise level. Patterns scale to client capability automatically." },
+        { title: "Progressive overload first", description: "Progressive overload before variety. Repeat movement patterns for 4-6 weeks before swapping." },
+        { title: "Session structure", description: "Every session has one primary pattern, one secondary, and 1-2 accessory movements." },
+        { title: "Assessment period", description: "Assess new clients in their first 2 weeks before prescribing heavy loads." }
+      ]
+    },
+    coaching_standards: {
+      id: "coaching_standards",
+      title: "Coaching Standards",
+      icon: "clipboard",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      description: "How coaches run sessions — engagement, note-taking, and what quality looks like on the floor.",
+      defaultRules: [
+        { title: "Session recap", description: "Every session ends with a brief recap: what we did, how it went, what's next." },
+        { title: "Timely notes", description: "Log coach notes within 30 minutes of the session ending." },
+        { title: "Flag concerns", description: "Flag any form issue, injury concern, or energy anomaly in the client's profile immediately." },
+        { title: "No phones", description: "No phones out during active coaching time. Voice-to-Milton for notes is fine." }
+      ]
+    },
+    follow_ups: {
+      id: "follow_ups",
+      title: "Follow-ups",
+      icon: "message-clock",
+      color: "#7c3aed",
+      bgColor: "#ede9fe",
+      description: "How and when we reach out — missed sessions, check-ins, milestones.",
+      defaultRules: [
+        { title: "Missed session", description: "Missed session: text within 4 hours. Personal, not templated." },
+        { title: "10-day absence", description: "No session logged in 10 days: coach reaches out directly, not Milton." },
+        { title: "PR celebration", description: "Client hits a PR: celebrate same day, coach-sent." },
+        { title: "30-day check-in", description: "30-day check-in on goals for every active client." }
+      ]
+    },
+    reporting: {
+      id: "reporting",
+      title: "Reporting",
+      icon: "chart",
+      color: "#dc2626",
+      bgColor: "#fef3f2",
+      description: "What gets measured, by whom, on what rhythm.",
+      defaultRules: [
+        { title: "Weekly scorecard", description: "Coach submits a weekly session scorecard every Friday." },
+        { title: "Retention review", description: "Director reviews retention-at-risk list every Monday morning." },
+        { title: "Monthly review", description: "Monthly business review covers revenue, retention, and NPS." },
+        { title: "At-risk reporting", description: "Any client flagged as at-risk triggers a 48-hour report to the director." }
+      ]
+    },
+    onboarding: {
+      id: "onboarding",
+      title: "Onboarding",
+      icon: "door",
+      color: "#d97706",
+      bgColor: "#fef3c7",
+      description: "The new member experience — first touch through first 30 days.",
+      defaultRules: [
+        { title: "Assessment first", description: "First session is always an assessment, not programming." },
+        { title: "Welcome call", description: "New member gets a welcome call from the director within 24 hours of signup." },
+        { title: "Goals conversation", description: "Goals conversation in session 2. Capture in Milton." },
+        { title: "Week 2 check-in", description: "Week 2 check-in: how's it feeling so far? Any adjustments needed?" }
+      ]
+    },
+    sales: {
+      id: "sales",
+      title: "Sales",
+      icon: "handshake",
+      color: "#db2777",
+      bgColor: "#fef2f6",
+      description: "How we sell — discovery, pricing, offers, and objection handling.",
+      defaultRules: [
+        { title: "Discovery first", description: "Every prospect gets a discovery call before any pricing conversation." },
+        { title: "CLOSER framework", description: "Use the CLOSER framework on discovery calls." },
+        { title: "No discounting", description: "No discounting without director approval." },
+        { title: "Trial offer", description: "Offer a trial session, not a free consult." }
+      ]
+    },
+    culture: {
+      id: "culture",
+      title: "Culture",
+      icon: "star",
+      color: "#65a30d",
+      bgColor: "#f0f4e8",
+      description: "Who we are and how we show up — mission, voice, and brand.",
+      defaultRules: [
+        { title: "Movement first", description: "We coach movement, not just workouts." },
+        { title: "Visible progress", description: "Progress is always visible. Every client knows where they stand." },
+        { title: "Plain language", description: "We speak plainly. No jargon when a simple word works." },
+        { title: "Community", description: "Community first — members know each other by name." }
+      ]
+    }
+  };
+  
+  const chapters = Object.values(chapterDefs);
+  
+  // Get chapter stats
+  const getChapterStats = (chapterId) => {
+    const chapterData = playbook?.chapters?.[chapterId] || {};
+    const rules = chapterData.rules || chapterDefs[chapterId].defaultRules.map((r, i) => ({
+      ...r,
+      id: `${chapterId}_default_${i}`,
+      source: "milton_default",
+      status: "active",
+      priority: i + 1
+    }));
+    const documents = chapterData.documents || [];
+    const activeRules = rules.filter(r => r.status === "active").length;
+    const pendingRules = rules.filter(r => r.status === "pending_review").length;
+    const lastUpdated = chapterData.lastUpdated || null;
+    
+    return { rules, documents, activeRules, pendingRules, lastUpdated };
+  };
+  
+  // Calculate summary stats
+  const totalRules = chapters.reduce((sum, ch) => sum + getChapterStats(ch.id).activeRules, 0);
+  const totalDocs = chapters.reduce((sum, ch) => sum + getChapterStats(ch.id).documents.length, 0);
+  const chaptersNeedingReview = chapters.filter(ch => getChapterStats(ch.id).pendingRules > 0).length;
+  
+  // Render chapter icon
+  const renderChapterIcon = (iconName, size = 20, color = "currentColor") => {
+    const icons = {
+      dumbbell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 12v5.5M6 6.5V12M18 12v5.5M18 6.5V12"/></svg>,
+      clipboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>,
+      "message-clock": <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/><circle cx="12" cy="12" r="3"/></svg>,
+      chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+      door: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M18 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2z"/><path d="M14 12h.01"/></svg>,
+      handshake: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M11 17l-5-5 5-5M13 7l5 5-5 5"/></svg>,
+      star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>,
+      book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    };
+    return icons[iconName] || icons.book;
+  };
+  
+  // Format relative time
+  const formatRelativeTime = (dateStr) => {
+    if (!dateStr) return "Not updated yet";
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Updated today";
+    if (days === 1) return "Updated yesterday";
+    if (days < 7) return `Updated ${days} days ago`;
+    return `Updated ${Math.floor(days / 7)} weeks ago`;
+  };
+  
+  // If viewing a chapter detail, render that instead
+  if (activeChapter) {
+    return (
+      <PlaybookChapterDetail
+        chapter={chapterDefs[activeChapter]}
+        chapterData={playbook?.chapters?.[activeChapter]}
+        getChapterStats={() => getChapterStats(activeChapter)}
+        renderChapterIcon={renderChapterIcon}
+        formatRelativeTime={formatRelativeTime}
+        onBack={() => setActiveChapter(null)}
+        onClose={onClose}
+        isMobile={isMobile}
+        onUploadToChapter={() => { setUploadTargetChapter(activeChapter); setShowUploadModal(true); }}
+        playbook={playbook}
+        setPlaybook={setPlaybook}
+      />
+    );
+  }
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "20px 16px" : "28px 40px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            {/* Badge */}
+            <div style={{ 
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "#e8f5f3", padding: "6px 12px", borderRadius: 20,
+              marginBottom: 12
+            }}>
+              {renderChapterIcon("book", 14, "#2B7A78")}
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#2B7A78" }}>Playbook</span>
+            </div>
+            <h1 style={{ 
+              fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+              letterSpacing: "-0.02em", lineHeight: 1.2
+            }}>
+              {gymName} Playbook
+            </h1>
+            <p style={{ 
+              fontSize: isMobile ? 13 : 14, color: TEXT_SEC, margin: "8px 0 0", 
+              maxWidth: 500, lineHeight: 1.5
+            }}>
+              The rules, standards, and systems your gym runs on. Upload documents, edit through chat, or configure by hand.
+            </p>
+          </div>
+          
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Summary Strip */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+          background: "#f9fbfa", padding: "12px 16px", borderRadius: 12, marginTop: 20
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 13, color: TEXT_SEC }}>
+            <span><strong style={{ color: TEXT }}>{chapters.length}</strong> chapters</span>
+            <span style={{ color: BORDER }}>·</span>
+            <span><strong style={{ color: TEXT }}>{totalRules}</strong> active rules</span>
+            <span style={{ color: BORDER }}>·</span>
+            <span><strong style={{ color: TEXT }}>{totalDocs}</strong> documents uploaded</span>
+          </div>
+          {chaptersNeedingReview > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
+              <span style={{ fontSize: 12, color: "#d97706" }}>{chaptersNeedingReview} chapter{chaptersNeedingReview > 1 ? "s" : ""} need review</span>
+            </div>
+          )}
+          <button
+            onClick={() => setShowUploadModal(true)}
+            style={{
+              padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: "transparent", color: TEAL, border: `1.5px solid ${TEAL}`,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload to Playbook
+          </button>
+        </div>
+      </div>
+      
+      {/* Chapter Grid */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "28px 40px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: 16
+        }}>
+          {chapters.map((chapter) => {
+            const stats = getChapterStats(chapter.id);
+            const hasNone = stats.activeRules === 0 && stats.documents.length === 0;
+            const needsReview = stats.pendingRules > 0;
+            
+            return (
+              <div
+                key={chapter.id}
+                onClick={() => setActiveChapter(chapter.id)}
+                style={{
+                  background: WHITE,
+                  borderRadius: 12,
+                  border: `0.5px solid ${BORDER}`,
+                  padding: 20,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = chapter.color; e.currentTarget.style.boxShadow = `0 4px 12px ${chapter.color}15`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                {/* Top row: Icon + Status */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, background: chapter.bgColor,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {renderChapterIcon(chapter.icon, 20, chapter.color)}
+                  </div>
+                  <div style={{
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: needsReview ? "#f59e0b" : (hasNone ? "#8aa3a0" : "#3aaf6a")
+                  }} />
+                </div>
+                
+                {/* Title */}
+                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
+                  {chapter.title}
+                </div>
+                
+                {/* Description */}
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, marginBottom: 14, minHeight: 40 }}>
+                  {chapter.description}
+                </div>
+                
+                {/* Stats row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: TEXT_SEC, marginBottom: 14 }}>
+                  <span>{stats.activeRules} rules active</span>
+                  <span style={{ color: BORDER }}>·</span>
+                  <span>{stats.documents.length} documents</span>
+                  <span style={{ color: BORDER }}>·</span>
+                  <span>{formatRelativeTime(stats.lastUpdated)}</span>
+                </div>
+                
+                {/* Bottom row: Rule pills + Open link */}
+                <div style={{ 
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  paddingTop: 12, borderTop: `1px solid ${BORDER}`
+                }}>
+                  <div style={{ display: "flex", gap: 6, flex: 1, overflow: "hidden" }}>
+                    {stats.rules.slice(0, 2).map((rule, idx) => (
+                      <span key={idx} style={{
+                        fontSize: 10, padding: "4px 8px", borderRadius: 6,
+                        background: "#f5f7f6", color: TEXT_SEC,
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 100
+                      }}>
+                        {rule.title}
+                      </span>
+                    ))}
+                    {stats.rules.length > 2 && (
+                      <span style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "#f5f7f6", color: TEXT_SEC }}>
+                        +{stats.rules.length - 2}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: TEAL, fontWeight: 500, whiteSpace: "nowrap", marginLeft: 8 }}>
+                    Open →
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <PlaybookUploadModal
+          chapters={chapters}
+          renderChapterIcon={renderChapterIcon}
+          onClose={() => { setShowUploadModal(false); setUploadTargetChapter(null); }}
+          onUpload={(chapterId, files) => {
+            // Handle upload - add documents to chapter
+            console.log("[v0] Uploading to chapter:", chapterId, files);
+            setShowUploadModal(false);
+            setUploadTargetChapter(null);
+          }}
+          preselectedChapter={uploadTargetChapter}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
+// ═══════════════════════════════════════════════════════════════
+function PlaybookChapterDetail({ 
+  chapter, 
+  chapterData, 
+  getChapterStats, 
+  renderChapterIcon, 
+  formatRelativeTime,
+  onBack, 
+  onClose, 
+  isMobile,
+  onUploadToChapter,
+  playbook,
+  setPlaybook
+}) {
+  const [activeTab, setActiveTab] = useState("active"); // active | pending | documents | archived
+  const [editingRule, setEditingRule] = useState(null);
+  const [showAddRule, setShowAddRule] = useState(false);
+  const [newRuleTitle, setNewRuleTitle] = useState("");
+  const [newRuleDesc, setNewRuleDesc] = useState("");
+  
+  const stats = getChapterStats();
+  
+  const tabs = [
+    { id: "active", label: "Active rules", count: stats.activeRules },
+    { id: "pending", label: "Pending review", count: stats.pendingRules },
+    { id: "documents", label: "Documents", count: stats.documents.length },
+    { id: "archived", label: "Archived", count: stats.rules.filter(r => r.status === "archived").length }
+  ];
+  
+  const filteredRules = stats.rules.filter(r => {
+    if (activeTab === "active") return r.status === "active";
+    if (activeTab === "pending") return r.status === "pending_review";
+    if (activeTab === "archived") return r.status === "archived";
+    return false;
+  });
+  
+  const handleAddRule = () => {
+    if (!newRuleTitle.trim()) return;
+    // Add the new rule
+    console.log("[v0] Adding rule:", newRuleTitle, newRuleDesc);
+    setShowAddRule(false);
+    setNewRuleTitle("");
+    setNewRuleDesc("");
+  };
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "20px 16px" : "24px 40px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        {/* Breadcrumb */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={onBack}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              fontSize: 13, color: TEAL, fontWeight: 500, padding: 0,
+              display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+            Playbook
+          </button>
+          <span style={{ color: TEXT_SEC, fontSize: 13 }}>/</span>
+          <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{chapter.title}</span>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+            {/* Large chapter icon */}
+            <div style={{
+              width: 56, height: 56, borderRadius: 14, background: chapter.bgColor,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              {renderChapterIcon(chapter.icon, 28, chapter.color)}
+            </div>
+            <div>
+              <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, margin: 0 }}>
+                {chapter.title}
+              </h1>
+              <p style={{ fontSize: 14, color: TEXT_SEC, margin: "6px 0 0", lineHeight: 1.5, maxWidth: 450 }}>
+                {chapter.description}
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginTop: 24 }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "10px 16px", fontSize: 13, fontWeight: 500,
+                background: activeTab === tab.id ? TEAL : "transparent",
+                color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                border: "none", borderRadius: 8, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.15s"
+              }}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{
+                  background: activeTab === tab.id ? "rgba(255,255,255,0.25)" : "#f0f4f3",
+                  color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                  padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600
+                }}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "24px 40px" }}>
+        {/* Active Rules Tab */}
+        {activeTab === "active" && (
+          <div style={{ maxWidth: 700 }}>
+            {/* Add Rule Button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+              <button
+                onClick={() => setShowAddRule(true)}
+                style={{
+                  padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add rule
+              </button>
+            </div>
+            
+            {/* Add Rule Form */}
+            {showAddRule && (
+              <div style={{ 
+                background: WHITE, borderRadius: 12, border: `1px solid ${TEAL}`, padding: 20, marginBottom: 16
+              }}>
+                <input
+                  type="text"
+                  value={newRuleTitle}
+                  onChange={e => setNewRuleTitle(e.target.value)}
+                  placeholder="Rule title"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, fontWeight: 500,
+                    border: `1px solid ${BORDER}`, marginBottom: 12
+                  }}
+                  autoFocus
+                />
+                <textarea
+                  value={newRuleDesc}
+                  onChange={e => setNewRuleDesc(e.target.value)}
+                  placeholder="Rule description (optional)"
+                  rows={3}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, resize: "vertical", marginBottom: 12
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setShowAddRule(false)} style={{
+                    padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+                  }}>Cancel</button>
+                  <button onClick={handleAddRule} style={{
+                    padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                  }}>Add rule</button>
+                </div>
+              </div>
+            )}
+            
+            {/* Rules List */}
+            {filteredRules.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>No active rules yet.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>Add a rule or upload a document to get started.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredRules.map((rule, idx) => (
+                  <div
+                    key={rule.id || idx}
+                    style={{
+                      background: WHITE, borderRadius: 12, border: `0.5px solid ${BORDER}`,
+                      padding: 16, display: "flex", alignItems: "flex-start", gap: 14
+                    }}
+                  >
+                    {/* Rule number */}
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8, background: "#f5f7f6",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 600, color: TEXT_SEC, flexShrink: 0
+                    }}>
+                      {idx + 1}
+                    </div>
+                    
+                    {/* Rule content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
+                        <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{rule.title}</span>
+                      </div>
+                      <p style={{ fontSize: 13, color: TEXT_SEC, margin: 0, lineHeight: 1.5 }}>
+                        {rule.description}
+                      </p>
+                    </div>
+                    
+                    {/* Source + Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: 11, padding: "4px 8px", borderRadius: 6,
+                        background: rule.source === "milton_default" ? "#f3e8ff" : "#f5f7f6",
+                        color: rule.source === "milton_default" ? "#8e7cc3" : TEXT_SEC
+                      }}>
+                        {rule.source === "milton_default" ? "Milton default" : "Manual"}
+                      </span>
+                      <button style={{
+                        width: 28, height: 28, borderRadius: 6, border: "none",
+                        background: "transparent", cursor: "pointer", color: TEXT_SEC
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Master Program placeholder for Programming chapter */}
+            {chapter.id === "programming" && (
+              <div style={{
+                marginTop: 32, padding: 24, borderRadius: 12,
+                background: "linear-gradient(135deg, #e8f5f3 0%, #f0fdf4 100%)",
+                border: `1px dashed ${TEAL}`
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEAL, marginBottom: 6 }}>
+                  Master Program
+                </div>
+                <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                  Your active training block lives here. Coming soon.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Pending Review Tab */}
+        {activeTab === "pending" && (
+          <div style={{ maxWidth: 700 }}>
+            {stats.pendingRules === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>Nothing waiting for review.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>When you upload a document, extracted rules show up here first.</div>
+              </div>
+            ) : (
+              <div>Pending rules would show here</div>
+            )}
+          </div>
+        )}
+        
+        {/* Documents Tab */}
+        {activeTab === "documents" && (
+          <div style={{ maxWidth: 700 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+              <button
+                onClick={onUploadToChapter}
+                style={{
+                  padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload document
+              </button>
+            </div>
+            
+            {stats.documents.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>No documents uploaded yet.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>Upload your coaching manuals, SOPs, or guidelines.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {stats.documents.map((doc, idx) => (
+                  <div key={idx} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: 14, background: WHITE, borderRadius: 10, border: `0.5px solid ${BORDER}`
+                  }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{doc.name}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.date} · {doc.rulesExtracted || 0} rules extracted</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Archived Tab */}
+        {activeTab === "archived" && (
+          <div style={{ maxWidth: 700, textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+            <div style={{ fontSize: 14 }}>No archived rules.</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>Rules you remove will appear here.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
+// ═══════════════════════════════════════════════════════════════
+function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
+  const [selectedChapter, setSelectedChapter] = useState(preselectedChapter || null);
+  const [letMiltonDecide, setLetMiltonDecide] = useState(false);
+  
+  const handleUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.txt,.md';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        onUpload(letMiltonDecide ? "auto" : selectedChapter, files);
+      }
+    };
+    input.click();
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 100, padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, width: "min(500px, 100%)",
+          maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Upload to Playbook</h2>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "transparent", cursor: "pointer", color: TEXT_SEC
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0" }}>
+            Which chapter does this belong to?
+          </p>
+        </div>
+        
+        {/* Chapter Options */}
+        <div style={{ flex: 1, overflow: "auto", padding: "16px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {chapters.map(chapter => (
+              <div
+                key={chapter.id}
+                onClick={() => { setSelectedChapter(chapter.id); setLetMiltonDecide(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: 14,
+                  borderRadius: 10, border: `1.5px solid ${selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : BORDER}`,
+                  background: selectedChapter === chapter.id && !letMiltonDecide ? `${chapter.bgColor}` : WHITE,
+                  cursor: "pointer", transition: "all 0.1s"
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: chapter.bgColor,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {renderChapterIcon(chapter.icon, 18, chapter.color)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{chapter.title}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{chapter.description.slice(0, 50)}...</div>
+                </div>
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%",
+                  border: `2px solid ${selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : BORDER}`,
+                  background: selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {selectedChapter === chapter.id && !letMiltonDecide && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {/* Let Milton Decide Option */}
+            <div
+              onClick={() => { setLetMiltonDecide(true); setSelectedChapter(null); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: 14,
+                borderRadius: 10, border: `1.5px solid ${letMiltonDecide ? TEAL : BORDER}`,
+                background: letMiltonDecide ? "#e8f5f3" : WHITE,
+                cursor: "pointer", transition: "all 0.1s", marginTop: 8
+              }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: 8, background: "#e8f5f3",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Let Milton decide</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>Milton will scan and route to the best chapter</div>
+              </div>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                border: `2px solid ${letMiltonDecide ? TEAL : BORDER}`,
+                background: letMiltonDecide ? TEAL : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                {letMiltonDecide && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ 
+          padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
+          display: "flex", gap: 12, justifyContent: "flex-end"
+        }}>
+          <button onClick={onClose} style={{
+            padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+            background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+          }}>Cancel</button>
+          <button
+            onClick={handleUpload}
+            disabled={!selectedChapter && !letMiltonDecide}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: (selectedChapter || letMiltonDecide) ? TEAL : "#e0e0e0",
+              color: (selectedChapter || letMiltonDecide) ? WHITE : TEXT_SEC,
+              border: "none", cursor: (selectedChapter || letMiltonDecide) ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload and process
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Legacy AIEngineCanvas kept for backwards compatibility - now redirects to PlaybookCanvas
 function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile }) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
@@ -12234,13 +13127,14 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       number: 5
     },
     { 
-      id: "aiEngine",
-      icon: "layers", 
-      title: "Your AI Engine", 
-      desc: "Upload videos, documents, and PDFs to train your AI assistant",
-      color: "#8e7cc3",
+      id: "playbook",
+      icon: "book", 
+      title: "Playbook", 
+      desc: "The rules your gym runs on. Programming, coaching standards, follow-ups, and more.",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
       available: true,
-      number: 6
+      number: 2
     }
   ];
   
@@ -12347,6 +13241,11 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                ) : template.icon === "book" ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                   </svg>
                 ) : (
                   <NavIcon icon={template.icon} size={24} />
@@ -15760,9 +16659,16 @@ export default function MiltonDashboard() {
   const [sessions, setSessions] = useState([...initialSessions]);
   const [activeSessionId, setActiveSessionId] = useState(null); // When set, shows SessionCanvas
   
+  // Playbook state (the gym's operating system)
+  const [playbook, setPlaybook] = useState({
+    gymId: "gym_001",
+    name: "Optimal Performance Playbook",
+    chapters: {} // Will be populated with default rules on first load
+  });
+  
   // Canvas state
   const [canvasMode, setCanvasMode] = useState(false);
-  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report' | 'aiEngine'
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'playbook' | 'messageSequence' | 'report'
   const [canvasData, setCanvasData] = useState(null);
   const [canvasClient, setCanvasClient] = useState(null);
   const [canvasHistory, setCanvasHistory] = useState([]);
@@ -16357,14 +17263,14 @@ export default function MiltonDashboard() {
                         </svg>
                         <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Help Center</span>
                       </div>
-                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
+                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); }} style={{
                         display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
                         cursor: "pointer", transition: "background 0.15s ease"
                       }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
-                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B7A78" strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                         </svg>
-                        <span style={{ fontSize: 15, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                       </div>
                       <div style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px",
@@ -16481,8 +17387,8 @@ export default function MiltonDashboard() {
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
   setCanvasData({});
-  } else if (templateType === "aiEngine") {
-  setCanvasType("aiEngine");
+  } else if (templateType === "playbook") {
+  setCanvasType("playbook");
   setCanvasData({});
   }
   }}
@@ -16498,13 +17404,15 @@ export default function MiltonDashboard() {
     onEditProcessed={handleDashboardEditResult}
   />
 )}
-{canvasType === "aiEngine" && (
-  <AIEngineCanvas
+{canvasType === "playbook" && (
+  <PlaybookCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
     onHome={() => setCanvasType("templates")}
     brainDocuments={brainDocuments}
     setBrainDocuments={setBrainDocuments}
-isMobile={isMobile}
+    isMobile={isMobile}
+    playbook={playbook}
+    setPlaybook={setPlaybook}
   />
   )}
   {canvasType === "workflows" && (
@@ -16720,14 +17628,14 @@ isMobile={isMobile}
                           </svg>
                           <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Help Center</span>
                         </div>
-                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
+                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); }} style={{
                           display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
                           cursor: "pointer", transition: "background 0.15s ease"
                         }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B7A78" strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                           </svg>
-                          <span style={{ fontSize: 16, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                         </div>
                         <div style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px",
