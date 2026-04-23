@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════���═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1476,6 +1476,621 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
         }
       `}</style>
     </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEMI-PRIVATE LIST - List view of semi-private sessions
+// ═══════════════════════════════════════════════════════════════
+function SemiPrivateList({ 
+  sessions, 
+  clients, 
+  onClose, 
+  onHome,
+  onSessionClick,
+  onCreateSession,
+  isMobile 
+}) {
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Filter sessions to only semi-private
+  const semiSessions = sessions.filter(s => s.sessionKind === "semi");
+  
+  // Calculate counts for tabs
+  const now = new Date();
+  const upcomingCount = semiSessions.filter(s => s.status === "scheduled").length;
+  const inProgressCount = semiSessions.filter(s => s.status === "in_progress").length;
+  const completedTodayCount = semiSessions.filter(s => s.status === "completed").length;
+  
+  // Filter based on active tab
+  const filteredSessions = semiSessions.filter(s => {
+    if (activeTab === "upcoming") return s.status === "scheduled";
+    if (activeTab === "inProgress") return s.status === "in_progress";
+    if (activeTab === "completedToday") return s.status === "completed";
+    return true; // "all" tab
+  });
+  
+  // Group sessions by day (mock grouping for demo - assumes all are "today")
+  const groupedSessions = [
+    { label: "Today · Wednesday, April 22", sessions: filteredSessions }
+  ];
+  
+  // Format time display
+  const formatSessionTime = (session) => {
+    return session.time;
+  };
+  
+  // Get client names for a session
+  const getSessionClients = (session) => {
+    return session.clientIds.map(id => clients[id]).filter(Boolean);
+  };
+  
+  // Get status badge style
+  const getStatusStyle = (status, elapsedMin = 0) => {
+    switch (status) {
+      case "scheduled": return { bg: "#f5f7f6", color: TEXT_SEC, label: "Not started" };
+      case "in_progress": return { bg: TEAL_LIGHT, color: TEAL, label: `In progress · ${elapsedMin} min` };
+      case "completed": return { bg: "#dcfce7", color: "#16a34a", label: "Completed" };
+      case "canceled": return { bg: "#fee2e2", color: "#dc2626", label: "Canceled" };
+      default: return { bg: "#f5f7f6", color: TEXT_SEC, label: status };
+    }
+  };
+  
+  const tabs = [
+    { id: "upcoming", label: "Upcoming", count: upcomingCount },
+    { id: "inProgress", label: "In progress", count: inProgressCount },
+    { id: "completedToday", label: "Completed today", count: completedTodayCount },
+    { id: "all", label: "All", count: semiSessions.length }
+  ];
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      background: "#fafcfb", position: "relative"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "16px" : "24px 32px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            {/* Badge */}
+            <div style={{ 
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "#e6f9ec", padding: "5px 10px", borderRadius: 16,
+              marginBottom: 12
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#1f7a3e" }}>Semi-Private</span>
+            </div>
+            
+            {/* Title */}
+            <h1 style={{ 
+              fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+              letterSpacing: "-0.02em"
+            }}>
+              Semi-Private Sessions
+            </h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Every session where multiple clients train together. Click any session to open the control panel.
+            </p>
+          </div>
+          
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                boxShadow: `0 2px 8px ${TEAL}40`
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", color: TEXT_SEC
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Tabs */}
+        <div style={{ 
+          display: "flex", gap: 4, marginTop: 20,
+          borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "10px 16px", fontSize: 13, fontWeight: 500,
+                background: "transparent", border: "none", cursor: "pointer",
+                color: activeTab === tab.id ? TEAL : TEXT_SEC,
+                borderBottom: activeTab === tab.id ? `2px solid ${TEAL}` : "2px solid transparent",
+                marginBottom: -1, transition: "all 0.15s"
+              }}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Session List */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        {filteredSessions.length === 0 ? (
+          /* Empty State */
+          <div style={{ 
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            padding: "80px 20px", textAlign: "center"
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%", background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 20, color: TEXT_SEC
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
+              No semi-private sessions yet
+            </h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "0 0 20px", maxWidth: 280 }}>
+              Create your first session to group clients who train together.
+            </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+          </div>
+        ) : (
+          /* Session Groups */
+          <div style={{ maxWidth: 800 }}>
+            {groupedSessions.map((group, gIdx) => (
+              <div key={gIdx}>
+                {/* Day Divider */}
+                <div style={{
+                  fontSize: 14, fontWeight: 500, color: TEXT,
+                  padding: "24px 0 8px",
+                  borderTop: gIdx > 0 ? `1px solid ${BORDER}` : "none",
+                  marginTop: gIdx > 0 ? 16 : 0
+                }}>
+                  {group.label}
+                </div>
+                
+                {/* Session Rows */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {group.sessions.map((session) => {
+                    const sessionClients = getSessionClients(session);
+                    const statusStyle = getStatusStyle(session.status);
+                    const workoutFocus = Object.values(session.workouts)[0]?.exercises?.[0]?.name?.split(" ").slice(0, 2).join(" ");
+                    
+                    return (
+                      <div
+                        key={session.id}
+                        onClick={() => onSessionClick?.(session.id)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 16,
+                          padding: 16, borderRadius: 12, background: WHITE,
+                          border: `0.5px solid ${BORDER}`, cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={e => { 
+                          e.currentTarget.style.borderColor = TEAL; 
+                          e.currentTarget.style.background = `${TEAL}05`;
+                        }}
+                        onMouseLeave={e => { 
+                          e.currentTarget.style.borderColor = BORDER; 
+                          e.currentTarget.style.background = WHITE;
+                        }}
+                      >
+                        {/* Time */}
+                        <div style={{ minWidth: 70 }}>
+                          <div style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>
+                            {formatSessionTime(session)}
+                          </div>
+                          <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                            {session.duration}
+                          </div>
+                        </div>
+                        
+                        {/* Session Details */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {/* Focus title */}
+                          {workoutFocus && (
+                            <div style={{ fontSize: 14, fontWeight: 500, color: TEXT, marginBottom: 6 }}>
+                              Strength Training
+                            </div>
+                          )}
+                          
+                          {/* Client avatars + count */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {/* Avatar stack */}
+                            <div style={{ display: "flex", marginLeft: 4 }}>
+                              {sessionClients.slice(0, 5).map((client, cIdx) => (
+                                <div
+                                  key={cIdx}
+                                  style={{
+                                    width: 28, height: 28, borderRadius: "50%",
+                                    background: `linear-gradient(135deg, ${TEAL}30, ${MINT}30)`,
+                                    border: `2px solid ${WHITE}`,
+                                    marginLeft: cIdx > 0 ? -10 : 0,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 10, fontWeight: 600, color: TEAL,
+                                    position: "relative", zIndex: 5 - cIdx
+                                  }}
+                                >
+                                  {client?.name?.split(" ").map(n => n[0]).join("")}
+                                </div>
+                              ))}
+                              {sessionClients.length > 5 && (
+                                <div style={{
+                                  width: 28, height: 28, borderRadius: "50%",
+                                  background: "#f0f4f3", border: `2px solid ${WHITE}`,
+                                  marginLeft: -10, display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 10, fontWeight: 600, color: TEXT_SEC
+                                }}>
+                                  +{sessionClients.length - 5}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Client count */}
+                            <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                              {sessionClients.length} client{sessionClients.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Status + Chevron */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                          <div style={{
+                            padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+                            background: statusStyle.bg, color: statusStyle.color
+                          }}>
+                            {statusStyle.label}
+                          </div>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                            <polyline points="9,18 15,12 9,6"/>
+                          </svg>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Create Session Modal */}
+      {showCreateModal && (
+        <CreateSemiPrivateModal
+          clients={clients}
+          onClose={() => setShowCreateModal(false)}
+          onCreateSession={(newSession) => {
+            onCreateSession?.(newSession);
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CREATE SEMI-PRIVATE MODAL - Form for creating new sessions
+// ═══════════════════════════════════════════════════════════════
+function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
+  const [date, setDate] = useState("2026-04-22");
+  const [time, setTime] = useState("5:00 PM");
+  const [duration, setDuration] = useState("60");
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [stationAssignments, setStationAssignments] = useState({});
+  const [sessionFocus, setSessionFocus] = useState("");
+  const [showAllClients, setShowAllClients] = useState(false);
+  
+  // Filter clients to Semi/Hybrid by default
+  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
+    if (showAllClients) return true;
+    return client.clientTypes?.some(t => t === "Semi" || t === "Hybrid");
+  });
+  
+  const toggleClient = (clientId) => {
+    const id = parseInt(clientId);
+    if (selectedClientIds.includes(id)) {
+      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
+      const newAssignments = { ...stationAssignments };
+      delete newAssignments[id];
+      setStationAssignments(newAssignments);
+    } else if (selectedClientIds.length < 6) {
+      setSelectedClientIds(prev => [...prev, id]);
+      setStationAssignments(prev => ({ ...prev, [id]: `Rack ${selectedClientIds.length + 1}` }));
+    }
+  };
+  
+  const stations = ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8", "Open floor"];
+  
+  const handleCreate = () => {
+    const newSession = {
+      id: `sess_${Date.now()}`,
+      time,
+      duration: `${duration} min`,
+      sessionKind: "semi",
+      clientIds: selectedClientIds,
+      stationAssignments,
+      status: "scheduled",
+      startedAt: null,
+      completedAt: null,
+      workouts: selectedClientIds.reduce((acc, cid) => {
+        acc[cid] = { exercises: [] }; // Empty - coach will build or Milton will generate
+        return acc;
+      }, {})
+    };
+    onCreateSession(newSession);
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, width: "min(480px, 100%)",
+          maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>New Semi-Private Session</h2>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Form */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          {/* Date & Time Row */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                Time
+              </label>
+              <select
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                }}
+              >
+                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
+                  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"
+                ].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          
+          {/* Duration */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Duration
+            </label>
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            >
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
+              <option value="75">75 minutes</option>
+              <option value="90">90 minutes</option>
+            </select>
+          </div>
+          
+          {/* Clients */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
+                Clients ({selectedClientIds.length}/6)
+              </label>
+              <button
+                onClick={() => setShowAllClients(!showAllClients)}
+                style={{
+                  fontSize: 12, color: TEAL, background: "transparent", border: "none",
+                  cursor: "pointer", fontWeight: 500
+                }}
+              >
+                {showAllClients ? "Show Semi/Hybrid only" : "Show all clients"}
+              </button>
+            </div>
+            <div style={{
+              border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto"
+            }}>
+              {eligibleClients.map(([id, client]) => {
+                const isSelected = selectedClientIds.includes(parseInt(id));
+                return (
+                  <div
+                    key={id}
+                    onClick={() => toggleClient(id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                      cursor: "pointer", borderBottom: `1px solid ${BORDER}`,
+                      background: isSelected ? `${TEAL}08` : "transparent",
+                      transition: "background 0.1s"
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 4,
+                      border: `2px solid ${isSelected ? TEAL : BORDER}`,
+                      background: isSelected ? TEAL : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {isSelected && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
+                    </div>
+                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Station Assignments (show only if clients selected) */}
+          {selectedClientIds.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 8 }}>
+                Station Assignments (optional)
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {selectedClientIds.map(cid => {
+                  const client = clients[cid];
+                  return (
+                    <div key={cid} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: TEXT, minWidth: 120 }}>{client?.name}</span>
+                      <select
+                        value={stationAssignments[cid] || ""}
+                        onChange={(e) => setStationAssignments(prev => ({ ...prev, [cid]: e.target.value }))}
+                        style={{
+                          flex: 1, padding: "8px 10px", borderRadius: 6, fontSize: 13,
+                          border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                        }}
+                      >
+                        <option value="">Select station...</option>
+                        {stations.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Session Focus */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Session Focus (optional)
+            </label>
+            <input
+              type="text"
+              value={sessionFocus}
+              onChange={(e) => setSessionFocus(e.target.value)}
+              placeholder="e.g., Pull: Back & Biceps"
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ 
+          padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
+          display: "flex", gap: 12, justifyContent: "flex-end"
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={selectedClientIds.length < 2}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: selectedClientIds.length >= 2 ? TEAL : "#e0e0e0",
+              color: selectedClientIds.length >= 2 ? WHITE : TEXT_SEC,
+              border: "none", cursor: selectedClientIds.length >= 2 ? "pointer" : "not-allowed"
+            }}
+          >
+            Create session
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -3449,7 +4064,8 @@ function MobileCanvasSheet({
   pendingDashboardEdit,
   onDashboardEditProcessed,
   sessions,
-  onSessionClick
+  onSessionClick,
+  onCreateSession
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -3685,6 +4301,17 @@ isMobile={true}
               onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
             />
           )}
+          {canvasType === "semiPrivate" && (
+            <SemiPrivateList
+              sessions={sessions}
+              clients={clients}
+              isMobile={true}
+              onClose={() => setCanvasType("templates")}
+              onHome={() => setCanvasType("templates")}
+              onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
+              onCreateSession={onCreateSession}
+            />
+          )}
         </div>
         
         {/* Chat Input at Bottom */}
@@ -3743,7 +4370,7 @@ isMobile={true}
   );
 }
 
-/* ═══════════════════��═════���══════════════���══
+/* ═══════════════════���═════���══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -10319,7 +10946,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
-══════════════════════════════════���══════════ */
+═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
@@ -11527,11 +12154,21 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
     { 
       id: "workout",
       icon: "chart", 
-      title: "Workout Builder", 
-      desc: "Design structured training programs with exercises and progressions",
+      title: "1-on-1 Training", 
+      desc: "Design structured training programs for individual clients with exercises and progressions",
       color: "#3aafa9",
       available: true,
       number: 1
+    },
+    { 
+      id: "semiPrivate",
+      icon: "users", 
+      title: "Semi-Private", 
+      desc: "Manage sessions where 2-6 clients train together, each with their own program",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      available: true,
+      number: 2
     },
     { 
       id: "mealPlan",
@@ -11540,16 +12177,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       desc: "Build custom nutrition plans with daily meals, macros, and recipes",
       color: "#2B7A78",
       available: true,
-      number: 2
+      number: 3
     },
-{
-  id: "workflows",
-  icon: "message-circle",
-  title: "AI Workflows",
-  desc: "Automate client check-ins, reminders, and engagement triggers",
+    {
+      id: "workflows",
+      icon: "message-circle",
+      title: "AI Workflows",
+      desc: "Automate client check-ins, reminders, and engagement triggers",
       color: "#1D9E75",
       available: true,
-      number: 3
+      number: 4
     },
     { 
       id: "aiDashboards",
@@ -11557,15 +12194,6 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       title: "AI Dashboards", 
       desc: "Create customizable client dashboards with smart triggers",
       color: "#45818e",
-      available: true,
-      number: 4
-    },
-    { 
-      id: "aiEngine",
-      icon: "layers", 
-      title: "Your AI Engine", 
-      desc: "Upload videos, documents, and PDFs to train your AI assistant",
-      color: "#8e7cc3",
       available: true,
       number: 5
     }
@@ -11632,8 +12260,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
         
         {/* Templates Grid */}
         <div style={{ 
-          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
-          gap: isMobile ? 12 : 16, maxWidth: isMobile ? "100%" : 600
+          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", 
+          gap: isMobile ? 12 : 16, maxWidth: isMobile ? "100%" : 900
         }}>
           {templates.map((template, idx) => (
             <div
@@ -11660,7 +12288,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
               <div style={{
                 width: 48, height: 48, borderRadius: 12,
                 background: template.available 
-                  ? (hoveredTemplate === template.id ? template.color : `${template.color}15`)
+                  ? (hoveredTemplate === template.id ? template.color : (template.bgColor || `${template.color}15`))
                   : "#f0f0f0",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 marginBottom: 16, transition: "all 0.2s ease",
@@ -11668,7 +12296,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
                   ? (hoveredTemplate === template.id ? WHITE : template.color)
                   : TEXT_SEC
               }}>
-                <NavIcon icon={template.icon} size={24} />
+                {template.icon === "users" ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                ) : (
+                  <NavIcon icon={template.icon} size={24} />
+                )}
               </div>
               
               {/* Title + Badge */}
@@ -15867,6 +16504,17 @@ isMobile={isMobile}
   onHome={() => setCanvasType("templates")}
   />
   )}
+  {canvasType === "semiPrivate" && (
+  <SemiPrivateList
+  sessions={sessions}
+  clients={clients}
+  isMobile={isMobile}
+  onClose={() => setCanvasType("templates")}
+  onHome={() => setCanvasType("templates")}
+  onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  />
+  )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
   isMobile={isMobile}
@@ -16578,6 +17226,7 @@ isMobile={isMobile}
   onDashboardEditProcessed={handleDashboardEditResult}
   sessions={sessions}
   onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
   />
   )}
 
