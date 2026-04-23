@@ -11775,14 +11775,32 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
       }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div>
-            {/* Badge */}
-            <div style={{ 
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: "#e8f5f3", padding: "6px 12px", borderRadius: 20,
-              marginBottom: 12
-            }}>
-              {renderChapterIcon("book", 14, "#2B7A78")}
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#2B7A78" }}>Playbook</span>
+            {/* Back button + Badge row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button
+                onClick={onHome}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; e.currentTarget.style.color = TEXT; }}
+                onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+              {/* Badge */}
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#e8f5f3", padding: "6px 12px", borderRadius: 20
+              }}>
+                {renderChapterIcon("book", 14, "#2B7A78")}
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#2B7A78" }}>Playbook</span>
+              </div>
             </div>
             <h1 style={{ 
               fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
