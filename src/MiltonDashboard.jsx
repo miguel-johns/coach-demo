@@ -297,6 +297,192 @@ const dataConnectors = {
   },
 };
 
+// Service type configuration
+const CLIENT_TYPES = {
+  PT: { label: "PT", bg: "#e8f5f3", color: "#2B7A78", description: "1-on-1 personal training" },
+  Semi: { label: "Semi", bg: "#e6f9ec", color: "#1f7a3e", description: "Semi-private group (2-6 clients)" },
+  Online: { label: "Online", bg: "#ede9fe", color: "#6b46c1", description: "Remote coaching only" },
+  Hybrid: { label: "Hybrid", bg: "#fef3c7", color: "#92400e", description: "Self-led with coach oversight" },
+};
+const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
+
+// ClientTypePill component - displays a single service type tag
+function ClientTypePill({ type, size = "sm" }) {
+  const config = CLIENT_TYPES[type];
+  if (!config) return null;
+  
+  const sizes = {
+    sm: { fontSize: 10, padding: "3px 7px", fontWeight: 600 },
+    md: { fontSize: 11, padding: "4px 10px", fontWeight: 600 },
+  };
+  const s = sizes[size] || sizes.sm;
+  
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      padding: s.padding,
+      borderRadius: 9999,
+      background: config.bg,
+      color: config.color,
+      fontSize: s.fontSize,
+      fontWeight: s.fontWeight,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+    }}>
+      {config.label}
+    </span>
+  );
+}
+
+// ClientTypePills component - displays multiple service type tags in order
+function ClientTypePills({ types = [], size = "sm", maxDisplay = 3 }) {
+  if (!types || types.length === 0) return null;
+  
+  // Sort types according to CLIENT_TYPE_ORDER
+  const sortedTypes = [...types].sort((a, b) => {
+    const aIdx = CLIENT_TYPE_ORDER.indexOf(a);
+    const bIdx = CLIENT_TYPE_ORDER.indexOf(b);
+    return aIdx - bIdx;
+  });
+  
+  const displayTypes = sortedTypes.slice(0, maxDisplay);
+  const overflow = sortedTypes.length - maxDisplay;
+  
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+      {displayTypes.map((type) => (
+        <ClientTypePill key={type} type={type} size={size} />
+      ))}
+      {overflow > 0 && (
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: size === "md" ? "4px 8px" : "3px 6px",
+          borderRadius: 9999,
+          background: "#f0f4f3",
+          color: TEXT_SEC,
+          fontSize: size === "md" ? 11 : 10,
+          fontWeight: 600,
+          lineHeight: 1,
+        }}>
+          +{overflow}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ServiceTypeEditModal - allows editing client service types
+function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
+  const [selected, setSelected] = useState([...clientTypes]);
+  
+  useEffect(() => {
+    setSelected([...clientTypes]);
+  }, [clientTypes, isOpen]);
+  
+  const toggleType = (type) => {
+    setSelected(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, animation: "fadeIn 0.15s ease"
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, padding: 24, width: "min(360px, 90vw)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)", animation: "scaleIn 0.2s ease"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>Service types</h3>
+          <button 
+            onClick={onClose}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_SEC }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 20px 0" }}>
+          What services does this client receive?
+        </p>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {CLIENT_TYPE_ORDER.map(type => {
+            const config = CLIENT_TYPES[type];
+            const isSelected = selected.includes(type);
+            return (
+              <button
+                key={type}
+                onClick={() => toggleType(type)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                  borderRadius: 12, border: `1.5px solid ${isSelected ? config.color : BORDER}`,
+                  background: isSelected ? config.bg : WHITE, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{
+                  width: 20, height: 20, borderRadius: 6,
+                  border: `2px solid ${isSelected ? config.color : "#d1d5db"}`,
+                  background: isSelected ? config.color : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s ease"
+                }}>
+                  {isSelected && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: isSelected ? config.color : TEXT }}>{type}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{config.description}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => { onSave(selected); onClose(); }}
+            style={{
+              flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+              boxShadow: `0 2px 8px ${TEAL}40`
+            }}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const initialClients = [
   {
     name: "Sarah Chen",
@@ -304,6 +490,7 @@ const initialClients = [
     alertType: "blue",
     program: "Fat Loss — Phase 2",
     startDate: "Feb 1",
+    clientTypes: ["PT", "Online"],
     assessment: {
       date: "2026-02-01",
       bodyweight: 158,
@@ -407,6 +594,7 @@ const initialClients = [
     alertType: "red",
     program: "Muscle Gain — Hypertrophy",
     startDate: "Jan 15",
+    clientTypes: ["PT"],
     assessment: {
       date: "2026-01-15",
       bodyweight: 175,
@@ -500,6 +688,7 @@ const initialClients = [
     alertType: "red",
     program: "General Fitness",
     startDate: "Feb 15",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-15",
       bodyweight: 145,
@@ -567,6 +756,7 @@ const initialClients = [
     alertType: "blue",
     program: "Powerlifting Prep",
     startDate: "Jan 5",
+    clientTypes: ["Semi", "Online"],
     assessment: {
       date: "2026-01-05",
       bodyweight: 198,
@@ -655,6 +845,7 @@ const initialClients = [
     alertType: "green",
     program: "Post-Pregnancy Recovery",
     startDate: "Mar 1",
+    clientTypes: ["PT", "Semi"],
     assessment: {
       date: "2026-03-01",
       bodyweight: 165,
@@ -734,6 +925,7 @@ const initialClients = [
     alertType: "green",
     program: "Strength Building",
     startDate: "Feb 12",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-12",
       bodyweight: 185,
@@ -823,6 +1015,7 @@ const initialClients = [
     alertType: "blue",
     program: "Olympic Lifting Intro",
     startDate: "Jan 8",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-01-08",
       bodyweight: 142,
@@ -912,6 +1105,7 @@ const initialClients = [
     alertType: "green",
     program: "Maintenance — Active Lifestyle",
     startDate: "Dec 1",
+    clientTypes: ["Online"],
     assessment: {
       date: "2025-12-01",
       bodyweight: 175,
@@ -990,6 +1184,7 @@ const initialClients = [
     alertType: "red",
     program: "Fat Loss — Phase 1",
     startDate: "Feb 20",
+    clientTypes: ["Online"],
     assessment: {
       date: "2026-02-20",
       bodyweight: 245,
@@ -1067,6 +1262,7 @@ const initialClients = [
     alertType: "green",
     program: "Rehab — Shoulder Recovery",
     startDate: "Jan 15",
+    clientTypes: ["Hybrid"],
     assessment: {
       date: "2026-01-15",
       bodyweight: 155,
@@ -1157,6 +1353,7 @@ const initialClients = [
     alertType: "blue",
     program: "Athletic Performance",
     startDate: "Feb 1",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-01",
       bodyweight: 195,
@@ -1245,6 +1442,7 @@ const initialClients = [
     alertType: "green",
     program: "Bodybuilding — Prep",
     startDate: "Mar 1",
+    clientTypes: ["Hybrid"],
     assessment: {
       date: "2026-03-01",
       bodyweight: 138,
@@ -1330,6 +1528,162 @@ const initialClients = [
     narrative: "Perfect attendance. Down 2 lbs while maintaining muscle. On track for stage.",
     attendanceRate: 98,
     weightData: [138, 137.5, 137, 136.5, 136.5, 136, 136],
+  },
+  // New Semi-only clients
+  {
+    name: "Jake Morrison",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Strength",
+    startDate: "Mar 10",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-03-10", bodyweight: 175, bodyFat: 22 },
+    current: { bodyweight: 173, bodyFat: 21 },
+    goals: { primary: "Build strength in group setting", targetWeight: 170, targetBodyFat: 18 },
+    sessions: [],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 8,
+    streak: { current: 8, best: 8, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 140, proteinTarget: 150 },
+    insight: "Jake thrives in the group environment and motivates others.",
+    coachAngle: "Consider pairing with Marcus for competitive motivation.",
+    narrative: "Great group dynamics. Consistent attendance.",
+    attendanceRate: 95,
+    weightData: [175, 174.5, 174, 173.5, 173],
+  },
+  {
+    name: "Olivia Chen",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Semi-Private HIIT",
+    startDate: "Feb 25",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-02-25", bodyweight: 145, bodyFat: 28 },
+    current: { bodyweight: 142, bodyFat: 26 },
+    goals: { primary: "Lose 15 lbs", targetWeight: 130, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 12,
+    streak: { current: 6, best: 8, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 110 },
+    insight: "Olivia responds well to group accountability.",
+    coachAngle: "Keep in morning HIIT group with similar goals.",
+    narrative: "Down 3 lbs. Enjoying the group energy.",
+    attendanceRate: 85,
+    weightData: [145, 144, 143.5, 143, 142.5, 142],
+  },
+  {
+    name: "Chris Taylor",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Basics",
+    startDate: "Mar 1",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-03-01", bodyweight: 195, bodyFat: 30 },
+    current: { bodyweight: 192, bodyFat: 28 },
+    goals: { primary: "Learn fundamentals", targetWeight: 180, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 8,
+    streak: { current: 4, best: 4, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 120, proteinTarget: 160 },
+    insight: "Beginner who benefits from watching others.",
+    coachAngle: "Pair with experienced lifters for form modeling.",
+    narrative: "Learning quickly. Form improving each session.",
+    attendanceRate: 100,
+    weightData: [195, 194, 193, 192],
+  },
+  {
+    name: "Mia Patel",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Conditioning",
+    startDate: "Feb 20",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-02-20", bodyweight: 135, bodyFat: 25 },
+    current: { bodyweight: 133, bodyFat: 24 },
+    goals: { primary: "Improve conditioning", targetWeight: 130, targetBodyFat: 20 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 3,
+    totalSessions: 14,
+    streak: { current: 14, best: 14, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 105, proteinTarget: 110 },
+    insight: "Mia is the most consistent semi-private client.",
+    coachAngle: "Consider transitioning to PT for advanced programming.",
+    narrative: "Perfect attendance. Ready for more challenge.",
+    attendanceRate: 100,
+    weightData: [135, 134.5, 134, 133.5, 133],
+  },
+  // New Online-only clients
+  {
+    name: "Ryan Cooper",
+    alert: "On Track",
+    alertType: "green",
+    program: "Online Strength",
+    startDate: "Feb 1",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-02-01", bodyweight: 180, bodyFat: 20 },
+    current: { bodyweight: 178, bodyFat: 19 },
+    goals: { primary: "Build muscle remotely", targetWeight: 185, targetBodyFat: 16 },
+    sessions: [],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 4,
+    totalSessions: 28,
+    streak: { current: 12, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 165, proteinTarget: 160 },
+    insight: "Ryan is highly self-motivated and follows programming exactly.",
+    coachAngle: "Weekly video check-ins are enough. Great progress.",
+    narrative: "Excellent remote client. Logs everything.",
+    attendanceRate: 92,
+    weightData: [180, 179.5, 179, 178.5, 178],
+  },
+  {
+    name: "Sophia Martinez",
+    alert: "Assessment Due",
+    alertType: "red",
+    program: "Online Fat Loss",
+    startDate: "Jan 15",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-01-15", bodyweight: 165, bodyFat: 32 },
+    current: { bodyweight: 158, bodyFat: 28 },
+    goals: { primary: "Lose 30 lbs", targetWeight: 135, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 20,
+    streak: { current: 4, best: 10, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 100, proteinTarget: 130 },
+    insight: "Sophia needs more frequent check-ins. Progress slowing.",
+    coachAngle: "Schedule mid-week video call. Reassess nutrition.",
+    narrative: "Down 7 lbs but plateau last 2 weeks.",
+    attendanceRate: 75,
+    weightData: [165, 163, 161, 159, 158, 158],
+  },
+  {
+    name: "Kevin Brooks",
+    alert: "On Track",
+    alertType: "green",
+    program: "Online Mobility",
+    startDate: "Mar 5",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-03-05", bodyweight: 200, bodyFat: 25 },
+    current: { bodyweight: 198, bodyFat: 24 },
+    goals: { primary: "Reduce back pain", targetWeight: 195, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 5,
+    totalSessions: 15,
+    streak: { current: 10, best: 10, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 140, proteinTarget: 160 },
+    insight: "Kevin follows mobility work religiously. Pain decreasing.",
+    coachAngle: "Start adding light strength work next week.",
+    narrative: "Back pain down 60%. Ready to progress.",
+    attendanceRate: 100,
+    weightData: [200, 199, 198.5, 198],
   },
 ];
 
@@ -3299,7 +3653,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 /* ═════════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═════════════════════════════════════════════ */
-function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
+function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks, onUpdateClient }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [viewMode, setViewMode] = useState("coach"); // "coach" | "client"
@@ -3315,6 +3669,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [nutritionExpanded, setNutritionExpanded] = useState(false);
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
+  const [showServiceTypeEdit, setShowServiceTypeEdit] = useState(false);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -3465,6 +3820,24 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <ClientTypePills types={client.clientTypes} size="md" />
+                  <button
+                    onClick={() => setShowServiceTypeEdit(true)}
+                    style={{
+                      width: 20, height: 20, borderRadius: 4, border: "none",
+                      background: "transparent", cursor: "pointer", padding: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: TEXT_SEC, transition: "all 0.15s"
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                    </svg>
+                  </button>
+                </div>
                 <div style={{ padding: "4px 10px", borderRadius: 10, background: `${TEAL}12`, color: TEAL, fontSize: 12, fontWeight: 600 }}>{client.program || "General Fitness"}</div>
                 {currentStreak > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 10, background: `${MINT}12`, color: MINT, fontSize: 12, fontWeight: 600 }}>
@@ -4582,13 +4955,25 @@ return (
           </div>
         );
       })()}
+      
+      {/* Service Type Edit Modal */}
+      <ServiceTypeEditModal 
+        isOpen={showServiceTypeEdit}
+        onClose={() => setShowServiceTypeEdit(false)}
+        clientTypes={client.clientTypes || []}
+        onSave={(newTypes) => {
+          if (onUpdateClient) {
+            onUpdateClient({ ...client, clientTypes: newTypes });
+          }
+        }}
+      />
     </div>
   );
 }
 
-/* ═════════════════════════════════�����═══════════
+/* ════════════════════════════════════════════
    SEND REPORT MODAL
-   ══════════════════════════������������══════════════════ */
+   ═════════════════════════════════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4983,13 +5368,13 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
   // ================================================================
   
   const CLIENTS = {
-    sc: { id: "sc", initials: "SC", name: "Sarah Chen", sub: "3x/wk · PT client", online: true },
-    mj: { id: "mj", initials: "MJ", name: "Marcus Johnson", sub: "2x/wk · PT client", online: false },
-    er: { id: "er", initials: "ER", name: "Emily Rodriguez", sub: "Online · weekly check-ins", online: true },
-    jt: { id: "jt", initials: "JT", name: "Jeff Turner", sub: "1x/wk · PT client", online: false },
-    kl: { id: "kl", initials: "KL", name: "Kim Lawson", sub: "Online · 6mo", online: false },
-    ap: { id: "ap", initials: "AP", name: "Ana Prieto", sub: "3x/wk · PT client", online: false },
-    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk · small group", online: false },
+    sc: { id: "sc", initials: "SC", name: "Sarah Chen", sub: "3x/wk · PT client", online: true, clientTypes: ["PT", "Online"] },
+    mj: { id: "mj", initials: "MJ", name: "Marcus Johnson", sub: "2x/wk · PT client", online: false, clientTypes: ["PT"] },
+    er: { id: "er", initials: "ER", name: "Emily Rodriguez", sub: "Online · weekly check-ins", online: true, clientTypes: ["Semi"] },
+    jt: { id: "jt", initials: "JT", name: "Jeff Turner", sub: "1x/wk · PT client", online: false, clientTypes: ["PT"] },
+    kl: { id: "kl", initials: "KL", name: "Kim Lawson", sub: "Online · 6mo", online: false, clientTypes: ["Online"] },
+    ap: { id: "ap", initials: "AP", name: "Ana Prieto", sub: "3x/wk · PT client", online: false, clientTypes: ["PT", "Semi"] },
+    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk · small group", online: false, clientTypes: ["Semi"] },
   };
 
   const [THREADS, setTHREADS] = useState({
@@ -5235,9 +5620,9 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
               >
                 <InboxAvatar client={client} dot />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</span>
-                    <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: TEAL_LIGHT, color: TEAL }}>CLIENT</span>
+                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
                   </div>
                   <p style={{ fontSize: 11, color: TEXT_SEC, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "2px 0 0" }}>{preview}</p>
                 </div>
@@ -5481,7 +5866,10 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <InboxAvatar client={client} size={7} />
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</span>
+                <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+              </div>
               <div style={{ fontSize: 9, color: client.online ? "#22c55e" : TEXT_SEC, fontWeight: client.online ? 500 : 400 }}>
                 {client.online ? "Online" : "Last seen 3h ago"}
               </div>
@@ -13506,6 +13894,8 @@ export default function MiltonDashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientFilter, setClientFilter] = useState(null);
+  const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
+  const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
   const [showAddClient, setShowAddClient] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [brainDocuments, setBrainDocuments] = useState([
@@ -13878,6 +14268,49 @@ export default function MiltonDashboard() {
         };
       }
       
+      // Detect service type tag changes
+      // Add: "add Sarah to Semi", "make Marcus a PT client", "add online tag to Emily"
+      const addTagMatch = low.match(/add\s+(\w+)\s+to\s+(pt|semi|online|hybrid)/i) 
+        || low.match(/add\s+(pt|semi|online|hybrid)\s+(?:tag\s+)?to\s+(\w+)/i)
+        || low.match(/make\s+(\w+)\s+(?:a\s+)?(pt|semi|online|hybrid)/i);
+      if (addTagMatch) {
+        const serviceType = (addTagMatch[2] || addTagMatch[1]).charAt(0).toUpperCase() + (addTagMatch[2] || addTagMatch[1]).slice(1).toLowerCase();
+        const validType = CLIENT_TYPE_ORDER.find(t => t.toLowerCase() === serviceType.toLowerCase());
+        if (validType && !(client.clientTypes || []).includes(validType)) {
+          return {
+            type: "addServiceType",
+            clientIndex,
+            client,
+            firstName,
+            serviceType: validType,
+            updates: {
+              clientTypes: [...(client.clientTypes || []), validType]
+            }
+          };
+        }
+      }
+      
+      // Remove: "remove Marcus's online tag", "take Sarah off Semi", "remove PT from Emily"
+      const removeTagMatch = low.match(/remove\s+(\w+)(?:'s)?\s+(pt|semi|online|hybrid)\s*tag?/i)
+        || low.match(/remove\s+(pt|semi|online|hybrid)\s+(?:tag\s+)?from\s+(\w+)/i)
+        || low.match(/take\s+(\w+)\s+off\s+(pt|semi|online|hybrid)/i);
+      if (removeTagMatch) {
+        const serviceType = (removeTagMatch[2] || removeTagMatch[1]).charAt(0).toUpperCase() + (removeTagMatch[2] || removeTagMatch[1]).slice(1).toLowerCase();
+        const validType = CLIENT_TYPE_ORDER.find(t => t.toLowerCase() === serviceType.toLowerCase());
+        if (validType && (client.clientTypes || []).includes(validType)) {
+          return {
+            type: "removeServiceType",
+            clientIndex,
+            client,
+            firstName,
+            serviceType: validType,
+            updates: {
+              clientTypes: (client.clientTypes || []).filter(t => t !== validType)
+            }
+          };
+        }
+      }
+      
       return null;
     })();
 
@@ -13903,6 +14336,10 @@ export default function MiltonDashboard() {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s calorie target to ${clientUpdateCmd.newCalorieTarget}.**\n\nThis change is now reflected in their dashboard. Want me to recalculate their macros based on this new target?`;
+        } else if (clientUpdateCmd.type === "addServiceType") {
+          responseText = `**Done! I've added ${clientUpdateCmd.firstName} to ${clientUpdateCmd.serviceType}.**\n\nThey'll now appear in the ${clientUpdateCmd.serviceType} filter tab, and you'll see the ${clientUpdateCmd.serviceType} tag on their profile.`;
+        } else if (clientUpdateCmd.type === "removeServiceType") {
+          responseText = `**Done! I've removed the ${clientUpdateCmd.serviceType} tag from ${clientUpdateCmd.firstName}.**\n\nThey'll no longer appear in the ${clientUpdateCmd.serviceType} filter tab.`;
         }
         
         setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
@@ -14265,6 +14702,9 @@ isMobile={isMobile}
                 title: `${client.name.split(" ")[0]}'s Report — Milton Insight`,
                 text: `${client.insight}\n\nCoaching angle: ${client.coachAngle}`
               }]);
+            }}
+            onUpdateClient={(updatedClient) => {
+              setClients(prev => prev.map((c, i) => i === selectedClient ? updatedClient : c));
             }}
           />
         </main>
@@ -14688,26 +15128,163 @@ isMobile={isMobile}
           </div>
         </div>
 
-        {/* Client Table / List */}
-        {clientFilter && (
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 16px", borderRadius: 12, background: TEAL_LIGHT,
-            border: `1px solid #b6dfd8`
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>
-              Showing: {clientFilter === "red" ? "Needs Attention" : clientFilter === "blue" ? "Report Ready" : "Made Progress"} ({clients.filter(c => c.alertType === clientFilter).length})
-            </span>
-            <div onClick={() => setClientFilter(null)} style={{ cursor: "pointer", color: TEAL, display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
-              Clear filter
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
-          </div>
-        )}
+        {/* Service Type Tab Bar */}
+        {(() => {
+          // Filter clients based on service type tab and dropdown
+          const getFilteredClients = () => {
+            let filtered = clients;
+            
+            // Apply alert type filter first
+            if (clientFilter) {
+              filtered = filtered.filter(c => c.alertType === clientFilter);
+            }
+            
+            // Apply service type tab filter (takes precedence)
+            if (serviceTypeTab !== "All") {
+              filtered = filtered.filter(c => c.clientTypes?.includes(serviceTypeTab));
+            } else if (serviceTypeDropdown.length > 0) {
+              // When on "All" tab, apply dropdown filter (OR logic)
+              filtered = filtered.filter(c => 
+                serviceTypeDropdown.some(type => c.clientTypes?.includes(type))
+              );
+            }
+            
+            return filtered;
+          };
+          
+          const filteredClients = getFilteredClients();
+          
+          // Count clients for each tab
+          const getCounts = () => {
+            const baseFiltered = clientFilter 
+              ? clients.filter(c => c.alertType === clientFilter) 
+              : clients;
+            return {
+              All: baseFiltered.length,
+              PT: baseFiltered.filter(c => c.clientTypes?.includes("PT")).length,
+              Semi: baseFiltered.filter(c => c.clientTypes?.includes("Semi")).length,
+              Online: baseFiltered.filter(c => c.clientTypes?.includes("Online")).length,
+              Hybrid: baseFiltered.filter(c => c.clientTypes?.includes("Hybrid")).length,
+            };
+          };
+          const counts = getCounts();
+          
+          return (
+            <>
+              {/* Tab Bar */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 0,
+                marginBottom: 12, borderBottom: `1px solid ${BORDER}`,
+                overflow: "auto", flexShrink: 0
+              }}>
+                {["All", "PT", "Semi", "Online", "Hybrid"].map((tab) => {
+                  const isActive = serviceTypeTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setServiceTypeTab(tab)}
+                      style={{
+                        padding: "12px 16px", fontSize: 14, fontWeight: isActive ? 500 : 400,
+                        color: isActive ? "#1a2e2a" : TEXT_SEC,
+                        background: "none", border: "none", cursor: "pointer",
+                        borderBottom: isActive ? `2px solid ${TEAL}` : "2px solid transparent",
+                        marginBottom: -1, whiteSpace: "nowrap", transition: "all 0.15s",
+                        display: "flex", alignItems: "center", gap: 4
+                      }}
+                    >
+                      {tab}
+                      <span style={{ color: "#8aa3a0", fontSize: 13 }}>({counts[tab]})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Service Type Dropdown Filter (shown when on "All" tab) */}
+              {serviceTypeTab === "All" && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap"
+                }}>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>Service type:</span>
+                  {["PT", "Semi", "Online", "Hybrid"].map((type) => {
+                    const isSelected = serviceTypeDropdown.includes(type);
+                    const config = CLIENT_TYPES[type];
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          setServiceTypeDropdown(prev => 
+                            isSelected ? prev.filter(t => t !== type) : [...prev, type]
+                          );
+                        }}
+                        style={{
+                          padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 500,
+                          background: isSelected ? config.bg : "#f5f7f6",
+                          color: isSelected ? config.color : TEXT_SEC,
+                          border: isSelected ? `1px solid ${config.color}30` : `1px solid ${BORDER}`,
+                          cursor: "pointer", transition: "all 0.15s",
+                          display: "flex", alignItems: "center", gap: 4
+                        }}
+                      >
+                        {isSelected && (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                        {type}
+                      </button>
+                    );
+                  })}
+                  {serviceTypeDropdown.length > 0 && (
+                    <button
+                      onClick={() => setServiceTypeDropdown([])}
+                      style={{
+                        padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600,
+                        background: "transparent", color: TEAL, border: "none",
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 2
+                      }}
+                    >
+                      Clear
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Alert Type Filter Banner */}
+              {clientFilter && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "10px 16px", borderRadius: 12, background: TEAL_LIGHT,
+                  border: `1px solid #b6dfd8`, marginBottom: 12
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>
+                    Showing: {clientFilter === "red" ? "Needs Attention" : clientFilter === "blue" ? "Report Ready" : "Made Progress"} ({filteredClients.length})
+                  </span>
+                  <div onClick={() => setClientFilter(null)} style={{ cursor: "pointer", color: TEAL, display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
+                    Clear filter
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
         {isMobile ? (
           /* ─── Mobile: Individual client cards ─── */
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
+            {clients.filter(c => {
+              // Alert type filter
+              if (clientFilter && c.alertType !== clientFilter) return false;
+              // Service type tab filter
+              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
+              // Service type dropdown filter (when on All tab)
+              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
+                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
+              }
+              return true;
+            }).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i} onClick={() => setSelectedClient(i)} style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
                 boxShadow: "0 2px 6px rgba(0,0,0,0.04)", padding: "16px",
@@ -14717,7 +15294,10 @@ isMobile={isMobile}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={48} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
+                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                    </div>
                     <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -14770,7 +15350,17 @@ isMobile={isMobile}
               <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
+            {clients.filter(c => {
+              // Alert type filter
+              if (clientFilter && c.alertType !== clientFilter) return false;
+              // Service type tab filter
+              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
+              // Service type dropdown filter (when on All tab)
+              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
+                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
+              }
+              return true;
+            }).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
@@ -14784,7 +15374,10 @@ isMobile={isMobile}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={34} />
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</span>
+                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                    </div>
                     <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
