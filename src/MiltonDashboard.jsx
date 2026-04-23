@@ -1557,19 +1557,37 @@ function SemiPrivateList({
       }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div>
-            {/* Badge */}
-            <div style={{ 
-              display: "inline-flex", alignItems: "center", gap: 6,
-              background: "#e6f9ec", padding: "5px 10px", borderRadius: 16,
-              marginBottom: 12
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#1f7a3e" }}>Semi-Private</span>
+            {/* Back button + Badge row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button
+                onClick={onHome}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; e.currentTarget.style.color = TEXT; }}
+                onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+              {/* Badge */}
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 6,
+                background: "#e6f9ec", padding: "5px 10px", borderRadius: 16
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1f7a3e" }}>Semi-Private</span>
+              </div>
             </div>
             
             {/* Title */}
