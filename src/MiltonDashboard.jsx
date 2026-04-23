@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�������═══════════════════════════════
+// ═══════════════════════════════���������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -11958,6 +11958,218 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MASTER PROGRAM SESSION DRAWER - Right-side detail view
+// ═══════════════════════════════════════════════════════════════
+function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
+  const [expandedPattern, setExpandedPattern] = useState(null);
+  
+  const roleStyles = {
+    primary: { bg: TEAL, color: WHITE, label: "Primary" },
+    secondary: { bg: "#e6f9ec", color: "#1f7a3e", label: "Secondary" },
+    accessory: { bg: "#f1f5f4", color: TEXT_SEC, label: "Accessory" },
+    finisher: { bg: "#ede9fe", color: "#6b46c1", label: "Finisher" }
+  };
+  
+  // Get full date for display
+  const getFullDate = () => {
+    if (!viewingBlock || !viewingBlock.startDate) return session.dayOfWeek;
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (session.weekNumber - 1) * 7 + (dayMap[session.dayOfWeek] || 0));
+    return start.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: isMobile ? "100%" : 440,
+        background: WHITE, boxShadow: "-8px 0 32px rgba(0,0,0,0.12)", zIndex: 100,
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.2s ease"
+      }}
+    >
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+      
+      {/* Header */}
+      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+          <div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 4 }}>
+              {getFullDate()} · Week {session.weekNumber}
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: 0 }}>
+              {session.focus}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "#f5f7f6", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Body - Scrollable */}
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          Pattern Breakdown
+        </div>
+        
+        {/* Pattern rows */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {session.patterns.map((pattern, idx) => {
+            const style = roleStyles[pattern.role] || roleStyles.accessory;
+            const isExpanded = expandedPattern === idx;
+            
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: "#fafcfb", borderRadius: 10, border: `0.5px solid ${BORDER}`,
+                  overflow: "hidden"
+                }}
+              >
+                {/* Pattern header */}
+                <div
+                  onClick={() => setExpandedPattern(isExpanded ? null : idx)}
+                  style={{
+                    padding: "14px 16px", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12
+                  }}
+                >
+                  {/* Role pill */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 6,
+                    background: style.bg, color: style.color, textTransform: "uppercase", letterSpacing: "0.5px"
+                  }}>
+                    {style.label}
+                  </span>
+                  
+                  {/* Pattern name */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>
+                      {formatPatternType(pattern.type)}
+                    </div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                      {pattern.sets} sets × {pattern.reps} reps
+                      {pattern.tempo && <span> · {pattern.tempo} tempo</span>}
+                    </div>
+                  </div>
+                  
+                  {/* Edit + expand */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); }}
+                    style={{
+                      width: 28, height: 28, borderRadius: 6, border: "none",
+                      background: "transparent", cursor: "pointer", color: TEXT_SEC
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <svg 
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
+                    style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}
+                  >
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </div>
+                
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div style={{ padding: "0 16px 14px", borderTop: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 12, marginBottom: 8 }}>Coach Notes</div>
+                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                      Focus on controlled eccentric. Pause at bottom position. Full ROM required.
+                    </div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 12, marginBottom: 8 }}>Suggested Exercises</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {pattern.type === "squat" && ["Back Squat", "Front Squat", "Goblet Squat"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "hinge" && ["Romanian Deadlift", "Trap Bar Deadlift", "Kettlebell Swing"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "horizontal_push" && ["Bench Press", "Dumbbell Press", "Push-Up"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "vertical_pull" && ["Pull-Up", "Lat Pulldown", "Chin-Up"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {!["squat", "hinge", "horizontal_push", "vertical_pull"].includes(pattern.type) && (
+                        <span style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#f5f7f6", color: TEXT_SEC }}>
+                          Coach selects based on client
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Usage context */}
+        <div style={{
+          marginTop: 24, padding: 16, borderRadius: 10, background: "#f5f7f6"
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Usage Context
+          </div>
+          <div style={{ fontSize: 13, color: TEXT, marginBottom: 8 }}>
+            <strong>12</strong> scheduled sessions will render from this template
+          </div>
+          <div style={{ fontSize: 13, color: TEXT }}>
+            <strong>3</strong> coaches will run sessions based on this plan
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer - Sticky actions */}
+      <div style={{ 
+        padding: "16px 20px", borderTop: `1px solid ${BORDER}`,
+        display: "flex", gap: 10
+      }}>
+        <button
+          style={{
+            flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+            background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          Ask Milton to modify
+        </button>
+        <button
+          style={{
+            padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+            background: "transparent", color: TEXT_SEC, border: `1px solid ${BORDER}`, cursor: "pointer"
+          }}
+        >
+          Replace day
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -11979,7 +12191,90 @@ function PlaybookChapterDetail({
   const [newRuleTitle, setNewRuleTitle] = useState("");
   const [newRuleDesc, setNewRuleDesc] = useState("");
   
+  // Master Program state (only for Programming chapter)
+  const [selectedSession, setSelectedSession] = useState(null); // For session detail drawer
+  const [viewingBlockId, setViewingBlockId] = useState(null); // null = active block
+  const [calendarWeekOffset, setCalendarWeekOffset] = useState(0); // 0 = current week centered
+  const [showBlockDropdown, setShowBlockDropdown] = useState(false);
+  
   const stats = getChapterStats();
+  
+  // Master Program data (Programming chapter only)
+  const masterProgram = chapter.id === "programming" ? playbook?.chapters?.programming?.masterProgram : null;
+  const allBlocks = masterProgram?.blocks || [];
+  const activeBlock = allBlocks.find(b => b.id === masterProgram?.activeBlockId);
+  const viewingBlock = viewingBlockId ? allBlocks.find(b => b.id === viewingBlockId) : activeBlock;
+  
+  // Calculate current week number based on today's date
+  const getCurrentWeekNumber = () => {
+    if (!viewingBlock || !viewingBlock.startDate) return 1;
+    const start = new Date(viewingBlock.startDate);
+    const today = new Date("2026-04-29"); // Mock today for demo
+    const daysSinceStart = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    return Math.max(1, Math.min(viewingBlock.weekCount, Math.ceil((daysSinceStart + 1) / 7)));
+  };
+  const currentWeekNumber = getCurrentWeekNumber();
+  
+  // Get visible weeks for the calendar (3 weeks: prev, current, next)
+  const getVisibleWeeks = () => {
+    if (!viewingBlock || !viewingBlock.weeks) return [];
+    const centerWeek = currentWeekNumber + calendarWeekOffset;
+    const weeks = [];
+    for (let i = centerWeek - 1; i <= centerWeek + 1; i++) {
+      if (i >= 1 && i <= viewingBlock.weekCount) {
+        weeks.push(viewingBlock.weeks.find(w => w.weekNumber === i) || { weekNumber: i, sessions: [] });
+      }
+    }
+    return weeks;
+  };
+  
+  // Format pattern type for display
+  const formatPatternType = (type) => {
+    return type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  };
+  
+  // Get week date range
+  const getWeekDateRange = (weekNum) => {
+    if (!viewingBlock || !viewingBlock.startDate) return "";
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (weekNum - 1) * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${monthNames[start.getMonth()]} ${start.getDate()} – ${monthNames[end.getMonth()]} ${end.getDate()}`;
+  };
+  
+  // Get day date for a specific week and day
+  const getDayDate = (weekNum, dayOfWeek) => {
+    if (!viewingBlock || !viewingBlock.startDate) return "";
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    return start.getDate();
+  };
+  
+  // Check if a day is today
+  const isToday = (weekNum, dayOfWeek) => {
+    const today = new Date("2026-04-29"); // Mock today - Wednesday of week 2
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock?.startDate || "2026-04-20");
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    return start.toDateString() === today.toDateString();
+  };
+  
+  // Get relative day text
+  const getRelativeDayText = (weekNum, dayOfWeek) => {
+    const today = new Date("2026-04-29");
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock?.startDate || "2026-04-20");
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    const diff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return { text: "Today", color: TEAL };
+    if (diff === 1) return { text: "Tomorrow", color: TEXT_SEC };
+    if (diff > 1 && diff <= 7) return { text: `In ${diff} days`, color: TEXT_SEC };
+    if (diff < 0) return { text: "Completed", color: "#16a34a" };
+    return { text: "", color: TEXT_SEC };
+  };
   
   const tabs = [
     { id: "active", label: "Active rules", count: stats.activeRules },
@@ -12218,20 +12513,351 @@ function PlaybookChapterDetail({
               </div>
             )}
             
-            {/* Master Program placeholder for Programming chapter */}
-            {chapter.id === "programming" && (
-              <div style={{
-                marginTop: 32, padding: 24, borderRadius: 12,
-                background: "linear-gradient(135deg, #e8f5f3 0%, #f0fdf4 100%)",
-                border: `1px dashed ${TEAL}`
-              }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: TEAL, marginBottom: 6 }}>
-                  Master Program
+            {/* Master Program Section for Programming chapter */}
+            {chapter.id === "programming" && viewingBlock && (
+              <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
+                {/* Master Program Header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    {/* Badge */}
+                    <div style={{ 
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      background: "#e6f9ec", padding: "5px 10px", borderRadius: 16, marginBottom: 10
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "#1f7a3e" }}>Master Program</span>
+                    </div>
+                    
+                    {/* Block title */}
+                    <h2 style={{ fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 6px" }}>
+                      {viewingBlock.name}
+                    </h2>
+                    <p style={{ fontSize: 13, color: TEXT_SEC, margin: 0 }}>
+                      Week {currentWeekNumber} of {viewingBlock.weekCount} · {viewingBlock.sessionsPerWeek} sessions/week · Started {new Date(viewingBlock.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {/* Change block dropdown */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => setShowBlockDropdown(!showBlockDropdown)}
+                        style={{
+                          padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                          background: WHITE, color: TEXT, border: `1px solid ${BORDER}`,
+                          cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+                        }}
+                      >
+                        Change block
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polyline points="6,9 12,15 18,9"/>
+                        </svg>
+                      </button>
+                      
+                      {showBlockDropdown && (
+                        <div style={{
+                          position: "absolute", top: "100%", right: 0, marginTop: 4,
+                          background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`,
+                          boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: 220, zIndex: 50
+                        }}>
+                          {allBlocks.map(block => (
+                            <div
+                              key={block.id}
+                              onClick={() => { setViewingBlockId(block.id === masterProgram.activeBlockId ? null : block.id); setShowBlockDropdown(false); }}
+                              style={{
+                                padding: "10px 14px", cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                borderBottom: `1px solid ${BORDER}`,
+                                background: (viewingBlockId === block.id || (!viewingBlockId && block.id === masterProgram.activeBlockId)) ? "#f7faf9" : "transparent"
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{block.name}</div>
+                                <div style={{ fontSize: 11, color: TEXT_SEC }}>
+                                  {block.status === "active" ? "Active" : block.status === "draft" ? "Draft" : "Archived"}
+                                </div>
+                              </div>
+                              {block.id === masterProgram.activeBlockId && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* New block button */}
+                    <button
+                      style={{
+                        padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        background: "transparent", color: TEAL, border: `1.5px solid ${TEAL}`,
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      New block
+                    </button>
+                  </div>
                 </div>
-                <div style={{ fontSize: 13, color: TEXT_SEC }}>
-                  Your active training block lives here. Coming soon.
+                
+                {/* Viewing archived/draft banner */}
+                {viewingBlockId && viewingBlockId !== masterProgram.activeBlockId && (
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "#fef3c7", padding: "10px 14px", borderRadius: 8, marginBottom: 16
+                  }}>
+                    <span style={{ fontSize: 13, color: "#92400e" }}>
+                      Viewing {viewingBlock.status} block. Activate to make it live.
+                    </span>
+                    <button
+                      onClick={() => {
+                        setPlaybook(prev => ({
+                          ...prev,
+                          chapters: {
+                            ...prev.chapters,
+                            programming: {
+                              ...prev.chapters.programming,
+                              masterProgram: {
+                                ...prev.chapters.programming.masterProgram,
+                                activeBlockId: viewingBlockId
+                              }
+                            }
+                          }
+                        }));
+                        setViewingBlockId(null);
+                      }}
+                      style={{
+                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+                        background: "#d97706", color: WHITE, border: "none", cursor: "pointer"
+                      }}
+                    >
+                      Activate block
+                    </button>
+                  </div>
+                )}
+                
+                {/* Status bar */}
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                  background: "#e8f5f3", padding: "12px 16px", borderRadius: 10, marginBottom: 20
+                }}>
+                  <span style={{ fontSize: 13, color: TEXT }}>
+                    Today · Wednesday, April 29 · Week {currentWeekNumber}
+                  </span>
+                  
+                  {/* Progress bar */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, maxWidth: 200 }}>
+                    <div style={{ flex: 1, height: 6, background: "#c8e6e3", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ 
+                        width: `${((currentWeekNumber - 1) / viewingBlock.weekCount) * 100}%`, 
+                        height: "100%", background: TEAL, borderRadius: 3 
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{Math.round(((currentWeekNumber - 1) / viewingBlock.weekCount) * 100)}%</span>
+                  </div>
+                  
+                  <button
+                    style={{
+                      fontSize: 13, color: TEAL, fontWeight: 500, background: "transparent",
+                      border: "none", cursor: "pointer", padding: 0
+                    }}
+                  >
+                    Preview today&apos;s session →
+                  </button>
+                </div>
+                
+                {/* Week Strip Calendar */}
+                <div style={{ position: "relative" }}>
+                  {/* Navigation arrows */}
+                  <button
+                    onClick={() => setCalendarWeekOffset(prev => Math.max(prev - 1, -(currentWeekNumber - 1)))}
+                    disabled={currentWeekNumber + calendarWeekOffset <= 1}
+                    style={{
+                      position: "absolute", left: -16, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: "50%", border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: currentWeekNumber + calendarWeekOffset > 1 ? "pointer" : "not-allowed",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: currentWeekNumber + calendarWeekOffset > 1 ? TEXT : TEXT_SEC,
+                      zIndex: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                  </button>
+                  
+                  <button
+                    onClick={() => setCalendarWeekOffset(prev => Math.min(prev + 1, viewingBlock.weekCount - currentWeekNumber))}
+                    disabled={currentWeekNumber + calendarWeekOffset >= viewingBlock.weekCount}
+                    style={{
+                      position: "absolute", right: -16, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: "50%", border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: currentWeekNumber + calendarWeekOffset < viewingBlock.weekCount ? "pointer" : "not-allowed",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: currentWeekNumber + calendarWeekOffset < viewingBlock.weekCount ? TEXT : TEXT_SEC,
+                      zIndex: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="9,18 15,12 9,6"/>
+                    </svg>
+                  </button>
+                  
+                  {/* Week columns */}
+                  <div style={{ 
+                    display: "flex", gap: 12, overflowX: "auto", padding: "4px 0",
+                    scrollbarWidth: "none", msOverflowStyle: "none"
+                  }}>
+                    {getVisibleWeeks().map((week) => {
+                      const isCurrentWeek = week.weekNumber === currentWeekNumber;
+                      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                      
+                      return (
+                        <div 
+                          key={week.weekNumber}
+                          style={{
+                            flex: isMobile ? "1 0 100%" : "1 0 calc(33.33% - 8px)",
+                            minWidth: isMobile ? "100%" : 220,
+                            background: isCurrentWeek ? "#f0fdf8" : WHITE,
+                            borderRadius: 12,
+                            border: `1px solid ${isCurrentWeek ? "#bbf7d0" : BORDER}`,
+                            padding: 12
+                          }}
+                        >
+                          {/* Week header */}
+                          <div style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${BORDER}`
+                          }}>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Week {week.weekNumber}</div>
+                              <div style={{ fontSize: 11, color: TEXT_SEC }}>{getWeekDateRange(week.weekNumber)}</div>
+                            </div>
+                            {isCurrentWeek && (
+                              <span style={{ fontSize: 10, fontWeight: 600, color: TEAL, background: "#dcfce7", padding: "3px 8px", borderRadius: 10 }}>
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Day cells */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {days.map((day) => {
+                              const session = week.sessions?.find(s => s.dayOfWeek === day);
+                              const dayDate = getDayDate(week.weekNumber, day);
+                              const isTodayCell = isToday(week.weekNumber, day);
+                              const relativeDay = getRelativeDayText(week.weekNumber, day);
+                              
+                              if (!session) {
+                                // Rest day
+                                return (
+                                  <div
+                                    key={day}
+                                    style={{
+                                      background: "#f5f7f6", borderRadius: 8, padding: "10px 12px",
+                                      minHeight: 50, display: "flex", alignItems: "center", justifyContent: "center"
+                                    }}
+                                  >
+                                    <span style={{ fontSize: 12, color: TEXT_SEC, fontStyle: "italic" }}>Rest</span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Session day
+                              return (
+                                <div
+                                  key={day}
+                                  onClick={() => setSelectedSession({ ...session, weekNumber: week.weekNumber, dayDate })}
+                                  style={{
+                                    background: WHITE, borderRadius: 8, padding: 12,
+                                    border: `0.5px solid ${isTodayCell ? TEAL : "#e0ebe8"}`,
+                                    cursor: "pointer", transition: "all 0.15s",
+                                    boxShadow: isTodayCell ? `0 0 0 2px ${TEAL}20` : "none"
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.boxShadow = isTodayCell ? `0 0 0 2px ${TEAL}20` : "none"; }}
+                                >
+                                  {/* Day label + date */}
+                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                    <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                      {day.slice(0, 3)}
+                                    </span>
+                                    <span style={{ fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>{dayDate}</span>
+                                  </div>
+                                  
+                                  {/* Focus */}
+                                  <div style={{ fontSize: 13, fontWeight: 500, color: TEXT, marginBottom: 8 }}>
+                                    {session.focus}
+                                  </div>
+                                  
+                                  {/* Pattern pills */}
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+                                    {session.patterns.slice(0, 4).map((pattern, pIdx) => {
+                                      const roleStyles = {
+                                        primary: { bg: TEAL, color: WHITE },
+                                        secondary: { bg: "#e6f9ec", color: "#1f7a3e" },
+                                        accessory: { bg: "#f1f5f4", color: TEXT_SEC },
+                                        finisher: { bg: "#ede9fe", color: "#6b46c1" }
+                                      };
+                                      const style = roleStyles[pattern.role] || roleStyles.accessory;
+                                      return (
+                                        <span
+                                          key={pIdx}
+                                          style={{
+                                            fontSize: 10, padding: "3px 6px", borderRadius: 10,
+                                            background: style.bg, color: style.color, fontWeight: 500
+                                          }}
+                                        >
+                                          {formatPatternType(pattern.type)}
+                                        </span>
+                                      );
+                                    })}
+                                    {session.patterns.length > 4 && (
+                                      <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 10, background: "#f1f5f4", color: TEXT_SEC }}>
+                                        +{session.patterns.length - 4}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Status */}
+                                  {relativeDay.text && (
+                                    <div style={{ fontSize: 11, color: relativeDay.color, fontWeight: 500 }}>
+                                      {relativeDay.text === "Completed" && (
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginRight: 4, verticalAlign: "middle" }}>
+                                          <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                      )}
+                                      {relativeDay.text}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+            )}
+            
+            {/* Session Detail Drawer */}
+            {selectedSession && (
+              <MasterProgramSessionDrawer
+                session={selectedSession}
+                viewingBlock={viewingBlock}
+                formatPatternType={formatPatternType}
+                onClose={() => setSelectedSession(null)}
+                isMobile={isMobile}
+              />
             )}
           </div>
         )}
@@ -16663,7 +17289,122 @@ export default function MiltonDashboard() {
   const [playbook, setPlaybook] = useState({
     gymId: "gym_001",
     name: "Optimal Performance Playbook",
-    chapters: {} // Will be populated with default rules on first load
+    chapters: {
+      programming: {
+        rules: [],
+        documents: [],
+        masterProgram: {
+          activeBlockId: "block_007",
+          blocks: [
+            {
+              id: "block_007",
+              name: "Spring Strength Block",
+              description: "6-week strength phase, focus on compound lifts and progressive overload",
+              startDate: "2026-04-20",
+              endDate: "2026-05-31",
+              weekCount: 6,
+              sessionsPerWeek: 4,
+              status: "active",
+              weeks: [
+                {
+                  weekNumber: 1,
+                  sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [
+                      { type: "squat", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "hinge", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "lunge", role: "accessory", sets: 3, reps: "10-12 each" },
+                      { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }
+                    ]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [
+                      { type: "horizontal_push", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "vertical_push", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "tricep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "carry", role: "finisher", sets: 3, reps: "40m" }
+                    ]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [
+                      { type: "hinge", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "squat", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" },
+                      { type: "core_flexion", role: "finisher", sets: 3, reps: "12-15" }
+                    ]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [
+                      { type: "vertical_pull", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "bicep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "rear_delt", role: "finisher", sets: 3, reps: "15-20" }
+                    ]}
+                  ]
+                },
+                {
+                  weekNumber: 2,
+                  sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [
+                      { type: "squat", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "hinge", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "lunge", role: "accessory", sets: 3, reps: "10-12 each" },
+                      { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "12 each" }
+                    ]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [
+                      { type: "horizontal_push", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "vertical_push", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "tricep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "carry", role: "finisher", sets: 3, reps: "50m" }
+                    ]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [
+                      { type: "hinge", role: "primary", sets: 4, reps: "4-5" },
+                      { type: "squat", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" },
+                      { type: "core_flexion", role: "finisher", sets: 3, reps: "15" }
+                    ]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [
+                      { type: "vertical_pull", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "bicep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "rear_delt", role: "finisher", sets: 3, reps: "15-20" }
+                    ]}
+                  ]
+                },
+                { weekNumber: 3, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 5, reps: "5" }, { type: "hinge", role: "secondary", sets: 3, reps: "8" }, { type: "lunge", role: "accessory", sets: 3, reps: "10 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "12 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 5, reps: "5" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "8" }, { type: "tricep", role: "accessory", sets: 3, reps: "12" }, { type: "carry", role: "finisher", sets: 3, reps: "60m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 5, reps: "4" }, { type: "squat", role: "secondary", sets: 3, reps: "8" }, { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "15" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 5, reps: "5" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8" }, { type: "bicep", role: "accessory", sets: 3, reps: "12" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "15" }]}
+                ]},
+                { weekNumber: 4, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 4, reps: "4" }, { type: "hinge", role: "secondary", sets: 3, reps: "6" }, { type: "lunge", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 4, reps: "4" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "6" }, { type: "tricep", role: "accessory", sets: 3, reps: "10" }, { type: "carry", role: "finisher", sets: 3, reps: "60m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 4, reps: "3" }, { type: "squat", role: "secondary", sets: 3, reps: "6" }, { type: "single_leg", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "12" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 4, reps: "4" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "6" }, { type: "bicep", role: "accessory", sets: 3, reps: "10" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "12" }]}
+                ]},
+                { weekNumber: 5, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 5, reps: "3" }, { type: "hinge", role: "secondary", sets: 3, reps: "6" }, { type: "lunge", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 5, reps: "3" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "6" }, { type: "tricep", role: "accessory", sets: 3, reps: "10" }, { type: "carry", role: "finisher", sets: 3, reps: "70m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 5, reps: "2-3" }, { type: "squat", role: "secondary", sets: 3, reps: "6" }, { type: "single_leg", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "12" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 5, reps: "3" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "6" }, { type: "bicep", role: "accessory", sets: 3, reps: "10" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "12" }]}
+                ]},
+                { weekNumber: 6, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 3, reps: "2" }, { type: "hinge", role: "secondary", sets: 2, reps: "5" }, { type: "lunge", role: "accessory", sets: 2, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 2, reps: "8 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 3, reps: "2" }, { type: "vertical_push", role: "secondary", sets: 2, reps: "5" }, { type: "tricep", role: "accessory", sets: 2, reps: "8" }, { type: "carry", role: "finisher", sets: 2, reps: "40m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 3, reps: "2" }, { type: "squat", role: "secondary", sets: 2, reps: "5" }, { type: "single_leg", role: "accessory", sets: 2, reps: "6 each" }, { type: "core_flexion", role: "finisher", sets: 2, reps: "10" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 3, reps: "2" }, { type: "horizontal_pull", role: "secondary", sets: 2, reps: "5" }, { type: "bicep", role: "accessory", sets: 2, reps: "8" }, { type: "rear_delt", role: "finisher", sets: 2, reps: "10" }]}
+                ]}
+              ]
+            },
+            {
+              id: "block_006",
+              name: "Winter Hypertrophy",
+              description: "8-week hypertrophy phase with higher volume and moderate loads",
+              startDate: "2026-02-01",
+              endDate: "2026-03-28",
+              weekCount: 8,
+              sessionsPerWeek: 4,
+              status: "archived",
+              weeks: []
+            }
+          ]
+        }
+      }
+    }
   });
   
   // Canvas state
