@@ -306,6 +306,193 @@ const CLIENT_TYPES = {
 };
 const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
+// ═══════════════════════════════════════════════════════════════
+// SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
+// ═══════════════════════════════════════════════════════════════
+const initialSessions = [
+  {
+    id: "sess_001",
+    time: "8:00 AM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [1], // Marcus Johnson
+    stationAssignments: { 1: "Rack 1" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      1: {
+        exercises: [
+          { id: "ex_01", name: "Barbell Back Squat", sets: 4, reps: "6", weightLast: 275, weightTarget: 285, completed: false, notes: "" },
+          { id: "ex_02", name: "Romanian Deadlift", sets: 3, reps: "8", weightLast: 225, weightTarget: 235, completed: false, notes: "" },
+          { id: "ex_03", name: "Bulgarian Split Squat", sets: 3, reps: "10 each", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_04", name: "Leg Press", sets: 3, reps: "12", weightLast: 360, weightTarget: 380, completed: false, notes: "" },
+          { id: "ex_05", name: "Hanging Leg Raise", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_002",
+    time: "10:00 AM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [0], // Sarah Chen
+    stationAssignments: { 0: "Platform 1" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      0: {
+        exercises: [
+          { id: "ex_06", name: "Goblet Squat", sets: 3, reps: "12", weightLast: 45, weightTarget: 50, completed: false, notes: "" },
+          { id: "ex_07", name: "Dumbbell Bench Press", sets: 3, reps: "10", weightLast: 30, weightTarget: 35, completed: false, notes: "" },
+          { id: "ex_08", name: "Cable Row", sets: 3, reps: "12", weightLast: 60, weightTarget: 65, completed: false, notes: "" },
+          { id: "ex_09", name: "Lateral Raise", sets: 3, reps: "15", weightLast: 12, weightTarget: 15, completed: false, notes: "" },
+          { id: "ex_10", name: "Plank Hold", sets: 3, reps: "45 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_003",
+    time: "2:00 PM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [3], // David Park
+    stationAssignments: { 3: "Platform 2" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      3: {
+        exercises: [
+          { id: "ex_11", name: "Competition Deadlift", sets: 5, reps: "3", weightLast: 405, weightTarget: 415, completed: false, notes: "" },
+          { id: "ex_12", name: "Paused Back Squat", sets: 4, reps: "4", weightLast: 315, weightTarget: 325, completed: false, notes: "" },
+          { id: "ex_13", name: "Barbell Row", sets: 4, reps: "6", weightLast: 185, weightTarget: 195, completed: false, notes: "" },
+          { id: "ex_14", name: "Good Mornings", sets: 3, reps: "10", weightLast: 135, weightTarget: 145, completed: false, notes: "" },
+          { id: "ex_15", name: "Face Pulls", sets: 3, reps: "15", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_004",
+    time: "5:00 PM",
+    duration: "60 min",
+    sessionKind: "semi",
+    clientIds: [12, 13, 4, 5], // Jake Morrison, Olivia Chen, Rachel Kim, Aaron Smith (all Semi-tagged)
+    stationAssignments: { 12: "Rack 1", 13: "Rack 2", 4: "Rack 3", 5: "Rack 4" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      12: { // Jake Morrison - Strength focus
+        exercises: [
+          { id: "ex_j1", name: "Barbell Back Squat", sets: 4, reps: "6", weightLast: 185, weightTarget: 195, completed: false, notes: "" },
+          { id: "ex_j2", name: "Dumbbell Bench Press", sets: 4, reps: "8", weightLast: 55, weightTarget: 60, completed: false, notes: "" },
+          { id: "ex_j3", name: "Barbell Row", sets: 3, reps: "8", weightLast: 135, weightTarget: 145, completed: false, notes: "" },
+          { id: "ex_j4", name: "Dumbbell Shoulder Press", sets: 3, reps: "10", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+          { id: "ex_j5", name: "Cable Tricep Pushdown", sets: 3, reps: "12", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_j6", name: "Plank", sets: 3, reps: "45 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      13: { // Olivia Chen - HIIT/conditioning
+        exercises: [
+          { id: "ex_o1", name: "Kettlebell Swings", sets: 4, reps: "15", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_o2", name: "Box Step-Ups", sets: 3, reps: "12 each", weightLast: 20, weightTarget: 25, completed: false, notes: "" },
+          { id: "ex_o3", name: "TRX Row", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_o4", name: "Medicine Ball Slams", sets: 3, reps: "12", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_o5", name: "Battle Ropes", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_o6", name: "Dead Bug", sets: 3, reps: "10 each", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      4: { // Rachel Kim - Post-pregnancy recovery
+        exercises: [
+          { id: "ex_r1", name: "Goblet Squat", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_r2", name: "Bird Dog", sets: 3, reps: "10 each", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_r3", name: "Glute Bridge", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_r4", name: "Pallof Press", sets: 3, reps: "12 each", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_r5", name: "Cable Pull-Through", sets: 3, reps: "12", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+        ]
+      },
+      5: { // Aaron Smith - Strength building
+        exercises: [
+          { id: "ex_a1", name: "Trap Bar Deadlift", sets: 4, reps: "6", weightLast: 225, weightTarget: 245, completed: false, notes: "" },
+          { id: "ex_a2", name: "Incline Dumbbell Press", sets: 3, reps: "10", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_a3", name: "Lat Pulldown", sets: 3, reps: "12", weightLast: 120, weightTarget: 130, completed: false, notes: "" },
+          { id: "ex_a4", name: "Dumbbell Lunges", sets: 3, reps: "10 each", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_a5", name: "Hammer Curls", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_005",
+    time: "6:00 PM",
+    duration: "60 min",
+    sessionKind: "semi",
+    clientIds: [14, 15, 6], // Chris Taylor, Mia Patel, Lisa Martinez (Semi-tagged)
+    stationAssignments: { 14: "Rack 1", 15: "Rack 2", 6: "Rack 3" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      14: { // Chris Taylor - Beginner basics
+        exercises: [
+          { id: "ex_c1", name: "Bodyweight Squat", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_c2", name: "Push-Up", sets: 3, reps: "10", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_c3", name: "Dumbbell Row", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_c4", name: "Goblet Squat", sets: 3, reps: "10", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_c5", name: "Plank", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      15: { // Mia Patel - Conditioning
+        exercises: [
+          { id: "ex_m1", name: "Dumbbell Thrusters", sets: 4, reps: "12", weightLast: 20, weightTarget: 25, completed: false, notes: "" },
+          { id: "ex_m2", name: "Renegade Rows", sets: 3, reps: "10 each", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_m3", name: "Box Jumps", sets: 3, reps: "10", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_m4", name: "Mountain Climbers", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_m5", name: "Kettlebell Goblet Squat", sets: 3, reps: "15", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_m6", name: "Russian Twist", sets: 3, reps: "20", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+        ]
+      },
+      6: { // Lisa Martinez - Olympic lifting intro
+        exercises: [
+          { id: "ex_l1", name: "Hang Clean", sets: 4, reps: "5", weightLast: 75, weightTarget: 85, completed: false, notes: "" },
+          { id: "ex_l2", name: "Front Squat", sets: 4, reps: "6", weightLast: 95, weightTarget: 105, completed: false, notes: "" },
+          { id: "ex_l3", name: "Push Press", sets: 3, reps: "8", weightLast: 65, weightTarget: 75, completed: false, notes: "" },
+          { id: "ex_l4", name: "Clean Pull", sets: 3, reps: "5", weightLast: 115, weightTarget: 125, completed: false, notes: "" },
+          { id: "ex_l5", name: "Overhead Squat", sets: 3, reps: "8", weightLast: 45, weightTarget: 55, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+];
+
+// Helper to get session display info
+const getSessionKindLabel = (kind) => {
+  switch (kind) {
+    case "pt": return "PT Session";
+    case "semi": return "Semi-Private";
+    case "bootcamp": return "Bootcamp";
+    case "online-checkin": return "Online Check-in";
+    case "assessment": return "Assessment";
+    case "group": return "Group Class";
+    default: return "Session";
+  }
+};
+
+const getSessionStatusBadge = (status, elapsedMin = 0) => {
+  switch (status) {
+    case "scheduled": return { label: "Not started", bg: "#f5f7f6", color: TEXT_SEC };
+    case "in_progress": return { label: `In progress · ${elapsedMin} min elapsed`, bg: TEAL_LIGHT, color: TEAL };
+    case "completed": return { label: "Completed", bg: "#dcfce7", color: "#16a34a" };
+    case "canceled": return { label: "Canceled", bg: "#fee2e2", color: "#dc2626" };
+    default: return { label: status, bg: "#f5f7f6", color: TEXT_SEC };
+  }
+};
+
 // ClientTypePill component - displays a single service type tag
 function ClientTypePill({ type, size = "sm" }) {
   const config = CLIENT_TYPES[type];
@@ -480,6 +667,815 @@ function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION CLIENT TILE - Individual client card within SessionCanvas
+// ═══════════════════════════════════════════════════════════════
+function SessionClientTile({ 
+  client, 
+  clientId,
+  workout, 
+  station, 
+  sessionStatus,
+  onExerciseComplete,
+  onWeightChange,
+  onAddNote,
+  onFlagToggle,
+  onClientClick,
+  isMobile 
+}) {
+  const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
+  const [flagged, setFlagged] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [localWeights, setLocalWeights] = useState({});
+  
+  if (!client || !workout) return null;
+  
+  const exercises = workout.exercises || [];
+  const completedCount = exercises.filter(e => e.completed).length;
+  const isSessionActive = sessionStatus === "in_progress";
+  
+  // Find first incomplete exercise for auto-focus
+  useEffect(() => {
+    const firstIncomplete = exercises.findIndex(e => !e.completed);
+    if (firstIncomplete >= 0) setCurrentExerciseIdx(firstIncomplete);
+  }, [exercises]);
+  
+  const handleExerciseClick = (idx) => {
+    if (isSessionActive) setCurrentExerciseIdx(idx);
+  };
+  
+  const handleCheckboxClick = (idx, exercise) => {
+    if (!isSessionActive) return;
+    onExerciseComplete?.(clientId, exercise.id, !exercise.completed);
+    // Auto-advance to next incomplete
+    if (!exercise.completed) {
+      const nextIncomplete = exercises.findIndex((e, i) => i > idx && !e.completed);
+      if (nextIncomplete >= 0) setCurrentExerciseIdx(nextIncomplete);
+    }
+  };
+  
+  const handleWeightChange = (exerciseId, value) => {
+    setLocalWeights(prev => ({ ...prev, [exerciseId]: value }));
+    onWeightChange?.(clientId, exerciseId, value);
+  };
+  
+  return (
+    <div style={{
+      background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`,
+      padding: 20, minHeight: 400, display: "flex", flexDirection: "column",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      transition: "box-shadow 0.2s, transform 0.2s"
+    }}
+    onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}}
+    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}}
+    >
+      {/* Tile Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+        <div 
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+          onClick={() => onClientClick?.(clientId)}
+        >
+          <div style={{
+            width: 40, height: 40, borderRadius: "50%", 
+            background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14, fontWeight: 600, color: TEAL
+          }}>
+            {client.name?.split(" ").map(n => n[0]).join("")}
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{client.name}</div>
+            {station && <div style={{ fontSize: 12, color: TEXT_SEC }}>{station}</div>}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <ClientTypePill type={client.clientTypes?.[0] || "Semi"} size="sm" />
+          <button
+            onClick={() => { setFlagged(!flagged); onFlagToggle?.(clientId, !flagged); }}
+            style={{
+              width: 28, height: 28, borderRadius: 6, border: `1px solid ${flagged ? "#f87171" : BORDER}`,
+              background: flagged ? "#fef2f2" : "transparent", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: flagged ? "#ef4444" : TEXT_SEC, transition: "all 0.15s"
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={flagged ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+              <line x1="4" y1="22" x2="4" y2="15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Workout List */}
+      <div style={{ flex: 1, overflowY: "auto", marginBottom: 12 }}>
+        {exercises.map((exercise, idx) => {
+          const isCurrent = idx === currentExerciseIdx && isSessionActive;
+          const localWeight = localWeights[exercise.id];
+          
+          return (
+            <div 
+              key={exercise.id}
+              onClick={() => handleExerciseClick(idx)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                borderRadius: 8, marginBottom: 4, cursor: isSessionActive ? "pointer" : "default",
+                background: exercise.completed ? "#f9fbfa" : (isCurrent ? `${TEAL}08` : "#f9fbfa"),
+                borderLeft: isCurrent ? `3px solid ${TEAL}` : "3px solid transparent",
+                transition: "all 0.15s"
+              }}
+            >
+              {/* Exercise Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  fontSize: 14, fontWeight: 500, color: exercise.completed ? TEXT_SEC : TEXT,
+                  textDecoration: exercise.completed ? "line-through" : "none"
+                }}>
+                  {exercise.name}
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  {exercise.sets} × {exercise.reps}
+                </div>
+              </div>
+              
+              {/* Weight Input */}
+              {exercise.weightTarget > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <input
+                      type="number"
+                      value={localWeight !== undefined ? localWeight : exercise.weightTarget}
+                      onChange={(e) => handleWeightChange(exercise.id, parseInt(e.target.value) || 0)}
+                      disabled={!isSessionActive}
+                      style={{
+                        width: 50, padding: "4px 6px", borderRadius: 6, fontSize: 13,
+                        border: `1px solid ${BORDER}`, textAlign: "right",
+                        background: isSessionActive ? WHITE : "#f5f7f6",
+                        color: TEXT
+                      }}
+                    />
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>lbs</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
+                    Last: {exercise.weightLast}
+                  </div>
+                </div>
+              )}
+              
+              {/* Checkbox */}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCheckboxClick(idx, exercise); }}
+                disabled={!isSessionActive}
+                style={{
+                  width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                  border: `2px solid ${exercise.completed ? TEAL : BORDER}`,
+                  background: exercise.completed ? TEAL : "transparent",
+                  cursor: isSessionActive ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s", opacity: isSessionActive ? 1 : 0.5
+                }}
+              >
+                {exercise.completed && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Tile Footer */}
+      <div style={{ 
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingTop: 12, borderTop: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setShowNoteInput(!showNoteInput)}
+            style={{
+              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Note
+          </button>
+          <button
+            style={{
+              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
+              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
+            </svg>
+            Swap
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>
+          {completedCount} of {exercises.length} complete
+        </div>
+      </div>
+      
+      {/* Note Input */}
+      {showNoteInput && (
+        <div style={{ marginTop: 12 }}>
+          <textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Add a note for this client..."
+            style={{
+              width: "100%", padding: 10, borderRadius: 8, fontSize: 13,
+              border: `1px solid ${BORDER}`, resize: "none", minHeight: 60,
+              fontFamily: "inherit"
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              onClick={() => { onAddNote?.(clientId, noteText); setNoteText(""); setShowNoteInput(false); }}
+              style={{
+                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => { setNoteText(""); setShowNoteInput(false); }}
+              style={{
+                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                background: "#f5f7f6", color: TEXT_SEC, border: "none", cursor: "pointer"
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION CANVAS - Full-screen session view for PT & Semi-Private
+// ═══════════════════════════════════════════════════════════════
+function SessionCanvas({ 
+  session, 
+  clients, 
+  onBack, 
+  onUpdateSession,
+  onOpenFullProfile,
+  isMobile 
+}) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [drawerClientId, setDrawerClientId] = useState(null);
+  
+  // Timer for in-progress sessions
+  useEffect(() => {
+    if (session?.status !== "in_progress") return;
+    
+    const startTime = session.startedAt ? new Date(session.startedAt).getTime() : Date.now();
+    const updateElapsed = () => {
+      const now = Date.now();
+      setElapsedSeconds(Math.floor((now - startTime) / 1000));
+    };
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [session?.status, session?.startedAt]);
+  
+  if (!session) return null;
+  
+  const sessionClients = session.clientIds.map(id => clients[id]).filter(Boolean);
+  const clientCount = sessionClients.length;
+  const elapsedMin = Math.floor(elapsedSeconds / 60);
+  const statusBadge = getSessionStatusBadge(session.status, elapsedMin);
+  
+  // Calculate grid layout based on client count
+  const getGridStyle = () => {
+    if (isMobile || clientCount === 1) {
+      return { display: "flex", flexDirection: "column", gap: 16 };
+    }
+    if (clientCount === 2) {
+      return { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
+    }
+    if (clientCount === 3) {
+      return { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 };
+    }
+    if (clientCount === 4) {
+      return { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 };
+    }
+    return { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 };
+  };
+  
+  const handleStartSession = () => {
+    onUpdateSession?.({
+      ...session,
+      status: "in_progress",
+      startedAt: new Date().toISOString()
+    });
+  };
+  
+  const handleEndSession = () => {
+    onUpdateSession?.({
+      ...session,
+      status: "completed",
+      completedAt: new Date().toISOString()
+    });
+    setShowEndConfirm(false);
+  };
+  
+  const handleExerciseComplete = (clientId, exerciseId, completed) => {
+    const updatedWorkouts = { ...session.workouts };
+    if (updatedWorkouts[clientId]) {
+      updatedWorkouts[clientId] = {
+        ...updatedWorkouts[clientId],
+        exercises: updatedWorkouts[clientId].exercises.map(ex =>
+          ex.id === exerciseId ? { ...ex, completed } : ex
+        )
+      };
+    }
+    onUpdateSession?.({ ...session, workouts: updatedWorkouts });
+  };
+  
+  const handleWeightChange = (clientId, exerciseId, weight) => {
+    const updatedWorkouts = { ...session.workouts };
+    if (updatedWorkouts[clientId]) {
+      updatedWorkouts[clientId] = {
+        ...updatedWorkouts[clientId],
+        exercises: updatedWorkouts[clientId].exercises.map(ex =>
+          ex.id === exerciseId ? { ...ex, weightTarget: weight } : ex
+        )
+      };
+    }
+    onUpdateSession?.({ ...session, workouts: updatedWorkouts });
+  };
+  
+  // Session Summary View
+  if (session.status === "completed") {
+    const totalExercises = Object.values(session.workouts).reduce((sum, w) => sum + w.exercises.length, 0);
+    const completedExercises = Object.values(session.workouts).reduce((sum, w) => sum + w.exercises.filter(e => e.completed).length, 0);
+    
+    return (
+      <div style={{ 
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+        background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column"
+      }}>
+        {/* Summary Header */}
+        <div style={{
+          height: 72, padding: "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>Session Complete</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC }}>{elapsedMin} min · {clientCount} client{clientCount > 1 ? "s" : ""}</div>
+          </div>
+        </div>
+        
+        {/* Summary Content */}
+        <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+          <div style={{ maxWidth: 600, margin: "0 auto" }}>
+            <div style={{ 
+              background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, 
+              padding: 20, marginBottom: 16 
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 16 }}>Session Summary</div>
+              {sessionClients.map((client, idx) => {
+                const workout = session.workouts[session.clientIds[idx]];
+                const completed = workout?.exercises.filter(e => e.completed).length || 0;
+                const total = workout?.exercises.length || 0;
+                return (
+                  <div key={idx} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 0",
+                    borderBottom: idx < sessionClients.length - 1 ? `1px solid ${BORDER}` : "none"
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", 
+                      background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 600, color: TEAL
+                    }}>
+                      {client?.name?.split(" ").map(n => n[0]).join("")}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client?.name}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{completed}/{total} exercises</div>
+                    </div>
+                    {completed === total && (
+                      <div style={{ 
+                        padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                        background: "#dcfce7", color: "#16a34a"
+                      }}>
+                        Complete
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={onBack}
+              style={{
+                width: "100%", padding: "14px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+              }}
+            >
+              Back to Today
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ 
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+      background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column"
+    }}>
+      {/* Header Bar */}
+      <div style={{
+        height: 72, padding: "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0
+      }}>
+        {/* Left: Back + Title */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={onBack}
+            style={{
+              width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              color: TEXT_SEC
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
+              {getSessionKindLabel(session.sessionKind)} · {session.time}
+            </div>
+            <div style={{ fontSize: 13, color: TEXT_SEC }}>
+              {clientCount} client{clientCount > 1 ? "s" : ""} · {session.duration}
+            </div>
+          </div>
+        </div>
+        
+        {/* Center: Status Badge */}
+        {!isMobile && (
+          <div style={{
+            padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 500,
+            background: statusBadge.bg, color: statusBadge.color
+          }}>
+            {statusBadge.label}
+          </div>
+        )}
+        
+        {/* Right: Action Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {session.status === "scheduled" && (
+            <button
+              onClick={handleStartSession}
+              style={{
+                padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                boxShadow: `0 2px 8px ${TEAL}40`
+              }}
+            >
+              Start Session
+            </button>
+          )}
+          {session.status === "in_progress" && (
+            <button
+              onClick={() => setShowEndConfirm(true)}
+              style={{
+                padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600,
+                background: "transparent", color: TEAL, border: `2px solid ${TEAL}`, cursor: "pointer"
+              }}
+            >
+              End Session
+            </button>
+          )}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              style={{
+                width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+              </svg>
+            </button>
+            {showMenu && (
+              <div style={{
+                position: "absolute", top: "100%", right: 0, marginTop: 4,
+                background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: 180, zIndex: 10
+              }}>
+                {["Add client", "Remove client", "Cancel session", "Notes"].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setShowMenu(false)}
+                    style={{
+                      width: "100%", padding: "10px 14px", fontSize: 13, color: item === "Cancel session" ? "#dc2626" : TEXT,
+                      background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                      borderBottom: i < 3 ? `1px solid ${BORDER}` : "none"
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Mobile Status Badge */}
+      {isMobile && (
+        <div style={{ padding: "12px 24px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{
+            padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+            background: statusBadge.bg, color: statusBadge.color, textAlign: "center"
+          }}>
+            {statusBadge.label}
+          </div>
+        </div>
+      )}
+      
+      {/* Tile Grid */}
+      <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+        <div style={clientCount === 1 ? { maxWidth: 720, margin: "0 auto" } : getGridStyle()}>
+          {session.clientIds.map((clientId) => (
+            <SessionClientTile
+              key={clientId}
+              client={clients[clientId]}
+              clientId={clientId}
+              workout={session.workouts[clientId]}
+              station={session.stationAssignments?.[clientId]}
+              sessionStatus={session.status}
+              onExerciseComplete={handleExerciseComplete}
+              onWeightChange={handleWeightChange}
+              onClientClick={(cid) => setDrawerClientId(cid)}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Client Context Drawer */}
+      <ClientContextDrawer
+        isOpen={drawerClientId !== null}
+        onClose={() => setDrawerClientId(null)}
+        client={drawerClientId !== null ? clients[drawerClientId] : null}
+        onOpenFullProfile={() => onOpenFullProfile?.(drawerClientId)}
+      />
+      
+      {/* End Session Confirmation Modal */}
+      {showEndConfirm && (
+        <div 
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setShowEndConfirm(false)}
+        >
+          <div 
+            style={{
+              background: WHITE, borderRadius: 16, padding: 24, width: "min(360px, 90vw)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "0 0 8px" }}>End session?</h3>
+            <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 20px" }}>
+              Any unlogged weights will be saved as-is.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                style={{
+                  flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEndSession}
+                style={{
+                  flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                }}
+              >
+                End Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENT CONTEXT DRAWER - Quick reference pane during sessions
+// ═══════════════════════════════════════════════════════════════
+function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
+  if (!isOpen || !client) return null;
+  
+  // Mock data for last sessions - in real app, this would come from client data
+  const lastSessions = [
+    { date: "Mar 12", type: "PT Session", completed: "6/6" },
+    { date: "Mar 8", type: "Semi-Private", completed: "5/6" },
+    { date: "Mar 5", type: "PT Session", completed: "6/6" },
+  ];
+  
+  // Mock goals
+  const goals = [
+    { name: client.goals?.primary || "Lose 15 lbs", progress: 65 },
+    { name: "Squat 200 lbs", progress: 85 },
+  ];
+  
+  // Mock coach notes
+  const recentNotes = [
+    { date: "Mar 12", text: "Great session today. Form improving on deadlifts." },
+    { date: "Mar 8", text: "Slight knee discomfort on squats - monitor next session." },
+    { date: "Mar 1", text: "Increased bench weight successfully. Ready for next progression." },
+  ];
+  
+  const sessionCount = client.totalSessions || 24;
+  
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.3)", zIndex: 1001
+        }}
+        onClick={onClose}
+      />
+      
+      {/* Drawer */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "min(360px, 90vw)",
+        background: WHITE, zIndex: 1002, boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.2s ease"
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px", borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Client Quick View</span>
+          <button
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 6, border: "none",
+              background: "transparent", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+          {/* Client Hero */}
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 14, marginBottom: 24,
+            padding: 16, background: `linear-gradient(135deg, ${TEAL}08, ${MINT}08)`,
+            borderRadius: 12
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", 
+              background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, fontWeight: 600, color: TEAL
+            }}>
+              {client.name?.split(" ").map(n => n[0]).join("")}
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{client.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+              </div>
+              <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                Session {sessionCount} with you
+              </div>
+            </div>
+          </div>
+          
+          {/* Last 3 Sessions */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Recent Sessions
+            </div>
+            {lastSessions.map((session, idx) => (
+              <div key={idx} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 0", borderBottom: idx < lastSessions.length - 1 ? `1px solid ${BORDER}` : "none"
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{session.type}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>{session.date}</div>
+                </div>
+                <div style={{ 
+                  fontSize: 12, fontWeight: 500, color: session.completed === "6/6" ? "#16a34a" : TEXT_SEC 
+                }}>
+                  {session.completed} exercises
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Goals */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Active Goals
+            </div>
+            {goals.map((goal, idx) => (
+              <div key={idx} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: TEXT }}>{goal.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: TEAL }}>{goal.progress}%</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: "#e8f5f3" }}>
+                  <div style={{ 
+                    width: `${goal.progress}%`, height: "100%", borderRadius: 3,
+                    background: `linear-gradient(90deg, ${TEAL}, ${MINT})`
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Recent Notes */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Coach Notes
+            </div>
+            {recentNotes.map((note, idx) => (
+              <div key={idx} style={{
+                padding: "10px 12px", background: "#f9fbfa", borderRadius: 8, marginBottom: 8
+              }}>
+                <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 4 }}>{note.date}</div>
+                <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.4 }}>{note.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => { onOpenFullProfile?.(); onClose(); }}
+            style={{
+              width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: "transparent", color: TEAL, border: `2px solid ${TEAL}`,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+            }}
+          >
+            Open full profile
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
   );
 }
 
@@ -2451,7 +3447,9 @@ function MobileCanvasSheet({
   brainDocuments,
   setBrainDocuments,
   pendingDashboardEdit,
-  onDashboardEditProcessed
+  onDashboardEditProcessed,
+  sessions,
+  onSessionClick
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2682,6 +3680,9 @@ isMobile={true}
               isMobile={true}
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
+              sessions={sessions}
+              clients={clients}
+              onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
             />
           )}
         </div>
@@ -6789,7 +7790,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
   );
 }
 
-function ScheduleCanvas({ onClose, onHome, isMobile }) {
+function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = [], onSessionClick }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("week"); // week or month
@@ -6797,23 +7798,46 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
   
   const categories = [
     { id: "session", label: "Sessions", color: TEAL },
+    { id: "semi", label: "Semi-Private", color: "#1f7a3e" },
     { id: "meeting", label: "Meetings", color: "#6366f1" },
     { id: "backoffice", label: "Back Office", color: "#f59e0b" },
     { id: "work", label: "Work Hours", color: "#94a3b8" }
   ];
   
-  const events = [
-    { id: 1, title: "Sarah Chen - Check-in", category: "session", day: 0, start: 9, duration: 1 },
-    { id: 2, title: "Marcus Johnson - Training", category: "session", day: 0, start: 14, duration: 1.5 },
+  // Convert sessions to calendar events (for today - Sunday = day 0)
+  const sessionEvents = sessions.map((sess, idx) => {
+    const timeMatch = sess.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    let startHour = 8;
+    if (timeMatch) {
+      startHour = parseInt(timeMatch[1]);
+      if (timeMatch[3].toUpperCase() === "PM" && startHour !== 12) startHour += 12;
+      if (timeMatch[3].toUpperCase() === "AM" && startHour === 12) startHour = 0;
+    }
+    const clientNames = sess.clientIds.map(id => clients[id]?.name?.split(" ")[0] || "Client").join(", ");
+    return {
+      id: `sess_${sess.id}`,
+      sessionId: sess.id,
+      title: sess.sessionKind === "semi" 
+        ? `Semi-Private (${sess.clientIds.length})`
+        : `${clientNames} - ${getSessionKindLabel(sess.sessionKind)}`,
+      category: sess.sessionKind === "semi" ? "semi" : "session",
+      day: 0, // Today (Sunday in this demo)
+      start: startHour,
+      duration: 1,
+      isSession: true,
+      status: sess.status
+    };
+  });
+  
+  const staticEvents = [
     { id: 3, title: "Team Standup", category: "meeting", day: 1, start: 10, duration: 0.5 },
-    { id: 4, title: "Emily Rodriguez - Assessment", category: "session", day: 1, start: 13, duration: 1 },
     { id: 5, title: "Content Planning", category: "backoffice", day: 2, start: 9, duration: 2 },
-    { id: 6, title: "Alex Kim - Progress Review", category: "session", day: 2, start: 15, duration: 1 },
     { id: 7, title: "Client Onboarding Call", category: "meeting", day: 3, start: 11, duration: 1 },
     { id: 8, title: "Program Updates", category: "backoffice", day: 3, start: 14, duration: 1.5 },
-    { id: 9, title: "Group Session - Nutrition", category: "session", day: 4, start: 10, duration: 1.5 },
     { id: 10, title: "Admin & Billing", category: "backoffice", day: 4, start: 16, duration: 1 },
   ];
+  
+  const events = [...sessionEvents, ...staticEvents];
   
   const workHours = { start: 8, end: 18 };
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -7010,10 +8034,17 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
                   {/* Events */}
                   {dayEvents.map(event => {
                     const slotHeight = isMobile ? 50 : 60;
+                    const handleEventClick = () => {
+                      if (event.isSession && event.sessionId && onSessionClick) {
+                        onSessionClick(event.sessionId);
+                      } else {
+                        setSelectedEvent(event);
+                      }
+                    };
                     return (
                     <div
                       key={event.id}
-                      onClick={() => setSelectedEvent(event)}
+                      onClick={handleEventClick}
                       style={{
                         position: "absolute",
                         top: (event.start - workHours.start) * slotHeight + 2,
@@ -7028,14 +8059,23 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
                       onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}25`; }}
                       onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}15`; }}
                     >
-                      <div style={{
-                        fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
-                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                      }}>
-                        {event.title}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{
+                          fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
+                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1
+                        }}>
+                          {event.title}
+                        </div>
+                        {event.isSession && event.status === "in_progress" && (
+                          <div style={{
+                            width: 8, height: 8, borderRadius: "50%", background: TEAL,
+                            animation: "pulse 2s infinite"
+                          }} />
+                        )}
                       </div>
                       <div style={{ fontSize: isMobile ? 12 : 10, color: TEXT_SEC, marginTop: 2 }}>
                         {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"} · {event.duration}hr
+                        {event.isSession && ` · ${event.status === "in_progress" ? "In progress" : (event.status === "completed" ? "Done" : "")}`}
                       </div>
                     </div>
                   );})}
@@ -13909,6 +14949,10 @@ export default function MiltonDashboard() {
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
 
+  // Session state for Semi-Private and PT sessions
+  const [sessions, setSessions] = useState([...initialSessions]);
+  const [activeSessionId, setActiveSessionId] = useState(null); // When set, shows SessionCanvas
+  
   // Canvas state
   const [canvasMode, setCanvasMode] = useState(false);
   const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report' | 'aiEngine'
@@ -14417,9 +15461,32 @@ export default function MiltonDashboard() {
 
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
+  // Handler for updating sessions
+  const handleUpdateSession = (updatedSession) => {
+    setSessions(prev => prev.map(s => s.id === updatedSession.id ? updatedSession : s));
+  };
+
+  // Get active session
+  const activeSession = activeSessionId ? sessions.find(s => s.id === activeSessionId) : null;
+
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+      {/* ═══ SESSION CANVAS (Full-screen when active) ═══ */}
+      {activeSession && (
+        <SessionCanvas
+          session={activeSession}
+          clients={clients}
+          onBack={() => setActiveSessionId(null)}
+          onUpdateSession={handleUpdateSession}
+          onOpenFullProfile={(clientId) => {
+            setActiveSessionId(null);
+            setSelectedClient(clientId);
+          }}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* ═══ MOBILE HEADER BAR ═══ */}
       {isMobile && (
@@ -14680,6 +15747,9 @@ isMobile={isMobile}
   isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
+  sessions={sessions}
+  clients={clients}
+  onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
   />
   )}
   </div>
@@ -15381,6 +16451,8 @@ isMobile={isMobile}
   setBrainDocuments={setBrainDocuments}
   pendingDashboardEdit={pendingDashboardEdit}
   onDashboardEditProcessed={handleDashboardEditResult}
+  sessions={sessions}
+  onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
   />
   )}
 
