@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���═══════════════════════════════
+// ═══════════════════════════════�����═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -4083,7 +4083,9 @@ function MobileCanvasSheet({
   onDashboardEditProcessed,
   sessions,
   onSessionClick,
-  onCreateSession
+  onCreateSession,
+  onUpdateSession,
+  onOpenFullProfile
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -4329,8 +4331,21 @@ isMobile={true}
               isMobile={true}
               onClose={() => setCanvasType("templates")}
               onHome={() => setCanvasType("templates")}
-              onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
+              onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
               onCreateSession={onCreateSession}
+            />
+          )}
+          {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
+            <SessionCanvas
+              session={sessions.find(s => s.id === canvasData.sessionId)}
+              clients={clients}
+              isMobile={true}
+              onBack={() => setCanvasType("semiPrivate")}
+              onUpdateSession={onUpdateSession}
+              onOpenFullProfile={(clientId) => {
+                onClose();
+                onOpenFullProfile?.(clientId);
+              }}
             />
           )}
         </div>
@@ -16535,8 +16550,23 @@ isMobile={isMobile}
   isMobile={isMobile}
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
-  onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
+  onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
   onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  />
+  )}
+  {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
+  <SessionCanvas
+  session={sessions.find(s => s.id === canvasData.sessionId)}
+  clients={clients}
+  isMobile={isMobile}
+  onBack={() => setCanvasType("semiPrivate")}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => {
+    setCanvasMode(false);
+    setCanvasData(null);
+    setCanvasType(null);
+    setSelectedClient(clientId);
+  }}
   />
   )}
   {canvasType === "schedule" && (
@@ -17251,6 +17281,8 @@ isMobile={isMobile}
   sessions={sessions}
   onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
   onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => { setCanvasMode(false); setSelectedClient(clientId); }}
   />
   )}
 
