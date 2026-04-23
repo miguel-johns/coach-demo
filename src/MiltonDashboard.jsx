@@ -4214,6 +4214,9 @@ clientName: "New Client",
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "semiPrivate") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
   setCanvasData({});
@@ -16427,6 +16430,9 @@ export default function MiltonDashboard() {
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "semiPrivate") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
   setCanvasData({});
