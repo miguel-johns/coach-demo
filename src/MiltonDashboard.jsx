@@ -3743,7 +3743,7 @@ isMobile={true}
   );
 }
 
-/* ═════════════════════════���══════════════���══
+/* ═══════════════════��═════���══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -10319,7 +10319,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
-═════════════════════════════════════════════ */
+══════════════════════════════════���══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
@@ -12256,6 +12256,25 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
   const [linkCopied, setLinkCopied] = useState(false);
   
+  // Completed workouts tracking - key is "YYYY-MM-DD" date string
+  const [completedWorkouts, setCompletedWorkouts] = useState({});
+  
+  // Toggle workout completion for a specific date
+  const toggleWorkoutComplete = (date, e) => {
+    e.stopPropagation(); // Prevent opening the expanded day view
+    const dateKey = date.toISOString().split('T')[0];
+    setCompletedWorkouts(prev => ({
+      ...prev,
+      [dateKey]: !prev[dateKey]
+    }));
+  };
+  
+  // Check if a workout is completed
+  const isWorkoutCompleted = (date) => {
+    const dateKey = date.toISOString().split('T')[0];
+    return !!completedWorkouts[dateKey];
+  };
+  
   // Calendar month navigation
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date();
@@ -13059,20 +13078,63 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                           Rest
                         </div>
                       ) : (
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                          {/* Workout title */}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+                          {/* Completion overlay when completed */}
+                          {isWorkoutCompleted(cellDate) && (
+                            <div style={{
+                              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                              background: "rgba(255,255,255,0.7)", zIndex: 1,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              pointerEvents: "none"
+                            }}>
+                              <div style={{
+                                width: 48, height: 48, borderRadius: "50%",
+                                background: "#dcfce7", border: "3px solid #16a34a",
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Workout title with completion toggle */}
                           <div style={{ 
                             padding: "8px 10px", 
-                            background: TEAL_LIGHT,
-                            borderBottom: `1px solid ${BORDER}`
+                            background: isWorkoutCompleted(cellDate) ? "#dcfce7" : TEAL_LIGHT,
+                            borderBottom: `1px solid ${BORDER}`,
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            gap: 8
                           }}>
                             <div style={{ 
-                              fontSize: 10, fontWeight: 700, color: TEXT,
+                              fontSize: 10, fontWeight: 700, color: isWorkoutCompleted(cellDate) ? "#16a34a" : TEXT,
                               textTransform: "uppercase", letterSpacing: "0.02em",
-                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                              flex: 1
                             }}>
                               {workout.title}
                             </div>
+                            {/* Completion checkbox */}
+                            <button
+                              onClick={(e) => toggleWorkoutComplete(cellDate, e)}
+                              style={{
+                                width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                                border: `2px solid ${isWorkoutCompleted(cellDate) ? "#16a34a" : BORDER}`,
+                                background: isWorkoutCompleted(cellDate) ? "#16a34a" : "transparent",
+                                cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                transition: "all 0.15s ease",
+                                zIndex: 2
+                              }}
+                              title={isWorkoutCompleted(cellDate) ? "Mark as incomplete" : "Mark as complete"}
+                            >
+                              {isWorkoutCompleted(cellDate) && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              )}
+                            </button>
                           </div>
                           
                           {/* Exercises list */}
@@ -13187,6 +13249,35 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
               </div>
             </div>
             
+            {/* Mark Complete Button */}
+            {expandedDay.date && (
+              <button
+                onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
+                style={{
+                  padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : "#f0f4f3",
+                  color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : TEXT,
+                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent"}`,
+                  cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8,
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: 4,
+                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : BORDER}`,
+                  background: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {isWorkoutCompleted(expandedDay.date) && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+                {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
+              </button>
+            )}
           </div>
           
           {/* Mobile: Card-based exercise list */}
@@ -13298,6 +13389,40 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   <div style={{ fontSize: 11, color: TEXT_SEC }}>Minutes</div>
                 </div>
               </div>
+              
+              {/* Mobile Mark Complete Button */}
+              {expandedDay.date && (
+                <button
+                  onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
+                  style={{
+                    width: "100%", padding: "16px", borderRadius: 12, marginTop: 12,
+                    fontSize: 15, fontWeight: 600,
+                    background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : TEAL,
+                    color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : WHITE,
+                    border: isWorkoutCompleted(expandedDay.date) ? "2px solid #16a34a" : "none",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  {isWorkoutCompleted(expandedDay.date) ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Workout Completed
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Mark as Complete
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           ) : (
           /* Desktop: Spreadsheet Style */
