@@ -19104,126 +19104,11 @@ export default function MiltonDashboard() {
             ))}
           </div>
         </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: "auto" }}>
-              {Array.from({ length: 12 }).map((_, j) => {
-                const colors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#6aa84f", "#e06666", "#f6b26b", "#8e7cc3", "#2B7A78", "#3aafa9", "#45818e", "#5CDB95"];
-                return (
-                  <svg key={j} width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 26 26">
-                    <circle cx="13" cy="10" r="5" fill={colors[j]} opacity="0.85"/>
-                    <ellipse cx="13" cy="22" rx="7" ry="5" fill={colors[j]} opacity="0.5"/>
-                  </svg>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* ── Card 2: Attendance Rate - Dot Grid ── */}
-          <div style={{
-            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
-            opacity: animatedKPIs[1] ? 1 : 0, transform: animatedKPIs[1] ? "translateY(0)" : "translateY(12px)",
-            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
-            minWidth: 0, overflow: "hidden"
-          }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Attendance Rate</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>83%</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +12%
-              </span>
-            </div>
-            {(() => {
-              const total = 12;
-              const engaged = 10;
-              const dotSize = isMobile ? 20 : 24;
-              const engagedColors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#2B7A78", "#3aafa9", "#6aa84f", "#5CDB95", "#45818e", "#2B7A78"];
-              return (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 5 : 6, marginTop: "auto" }}>
-                  {Array.from({ length: total }).map((_, j) => {
-                    const isEngaged = j < engaged;
-                    return (
-                      <div key={j} style={{
-                        width: dotSize, height: dotSize, borderRadius: "50%",
-                        background: isEngaged ? engagedColors[j] : "transparent",
-                        border: isEngaged ? "none" : `2px dashed #c8d8d4`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        transition: "all 0.4s ease",
-                        transitionDelay: `${j * 0.04}s`
-                      }}>
-                        {isEngaged && (
-                          <svg width={dotSize * 0.5} height={dotSize * 0.5} viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="2,6 5,9 10,3" />
-                          </svg>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 500, marginTop: 8 }}>
-              <span style={{ fontWeight: 700, color: TEXT }}>10</span> of 12 clients engaged
-            </div>
-          </div>
-
-          {/* ── Card 3: Client Growth - Progressive Bar Chart �����─ */}
-          <div style={{
-            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
-            opacity: animatedKPIs[2] ? 1 : 0, transform: animatedKPIs[2] ? "translateY(0)" : "translateY(12px)",
-            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
-            minWidth: 0, overflow: "hidden"
-          }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Client Growth</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 10 : 14 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>12</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +12
-              </span>
-            </div>
-            {(() => {
-              const months = [
-                { label: "Jul", value: 1 },
-                { label: "Aug", value: 2 },
-                { label: "Sep", value: 3 },
-                { label: "Oct", value: 5 },
-                { label: "Nov", value: 7 },
-                { label: "Dec", value: 8 },
-                { label: "Jan", value: 10 },
-                { label: "Feb", value: 12 },
-              ];
-              const maxVal = 12;
-              const barH = isMobile ? 50 : 60;
-              return (
-                <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 3 : 5, flex: 1, marginTop: "auto" }}>
-                  {months.map((m, j) => {
-                    const h = Math.max(3, (m.value / maxVal) * barH);
-                    const isLast = j === months.length - 1;
-                    const intensity = 0.15 + (j / (months.length - 1)) * 0.85;
-                    return (
-                      <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 4 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: isLast ? TEAL : TEXT_SEC }}>
-                          {m.value}
-                        </span>
-                        <div style={{
-                          width: "100%", height: h, borderRadius: 4,
-                          background: isLast
-                            ? `linear-gradient(180deg, ${TEAL}, ${SAGE})`
-                            : `rgba(43,122,120,${intensity})`,
-                          transition: "height 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-                          transitionDelay: `${j * 0.07}s`
-                        }} />
-                        <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 500 }}>{m.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </div>
-
+        {/* Old Cards 3-4 conditionally hidden for reference */}
+        {false && <>
+          {/* ── Old Card 3 ── */}
+          <div></div>
           {/* ── Card 4: Success Rate - Progressive Bar Chart ���─ */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
@@ -19281,8 +19166,7 @@ export default function MiltonDashboard() {
               );
             })()}
           </div>
-
-        </div>
+        </>}
 
         {/* Coaching Queue */}
         <div style={{
