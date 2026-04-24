@@ -695,10 +695,17 @@ function SessionClientTile({
   const [setCompletions, setSetCompletions] = useState({}); // { exerciseId: { 1: true, 2: false, 3: false } }
   const [setWeights, setSetWeights] = useState({}); // { exerciseId: { 1: 185, 2: 185, 3: 195 } }
   const [showSwapModal, setShowSwapModal] = useState(null); // exerciseId to swap
+  const [editingExercise, setEditingExercise] = useState(null); // { id, sets, reps, weight }
+  const [localExercises, setLocalExercises] = useState(exercises); // Local copy for editing
   
   if (!client || !workout) return null;
   
-  const exercises = workout.exercises || [];
+  const workoutExercises = workout.exercises || [];
+  // Use local state to allow editing
+  useEffect(() => {
+    setLocalExercises(workoutExercises);
+  }, [workout]);
+  const exercises = localExercises.length > 0 ? localExercises : workoutExercises;
   const completedCount = exercises.filter(e => e.completed).length;
   const isSessionActive = sessionStatus === "in_progress";
   
@@ -764,8 +771,40 @@ function SessionClientTile({
   };
   
   const handleSwapExercise = (exerciseId, newExercise) => {
-    // Would update the workout with the new exercise
+    // Update the local exercises with the swapped exercise
+    setLocalExercises(prev => prev.map(ex => 
+      ex.id === exerciseId ? { ...ex, name: newExercise } : ex
+    ));
     setShowSwapModal(null);
+  };
+  
+  const handleOpenEditModal = (exercise) => {
+    setEditingExercise({
+      id: exercise.id,
+      name: exercise.name,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      weight: exercise.weightTarget || 0
+    });
+  };
+  
+  const handleSaveEdit = () => {
+    if (!editingExercise) return;
+    setLocalExercises(prev => prev.map(ex => 
+      ex.id === editingExercise.id 
+        ? { ...ex, sets: editingExercise.sets, reps: editingExercise.reps, weightTarget: editingExercise.weight }
+        : ex
+    ));
+    // Re-initialize set completions/weights for the new set count
+    const initialCompletions = {};
+    const initialWeights = {};
+    for (let i = 1; i <= editingExercise.sets; i++) {
+      initialCompletions[i] = setCompletions[editingExercise.id]?.[i] || false;
+      initialWeights[i] = editingExercise.weight;
+    }
+    setSetCompletions(prev => ({ ...prev, [editingExercise.id]: initialCompletions }));
+    setSetWeights(prev => ({ ...prev, [editingExercise.id]: initialWeights }));
+    setEditingExercise(null);
   };
   
   const handleCheckboxClick = (idx, exercise) => {
@@ -1013,7 +1052,7 @@ function SessionClientTile({
                       Swap exercise
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); /* Edit exercise */ }}
+                      onClick={(e) => { e.stopPropagation(); handleOpenEditModal(exercise); }}
                       style={{
                         padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
                         background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
@@ -1192,6 +1231,139 @@ function SessionClientTile({
                 }}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Sets/Reps Modal */}
+      {editingExercise && (
+        <div 
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setEditingExercise(null)}
+        >
+          <div 
+            style={{
+              background: WHITE, borderRadius: 16, width: "min(360px, 90vw)",
+              overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>Edit Exercise</h3>
+                <button onClick={() => setEditingExercise(null)} style={{
+                  width: 28, height: 28, borderRadius: 6, border: "none",
+                  background: "#f5f7f6", cursor: "pointer", color: TEXT_SEC,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <p style={{ fontSize: 14, color: TEXT, margin: "8px 0 0", fontWeight: 500 }}>
+                {editingExercise.name}
+              </p>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              {/* Sets */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Sets
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <button
+                    onClick={() => setEditingExercise(prev => ({ ...prev, sets: Math.max(1, prev.sets - 1) }))}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: "pointer", fontSize: 18, color: TEXT,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    value={editingExercise.sets}
+                    onChange={(e) => setEditingExercise(prev => ({ ...prev, sets: parseInt(e.target.value) || 1 }))}
+                    style={{
+                      width: 60, padding: "8px 12px", borderRadius: 8, fontSize: 16, fontWeight: 600,
+                      border: `1px solid ${BORDER}`, textAlign: "center", color: TEXT
+                    }}
+                  />
+                  <button
+                    onClick={() => setEditingExercise(prev => ({ ...prev, sets: prev.sets + 1 }))}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: "pointer", fontSize: 18, color: TEXT,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              
+              {/* Reps */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Reps
+                </label>
+                <input
+                  type="text"
+                  value={editingExercise.reps}
+                  onChange={(e) => setEditingExercise(prev => ({ ...prev, reps: e.target.value }))}
+                  placeholder="e.g. 8, 6-8, AMRAP"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, color: TEXT
+                  }}
+                />
+              </div>
+              
+              {/* Weight */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Target Weight (lbs)
+                </label>
+                <input
+                  type="number"
+                  value={editingExercise.weight}
+                  onChange={(e) => setEditingExercise(prev => ({ ...prev, weight: parseInt(e.target.value) || 0 }))}
+                  placeholder="0 for bodyweight"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, color: TEXT
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ padding: "12px 20px 20px", display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setEditingExercise(null)}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                }}
+              >
+                Save Changes
               </button>
             </div>
           </div>
