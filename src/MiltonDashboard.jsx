@@ -3912,7 +3912,7 @@ function generateAIResponse(msg) {
   if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
     return { 
       title: "Programming Needed", 
-      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** �� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** ��� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
     };
   }
 
@@ -19308,34 +19308,6 @@ export default function MiltonDashboard() {
           
           return (
             <>
-              {/* Tab Bar */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 0,
-                marginBottom: 12, borderBottom: `1px solid ${BORDER}`,
-                overflow: "auto", flexShrink: 0
-              }}>
-                {["All", "PT", "Semi", "Online", "Hybrid"].map((tab) => {
-                  const isActive = serviceTypeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setServiceTypeTab(tab)}
-                      style={{
-                        padding: "12px 16px", fontSize: 14, fontWeight: isActive ? 500 : 400,
-                        color: isActive ? "#1a2e2a" : TEXT_SEC,
-                        background: "none", border: "none", cursor: "pointer",
-                        borderBottom: isActive ? `2px solid ${TEAL}` : "2px solid transparent",
-                        marginBottom: -1, whiteSpace: "nowrap", transition: "all 0.15s",
-                        display: "flex", alignItems: "center", gap: 4
-                      }}
-                    >
-                      {tab}
-                      <span style={{ color: "#8aa3a0", fontSize: 13 }}>({counts[tab]})</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Alert Type Filter Banner */}
               {clientFilter && (
                 <div style={{
@@ -19357,60 +19329,31 @@ export default function MiltonDashboard() {
           /* ─── Mobile: Individual client cards ─── */
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {clients.filter(c => {
-              // Alert type filter
               if (clientFilter && c.alertType !== clientFilter) return false;
-              // Service type tab filter
-              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
-              // Service type dropdown filter (when on All tab)
-              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
-                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
-              }
               return true;
             }).map((client, _fi) => { const i = clients.indexOf(client); return (
-              <div key={i} onClick={() => setSelectedClient(i)} style={{
-                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                boxShadow: "0 2px 6px rgba(0,0,0,0.04)", padding: "16px",
-                display: "flex", flexDirection: "column", gap: 12, cursor: "pointer"
-              }}>
-                {/* Row 1: Avatar + Name + Badge */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Avatar name={client.name} size={48} statusDot={client.statusDot} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
-                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+              <div key={i}
+                onClick={() => setSelectedClient(i)}
+                style={{
+                  background: WHITE, borderRadius: 14, padding: 14,
+                  border: `1px solid ${BORDER}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+                }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                  <Avatar name={client.name} size={38} statusDot={client.statusDot} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600 }}>{client.name}</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: TEAL, background: TEAL_LIGHT, padding: "2px 8px", borderRadius: 10 }}>
+                        {client.clientTypes?.[0] || "PT"}
+                      </span>
                     </div>
-                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{client.program || "General Fitness"}</div>
                   </div>
+                  <AlertBadge type={client.alertType} label={client.alert} />
                 </div>
-                {/* Tags */}
-                {client.tags && client.tags.length > 0 && (
-                  <ClientTags tags={client.tags} />
-                )}
-
-                {/* Goal */}
-                {client.goals?.primary && (
-                  <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.5, padding: "0 2px" }}>
-                    Goal: <span style={{ fontWeight: 600, color: TEAL }}>{client.goals.primary}</span>
-                  </div>
-                )}
-
-                {/* Row 3: Sessions progress */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
-                    Sessions: <span style={{ color: TEAL, fontWeight: 700 }}>{client.sessionsThisWeek || 0}/{client.sessionsPerWeek || 3}</span> this week
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                    {client.totalSessions || 0} total
-                  </div>
-                </div>
-                <div style={{ width: "100%", height: 6, borderRadius: 3, background: "#e8f0ee" }}>
-                  <div style={{
-                    width: `${Math.min(100, ((client.sessionsThisWeek || 0) / (client.sessionsPerWeek || 3)) * 100)}%`, 
-                    height: "100%", borderRadius: 3,
-                    background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
-                    transition: "width 1s ease"
-                  }} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+                  <span><strong style={{ color: TEAL }}>{client.sessionsThisWeek || 0}</strong>/{client.sessionsPerWeek || 3} sessions</span>
+                  <span>{client.goals?.primary || "Build Strength"}</span>
                 </div>
               </div>
             ); })}
@@ -19422,61 +19365,61 @@ export default function MiltonDashboard() {
             boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
           }}>
             <div style={{
-              display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
+              display: "grid", gridTemplateColumns: "2fr 0.8fr 1fr 0.8fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
               color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em"
             }}>
-              <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
+              <span>Client</span><span>Type</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div>
             {clients.filter(c => {
-              // Alert type filter
               if (clientFilter && c.alertType !== clientFilter) return false;
-              // Service type tab filter
-              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
-              // Service type dropdown filter (when on All tab)
-              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
-                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
-              }
               return true;
             }).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
                 style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
+                  display: "grid", gridTemplateColumns: "2fr 0.8fr 1fr 0.8fr 1fr 36px",
                   padding: "14px 24px", alignItems: "center",
                   borderBottom: i < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                   background: hoveredClient === i ? "#f7faf9" : "transparent",
                   transition: "background 0.15s ease", cursor: "pointer"
                 }}>
+                {/* Client */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={34} statusDot={client.statusDot} />
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</span>
-                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
-                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</span>
                     <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  {client.tags && client.tags.length > 0 ? (
-                    <ClientTags tags={client.tags} />
-                  ) : (
-                    <AlertBadge type={client.alertType} label={client.alert} />
-                  )}
+                {/* Type */}
+                <div>
+                  <span style={{ 
+                    fontSize: 12, fontWeight: 500, color: TEAL,
+                    background: TEAL_LIGHT, padding: "4px 10px", borderRadius: 12
+                  }}>
+                    {client.clientTypes?.[0] || "PT"}
+                  </span>
                 </div>
+                {/* Status */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <AlertBadge type={client.alertType} label={client.alert} />
+                </div>
+                {/* Sessions */}
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{client.sessionsThisWeek || 0}</span>
                   <span style={{ fontSize: 12, color: "#b0c4c0" }}>/ {client.sessionsPerWeek || 3}</span>
                 </div>
+                {/* Goal */}
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>
                     {client.goals?.primary || "Build Strength"}
                   </span>
                 </div>
+                {/* Chevron */}
                 <div style={{ color: TEXT_SEC, display: "flex", justifyContent: "center" }}>
                   <NavIcon icon="chevron" size={16} />
                 </div>
