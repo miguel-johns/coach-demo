@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�������������═══════════════════════════════
+// ═══════════════════════════════���������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -3912,7 +3912,7 @@ function generateAIResponse(msg) {
   if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
     return { 
       title: "Programming Needed", 
-      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** ���� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** ����� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
     };
   }
 
@@ -17763,6 +17763,51 @@ export default function MiltonDashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientFilter, setClientFilter] = useState(null);
+  const [sortColumn, setSortColumn] = useState(null); // 'client' | 'type' | 'status' | 'sessions' | 'goal'
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
+  
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortClients = (clientList) => {
+    if (!sortColumn) return clientList;
+    return [...clientList].sort((a, b) => {
+      let aVal, bVal;
+      switch (sortColumn) {
+        case 'client':
+          aVal = a.name?.toLowerCase() || '';
+          bVal = b.name?.toLowerCase() || '';
+          break;
+        case 'type':
+          aVal = a.clientTypes?.[0]?.toLowerCase() || '';
+          bVal = b.clientTypes?.[0]?.toLowerCase() || '';
+          break;
+        case 'status':
+          aVal = a.alertType || '';
+          bVal = b.alertType || '';
+          break;
+        case 'sessions':
+          aVal = a.sessionsThisWeek || 0;
+          bVal = b.sessionsThisWeek || 0;
+          break;
+        case 'goal':
+          aVal = a.goals?.primary?.toLowerCase() || '';
+          bVal = b.goals?.primary?.toLowerCase() || '';
+          break;
+        default:
+          return 0;
+      }
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
   const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
   const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
   const [showAddClient, setShowAddClient] = useState(false);
@@ -19351,13 +19396,38 @@ export default function MiltonDashboard() {
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
               color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em"
             }}>
-              <span>Client</span><span>Type</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
+              {[
+                { key: 'client', label: 'Client' },
+                { key: 'type', label: 'Type' },
+                { key: 'status', label: 'Status' },
+                { key: 'sessions', label: 'Sessions' },
+                { key: 'goal', label: 'Goal' },
+              ].map(col => (
+                <button
+                  key={col.key}
+                  onClick={() => handleSort(col.key)}
+                  style={{
+                    background: 'none', border: 'none', padding: 0, margin: 0,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: 12, fontWeight: 600, color: sortColumn === col.key ? TEAL : TEXT_SEC,
+                    textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left'
+                  }}
+                >
+                  {col.label}
+                  {sortColumn === col.key && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transform: sortDirection === 'desc' ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                      <path d="M5 2L8 7H2L5 2Z" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+              <span />
             </div>
             <div>
-            {clients.filter(c => {
+            {sortClients(clients.filter(c => {
               if (clientFilter && c.alertType !== clientFilter) return false;
               return true;
-            }).map((client, _fi) => { const i = clients.indexOf(client); return (
+            })).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
