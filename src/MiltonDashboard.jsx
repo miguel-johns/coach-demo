@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����������═══════════════════════════════
+// ═══════════════════════════════�������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2247,7 +2247,7 @@ function SemiPrivateList({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════���═════════════════════════════════════════════════
 // CREATE SEMI-PRIVATE MODAL - Form for creating new sessions
 // ═══════════════════════════════════════════════════════════════
 function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
@@ -18421,7 +18421,7 @@ export default function MiltonDashboard() {
   const activeSession = activeSessionId ? sessions.find(s => s.id === activeSessionId) : null;
 
   return (
-    <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* ═══ SESSION CANVAS (Full-screen when active) ═══ */}
@@ -19306,7 +19306,7 @@ export default function MiltonDashboard() {
           const counts = getCounts();
           
           return (
-            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <>
               {/* Tab Bar */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 0,
@@ -19415,22 +19415,20 @@ export default function MiltonDashboard() {
             ); })}
           </div>
         ) : (
-          /* ──��� Desktop: Table ─���─ */
+          /* ── Desktop: Table ── */
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden", flex: 1,
-            display: "flex", flexDirection: "column", minHeight: 0
+            boxShadow: "0 1px 4px rgba(0,0,0,0.03)", overflow: "hidden"
           }}>
             <div style={{
               display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
-              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
-              flexShrink: 0
+              color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em"
             }}>
               <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
             </div>
-            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+            <div>
             {clients.filter(c => {
               // Alert type filter
               if (clientFilter && c.alertType !== clientFilter) return false;
@@ -19486,7 +19484,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
         )}
-        </div>
+        </>
       );
       })()}
       </main>
