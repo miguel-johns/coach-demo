@@ -3912,7 +3912,7 @@ function generateAIResponse(msg) {
   if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
     return { 
       title: "Programming Needed", 
-      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** — Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** �� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
     };
   }
 
@@ -18762,10 +18762,11 @@ export default function MiltonDashboard() {
         </main>
       ) : !canvasMode ? (
       <main style={{
-        flex: 1, overflowY: "auto", minHeight: 0,
-        padding: isMobile ? "68px 14px 76px" : "24px 28px",
-        display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
+        flex: 1, overflowY: "auto",
+        padding: isMobile ? "68px 14px 76px" : "24px 28px 80px",
+        display: "block"
       }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -19487,6 +19488,7 @@ export default function MiltonDashboard() {
         </>
       );
       })()}
+      </div>
       </main>
       ) : null}
 
