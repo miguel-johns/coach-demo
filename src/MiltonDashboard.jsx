@@ -688,8 +688,6 @@ function SessionClientTile({
 }) {
   const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
   const [flagged, setFlagged] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [showNoteInput, setShowNoteInput] = useState(false);
   const [localWeights, setLocalWeights] = useState({});
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [setCompletions, setSetCompletions] = useState({}); // { exerciseId: { 1: true, 2: false, 3: false } }
@@ -1100,77 +1098,13 @@ function SessionClientTile({
       
       {/* Tile Footer */}
       <div style={{ 
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex", alignItems: "center", justifyContent: "flex-end",
         paddingTop: 12, borderTop: `1px solid ${BORDER}`
       }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => setShowNoteInput(!showNoteInput)}
-            style={{
-              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Note
-          </button>
-          <button
-            style={{
-              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
-              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
-            </svg>
-            Swap
-          </button>
-        </div>
         <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>
           {completedCount} of {exercises.length} complete
         </div>
       </div>
-      
-      {/* Note Input */}
-      {showNoteInput && (
-        <div style={{ marginTop: 12 }}>
-          <textarea
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Add a note for this client..."
-            style={{
-              width: "100%", padding: 10, borderRadius: 8, fontSize: 13,
-              border: `1px solid ${BORDER}`, resize: "none", minHeight: 60,
-              fontFamily: "inherit"
-            }}
-          />
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button
-              onClick={() => { onAddNote?.(clientId, noteText); setNoteText(""); setShowNoteInput(false); }}
-              style={{
-                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
-                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
-              }}
-            >
-              Save
-            </button>
-            <button
-              onClick={() => { setNoteText(""); setShowNoteInput(false); }}
-              style={{
-                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-                background: "#f5f7f6", color: TEXT_SEC, border: "none", cursor: "pointer"
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
       
       {/* Swap Exercise Modal */}
       {showSwapModal && (
@@ -5768,7 +5702,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 
 /* ═════════════════════════════════════════════
    CLIENT PROFILE SCREEN
-   ═════════════════════════════════════════════ */
+   ═════════════���═══════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks, onUpdateClient }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
