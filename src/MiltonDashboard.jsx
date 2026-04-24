@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������═══════════════════════════════
+// ═══════════════════════════════�����������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2532,6 +2532,8 @@ const initialClients = [
     name: "Sarah Chen",
     alert: "Session Today",
     alertType: "blue",
+    statusDot: "green",
+    tags: [{ type: "session", label: "Session today" }],
     program: "Fat Loss — Phase 2",
     startDate: "Feb 1",
     clientTypes: ["PT", "Online"],
@@ -2636,6 +2638,8 @@ const initialClients = [
     name: "Marcus Johnson",
     alert: "Assessment Due",
     alertType: "red",
+    statusDot: "amber",
+    tags: [{ type: "session", label: "Session today" }, { type: "attention", label: "Assessment due" }],
     program: "Muscle Gain — Hypertrophy",
     startDate: "Jan 15",
     clientTypes: ["PT"],
@@ -2730,6 +2734,8 @@ const initialClients = [
     name: "Emily Rodriguez",
     alert: "Needs Programming",
     alertType: "red",
+    statusDot: "red",
+    tags: [{ type: "attention", label: "2 no-shows · 5 days silent" }],
     program: "General Fitness",
     startDate: "Feb 15",
     clientTypes: ["Semi"],
@@ -2797,7 +2803,9 @@ const initialClients = [
   {
     name: "David Park",
     alert: "Session Today",
-    alertType: "blue",
+    alertType: "green",
+    statusDot: "green",
+    tags: [{ type: "pr", label: "PR yesterday" }],
     program: "Powerlifting Prep",
     startDate: "Jan 5",
     clientTypes: ["Semi", "Online"],
@@ -2887,6 +2895,8 @@ const initialClients = [
     name: "Rachel Kim",
     alert: "On Track",
     alertType: "green",
+    statusDot: "green",
+    tags: [{ type: "milestone", label: "6-month milestone" }],
     program: "Post-Pregnancy Recovery",
     startDate: "Mar 1",
     clientTypes: ["PT", "Semi"],
@@ -2967,6 +2977,8 @@ const initialClients = [
     name: "Aaron Smith",
     alert: "On Track",
     alertType: "green",
+    statusDot: "green",
+    tags: [{ type: "program", label: "New program due Sunday" }],
     program: "Strength Building",
     startDate: "Feb 12",
     clientTypes: ["Semi"],
@@ -3057,6 +3069,8 @@ const initialClients = [
     name: "Lisa Martinez",
     alert: "Session Today",
     alertType: "blue",
+    statusDot: "green",
+    tags: [{ type: "session", label: "Session today" }],
     program: "Olympic Lifting Intro",
     startDate: "Jan 8",
     clientTypes: ["Semi"],
@@ -3144,9 +3158,11 @@ const initialClients = [
     weightData: [142, 143, 143.5, 144, 144.5, 145, 145],
   },
   {
-    name: "Jason Williams",
+    name: "Tom Wilson",
     alert: "On Track",
     alertType: "green",
+    statusDot: "green",
+    tags: [{ type: "milestone", label: "6-month milestone" }],
     program: "Maintenance — Active Lifestyle",
     startDate: "Dec 1",
     clientTypes: ["Online"],
@@ -3223,9 +3239,11 @@ const initialClients = [
     weightData: [175, 175, 176, 175.5, 176, 176, 176],
   },
   {
-    name: "Daniel Torres",
-    alert: "Needs Programming",
-    alertType: "red",
+    name: "Jasmine Rivera",
+    alert: "Unreplied",
+    alertType: "blue",
+    statusDot: "amber",
+    tags: [{ type: "response", label: "Unreplied · 3 days" }],
     program: "Fat Loss — Phase 1",
     startDate: "Feb 20",
     clientTypes: ["Online"],
@@ -3301,10 +3319,12 @@ const initialClients = [
     weightData: [245, 243, 241, 240, 239, 238, 238],
   },
   {
-    name: "Amanda Foster",
+    name: "Ian Nakamura",
     alert: "On Track",
     alertType: "green",
-    program: "Rehab — Shoulder Recovery",
+    statusDot: "green",
+    tags: [{ type: "program", label: "New program due Sunday" }],
+    program: "Powerlifting Meet Prep",
     startDate: "Jan 15",
     clientTypes: ["Hybrid"],
     assessment: {
@@ -3984,16 +4004,27 @@ function generateAIResponse(msg) {
   };
 }
 
-function Avatar({ name, size = 36 }) {
+function Avatar({ name, size = 36, statusDot }) {
   const colors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#6aa84f", "#e06666", "#f6b26b", "#8e7cc3"];
   const idx = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2);
+  const statusColors = { green: "#2BBFAA", amber: "#E8A838", red: "#E04E3B" };
+  const dotSize = Math.max(10, size * 0.32);
   return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%", background: colors[idx],
-      display: "flex", alignItems: "center", justifyContent: "center",
-      color: "#fff", fontSize: size * 0.38, fontWeight: 600, flexShrink: 0
-    }}>{initials}</div>
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <div style={{
+        width: size, height: size, borderRadius: "50%", background: colors[idx],
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#fff", fontSize: size * 0.38, fontWeight: 600
+      }}>{initials}</div>
+      {statusDot && statusColors[statusDot] && (
+        <div style={{
+          position: "absolute", bottom: -1, right: -1,
+          width: dotSize, height: dotSize, borderRadius: "50%",
+          background: statusColors[statusDot], border: "2px solid #fff"
+        }} />
+      )}
+    </div>
   );
 }
 
@@ -4006,6 +4037,39 @@ function ConnectorDot({ type, first }) {
       marginLeft: first ? 0 : -6, position: "relative", zIndex: 1,
       border: "2px solid #fff"
     }}>{c.icon ? c.icon(14) : null}</div>
+  );
+}
+
+// Client context tags component
+function ClientTags({ tags }) {
+  if (!tags || tags.length === 0) return null;
+  
+  const tagStyles = {
+    session: { bg: "#E8F4FD", color: "#2B7EBF", icon: null },
+    pr: { bg: "#FFF0B8", color: "#9E6E05", icon: "⭐" },
+    milestone: { bg: "#F1EDFB", color: "#8B6FE0", icon: "🎉" },
+    attention: { bg: "#FDECE8", color: "#E04E3B", icon: "●" },
+    response: { bg: "#E8F4FD", color: "#2B7EBF", icon: "💬" },
+    program: { bg: "#E6F7F4", color: "#1F9B8B", icon: "📋" },
+    amber: { bg: "#FDF3DC", color: "#A06C00", icon: null },
+  };
+  
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {tags.map((tag, idx) => {
+        const style = tagStyles[tag.type] || tagStyles.session;
+        return (
+          <span key={idx} style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            background: style.bg, color: style.color,
+            fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 10
+          }}>
+            {style.icon && <span>{style.icon}</span>}
+            {tag.label}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -18842,25 +18906,204 @@ export default function MiltonDashboard() {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
+        {/* March at a Glance Banner */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Day 22 of 31 · 71% through the month</div>
+          </div>
+          <div style={{ background: "#F1EDFB", color: "#8B6FE0", fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 12 }}>
+            Director-set goals
+          </div>
+        </div>
 
-          {/* ── Card 1: Active Clients - Person Icons ── */}
+        {/* Goal-Driven KPI Tiles */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "1.4fr 1fr 1fr 1fr", gap: isMobile ? 10 : 14 }}>
+
+          {/* ── Tile 1: Monthly Revenue (Featured, Dark Navy) ── */}
+          <div style={{
+            background: "#0B1628", borderRadius: 16, 
+            boxShadow: "0 4px 16px rgba(11,22,40,0.2)", padding: isMobile ? "16px" : "20px 22px",
+            opacity: animatedKPIs[0] ? 1 : 0, transform: animatedKPIs[0] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
+            minWidth: 0, overflow: "hidden", gridColumn: isMobile ? "span 2" : "span 1"
+          }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Monthly Revenue</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1 }}>$8,400</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 20 : 24, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: "-0.02em" }}>/ $12,000</span>
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 12 }}>70% to goal · $3,600 to go</div>
+            {/* Progress bar */}
+            <div style={{ width: "100%", height: 8, borderRadius: 4, background: "rgba(255,255,255,0.15)", marginBottom: 10 }}>
+              <div style={{ width: "70%", height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${TEAL}, ${MINT})` }} />
+            </div>
+            {/* Pace chip */}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(154,241,152,0.15)", padding: "4px 10px", borderRadius: 10, width: "fit-content", marginBottom: 12 }}>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={MINT} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
+              <span style={{ fontSize: 11, fontWeight: 600, color: MINT }}>2 days ahead of pace</span>
+            </div>
+            {/* Footer */}
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, marginTop: "auto" }}>
+              Book <span style={{ fontWeight: 700, color: WHITE }}>4 more sessions</span> this week to stay ahead. Tom and Sarah have open slots.
+            </div>
+          </div>
+
+          {/* ── Tile 2: Sessions ── */}
           <div style={{
             background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
             boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
-            opacity: animatedKPIs[0] ? 1 : 0, transform: animatedKPIs[0] ? "translateY(0)" : "translateY(12px)",
+            opacity: animatedKPIs[1] ? 1 : 0, transform: animatedKPIs[1] ? "translateY(0)" : "translateY(12px)",
             transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
             minWidth: 0, overflow: "hidden"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Active Clients</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 12 : 16 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>12</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +3
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Sessions</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>68</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 18 : 22, fontWeight: 500, color: TEXT_SEC, letterSpacing: "-0.02em" }}>/ 80</span>
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>Monthly target</div>
+            {/* Progress bar */}
+            <div style={{ width: "100%", height: 6, borderRadius: 3, background: "#e8f0ee", marginBottom: 10 }}>
+              <div style={{ width: "85%", height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${TEAL}, ${MINT})` }} />
+            </div>
+            {/* Pace chip */}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#e8f5e9", padding: "4px 10px", borderRadius: 10, width: "fit-content", marginBottom: 10 }}>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
+              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN }}>+3 vs last week</span>
+            </div>
+            {/* Footer */}
+            <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, marginTop: "auto" }}>
+              Completed this month. <span style={{ fontWeight: 700, color: TEXT }}>12 remaining</span> to hit target.
+            </div>
+          </div>
+
+          {/* ── Tile 3: Plus-One Rule ── */}
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
+            opacity: animatedKPIs[2] ? 1 : 0, transform: animatedKPIs[2] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
+            minWidth: 0, overflow: "hidden"
+          }}>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Plus-One Rule</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>+3</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: TEXT_SEC }}>net</span>
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 8 }}>Client change this month</div>
+            {/* Inline row: new vs lost */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, fontSize: 12 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
+                <span style={{ color: TEAL, fontWeight: 600 }}>5 new</span>
+              </span>
+              <span style={{ color: TEXT_SEC }}>·</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#E04E3B" strokeWidth="2" strokeLinecap="round"><polyline points="1,4 6,9 11,4" /></svg>
+                <span style={{ color: "#E04E3B", fontWeight: 600 }}>2 lost</span>
               </span>
             </div>
+            {/* Pace chip */}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#e8f5e9", padding: "4px 10px", borderRadius: 10, width: "fit-content", marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN }}>Net positive</span>
+            </div>
+            {/* Footer */}
+            <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5, marginTop: "auto" }}>
+              Lost 2, need 3+ to stay in the green. <span style={{ fontWeight: 700, color: TEXT }}>Already there.</span>
+            </div>
+          </div>
+
+          {/* ── Tile 4: Attendance Rate ── */}
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
+            opacity: animatedKPIs[3] ? 1 : 0, transform: animatedKPIs[3] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
+            minWidth: 0, overflow: "hidden"
+          }}>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Attendance Rate</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>83%</span>
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>10 of 12 clients engaged</div>
+            {/* Dots visualization */}
+            {(() => {
+              const total = 12;
+              const engaged = 10;
+              const dotSize = isMobile ? 18 : 22;
+              const engagedColors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#2B7A78", "#3aafa9", "#6aa84f", "#5CDB95", "#45818e", "#2B7A78"];
+              return (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 4 : 5, marginBottom: 10 }}>
+                  {Array.from({ length: total }).map((_, j) => {
+                    const isEngaged = j < engaged;
+                    return (
+                      <div key={j} style={{
+                        width: dotSize, height: dotSize, borderRadius: "50%",
+                        background: isEngaged ? engagedColors[j] : "transparent",
+                        border: isEngaged ? "none" : `2px dashed #c8d8d4`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.4s ease",
+                        transitionDelay: `${j * 0.04}s`
+                      }}>
+                        {isEngaged && (
+                          <svg width={dotSize * 0.5} height={dotSize * 0.5} viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="2,6 5,9 10,3" />
+                          </svg>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            {/* Footer */}
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: "auto" }}>
+              <span style={{ fontWeight: 700, color: ALERT_GREEN }}>+12%</span> vs last month
+            </div>
+          </div>
+
+        </div>
+
+        {/* ══════ Today's Sessions Strip ══════ */}
+        <div style={{ marginTop: 20 }}>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 500, color: "#0B1628" }}>Today&apos;s Sessions</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Thursday, March 22 · 3 scheduled</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
+            {[
+              { time: "8:00 AM", type: "Strength", name: "David Park", goal: "Gain strength · Week 6", cue: "Hit 315lb deadlift PR yesterday. Open with it. Recovery is green, push him on bench today." },
+              { time: "10:00 AM", type: "Fat Loss", name: "Sarah Chen", goal: "Lose 20 lbs · Phase 2", cue: "Sleep down over the weekend, HRV trending down. Consider swapping heavy squat for tempo work. Ask her about stress." },
+              { time: "4:30 PM", type: "Hypertrophy", name: "Marcus Johnson", goal: "Gain 15 lbs muscle", cue: "Assessment due this week. Ask 3 intake questions before the session starts." },
+            ].map((session, idx) => (
+              <div key={idx} style={{
+                background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: 16, display: "flex", flexDirection: "column", gap: 12
+              }}>
+                {/* Time & Type */}
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {session.time} · {session.type}
+                </div>
+                {/* Avatar + Name + Goal */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Avatar name={session.name} size={36} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{session.name}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.goal}</div>
+                  </div>
+                </div>
+                {/* Milton Cue Callout */}
+                <div style={{
+                  background: "#E6F7F4", borderLeft: `3px solid ${TEAL}`, borderRadius: 8, padding: "10px 12px"
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Milton Cue</div>
+                  <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.5 }}>{session.cue}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: "auto" }}>
               {Array.from({ length: 12 }).map((_, j) => {
                 const colors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#6aa84f", "#e06666", "#f6b26b", "#8e7cc3", "#2B7A78", "#3aafa9", "#45818e", "#5CDB95"];
@@ -19044,73 +19287,94 @@ export default function MiltonDashboard() {
         {/* Coaching Queue */}
         <div style={{
           background: WHITE, borderRadius: 16, padding: isMobile ? "16px" : "20px 24px",
-          border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+          border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)", marginTop: 20
         }}>
-          <div style={{ marginBottom: 14 }}>
-            <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Today's Coaching Queue</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 10 }}>
-            {[
-              {
-                count: clients.filter(c => c.alertType === "red").length, label: "Clients Attention", filterType: "red",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" fill="#fee2e2"/>
-                    <circle cx="12" cy="12" r="6" fill="#fca5a5"/>
-                    <circle cx="12" cy="12" r="2.5" fill="#ef4444"/>
-                  </svg>
-                )
-              },
-              {
-                count: clients.filter(c => c.alertType === "blue").length, label: "Reports Ready", filterType: "blue",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <rect x="4" y="3" width="16" height="18" rx="3" fill="#dbeafe"/>
-                    <rect x="7" y="7" width="6" height="1.5" rx="0.75" fill="#60a5fa"/>
-                    <rect x="7" y="10.5" width="10" height="1.5" rx="0.75" fill="#93c5fd"/>
-                    <rect x="7" y="14" width="8" height="1.5" rx="0.75" fill="#93c5fd"/>
-                    <circle cx="17" cy="17" r="5" fill="#34d399"/>
-                    <polyline points="14.5,17 16.2,18.7 19.5,15.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  </svg>
-                )
-              },
-              {
-                count: clients.filter(c => c.alertType === "green").length, label: "Client Milestone", filterType: "green",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="9" r="5" fill="#e9d5ff"/>
-                    <path d="M12 4l1.5 3 3.5.5-2.5 2.4.6 3.5L12 12l-3.1 1.4.6-3.5L7 7.5l3.5-.5z" fill="#a78bfa"/>
-                    <path d="M6 18c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#c4b5fd" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                  </svg>
-                )
-              },
-            ].map((q, i) => {
-              const isActive = clientFilter === q.filterType;
-              return (
-              <div key={i} onClick={() => setClientFilter(isActive ? null : q.filterType)} style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: isMobile ? "10px 14px" : "10px 16px",
-                borderRadius: 28,
-                background: isActive ? TEAL : "#f8faf9",
-                border: isActive ? `1px solid ${TEAL}` : `1px solid ${BORDER}`,
-                cursor: "pointer",
-                boxShadow: isActive ? "0 2px 10px rgba(43,122,120,0.3)" : "0 1px 3px rgba(0,0,0,0.03)",
-                transition: "all 0.2s ease", whiteSpace: "nowrap",
-                transform: isActive ? "scale(1.03)" : "scale(1)"
-              }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"; e.currentTarget.style.transform = "translateY(-1px)"; }}}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)"; e.currentTarget.style.transform = "scale(1)"; }}}
-              >
-                {q.icon}
-                <span style={{ fontSize: 13, fontWeight: 600, color: isActive ? "#fff" : TEXT }}>
-                  {q.count} {q.label}
-                </span>
-                {isActive && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                )}
+          {/* Header with title and filter chips */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Today&apos;s Coaching Queue</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 12, background: "#f5f7f6", fontSize: 11, fontWeight: 500, color: TEXT_SEC, cursor: "pointer" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC }} />
+                Show work ahead
               </div>
+              <div style={{ padding: "5px 10px", borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 500, color: TEXT_SEC, cursor: "pointer" }}>
+                All cues
+              </div>
+            </div>
+          </div>
+          
+          {/* 4 Priority Cue Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
+            {[
+              { 
+                count: 2, label: "Celebrate", sublabel: "Recent wins to acknowledge", 
+                bg: "#FFF8E1", iconBg: "#FFF0B8", icon: "⭐", filterType: "green",
+                fresh: true
+              },
+              { 
+                count: 3, label: "Needs Attention", sublabel: "Red and yellow clients",
+                bg: "#FDECE8", iconBg: "#F9CFC7", icon: "●", filterType: "red"
+              },
+              { 
+                count: 4, label: "Needs Response", sublabel: "Unanswered messages",
+                bg: "#E8F4FD", iconBg: "#C9E1F6", icon: "💬", filterType: "blue"
+              },
+              { 
+                count: 5, label: "Needs Programming", sublabel: "Due this week",
+                bg: "#E6F7F4", iconBg: "#B8E5DE", icon: "📋", filterType: "program"
+              },
+            ].map((cue, i) => {
+              const isActive = clientFilter === cue.filterType;
+              return (
+                <div 
+                  key={i} 
+                  onClick={() => setClientFilter(isActive ? null : cue.filterType)} 
+                  style={{
+                    position: "relative",
+                    background: isActive ? TEAL : cue.bg, 
+                    borderRadius: 14, 
+                    padding: "16px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    transform: isActive ? "scale(1.02)" : "scale(1)",
+                    boxShadow: isActive ? "0 4px 16px rgba(43,122,120,0.25)" : "0 1px 3px rgba(0,0,0,0.03)"
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.transform = "scale(1)"; }}
+                >
+                  {/* Fresh badge */}
+                  {cue.fresh && !isActive && (
+                    <div style={{
+                      position: "absolute", top: -6, right: 12,
+                      background: "#0B1628", color: WHITE, fontSize: 9, fontWeight: 700,
+                      padding: "3px 8px", borderRadius: 8, letterSpacing: "0.06em"
+                    }}>
+                      FRESH
+                    </div>
+                  )}
+                  {/* Icon square */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: isActive ? "rgba(255,255,255,0.2)" : cue.iconBg,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, marginBottom: 12
+                  }}>
+                    {cue.icon}
+                  </div>
+                  {/* Count */}
+                  <div style={{ 
+                    fontFamily: "'Cormorant Garamond', Georgia, serif", 
+                    fontSize: 20, fontWeight: 600, 
+                    color: isActive ? WHITE : "#0B1628", 
+                    marginBottom: 2 
+                  }}>
+                    {cue.count} {cue.label}
+                  </div>
+                  {/* Sublabel */}
+                  <div style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,0.8)" : TEXT_SEC }}>
+                    {cue.sublabel}
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -19227,7 +19491,7 @@ export default function MiltonDashboard() {
               }}>
                 {/* Row 1: Avatar + Name + Badge */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Avatar name={client.name} size={48} />
+                  <Avatar name={client.name} size={48} statusDot={client.statusDot} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
@@ -19235,11 +19499,11 @@ export default function MiltonDashboard() {
                     </div>
                     <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                    <AlertBadge type={client.alertType} label={client.alert} />
-                    <StreakBadge streak={client.streak?.current || client.streaks || 0} compact />
-                  </div>
                 </div>
+                {/* Tags */}
+                {client.tags && client.tags.length > 0 && (
+                  <ClientTags tags={client.tags} />
+                )}
 
                 {/* Goal */}
                 {client.goals?.primary && (
@@ -19307,7 +19571,7 @@ export default function MiltonDashboard() {
                   transition: "background 0.15s ease", cursor: "pointer"
                 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Avatar name={client.name} size={34} />
+                  <Avatar name={client.name} size={34} statusDot={client.statusDot} />
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</span>
@@ -19316,10 +19580,16 @@ export default function MiltonDashboard() {
                     <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertBadge type={client.alertType} label={client.alert} /><StreakBadge streak={client.streak?.current || client.streaks || 0} compact /></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  {client.tags && client.tags.length > 0 ? (
+                    <ClientTags tags={client.tags} />
+                  ) : (
+                    <AlertBadge type={client.alertType} label={client.alert} />
+                  )}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{client.sessionsThisWeek || 0}</span>
-                  <span style={{ fontSize: 12, color: TEXT_SEC }}>/ {client.sessionsPerWeek || 3}</span>
+                  <span style={{ fontSize: 12, color: "#b0c4c0" }}>/ {client.sessionsPerWeek || 3}</span>
                 </div>
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>
