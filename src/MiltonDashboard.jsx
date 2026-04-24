@@ -688,24 +688,127 @@ function SessionClientTile({
 }) {
   const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
   const [flagged, setFlagged] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [showNoteInput, setShowNoteInput] = useState(false);
   const [localWeights, setLocalWeights] = useState({});
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+  const [setCompletions, setSetCompletions] = useState({}); // { exerciseId: { 1: true, 2: false, 3: false } }
+  const [setWeights, setSetWeights] = useState({}); // { exerciseId: { 1: 185, 2: 185, 3: 195 } }
+  const [showSwapModal, setShowSwapModal] = useState(null); // exerciseId to swap
+  const [editingExercise, setEditingExercise] = useState(null); // { id, sets, reps, weight }
+  const [localExerciseEdits, setLocalExerciseEdits] = useState({}); // { exerciseId: { sets, reps, weightTarget, name } }
   
   if (!client || !workout) return null;
   
-  const exercises = workout.exercises || [];
+  const workoutExercises = workout.exercises || [];
+  // Merge local edits with workout exercises
+  const exercises = workoutExercises.map(ex => ({
+    ...ex,
+    ...(localExerciseEdits[ex.id] || {})
+  }));
   const completedCount = exercises.filter(e => e.completed).length;
   const isSessionActive = sessionStatus === "in_progress";
   
   // Find first incomplete exercise for auto-focus
   useEffect(() => {
-    const firstIncomplete = exercises.findIndex(e => !e.completed);
+    const firstIncomplete = workoutExercises.findIndex(e => !e.completed);
     if (firstIncomplete >= 0) setCurrentExerciseIdx(firstIncomplete);
-  }, [exercises]);
+  }, [workoutExercises.length]);
   
-  const handleExerciseClick = (idx) => {
+  const handleExerciseClick = (idx, exerciseId) => {
+    // Toggle expand for this exercise
+    if (expandedExerciseId === exerciseId) {
+      setExpandedExerciseId(null);
+    } else {
+      setExpandedExerciseId(exerciseId);
+      // Initialize set completions/weights if not set
+      const exercise = exercises[idx];
+      if (!setCompletions[exerciseId]) {
+        const initialCompletions = {};
+        const initialWeights = {};
+        for (let i = 1; i <= exercise.sets; i++) {
+          initialCompletions[i] = false;
+          initialWeights[i] = exercise.weightTarget || 0;
+        }
+        setSetCompletions(prev => ({ ...prev, [exerciseId]: initialCompletions }));
+        setSetWeights(prev => ({ ...prev, [exerciseId]: initialWeights }));
+      }
+    }
     if (isSessionActive) setCurrentExerciseIdx(idx);
+  };
+  
+  const handleSetComplete = (exerciseId, setNum) => {
+    setSetCompletions(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        [setNum]: !prev[exerciseId]?.[setNum]
+      }
+    }));
+    // Check if all sets completed
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (exercise) {
+      const updatedCompletions = {
+        ...setCompletions[exerciseId],
+        [setNum]: !setCompletions[exerciseId]?.[setNum]
+      };
+      const allComplete = Object.keys(updatedCompletions).length === exercise.sets &&
+        Object.values(updatedCompletions).every(v => v);
+      if (allComplete) {
+        onExerciseComplete?.(clientId, exerciseId, true);
+      }
+    }
+  };
+  
+  const handleSetWeightChange = (exerciseId, setNum, weight) => {
+    setSetWeights(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        [setNum]: parseInt(weight) || 0
+      }
+    }));
+  };
+  
+  const handleSwapExercise = (exerciseId, newExercise) => {
+    // Update the local exercise edits with the swapped exercise name
+    setLocalExerciseEdits(prev => ({
+      ...prev,
+      [exerciseId]: { ...(prev[exerciseId] || {}), name: newExercise }
+    }));
+    setShowSwapModal(null);
+  };
+  
+  const handleOpenEditModal = (exercise) => {
+    setEditingExercise({
+      id: exercise.id,
+      name: exercise.name,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      weight: exercise.weightTarget || 0
+    });
+  };
+  
+  const handleSaveEdit = () => {
+    if (!editingExercise) return;
+    // Update local exercise edits
+    setLocalExerciseEdits(prev => ({
+      ...prev,
+      [editingExercise.id]: {
+        ...(prev[editingExercise.id] || {}),
+        sets: editingExercise.sets,
+        reps: editingExercise.reps,
+        weightTarget: editingExercise.weight
+      }
+    }));
+    // Re-initialize set completions/weights for the new set count
+    const initialCompletions = {};
+    const initialWeights = {};
+    for (let i = 1; i <= editingExercise.sets; i++) {
+      initialCompletions[i] = setCompletions[editingExercise.id]?.[i] || false;
+      initialWeights[i] = editingExercise.weight;
+    }
+    setSetCompletions(prev => ({ ...prev, [editingExercise.id]: initialCompletions }));
+    setSetWeights(prev => ({ ...prev, [editingExercise.id]: initialWeights }));
+    setEditingExercise(null);
   };
   
   const handleCheckboxClick = (idx, exercise) => {
@@ -776,75 +879,218 @@ function SessionClientTile({
         {exercises.map((exercise, idx) => {
           const isCurrent = idx === currentExerciseIdx && isSessionActive;
           const localWeight = localWeights[exercise.id];
+          const isExpanded = expandedExerciseId === exercise.id;
+          const exerciseSetCompletions = setCompletions[exercise.id] || {};
+          const exerciseSetWeights = setWeights[exercise.id] || {};
+          const completedSets = Object.values(exerciseSetCompletions).filter(Boolean).length;
           
           return (
-            <div 
-              key={exercise.id}
-              onClick={() => handleExerciseClick(idx)}
-              style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
-                borderRadius: 8, marginBottom: 4, cursor: isSessionActive ? "pointer" : "default",
-                background: exercise.completed ? "#f9fbfa" : (isCurrent ? `${TEAL}08` : "#f9fbfa"),
-                borderLeft: isCurrent ? `3px solid ${TEAL}` : "3px solid transparent",
-                transition: "all 0.15s"
-              }}
-            >
-              {/* Exercise Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ 
-                  fontSize: 14, fontWeight: 500, color: exercise.completed ? TEXT_SEC : TEXT,
-                  textDecoration: exercise.completed ? "line-through" : "none"
-                }}>
-                  {exercise.name}
+            <div key={exercise.id} style={{ marginBottom: 4 }}>
+              {/* Exercise Row */}
+              <div 
+                onClick={() => handleExerciseClick(idx, exercise.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                  borderRadius: isExpanded ? "8px 8px 0 0" : 8, 
+                  cursor: "pointer",
+                  background: exercise.completed ? "#f0fdf4" : (isCurrent ? `${TEAL}08` : "#f9fbfa"),
+                  borderLeft: isCurrent ? `3px solid ${TEAL}` : "3px solid transparent",
+                  border: isExpanded ? `1px solid ${TEAL}40` : "1px solid transparent",
+                  borderBottom: isExpanded ? "none" : "1px solid transparent",
+                  transition: "all 0.15s"
+                }}
+              >
+                {/* Exercise Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    fontSize: 14, fontWeight: 500, color: exercise.completed ? "#16a34a" : TEXT,
+                    display: "flex", alignItems: "center", gap: 6
+                  }}>
+                    {exercise.name}
+                    {exercise.completed && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {isSessionActive && completedSets > 0 
+                      ? `${completedSets}/${exercise.sets} sets · ${exercise.reps}`
+                      : `${exercise.sets} × ${exercise.reps}`
+                    }
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  {exercise.sets} × {exercise.reps}
+                
+                {/* Weight Display */}
+                {exercise.weightTarget > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>
+                        {localWeight !== undefined ? localWeight : exercise.weightTarget}
+                      </span>
+                      <span style={{ fontSize: 11, color: TEXT_SEC }}>lbs</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>
+                      Last: {exercise.weightLast}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Expand/Collapse Icon */}
+                <div style={{
+                  width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                  border: `1px solid ${BORDER}`,
+                  background: "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s"
+                }}>
+                  <svg 
+                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
+                    style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}
+                  >
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
                 </div>
               </div>
               
-              {/* Weight Input */}
-              {exercise.weightTarget > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <input
-                      type="number"
-                      value={localWeight !== undefined ? localWeight : exercise.weightTarget}
-                      onChange={(e) => handleWeightChange(exercise.id, parseInt(e.target.value) || 0)}
-                      disabled={!isSessionActive}
-                      style={{
-                        width: 50, padding: "4px 6px", borderRadius: 6, fontSize: 13,
-                        border: `1px solid ${BORDER}`, textAlign: "right",
-                        background: isSessionActive ? WHITE : "#f5f7f6",
-                        color: TEXT
-                      }}
-                    />
-                    <span style={{ fontSize: 11, color: TEXT_SEC }}>lbs</span>
+              {/* Expanded Set-by-Set View */}
+              {isExpanded && (
+                <div style={{
+                  background: WHITE, borderRadius: "0 0 8px 8px",
+                  border: `1px solid ${TEAL}40`, borderTop: "none",
+                  padding: 12
+                }}>
+                  {/* Set rows */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {Array.from({ length: exercise.sets }, (_, i) => {
+                      const setNum = i + 1;
+                      const setComplete = exerciseSetCompletions[setNum] || false;
+                      const setWeight = exerciseSetWeights[setNum] !== undefined 
+                        ? exerciseSetWeights[setNum] 
+                        : (exercise.weightTarget || 0);
+                      
+                      return (
+                        <div 
+                          key={setNum}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "8px 10px", borderRadius: 6,
+                            background: setComplete ? "#f0fdf4" : "#f9fbfa",
+                            border: `1px solid ${setComplete ? "#bbf7d0" : BORDER}`
+                          }}
+                        >
+                          {/* Set number */}
+                          <div style={{
+                            width: 24, height: 24, borderRadius: "50%",
+                            background: setComplete ? TEAL : "#e5e7eb",
+                            color: setComplete ? WHITE : TEXT_SEC,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 11, fontWeight: 600
+                          }}>
+                            {setNum}
+                          </div>
+                          
+                          {/* Weight input */}
+                          {exercise.weightTarget > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <input
+                                type="number"
+                                value={setWeight}
+                                onChange={(e) => handleSetWeightChange(exercise.id, setNum, e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  width: 60, padding: "6px 8px", borderRadius: 6, fontSize: 14,
+                                  border: `1px solid ${BORDER}`, textAlign: "center",
+                                  background: WHITE, color: TEXT, fontWeight: 500
+                                }}
+                              />
+                              <span style={{ fontSize: 12, color: TEXT_SEC }}>lbs</span>
+                            </div>
+                          )}
+                          
+                          {/* Reps display */}
+                          <div style={{ flex: 1, fontSize: 13, color: TEXT_SEC }}>
+                            × {exercise.reps}
+                          </div>
+                          
+                          {/* Complete checkbox */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSetComplete(exercise.id, setNum); }}
+                            style={{
+                              width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                              border: `2px solid ${setComplete ? TEAL : BORDER}`,
+                              background: setComplete ? TEAL : "transparent",
+                              cursor: "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.15s"
+                            }}
+                          >
+                            {setComplete && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
-                    Last: {exercise.weightLast}
+                  
+                  {/* Action buttons */}
+                  <div style={{ 
+                    display: "flex", gap: 8, marginTop: 12, paddingTop: 12,
+                    borderTop: `1px solid ${BORDER}`
+                  }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowSwapModal(exercise.id); }}
+                      style={{
+                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                        background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
+                        <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
+                      </svg>
+                      Swap exercise
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleOpenEditModal(exercise); }}
+                      style={{
+                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                        background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Edit sets/reps
+                    </button>
+                    {isSessionActive && (
+                      <button
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          // Mark all sets complete
+                          const allComplete = {};
+                          for (let i = 1; i <= exercise.sets; i++) allComplete[i] = true;
+                          setSetCompletions(prev => ({ ...prev, [exercise.id]: allComplete }));
+                          onExerciseComplete?.(clientId, exercise.id, true);
+                        }}
+                        style={{
+                          padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+                          background: TEAL, border: "none", color: WHITE,
+                          cursor: "pointer", marginLeft: "auto"
+                        }}
+                      >
+                        Complete all
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
-              
-              {/* Checkbox */}
-              <button
-                onClick={(e) => { e.stopPropagation(); handleCheckboxClick(idx, exercise); }}
-                disabled={!isSessionActive}
-                style={{
-                  width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                  border: `2px solid ${exercise.completed ? TEAL : BORDER}`,
-                  background: exercise.completed ? TEAL : "transparent",
-                  cursor: isSessionActive ? "pointer" : "default",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.15s", opacity: isSessionActive ? 1 : 0.5
-                }}
-              >
-                {exercise.completed && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                )}
-              </button>
             </div>
           );
         })}
@@ -852,74 +1098,214 @@ function SessionClientTile({
       
       {/* Tile Footer */}
       <div style={{ 
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex", alignItems: "center", justifyContent: "flex-end",
         paddingTop: 12, borderTop: `1px solid ${BORDER}`
       }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => setShowNoteInput(!showNoteInput)}
-            style={{
-              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Note
-          </button>
-          <button
-            style={{
-              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
-              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
-            </svg>
-            Swap
-          </button>
-        </div>
         <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>
           {completedCount} of {exercises.length} complete
         </div>
       </div>
       
-      {/* Note Input */}
-      {showNoteInput && (
-        <div style={{ marginTop: 12 }}>
-          <textarea
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Add a note for this client..."
+      {/* Swap Exercise Modal */}
+      {showSwapModal && (
+        <div 
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setShowSwapModal(null)}
+        >
+          <div 
             style={{
-              width: "100%", padding: 10, borderRadius: 8, fontSize: 13,
-              border: `1px solid ${BORDER}`, resize: "none", minHeight: 60,
-              fontFamily: "inherit"
+              background: WHITE, borderRadius: 16, width: "min(400px, 90vw)",
+              maxHeight: "70vh", overflow: "hidden", display: "flex", flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
             }}
-          />
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button
-              onClick={() => { onAddNote?.(clientId, noteText); setNoteText(""); setShowNoteInput(false); }}
-              style={{
-                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
-                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
-              }}
-            >
-              Save
-            </button>
-            <button
-              onClick={() => { setNoteText(""); setShowNoteInput(false); }}
-              style={{
-                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-                background: "#f5f7f6", color: TEXT_SEC, border: "none", cursor: "pointer"
-              }}
-            >
-              Cancel
-            </button>
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>Swap Exercise</h3>
+                <button onClick={() => setShowSwapModal(null)} style={{
+                  width: 28, height: 28, borderRadius: 6, border: "none",
+                  background: "#f5f7f6", cursor: "pointer", color: TEXT_SEC,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <p style={{ fontSize: 13, color: TEXT_SEC, margin: "6px 0 0" }}>
+                Select a replacement exercise
+              </p>
+            </div>
+            
+            <div style={{ flex: 1, overflow: "auto", padding: 12 }}>
+              {/* Exercise suggestions based on pattern */}
+              {["Barbell Back Squat", "Front Squat", "Goblet Squat", "Leg Press", "Hack Squat", "Bulgarian Split Squat"].map((ex, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => { handleSwapExercise(showSwapModal, ex); }}
+                  style={{
+                    padding: "12px 14px", borderRadius: 8, marginBottom: 6,
+                    border: `1px solid ${BORDER}`, cursor: "pointer",
+                    transition: "all 0.15s"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#f7faf9"; e.currentTarget.style.borderColor = TEAL; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = BORDER; }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{ex}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>Primary: Squat</div>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}` }}>
+              <button
+                onClick={() => setShowSwapModal(null)}
+                style={{
+                  width: "100%", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Sets/Reps Modal */}
+      {editingExercise && (
+        <div 
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setEditingExercise(null)}
+        >
+          <div 
+            style={{
+              background: WHITE, borderRadius: 16, width: "min(360px, 90vw)",
+              overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>Edit Exercise</h3>
+                <button onClick={() => setEditingExercise(null)} style={{
+                  width: 28, height: 28, borderRadius: 6, border: "none",
+                  background: "#f5f7f6", cursor: "pointer", color: TEXT_SEC,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <p style={{ fontSize: 14, color: TEXT, margin: "8px 0 0", fontWeight: 500 }}>
+                {editingExercise.name}
+              </p>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              {/* Sets */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Sets
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <button
+                    onClick={() => setEditingExercise(prev => ({ ...prev, sets: Math.max(1, prev.sets - 1) }))}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: "pointer", fontSize: 18, color: TEXT,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    value={editingExercise.sets}
+                    onChange={(e) => setEditingExercise(prev => ({ ...prev, sets: parseInt(e.target.value) || 1 }))}
+                    style={{
+                      width: 60, padding: "8px 12px", borderRadius: 8, fontSize: 16, fontWeight: 600,
+                      border: `1px solid ${BORDER}`, textAlign: "center", color: TEXT
+                    }}
+                  />
+                  <button
+                    onClick={() => setEditingExercise(prev => ({ ...prev, sets: prev.sets + 1 }))}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: "pointer", fontSize: 18, color: TEXT,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              
+              {/* Reps */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Reps
+                </label>
+                <input
+                  type="text"
+                  value={editingExercise.reps}
+                  onChange={(e) => setEditingExercise(prev => ({ ...prev, reps: e.target.value }))}
+                  placeholder="e.g. 8, 6-8, AMRAP"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, color: TEXT
+                  }}
+                />
+              </div>
+              
+              {/* Weight */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                  Target Weight (lbs)
+                </label>
+                <input
+                  type="number"
+                  value={editingExercise.weight}
+                  onChange={(e) => setEditingExercise(prev => ({ ...prev, weight: parseInt(e.target.value) || 0 }))}
+                  placeholder="0 for bodyweight"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, color: TEXT
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ padding: "12px 20px 20px", display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setEditingExercise(null)}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                }}
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -5316,7 +5702,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 
 /* ═════════════════════════════════════════════
    CLIENT PROFILE SCREEN
-   ═════════════════════════════════════════════ */
+   ═════════════���═══════════════════════════════ */
 function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks, onUpdateClient }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -11975,7 +12361,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ��══════════════════════════════════════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
