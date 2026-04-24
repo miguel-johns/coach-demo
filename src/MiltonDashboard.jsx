@@ -19306,7 +19306,7 @@ export default function MiltonDashboard() {
           const counts = getCounts();
           
           return (
-            <>
+            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
               {/* Tab Bar */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 0,
@@ -19486,7 +19486,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
         )}
-        </>
+        </div>
       );
       })()}
       </main>
