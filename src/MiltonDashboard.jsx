@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������������═══════════════════════════════
+// ═══════════════════════════════�����������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -19122,11 +19122,18 @@ export default function MiltonDashboard() {
               { time: "8:00 AM", type: "Strength", name: "David Park", goal: "Gain strength · Week 6", cue: "Hit 315lb deadlift PR yesterday. Open with it. Recovery is green, push him on bench today." },
               { time: "10:00 AM", type: "Fat Loss", name: "Sarah Chen", goal: "Lose 20 lbs · Phase 2", cue: "Sleep down over the weekend, HRV trending down. Consider swapping heavy squat for tempo work. Ask her about stress." },
               { time: "4:30 PM", type: "Hypertrophy", name: "Marcus Johnson", goal: "Gain 15 lbs muscle", cue: "Assessment due this week. Ask 3 intake questions before the session starts." },
-            ].map((session, idx) => (
-              <div key={idx} style={{
+            ].map((session, idx) => {
+              const clientIndex = clients.findIndex(c => c.name === session.name);
+              return (
+              <div key={idx} 
+                onClick={() => clientIndex !== -1 && setSelectedClient(clientIndex)}
+                style={{
                 background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: 16, display: "flex", flexDirection: "column", gap: 12
-              }}>
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: 16, display: "flex", flexDirection: "column", gap: 12,
+                cursor: clientIndex !== -1 ? "pointer" : "default", transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { if (clientIndex !== -1) e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}>
                 {/* Time & Type */}
                 <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {session.time} · {session.type}
@@ -19147,7 +19154,8 @@ export default function MiltonDashboard() {
                   <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.5 }}>{session.cue}</div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
 
