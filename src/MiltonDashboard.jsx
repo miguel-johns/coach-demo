@@ -297,6 +297,1821 @@ const dataConnectors = {
   },
 };
 
+// Service type configuration
+const CLIENT_TYPES = {
+  PT: { label: "PT", bg: "#e8f5f3", color: "#2B7A78", description: "1-on-1 personal training" },
+  Semi: { label: "Semi", bg: "#e6f9ec", color: "#1f7a3e", description: "Semi-private group (2-6 clients)" },
+  Online: { label: "Online", bg: "#ede9fe", color: "#6b46c1", description: "Remote coaching only" },
+  Hybrid: { label: "Hybrid", bg: "#fef3c7", color: "#92400e", description: "Self-led with coach oversight" },
+};
+const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
+// ═══════════════════════════════���������═══════════════════════════════
+const initialSessions = [
+  {
+    id: "sess_001",
+    time: "8:00 AM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [1], // Marcus Johnson
+    stationAssignments: { 1: "Rack 1" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      1: {
+        exercises: [
+          { id: "ex_01", name: "Barbell Back Squat", sets: 4, reps: "6", weightLast: 275, weightTarget: 285, completed: false, notes: "" },
+          { id: "ex_02", name: "Romanian Deadlift", sets: 3, reps: "8", weightLast: 225, weightTarget: 235, completed: false, notes: "" },
+          { id: "ex_03", name: "Bulgarian Split Squat", sets: 3, reps: "10 each", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_04", name: "Leg Press", sets: 3, reps: "12", weightLast: 360, weightTarget: 380, completed: false, notes: "" },
+          { id: "ex_05", name: "Hanging Leg Raise", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_002",
+    time: "10:00 AM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [0], // Sarah Chen
+    stationAssignments: { 0: "Platform 1" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      0: {
+        exercises: [
+          { id: "ex_06", name: "Goblet Squat", sets: 3, reps: "12", weightLast: 45, weightTarget: 50, completed: false, notes: "" },
+          { id: "ex_07", name: "Dumbbell Bench Press", sets: 3, reps: "10", weightLast: 30, weightTarget: 35, completed: false, notes: "" },
+          { id: "ex_08", name: "Cable Row", sets: 3, reps: "12", weightLast: 60, weightTarget: 65, completed: false, notes: "" },
+          { id: "ex_09", name: "Lateral Raise", sets: 3, reps: "15", weightLast: 12, weightTarget: 15, completed: false, notes: "" },
+          { id: "ex_10", name: "Plank Hold", sets: 3, reps: "45 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_003",
+    time: "2:00 PM",
+    duration: "60 min",
+    sessionKind: "pt",
+    clientIds: [3], // David Park
+    stationAssignments: { 3: "Platform 2" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      3: {
+        exercises: [
+          { id: "ex_11", name: "Competition Deadlift", sets: 5, reps: "3", weightLast: 405, weightTarget: 415, completed: false, notes: "" },
+          { id: "ex_12", name: "Paused Back Squat", sets: 4, reps: "4", weightLast: 315, weightTarget: 325, completed: false, notes: "" },
+          { id: "ex_13", name: "Barbell Row", sets: 4, reps: "6", weightLast: 185, weightTarget: 195, completed: false, notes: "" },
+          { id: "ex_14", name: "Good Mornings", sets: 3, reps: "10", weightLast: 135, weightTarget: 145, completed: false, notes: "" },
+          { id: "ex_15", name: "Face Pulls", sets: 3, reps: "15", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_004",
+    time: "5:00 PM",
+    duration: "60 min",
+    sessionKind: "semi",
+    clientIds: [12, 13, 4, 5], // Jake Morrison, Olivia Chen, Rachel Kim, Aaron Smith (all Semi-tagged)
+    stationAssignments: { 12: "Rack 1", 13: "Rack 2", 4: "Rack 3", 5: "Rack 4" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      12: { // Jake Morrison - Strength focus
+        exercises: [
+          { id: "ex_j1", name: "Barbell Back Squat", sets: 4, reps: "6", weightLast: 185, weightTarget: 195, completed: false, notes: "" },
+          { id: "ex_j2", name: "Dumbbell Bench Press", sets: 4, reps: "8", weightLast: 55, weightTarget: 60, completed: false, notes: "" },
+          { id: "ex_j3", name: "Barbell Row", sets: 3, reps: "8", weightLast: 135, weightTarget: 145, completed: false, notes: "" },
+          { id: "ex_j4", name: "Dumbbell Shoulder Press", sets: 3, reps: "10", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+          { id: "ex_j5", name: "Cable Tricep Pushdown", sets: 3, reps: "12", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_j6", name: "Plank", sets: 3, reps: "45 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      13: { // Olivia Chen - HIIT/conditioning
+        exercises: [
+          { id: "ex_o1", name: "Kettlebell Swings", sets: 4, reps: "15", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_o2", name: "Box Step-Ups", sets: 3, reps: "12 each", weightLast: 20, weightTarget: 25, completed: false, notes: "" },
+          { id: "ex_o3", name: "TRX Row", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_o4", name: "Medicine Ball Slams", sets: 3, reps: "12", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_o5", name: "Battle Ropes", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_o6", name: "Dead Bug", sets: 3, reps: "10 each", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      4: { // Rachel Kim - Post-pregnancy recovery
+        exercises: [
+          { id: "ex_r1", name: "Goblet Squat", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_r2", name: "Bird Dog", sets: 3, reps: "10 each", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_r3", name: "Glute Bridge", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_r4", name: "Pallof Press", sets: 3, reps: "12 each", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_r5", name: "Cable Pull-Through", sets: 3, reps: "12", weightLast: 40, weightTarget: 45, completed: false, notes: "" },
+        ]
+      },
+      5: { // Aaron Smith - Strength building
+        exercises: [
+          { id: "ex_a1", name: "Trap Bar Deadlift", sets: 4, reps: "6", weightLast: 225, weightTarget: 245, completed: false, notes: "" },
+          { id: "ex_a2", name: "Incline Dumbbell Press", sets: 3, reps: "10", weightLast: 50, weightTarget: 55, completed: false, notes: "" },
+          { id: "ex_a3", name: "Lat Pulldown", sets: 3, reps: "12", weightLast: 120, weightTarget: 130, completed: false, notes: "" },
+          { id: "ex_a4", name: "Dumbbell Lunges", sets: 3, reps: "10 each", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_a5", name: "Hammer Curls", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+  {
+    id: "sess_005",
+    time: "6:00 PM",
+    duration: "60 min",
+    sessionKind: "semi",
+    clientIds: [14, 15, 6], // Chris Taylor, Mia Patel, Lisa Martinez (Semi-tagged)
+    stationAssignments: { 14: "Rack 1", 15: "Rack 2", 6: "Rack 3" },
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    workouts: {
+      14: { // Chris Taylor - Beginner basics
+        exercises: [
+          { id: "ex_c1", name: "Bodyweight Squat", sets: 3, reps: "15", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_c2", name: "Push-Up", sets: 3, reps: "10", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_c3", name: "Dumbbell Row", sets: 3, reps: "12", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_c4", name: "Goblet Squat", sets: 3, reps: "10", weightLast: 25, weightTarget: 30, completed: false, notes: "" },
+          { id: "ex_c5", name: "Plank", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+        ]
+      },
+      15: { // Mia Patel - Conditioning
+        exercises: [
+          { id: "ex_m1", name: "Dumbbell Thrusters", sets: 4, reps: "12", weightLast: 20, weightTarget: 25, completed: false, notes: "" },
+          { id: "ex_m2", name: "Renegade Rows", sets: 3, reps: "10 each", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+          { id: "ex_m3", name: "Box Jumps", sets: 3, reps: "10", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_m4", name: "Mountain Climbers", sets: 3, reps: "30 sec", weightLast: 0, weightTarget: 0, completed: false, notes: "" },
+          { id: "ex_m5", name: "Kettlebell Goblet Squat", sets: 3, reps: "15", weightLast: 35, weightTarget: 40, completed: false, notes: "" },
+          { id: "ex_m6", name: "Russian Twist", sets: 3, reps: "20", weightLast: 15, weightTarget: 20, completed: false, notes: "" },
+        ]
+      },
+      6: { // Lisa Martinez - Olympic lifting intro
+        exercises: [
+          { id: "ex_l1", name: "Hang Clean", sets: 4, reps: "5", weightLast: 75, weightTarget: 85, completed: false, notes: "" },
+          { id: "ex_l2", name: "Front Squat", sets: 4, reps: "6", weightLast: 95, weightTarget: 105, completed: false, notes: "" },
+          { id: "ex_l3", name: "Push Press", sets: 3, reps: "8", weightLast: 65, weightTarget: 75, completed: false, notes: "" },
+          { id: "ex_l4", name: "Clean Pull", sets: 3, reps: "5", weightLast: 115, weightTarget: 125, completed: false, notes: "" },
+          { id: "ex_l5", name: "Overhead Squat", sets: 3, reps: "8", weightLast: 45, weightTarget: 55, completed: false, notes: "" },
+        ]
+      }
+    }
+  },
+];
+
+// Helper to get session display info
+const getSessionKindLabel = (kind) => {
+  switch (kind) {
+    case "pt": return "PT Session";
+    case "semi": return "Semi-Private";
+    case "bootcamp": return "Bootcamp";
+    case "online-checkin": return "Online Check-in";
+    case "assessment": return "Assessment";
+    case "group": return "Group Class";
+    default: return "Session";
+  }
+};
+
+const getSessionStatusBadge = (status, elapsedMin = 0) => {
+  switch (status) {
+    case "scheduled": return { label: "Not started", bg: "#f5f7f6", color: TEXT_SEC };
+    case "in_progress": return { label: `In progress · ${elapsedMin} min elapsed`, bg: TEAL_LIGHT, color: TEAL };
+    case "completed": return { label: "Completed", bg: "#dcfce7", color: "#16a34a" };
+    case "canceled": return { label: "Canceled", bg: "#fee2e2", color: "#dc2626" };
+    default: return { label: status, bg: "#f5f7f6", color: TEXT_SEC };
+  }
+};
+
+// ClientTypePill component - displays a single service type tag
+function ClientTypePill({ type, size = "sm" }) {
+  const config = CLIENT_TYPES[type];
+  if (!config) return null;
+  
+  const sizes = {
+    sm: { fontSize: 10, padding: "3px 7px", fontWeight: 600 },
+    md: { fontSize: 11, padding: "4px 10px", fontWeight: 600 },
+  };
+  const s = sizes[size] || sizes.sm;
+  
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      padding: s.padding,
+      borderRadius: 9999,
+      background: config.bg,
+      color: config.color,
+      fontSize: s.fontSize,
+      fontWeight: s.fontWeight,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+    }}>
+      {config.label}
+    </span>
+  );
+}
+
+// ClientTypePills component - displays multiple service type tags in order
+function ClientTypePills({ types = [], size = "sm", maxDisplay = 3 }) {
+  if (!types || types.length === 0) return null;
+  
+  // Sort types according to CLIENT_TYPE_ORDER
+  const sortedTypes = [...types].sort((a, b) => {
+    const aIdx = CLIENT_TYPE_ORDER.indexOf(a);
+    const bIdx = CLIENT_TYPE_ORDER.indexOf(b);
+    return aIdx - bIdx;
+  });
+  
+  const displayTypes = sortedTypes.slice(0, maxDisplay);
+  const overflow = sortedTypes.length - maxDisplay;
+  
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+      {displayTypes.map((type) => (
+        <ClientTypePill key={type} type={type} size={size} />
+      ))}
+      {overflow > 0 && (
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: size === "md" ? "4px 8px" : "3px 6px",
+          borderRadius: 9999,
+          background: "#f0f4f3",
+          color: TEXT_SEC,
+          fontSize: size === "md" ? 11 : 10,
+          fontWeight: 600,
+          lineHeight: 1,
+        }}>
+          +{overflow}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ServiceTypeEditModal - allows editing client service types
+function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
+  const [selected, setSelected] = useState([...clientTypes]);
+  
+  useEffect(() => {
+    setSelected([...clientTypes]);
+  }, [clientTypes, isOpen]);
+  
+  const toggleType = (type) => {
+    setSelected(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, animation: "fadeIn 0.15s ease"
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, padding: 24, width: "min(360px, 90vw)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)", animation: "scaleIn 0.2s ease"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>Service types</h3>
+          <button 
+            onClick={onClose}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_SEC }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 20px 0" }}>
+          What services does this client receive?
+        </p>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {CLIENT_TYPE_ORDER.map(type => {
+            const config = CLIENT_TYPES[type];
+            const isSelected = selected.includes(type);
+            return (
+              <button
+                key={type}
+                onClick={() => toggleType(type)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                  borderRadius: 12, border: `1.5px solid ${isSelected ? config.color : BORDER}`,
+                  background: isSelected ? config.bg : WHITE, cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{
+                  width: 20, height: 20, borderRadius: 6,
+                  border: `2px solid ${isSelected ? config.color : "#d1d5db"}`,
+                  background: isSelected ? config.color : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s ease"
+                }}>
+                  {isSelected && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: isSelected ? config.color : TEXT }}>{type}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{config.description}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => { onSave(selected); onClose(); }}
+            style={{
+              flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+              boxShadow: `0 2px 8px ${TEAL}40`
+            }}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION CLIENT TILE - Individual client card within SessionCanvas
+// ═══════════════════════════════════════════════════════════════
+function SessionClientTile({ 
+  client, 
+  clientId,
+  workout, 
+  station, 
+  sessionStatus,
+  onExerciseComplete,
+  onWeightChange,
+  onAddNote,
+  onFlagToggle,
+  onClientClick,
+  isMobile 
+}) {
+  const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
+  const [flagged, setFlagged] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [localWeights, setLocalWeights] = useState({});
+  
+  if (!client || !workout) return null;
+  
+  const exercises = workout.exercises || [];
+  const completedCount = exercises.filter(e => e.completed).length;
+  const isSessionActive = sessionStatus === "in_progress";
+  
+  // Find first incomplete exercise for auto-focus
+  useEffect(() => {
+    const firstIncomplete = exercises.findIndex(e => !e.completed);
+    if (firstIncomplete >= 0) setCurrentExerciseIdx(firstIncomplete);
+  }, [exercises]);
+  
+  const handleExerciseClick = (idx) => {
+    if (isSessionActive) setCurrentExerciseIdx(idx);
+  };
+  
+  const handleCheckboxClick = (idx, exercise) => {
+    if (!isSessionActive) return;
+    onExerciseComplete?.(clientId, exercise.id, !exercise.completed);
+    // Auto-advance to next incomplete
+    if (!exercise.completed) {
+      const nextIncomplete = exercises.findIndex((e, i) => i > idx && !e.completed);
+      if (nextIncomplete >= 0) setCurrentExerciseIdx(nextIncomplete);
+    }
+  };
+  
+  const handleWeightChange = (exerciseId, value) => {
+    setLocalWeights(prev => ({ ...prev, [exerciseId]: value }));
+    onWeightChange?.(clientId, exerciseId, value);
+  };
+  
+  return (
+    <div style={{
+      background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`,
+      padding: 20, minHeight: 400, display: "flex", flexDirection: "column",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      transition: "box-shadow 0.2s, transform 0.2s"
+    }}
+    onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}}
+    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}}
+    >
+      {/* Tile Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+        <div 
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+          onClick={() => onClientClick?.(clientId)}
+        >
+          <div style={{
+            width: 40, height: 40, borderRadius: "50%", 
+            background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14, fontWeight: 600, color: TEAL
+          }}>
+            {client.name?.split(" ").map(n => n[0]).join("")}
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{client.name}</div>
+            {station && <div style={{ fontSize: 12, color: TEXT_SEC }}>{station}</div>}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <ClientTypePill type={client.clientTypes?.[0] || "Semi"} size="sm" />
+          <button
+            onClick={() => { setFlagged(!flagged); onFlagToggle?.(clientId, !flagged); }}
+            style={{
+              width: 28, height: 28, borderRadius: 6, border: `1px solid ${flagged ? "#f87171" : BORDER}`,
+              background: flagged ? "#fef2f2" : "transparent", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: flagged ? "#ef4444" : TEXT_SEC, transition: "all 0.15s"
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={flagged ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+              <line x1="4" y1="22" x2="4" y2="15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Workout List */}
+      <div style={{ flex: 1, overflowY: "auto", marginBottom: 12 }}>
+        {exercises.map((exercise, idx) => {
+          const isCurrent = idx === currentExerciseIdx && isSessionActive;
+          const localWeight = localWeights[exercise.id];
+          
+          return (
+            <div 
+              key={exercise.id}
+              onClick={() => handleExerciseClick(idx)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                borderRadius: 8, marginBottom: 4, cursor: isSessionActive ? "pointer" : "default",
+                background: exercise.completed ? "#f9fbfa" : (isCurrent ? `${TEAL}08` : "#f9fbfa"),
+                borderLeft: isCurrent ? `3px solid ${TEAL}` : "3px solid transparent",
+                transition: "all 0.15s"
+              }}
+            >
+              {/* Exercise Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  fontSize: 14, fontWeight: 500, color: exercise.completed ? TEXT_SEC : TEXT,
+                  textDecoration: exercise.completed ? "line-through" : "none"
+                }}>
+                  {exercise.name}
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                  {exercise.sets} × {exercise.reps}
+                </div>
+              </div>
+              
+              {/* Weight Input */}
+              {exercise.weightTarget > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <input
+                      type="number"
+                      value={localWeight !== undefined ? localWeight : exercise.weightTarget}
+                      onChange={(e) => handleWeightChange(exercise.id, parseInt(e.target.value) || 0)}
+                      disabled={!isSessionActive}
+                      style={{
+                        width: 50, padding: "4px 6px", borderRadius: 6, fontSize: 13,
+                        border: `1px solid ${BORDER}`, textAlign: "right",
+                        background: isSessionActive ? WHITE : "#f5f7f6",
+                        color: TEXT
+                      }}
+                    />
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>lbs</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>
+                    Last: {exercise.weightLast}
+                  </div>
+                </div>
+              )}
+              
+              {/* Checkbox */}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCheckboxClick(idx, exercise); }}
+                disabled={!isSessionActive}
+                style={{
+                  width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                  border: `2px solid ${exercise.completed ? TEAL : BORDER}`,
+                  background: exercise.completed ? TEAL : "transparent",
+                  cursor: isSessionActive ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s", opacity: isSessionActive ? 1 : 0.5
+                }}
+              >
+                {exercise.completed && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Tile Footer */}
+      <div style={{ 
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingTop: 12, borderTop: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setShowNoteInput(!showNoteInput)}
+            style={{
+              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Note
+          </button>
+          <button
+            style={{
+              padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+              background: "transparent", border: `1px solid ${BORDER}`, color: TEXT_SEC,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
+              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
+            </svg>
+            Swap
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>
+          {completedCount} of {exercises.length} complete
+        </div>
+      </div>
+      
+      {/* Note Input */}
+      {showNoteInput && (
+        <div style={{ marginTop: 12 }}>
+          <textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Add a note for this client..."
+            style={{
+              width: "100%", padding: 10, borderRadius: 8, fontSize: 13,
+              border: `1px solid ${BORDER}`, resize: "none", minHeight: 60,
+              fontFamily: "inherit"
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              onClick={() => { onAddNote?.(clientId, noteText); setNoteText(""); setShowNoteInput(false); }}
+              style={{
+                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => { setNoteText(""); setShowNoteInput(false); }}
+              style={{
+                padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                background: "#f5f7f6", color: TEXT_SEC, border: "none", cursor: "pointer"
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION CANVAS - Full-screen session view for PT & Semi-Private
+// ═══════════════════════════════════════════════════════════════
+function SessionCanvas({ 
+  session, 
+  clients, 
+  onBack, 
+  onUpdateSession,
+  onOpenFullProfile,
+  isMobile 
+}) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [drawerClientId, setDrawerClientId] = useState(null);
+  
+  // Timer for in-progress sessions
+  useEffect(() => {
+    if (session?.status !== "in_progress") return;
+    
+    const startTime = session.startedAt ? new Date(session.startedAt).getTime() : Date.now();
+    const updateElapsed = () => {
+      const now = Date.now();
+      setElapsedSeconds(Math.floor((now - startTime) / 1000));
+    };
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [session?.status, session?.startedAt]);
+  
+  if (!session) return null;
+  
+  const sessionClients = session.clientIds.map(id => clients[id]).filter(Boolean);
+  const clientCount = sessionClients.length;
+  const elapsedMin = Math.floor(elapsedSeconds / 60);
+  const statusBadge = getSessionStatusBadge(session.status, elapsedMin);
+  
+  // Calculate grid layout based on client count
+  const getGridStyle = () => {
+    if (isMobile || clientCount === 1) {
+      return { display: "flex", flexDirection: "column", gap: 16 };
+    }
+    if (clientCount === 2) {
+      return { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
+    }
+    if (clientCount === 3) {
+      return { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 };
+    }
+    if (clientCount === 4) {
+      return { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 };
+    }
+    return { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 };
+  };
+  
+  const handleStartSession = () => {
+    onUpdateSession?.({
+      ...session,
+      status: "in_progress",
+      startedAt: new Date().toISOString()
+    });
+  };
+  
+  const handleEndSession = () => {
+    onUpdateSession?.({
+      ...session,
+      status: "completed",
+      completedAt: new Date().toISOString()
+    });
+    setShowEndConfirm(false);
+  };
+  
+  const handleExerciseComplete = (clientId, exerciseId, completed) => {
+    const updatedWorkouts = { ...session.workouts };
+    if (updatedWorkouts[clientId]) {
+      updatedWorkouts[clientId] = {
+        ...updatedWorkouts[clientId],
+        exercises: updatedWorkouts[clientId].exercises.map(ex =>
+          ex.id === exerciseId ? { ...ex, completed } : ex
+        )
+      };
+    }
+    onUpdateSession?.({ ...session, workouts: updatedWorkouts });
+  };
+  
+  const handleWeightChange = (clientId, exerciseId, weight) => {
+    const updatedWorkouts = { ...session.workouts };
+    if (updatedWorkouts[clientId]) {
+      updatedWorkouts[clientId] = {
+        ...updatedWorkouts[clientId],
+        exercises: updatedWorkouts[clientId].exercises.map(ex =>
+          ex.id === exerciseId ? { ...ex, weightTarget: weight } : ex
+        )
+      };
+    }
+    onUpdateSession?.({ ...session, workouts: updatedWorkouts });
+  };
+  
+  // Session Summary View
+  if (session.status === "completed") {
+    const totalExercises = Object.values(session.workouts).reduce((sum, w) => sum + w.exercises.length, 0);
+    const completedExercises = Object.values(session.workouts).reduce((sum, w) => sum + w.exercises.filter(e => e.completed).length, 0);
+    
+    return (
+      <div style={{ 
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+        background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column"
+      }}>
+        {/* Summary Header */}
+        <div style={{
+          height: 72, padding: "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>Session Complete</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC }}>{elapsedMin} min · {clientCount} client{clientCount > 1 ? "s" : ""}</div>
+          </div>
+        </div>
+        
+        {/* Summary Content */}
+        <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+          <div style={{ maxWidth: 600, margin: "0 auto" }}>
+            <div style={{ 
+              background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, 
+              padding: 20, marginBottom: 16 
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 16 }}>Session Summary</div>
+              {sessionClients.map((client, idx) => {
+                const workout = session.workouts[session.clientIds[idx]];
+                const completed = workout?.exercises.filter(e => e.completed).length || 0;
+                const total = workout?.exercises.length || 0;
+                return (
+                  <div key={idx} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 0",
+                    borderBottom: idx < sessionClients.length - 1 ? `1px solid ${BORDER}` : "none"
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", 
+                      background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 600, color: TEAL
+                    }}>
+                      {client?.name?.split(" ").map(n => n[0]).join("")}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client?.name}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{completed}/{total} exercises</div>
+                    </div>
+                    {completed === total && (
+                      <div style={{ 
+                        padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                        background: "#dcfce7", color: "#16a34a"
+                      }}>
+                        Complete
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={onBack}
+              style={{
+                width: "100%", padding: "14px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+              }}
+            >
+              Back to Today
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ 
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+      background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column"
+    }}>
+      {/* Header Bar */}
+      <div style={{
+        height: 72, padding: "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0
+      }}>
+        {/* Left: Back + Title */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={onBack}
+            style={{
+              width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              color: TEXT_SEC
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
+              {getSessionKindLabel(session.sessionKind)} · {session.time}
+            </div>
+            <div style={{ fontSize: 13, color: TEXT_SEC }}>
+              {clientCount} client{clientCount > 1 ? "s" : ""} · {session.duration}
+            </div>
+          </div>
+        </div>
+        
+        {/* Center: Status Badge */}
+        {!isMobile && (
+          <div style={{
+            padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 500,
+            background: statusBadge.bg, color: statusBadge.color
+          }}>
+            {statusBadge.label}
+          </div>
+        )}
+        
+        {/* Right: Action Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {session.status === "scheduled" && (
+            <button
+              onClick={handleStartSession}
+              style={{
+                padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                boxShadow: `0 2px 8px ${TEAL}40`
+              }}
+            >
+              Start Session
+            </button>
+          )}
+          {session.status === "in_progress" && (
+            <button
+              onClick={() => setShowEndConfirm(true)}
+              style={{
+                padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600,
+                background: "transparent", color: TEAL, border: `2px solid ${TEAL}`, cursor: "pointer"
+              }}
+            >
+              End Session
+            </button>
+          )}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              style={{
+                width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+              </svg>
+            </button>
+            {showMenu && (
+              <div style={{
+                position: "absolute", top: "100%", right: 0, marginTop: 4,
+                background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: 180, zIndex: 10
+              }}>
+                {["Add client", "Remove client", "Cancel session", "Notes"].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setShowMenu(false)}
+                    style={{
+                      width: "100%", padding: "10px 14px", fontSize: 13, color: item === "Cancel session" ? "#dc2626" : TEXT,
+                      background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                      borderBottom: i < 3 ? `1px solid ${BORDER}` : "none"
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Mobile Status Badge */}
+      {isMobile && (
+        <div style={{ padding: "12px 24px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{
+            padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+            background: statusBadge.bg, color: statusBadge.color, textAlign: "center"
+          }}>
+            {statusBadge.label}
+          </div>
+        </div>
+      )}
+      
+      {/* Tile Grid */}
+      <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
+        <div style={clientCount === 1 ? { maxWidth: 720, margin: "0 auto" } : getGridStyle()}>
+          {session.clientIds.map((clientId) => (
+            <SessionClientTile
+              key={clientId}
+              client={clients[clientId]}
+              clientId={clientId}
+              workout={session.workouts[clientId]}
+              station={session.stationAssignments?.[clientId]}
+              sessionStatus={session.status}
+              onExerciseComplete={handleExerciseComplete}
+              onWeightChange={handleWeightChange}
+              onClientClick={(cid) => setDrawerClientId(cid)}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Client Context Drawer */}
+      <ClientContextDrawer
+        isOpen={drawerClientId !== null}
+        onClose={() => setDrawerClientId(null)}
+        client={drawerClientId !== null ? clients[drawerClientId] : null}
+        onOpenFullProfile={() => onOpenFullProfile?.(drawerClientId)}
+      />
+      
+      {/* End Session Confirmation Modal */}
+      {showEndConfirm && (
+        <div 
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setShowEndConfirm(false)}
+        >
+          <div 
+            style={{
+              background: WHITE, borderRadius: 16, padding: 24, width: "min(360px, 90vw)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "0 0 8px" }}>End session?</h3>
+            <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 20px" }}>
+              Any unlogged weights will be saved as-is.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                style={{
+                  flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEndSession}
+                style={{
+                  flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                }}
+              >
+                End Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENT CONTEXT DRAWER - Quick reference pane during sessions
+// ═══════════════════════════════════════════════════════════════
+function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
+  if (!isOpen || !client) return null;
+  
+  // Mock data for last sessions - in real app, this would come from client data
+  const lastSessions = [
+    { date: "Mar 12", type: "PT Session", completed: "6/6" },
+    { date: "Mar 8", type: "Semi-Private", completed: "5/6" },
+    { date: "Mar 5", type: "PT Session", completed: "6/6" },
+  ];
+  
+  // Mock goals
+  const goals = [
+    { name: client.goals?.primary || "Lose 15 lbs", progress: 65 },
+    { name: "Squat 200 lbs", progress: 85 },
+  ];
+  
+  // Mock coach notes
+  const recentNotes = [
+    { date: "Mar 12", text: "Great session today. Form improving on deadlifts." },
+    { date: "Mar 8", text: "Slight knee discomfort on squats - monitor next session." },
+    { date: "Mar 1", text: "Increased bench weight successfully. Ready for next progression." },
+  ];
+  
+  const sessionCount = client.totalSessions || 24;
+  
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.3)", zIndex: 1001
+        }}
+        onClick={onClose}
+      />
+      
+      {/* Drawer */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "min(360px, 90vw)",
+        background: WHITE, zIndex: 1002, boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.2s ease"
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px", borderBottom: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Client Quick View</span>
+          <button
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 6, border: "none",
+              background: "transparent", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+          {/* Client Hero */}
+          <div style={{ 
+            display: "flex", alignItems: "center", gap: 14, marginBottom: 24,
+            padding: 16, background: `linear-gradient(135deg, ${TEAL}08, ${MINT}08)`,
+            borderRadius: 12
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", 
+              background: `linear-gradient(135deg, ${TEAL}20, ${MINT}20)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, fontWeight: 600, color: TEAL
+            }}>
+              {client.name?.split(" ").map(n => n[0]).join("")}
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{client.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+              </div>
+              <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 4 }}>
+                Session {sessionCount} with you
+              </div>
+            </div>
+          </div>
+          
+          {/* Last 3 Sessions */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Recent Sessions
+            </div>
+            {lastSessions.map((session, idx) => (
+              <div key={idx} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 0", borderBottom: idx < lastSessions.length - 1 ? `1px solid ${BORDER}` : "none"
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{session.type}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>{session.date}</div>
+                </div>
+                <div style={{ 
+                  fontSize: 12, fontWeight: 500, color: session.completed === "6/6" ? "#16a34a" : TEXT_SEC 
+                }}>
+                  {session.completed} exercises
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Goals */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Active Goals
+            </div>
+            {goals.map((goal, idx) => (
+              <div key={idx} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: TEXT }}>{goal.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: TEAL }}>{goal.progress}%</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: "#e8f5f3" }}>
+                  <div style={{ 
+                    width: `${goal.progress}%`, height: "100%", borderRadius: 3,
+                    background: `linear-gradient(90deg, ${TEAL}, ${MINT})`
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Recent Notes */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Coach Notes
+            </div>
+            {recentNotes.map((note, idx) => (
+              <div key={idx} style={{
+                padding: "10px 12px", background: "#f9fbfa", borderRadius: 8, marginBottom: 8
+              }}>
+                <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 4 }}>{note.date}</div>
+                <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.4 }}>{note.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => { onOpenFullProfile?.(); onClose(); }}
+            style={{
+              width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              background: "transparent", color: TEAL, border: `2px solid ${TEAL}`,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+            }}
+          >
+            Open full profile
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEMI-PRIVATE LIST - List view of semi-private sessions
+// ═══════════════════════════════════════════════════════════════
+function SemiPrivateList({ 
+  sessions, 
+  clients, 
+  onClose, 
+  onHome,
+  onSessionClick,
+  onCreateSession,
+  isMobile 
+}) {
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Filter sessions to only semi-private
+  const semiSessions = sessions.filter(s => s.sessionKind === "semi");
+  
+  // Calculate counts for tabs
+  const now = new Date();
+  const upcomingCount = semiSessions.filter(s => s.status === "scheduled").length;
+  const inProgressCount = semiSessions.filter(s => s.status === "in_progress").length;
+  const completedTodayCount = semiSessions.filter(s => s.status === "completed").length;
+  
+  // Filter based on active tab
+  const filteredSessions = semiSessions.filter(s => {
+    if (activeTab === "upcoming") return s.status === "scheduled";
+    if (activeTab === "inProgress") return s.status === "in_progress";
+    if (activeTab === "completedToday") return s.status === "completed";
+    return true; // "all" tab
+  });
+  
+  // Group sessions by day (mock grouping for demo - assumes all are "today")
+  const groupedSessions = [
+    { label: "Today · Wednesday, April 22", sessions: filteredSessions }
+  ];
+  
+  // Format time display
+  const formatSessionTime = (session) => {
+    return session.time;
+  };
+  
+  // Get client names for a session
+  const getSessionClients = (session) => {
+    return session.clientIds.map(id => clients[id]).filter(Boolean);
+  };
+  
+  // Get status badge style
+  const getStatusStyle = (status, elapsedMin = 0) => {
+    switch (status) {
+      case "scheduled": return { bg: "#f5f7f6", color: TEXT_SEC, label: "Not started" };
+      case "in_progress": return { bg: TEAL_LIGHT, color: TEAL, label: `In progress · ${elapsedMin} min` };
+      case "completed": return { bg: "#dcfce7", color: "#16a34a", label: "Completed" };
+      case "canceled": return { bg: "#fee2e2", color: "#dc2626", label: "Canceled" };
+      default: return { bg: "#f5f7f6", color: TEXT_SEC, label: status };
+    }
+  };
+  
+  const tabs = [
+    { id: "upcoming", label: "Upcoming", count: upcomingCount },
+    { id: "inProgress", label: "In progress", count: inProgressCount },
+    { id: "completedToday", label: "Completed today", count: completedTodayCount },
+    { id: "all", label: "All", count: semiSessions.length }
+  ];
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      background: "#fafcfb", position: "relative"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "16px" : "24px 32px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            {/* Back button + Badge row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button
+                onClick={onHome}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; e.currentTarget.style.color = TEXT; }}
+                onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+              {/* Badge */}
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 6,
+                background: "#e6f9ec", padding: "5px 10px", borderRadius: 16
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1f7a3e" }}>Semi-Private</span>
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h1 style={{ 
+              fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+              letterSpacing: "-0.02em"
+            }}>
+              Semi-Private Sessions
+            </h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Every session where multiple clients train together. Click any session to open the control panel.
+            </p>
+          </div>
+          
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                boxShadow: `0 2px 8px ${TEAL}40`
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+                background: WHITE, cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", color: TEXT_SEC
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Tabs */}
+        <div style={{ 
+          display: "flex", gap: 4, marginTop: 20,
+          borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "10px 16px", fontSize: 13, fontWeight: 500,
+                background: "transparent", border: "none", cursor: "pointer",
+                color: activeTab === tab.id ? TEAL : TEXT_SEC,
+                borderBottom: activeTab === tab.id ? `2px solid ${TEAL}` : "2px solid transparent",
+                marginBottom: -1, transition: "all 0.15s"
+              }}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Session List */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        {filteredSessions.length === 0 ? (
+          /* Empty State */
+          <div style={{ 
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            padding: "80px 20px", textAlign: "center"
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%", background: "#f0f4f3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 20, color: TEXT_SEC
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>
+              No semi-private sessions yet
+            </h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "0 0 20px", maxWidth: 280 }}>
+              Create your first session to group clients who train together.
+            </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+          </div>
+        ) : (
+          /* Session Groups */
+          <div style={{ maxWidth: 800 }}>
+            {groupedSessions.map((group, gIdx) => (
+              <div key={gIdx}>
+                {/* Day Divider */}
+                <div style={{
+                  fontSize: 14, fontWeight: 500, color: TEXT,
+                  padding: "24px 0 8px",
+                  borderTop: gIdx > 0 ? `1px solid ${BORDER}` : "none",
+                  marginTop: gIdx > 0 ? 16 : 0
+                }}>
+                  {group.label}
+                </div>
+                
+                {/* Session Rows */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {group.sessions.map((session) => {
+                    const sessionClients = getSessionClients(session);
+                    const statusStyle = getStatusStyle(session.status);
+                    const workoutFocus = Object.values(session.workouts)[0]?.exercises?.[0]?.name?.split(" ").slice(0, 2).join(" ");
+                    
+                    return (
+                      <div
+                        key={session.id}
+                        onClick={() => onSessionClick?.(session.id)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 16,
+                          padding: 16, borderRadius: 12, background: WHITE,
+                          border: `0.5px solid ${BORDER}`, cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={e => { 
+                          e.currentTarget.style.borderColor = TEAL; 
+                          e.currentTarget.style.background = `${TEAL}05`;
+                        }}
+                        onMouseLeave={e => { 
+                          e.currentTarget.style.borderColor = BORDER; 
+                          e.currentTarget.style.background = WHITE;
+                        }}
+                      >
+                        {/* Time */}
+                        <div style={{ minWidth: 70 }}>
+                          <div style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>
+                            {formatSessionTime(session)}
+                          </div>
+                          <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                            {session.duration}
+                          </div>
+                        </div>
+                        
+                        {/* Session Details */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {/* Focus title */}
+                          {workoutFocus && (
+                            <div style={{ fontSize: 14, fontWeight: 500, color: TEXT, marginBottom: 6 }}>
+                              Strength Training
+                            </div>
+                          )}
+                          
+                          {/* Client avatars + count */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {/* Avatar stack */}
+                            <div style={{ display: "flex", marginLeft: 4 }}>
+                              {sessionClients.slice(0, 5).map((client, cIdx) => (
+                                <div
+                                  key={cIdx}
+                                  style={{
+                                    width: 28, height: 28, borderRadius: "50%",
+                                    background: `linear-gradient(135deg, ${TEAL}30, ${MINT}30)`,
+                                    border: `2px solid ${WHITE}`,
+                                    marginLeft: cIdx > 0 ? -10 : 0,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 10, fontWeight: 600, color: TEAL,
+                                    position: "relative", zIndex: 5 - cIdx
+                                  }}
+                                >
+                                  {client?.name?.split(" ").map(n => n[0]).join("")}
+                                </div>
+                              ))}
+                              {sessionClients.length > 5 && (
+                                <div style={{
+                                  width: 28, height: 28, borderRadius: "50%",
+                                  background: "#f0f4f3", border: `2px solid ${WHITE}`,
+                                  marginLeft: -10, display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 10, fontWeight: 600, color: TEXT_SEC
+                                }}>
+                                  +{sessionClients.length - 5}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Client count */}
+                            <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                              {sessionClients.length} client{sessionClients.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Status + Chevron */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                          <div style={{
+                            padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+                            background: statusStyle.bg, color: statusStyle.color
+                          }}>
+                            {statusStyle.label}
+                          </div>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round">
+                            <polyline points="9,18 15,12 9,6"/>
+                          </svg>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Create Session Modal */}
+      {showCreateModal && (
+        <CreateSemiPrivateModal
+          clients={clients}
+          onClose={() => setShowCreateModal(false)}
+          onCreateSession={(newSession) => {
+            onCreateSession?.(newSession);
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CREATE SEMI-PRIVATE MODAL - Form for creating new sessions
+// ═══════════════════════════════════════════════════════════════
+function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
+  const [date, setDate] = useState("2026-04-22");
+  const [time, setTime] = useState("5:00 PM");
+  const [duration, setDuration] = useState("60");
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [stationAssignments, setStationAssignments] = useState({});
+  const [sessionFocus, setSessionFocus] = useState("");
+  const [showAllClients, setShowAllClients] = useState(false);
+  
+  // Filter clients to Semi/Hybrid by default
+  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
+    if (showAllClients) return true;
+    return client.clientTypes?.some(t => t === "Semi" || t === "Hybrid");
+  });
+  
+  const toggleClient = (clientId) => {
+    const id = parseInt(clientId);
+    if (selectedClientIds.includes(id)) {
+      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
+      const newAssignments = { ...stationAssignments };
+      delete newAssignments[id];
+      setStationAssignments(newAssignments);
+    } else if (selectedClientIds.length < 6) {
+      setSelectedClientIds(prev => [...prev, id]);
+      setStationAssignments(prev => ({ ...prev, [id]: `Rack ${selectedClientIds.length + 1}` }));
+    }
+  };
+  
+  const stations = ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8", "Open floor"];
+  
+  const handleCreate = () => {
+    const newSession = {
+      id: `sess_${Date.now()}`,
+      time,
+      duration: `${duration} min`,
+      sessionKind: "semi",
+      clientIds: selectedClientIds,
+      stationAssignments,
+      status: "scheduled",
+      startedAt: null,
+      completedAt: null,
+      workouts: selectedClientIds.reduce((acc, cid) => {
+        acc[cid] = { exercises: [] }; // Empty - coach will build or Milton will generate
+        return acc;
+      }, {})
+    };
+    onCreateSession(newSession);
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, width: "min(480px, 100%)",
+          maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>New Semi-Private Session</h2>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: "transparent", cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", color: TEXT_SEC
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Form */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          {/* Date & Time Row */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+                Time
+              </label>
+              <select
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                }}
+              >
+                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
+                  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"
+                ].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          
+          {/* Duration */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Duration
+            </label>
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            >
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
+              <option value="75">75 minutes</option>
+              <option value="90">90 minutes</option>
+            </select>
+          </div>
+          
+          {/* Clients */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
+                Clients ({selectedClientIds.length}/6)
+              </label>
+              <button
+                onClick={() => setShowAllClients(!showAllClients)}
+                style={{
+                  fontSize: 12, color: TEAL, background: "transparent", border: "none",
+                  cursor: "pointer", fontWeight: 500
+                }}
+              >
+                {showAllClients ? "Show Semi/Hybrid only" : "Show all clients"}
+              </button>
+            </div>
+            <div style={{
+              border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto"
+            }}>
+              {eligibleClients.map(([id, client]) => {
+                const isSelected = selectedClientIds.includes(parseInt(id));
+                return (
+                  <div
+                    key={id}
+                    onClick={() => toggleClient(id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                      cursor: "pointer", borderBottom: `1px solid ${BORDER}`,
+                      background: isSelected ? `${TEAL}08` : "transparent",
+                      transition: "background 0.1s"
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 4,
+                      border: `2px solid ${isSelected ? TEAL : BORDER}`,
+                      background: isSelected ? TEAL : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {isSelected && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
+                    </div>
+                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Station Assignments (show only if clients selected) */}
+          {selectedClientIds.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 8 }}>
+                Station Assignments (optional)
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {selectedClientIds.map(cid => {
+                  const client = clients[cid];
+                  return (
+                    <div key={cid} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: TEXT, minWidth: 120 }}>{client?.name}</span>
+                      <select
+                        value={stationAssignments[cid] || ""}
+                        onChange={(e) => setStationAssignments(prev => ({ ...prev, [cid]: e.target.value }))}
+                        style={{
+                          flex: 1, padding: "8px 10px", borderRadius: 6, fontSize: 13,
+                          border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+                        }}
+                      >
+                        <option value="">Select station...</option>
+                        {stations.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Session Focus */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Session Focus (optional)
+            </label>
+            <input
+              type="text"
+              value={sessionFocus}
+              onChange={(e) => setSessionFocus(e.target.value)}
+              placeholder="e.g., Pull: Back & Biceps"
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ 
+          padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
+          display: "flex", gap: 12, justifyContent: "flex-end"
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={selectedClientIds.length < 2}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: selectedClientIds.length >= 2 ? TEAL : "#e0e0e0",
+              color: selectedClientIds.length >= 2 ? WHITE : TEXT_SEC,
+              border: "none", cursor: selectedClientIds.length >= 2 ? "pointer" : "not-allowed"
+            }}
+          >
+            Create session
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const initialClients = [
   {
     name: "Sarah Chen",
@@ -304,6 +2119,7 @@ const initialClients = [
     alertType: "blue",
     program: "Fat Loss — Phase 2",
     startDate: "Feb 1",
+    clientTypes: ["PT", "Online"],
     assessment: {
       date: "2026-02-01",
       bodyweight: 158,
@@ -407,6 +2223,7 @@ const initialClients = [
     alertType: "red",
     program: "Muscle Gain — Hypertrophy",
     startDate: "Jan 15",
+    clientTypes: ["PT"],
     assessment: {
       date: "2026-01-15",
       bodyweight: 175,
@@ -500,6 +2317,7 @@ const initialClients = [
     alertType: "red",
     program: "General Fitness",
     startDate: "Feb 15",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-15",
       bodyweight: 145,
@@ -567,6 +2385,7 @@ const initialClients = [
     alertType: "blue",
     program: "Powerlifting Prep",
     startDate: "Jan 5",
+    clientTypes: ["Semi", "Online"],
     assessment: {
       date: "2026-01-05",
       bodyweight: 198,
@@ -655,6 +2474,7 @@ const initialClients = [
     alertType: "green",
     program: "Post-Pregnancy Recovery",
     startDate: "Mar 1",
+    clientTypes: ["PT", "Semi"],
     assessment: {
       date: "2026-03-01",
       bodyweight: 165,
@@ -734,6 +2554,7 @@ const initialClients = [
     alertType: "green",
     program: "Strength Building",
     startDate: "Feb 12",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-12",
       bodyweight: 185,
@@ -823,6 +2644,7 @@ const initialClients = [
     alertType: "blue",
     program: "Olympic Lifting Intro",
     startDate: "Jan 8",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-01-08",
       bodyweight: 142,
@@ -912,6 +2734,7 @@ const initialClients = [
     alertType: "green",
     program: "Maintenance — Active Lifestyle",
     startDate: "Dec 1",
+    clientTypes: ["Online"],
     assessment: {
       date: "2025-12-01",
       bodyweight: 175,
@@ -990,6 +2813,7 @@ const initialClients = [
     alertType: "red",
     program: "Fat Loss — Phase 1",
     startDate: "Feb 20",
+    clientTypes: ["Online"],
     assessment: {
       date: "2026-02-20",
       bodyweight: 245,
@@ -1067,6 +2891,7 @@ const initialClients = [
     alertType: "green",
     program: "Rehab — Shoulder Recovery",
     startDate: "Jan 15",
+    clientTypes: ["Hybrid"],
     assessment: {
       date: "2026-01-15",
       bodyweight: 155,
@@ -1157,6 +2982,7 @@ const initialClients = [
     alertType: "blue",
     program: "Athletic Performance",
     startDate: "Feb 1",
+    clientTypes: ["Semi"],
     assessment: {
       date: "2026-02-01",
       bodyweight: 195,
@@ -1245,6 +3071,7 @@ const initialClients = [
     alertType: "green",
     program: "Bodybuilding — Prep",
     startDate: "Mar 1",
+    clientTypes: ["Hybrid"],
     assessment: {
       date: "2026-03-01",
       bodyweight: 138,
@@ -1330,6 +3157,162 @@ const initialClients = [
     narrative: "Perfect attendance. Down 2 lbs while maintaining muscle. On track for stage.",
     attendanceRate: 98,
     weightData: [138, 137.5, 137, 136.5, 136.5, 136, 136],
+  },
+  // New Semi-only clients
+  {
+    name: "Jake Morrison",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Strength",
+    startDate: "Mar 10",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-03-10", bodyweight: 175, bodyFat: 22 },
+    current: { bodyweight: 173, bodyFat: 21 },
+    goals: { primary: "Build strength in group setting", targetWeight: 170, targetBodyFat: 18 },
+    sessions: [],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 8,
+    streak: { current: 8, best: 8, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 140, proteinTarget: 150 },
+    insight: "Jake thrives in the group environment and motivates others.",
+    coachAngle: "Consider pairing with Marcus for competitive motivation.",
+    narrative: "Great group dynamics. Consistent attendance.",
+    attendanceRate: 95,
+    weightData: [175, 174.5, 174, 173.5, 173],
+  },
+  {
+    name: "Olivia Chen",
+    alert: "Session Today",
+    alertType: "blue",
+    program: "Semi-Private HIIT",
+    startDate: "Feb 25",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-02-25", bodyweight: 145, bodyFat: 28 },
+    current: { bodyweight: 142, bodyFat: 26 },
+    goals: { primary: "Lose 15 lbs", targetWeight: 130, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 12,
+    streak: { current: 6, best: 8, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 110 },
+    insight: "Olivia responds well to group accountability.",
+    coachAngle: "Keep in morning HIIT group with similar goals.",
+    narrative: "Down 3 lbs. Enjoying the group energy.",
+    attendanceRate: 85,
+    weightData: [145, 144, 143.5, 143, 142.5, 142],
+  },
+  {
+    name: "Chris Taylor",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Basics",
+    startDate: "Mar 1",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-03-01", bodyweight: 195, bodyFat: 30 },
+    current: { bodyweight: 192, bodyFat: 28 },
+    goals: { primary: "Learn fundamentals", targetWeight: 180, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 2,
+    sessionsThisWeek: 2,
+    totalSessions: 8,
+    streak: { current: 4, best: 4, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 120, proteinTarget: 160 },
+    insight: "Beginner who benefits from watching others.",
+    coachAngle: "Pair with experienced lifters for form modeling.",
+    narrative: "Learning quickly. Form improving each session.",
+    attendanceRate: 100,
+    weightData: [195, 194, 193, 192],
+  },
+  {
+    name: "Mia Patel",
+    alert: "On Track",
+    alertType: "green",
+    program: "Semi-Private Conditioning",
+    startDate: "Feb 20",
+    clientTypes: ["Semi"],
+    assessment: { date: "2026-02-20", bodyweight: 135, bodyFat: 25 },
+    current: { bodyweight: 133, bodyFat: 24 },
+    goals: { primary: "Improve conditioning", targetWeight: 130, targetBodyFat: 20 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 3,
+    totalSessions: 14,
+    streak: { current: 14, best: 14, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 105, proteinTarget: 110 },
+    insight: "Mia is the most consistent semi-private client.",
+    coachAngle: "Consider transitioning to PT for advanced programming.",
+    narrative: "Perfect attendance. Ready for more challenge.",
+    attendanceRate: 100,
+    weightData: [135, 134.5, 134, 133.5, 133],
+  },
+  // New Online-only clients
+  {
+    name: "Ryan Cooper",
+    alert: "On Track",
+    alertType: "green",
+    program: "Online Strength",
+    startDate: "Feb 1",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-02-01", bodyweight: 180, bodyFat: 20 },
+    current: { bodyweight: 178, bodyFat: 19 },
+    goals: { primary: "Build muscle remotely", targetWeight: 185, targetBodyFat: 16 },
+    sessions: [],
+    sessionsPerWeek: 4,
+    sessionsThisWeek: 4,
+    totalSessions: 28,
+    streak: { current: 12, best: 12, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 165, proteinTarget: 160 },
+    insight: "Ryan is highly self-motivated and follows programming exactly.",
+    coachAngle: "Weekly video check-ins are enough. Great progress.",
+    narrative: "Excellent remote client. Logs everything.",
+    attendanceRate: 92,
+    weightData: [180, 179.5, 179, 178.5, 178],
+  },
+  {
+    name: "Sophia Martinez",
+    alert: "Assessment Due",
+    alertType: "red",
+    program: "Online Fat Loss",
+    startDate: "Jan 15",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-01-15", bodyweight: 165, bodyFat: 32 },
+    current: { bodyweight: 158, bodyFat: 28 },
+    goals: { primary: "Lose 30 lbs", targetWeight: 135, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 3,
+    sessionsThisWeek: 2,
+    totalSessions: 20,
+    streak: { current: 4, best: 10, unit: "sessions" },
+    nutrition: { tracking: true, proteinAvg: 100, proteinTarget: 130 },
+    insight: "Sophia needs more frequent check-ins. Progress slowing.",
+    coachAngle: "Schedule mid-week video call. Reassess nutrition.",
+    narrative: "Down 7 lbs but plateau last 2 weeks.",
+    attendanceRate: 75,
+    weightData: [165, 163, 161, 159, 158, 158],
+  },
+  {
+    name: "Kevin Brooks",
+    alert: "On Track",
+    alertType: "green",
+    program: "Online Mobility",
+    startDate: "Mar 5",
+    clientTypes: ["Online"],
+    assessment: { date: "2026-03-05", bodyweight: 200, bodyFat: 25 },
+    current: { bodyweight: 198, bodyFat: 24 },
+    goals: { primary: "Reduce back pain", targetWeight: 195, targetBodyFat: 22 },
+    sessions: [],
+    sessionsPerWeek: 5,
+    sessionsThisWeek: 5,
+    totalSessions: 15,
+    streak: { current: 10, best: 10, unit: "sessions" },
+    nutrition: { tracking: false, proteinAvg: 140, proteinTarget: 160 },
+    insight: "Kevin follows mobility work religiously. Pain decreasing.",
+    coachAngle: "Start adding light strength work next week.",
+    narrative: "Back pain down 60%. Ready to progress.",
+    attendanceRate: 100,
+    weightData: [200, 199, 198.5, 198],
   },
 ];
 
@@ -2097,7 +4080,12 @@ function MobileCanvasSheet({
   brainDocuments,
   setBrainDocuments,
   pendingDashboardEdit,
-  onDashboardEditProcessed
+  onDashboardEditProcessed,
+  sessions,
+  onSessionClick,
+  onCreateSession,
+  onUpdateSession,
+  onOpenFullProfile
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
@@ -2151,7 +4139,7 @@ function MobileCanvasSheet({
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
-  case "aiEngine": return "Your AI Engine";
+  case "playbook": return "Playbook";
   case "aiDashboards": return "AI Dashboards";
   default: return "Canvas";
     }
@@ -2246,14 +4234,17 @@ clientName: "New Client",
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "semiPrivate") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
   setCanvasData({});
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
   setCanvasData({});
-  } else if (templateType === "aiEngine") {
-  setCanvasType("aiEngine");
+  } else if (templateType === "playbook") {
+  setCanvasType("playbook");
   setCanvasData({});
   }
   }}
@@ -2328,6 +4319,33 @@ isMobile={true}
               isMobile={true}
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
+              sessions={sessions}
+              clients={clients}
+              onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
+            />
+          )}
+          {canvasType === "semiPrivate" && (
+            <SemiPrivateList
+              sessions={sessions}
+              clients={clients}
+              isMobile={true}
+              onClose={() => setCanvasType("templates")}
+              onHome={() => setCanvasType("templates")}
+              onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
+              onCreateSession={onCreateSession}
+            />
+          )}
+          {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
+            <SessionCanvas
+              session={sessions.find(s => s.id === canvasData.sessionId)}
+              clients={clients}
+              isMobile={true}
+              onBack={() => setCanvasType("semiPrivate")}
+              onUpdateSession={onUpdateSession}
+              onOpenFullProfile={(clientId) => {
+                onClose();
+                onOpenFullProfile?.(clientId);
+              }}
             />
           )}
         </div>
@@ -2388,7 +4406,7 @@ isMobile={true}
   );
 }
 
-/* ═════════════════════════���══════════════���══
+/* ═══════════════════���═════���══════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -3299,7 +5317,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 /* ═════════════════════════════════════════════
    CLIENT PROFILE SCREEN
    ═════════════════════════════════════════════ */
-function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks }) {
+function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, setReportBlocks, onUpdateClient }) {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [viewMode, setViewMode] = useState("coach"); // "coach" | "client"
@@ -3315,6 +5333,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [nutritionExpanded, setNutritionExpanded] = useState(false);
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
+  const [showServiceTypeEdit, setShowServiceTypeEdit] = useState(false);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -3465,6 +5484,24 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <ClientTypePills types={client.clientTypes} size="md" />
+                  <button
+                    onClick={() => setShowServiceTypeEdit(true)}
+                    style={{
+                      width: 20, height: 20, borderRadius: 4, border: "none",
+                      background: "transparent", cursor: "pointer", padding: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: TEXT_SEC, transition: "all 0.15s"
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                    </svg>
+                  </button>
+                </div>
                 <div style={{ padding: "4px 10px", borderRadius: 10, background: `${TEAL}12`, color: TEAL, fontSize: 12, fontWeight: 600 }}>{client.program || "General Fitness"}</div>
                 {currentStreak > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 10, background: `${MINT}12`, color: MINT, fontSize: 12, fontWeight: 600 }}>
@@ -4582,13 +6619,25 @@ return (
           </div>
         );
       })()}
+      
+      {/* Service Type Edit Modal */}
+      <ServiceTypeEditModal 
+        isOpen={showServiceTypeEdit}
+        onClose={() => setShowServiceTypeEdit(false)}
+        clientTypes={client.clientTypes || []}
+        onSave={(newTypes) => {
+          if (onUpdateClient) {
+            onUpdateClient({ ...client, clientTypes: newTypes });
+          }
+        }}
+      />
     </div>
   );
 }
 
-/* ═════════════════════════════════�����═══════════
+/* ════════════════════════════════════════════
    SEND REPORT MODAL
-   ══════════════════════════���══════════════════ */
+   ═════════════════════════════════════════════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -4948,352 +6997,1463 @@ function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
 }
 
 function InboxCanvas({ onClose, onHome, isMobile }) {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedConvo, setSelectedConvo] = useState(null);
-  const [messageInput, setMessageInput] = useState("");
+  // Navigation stack for screen management
+  const [stack, setStack] = useState([{ view: "inbox", tab: "messages" }]);
+  const [modal, setModal] = useState(null);
+  const [filters, setFilters] = useState({ messages: "all", broadcasts: "all", audiences: "all" });
   
-  const filters = [
-    { id: "all", label: "All" },
-    { id: "team", label: "Team", color: "#6366f1" },
-    { id: "client", label: "Client", color: TEAL },
-    { id: "announcement", label: "Announcements", color: "#f59e0b" }
+  const current = stack[stack.length - 1];
+  
+  // Navigation helpers
+  const nav = {
+    push: (view) => setStack([...stack, view]),
+    replace: (view) => setStack([...stack.slice(0, -1), view]),
+    back: () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)),
+    reset: () => setStack([{ view: "inbox", tab: "messages" }]),
+    resetTo: (view, newFilters) => {
+      setStack([view]);
+      if (newFilters) setFilters((f) => ({ ...f, ...newFilters }));
+    },
+    setTab: (tab) => {
+      if (current.view === "inbox") {
+        setStack([...stack.slice(0, -1), { view: "inbox", tab }]);
+      } else {
+        setStack([{ view: "inbox", tab }]);
+      }
+    },
+    setTabAndReset: (tab) => setStack([{ view: "inbox", tab }]),
+    setModal,
+  };
+  
+  const setFilter = (tab, filter) => setFilters((f) => ({ ...f, [tab]: filter }));
+
+  // ================================================================
+  // MOCK DATA
+  // ================================================================
+  
+  const CLIENTS = {
+    sc: { id: "sc", initials: "SC", name: "Sarah Chen", sub: "3x/wk · PT client", online: true, clientTypes: ["PT", "Online"] },
+    mj: { id: "mj", initials: "MJ", name: "Marcus Johnson", sub: "2x/wk · PT client", online: false, clientTypes: ["PT"] },
+    er: { id: "er", initials: "ER", name: "Emily Rodriguez", sub: "Online · weekly check-ins", online: true, clientTypes: ["Semi"] },
+    jt: { id: "jt", initials: "JT", name: "Jeff Turner", sub: "1x/wk · PT client", online: false, clientTypes: ["PT"] },
+    kl: { id: "kl", initials: "KL", name: "Kim Lawson", sub: "Online · 6mo", online: false, clientTypes: ["Online"] },
+    ap: { id: "ap", initials: "AP", name: "Ana Prieto", sub: "3x/wk · PT client", online: false, clientTypes: ["PT", "Semi"] },
+    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk · small group", online: false, clientTypes: ["Semi"] },
+  };
+
+  const [THREADS, setTHREADS] = useState({
+    sc: {
+      clientId: "sc", unread: 2, lastTime: "2m",
+      messages: [
+        { id: 1, from: "client", body: "Hey! Just wanted to check in about my progress this week.", time: "10:32 AM" },
+        { id: 2, from: "coach", body: "Great progress! Keep up the consistency.", time: "10:35 AM" },
+        { id: 3, from: "client", body: "Feeling great! Low back is a little tight after Monday though. Should I be worried?", time: "10:42 AM" },
+        { id: 4, from: "client", body: "Thanks for the updated meal plan!", time: "11:14 AM" },
+      ],
+    },
+    mj: {
+      clientId: "mj", unread: 1, lastTime: "1h",
+      messages: [
+        { id: 1, from: "client", body: "Can we move tomorrow's session? Work thing came up.", time: "9:42 AM" },
+      ],
+    },
+    er: {
+      clientId: "er", unread: 0, lastTime: "5h",
+      messages: [
+        { id: 1, from: "client", body: "Just finished week 3 of the program!", time: "Yesterday 2:14 PM" },
+        { id: 2, from: "coach", body: "That's amazing Emily — how are you feeling about next week's block?", time: "Yesterday 2:45 PM" },
+        { id: 3, from: "client", body: "Excited but a little nervous about the volume bump.", time: "Yesterday 3:01 PM" },
+      ],
+    },
+    jt: {
+      clientId: "jt", unread: 0, lastTime: "2d",
+      messages: [
+        { id: 1, from: "coach", body: "Jeff — check in? Missed you Monday.", time: "Mon 6:15 PM" },
+      ],
+    },
+  });
+
+  const AUDIENCES = {
+    online: { id: "online", name: "Online clients", type: "smart", count: 18, sub: "Auto-updates", used: "Used 2m ago · broadcast", members: ["er", "kl"] },
+    atrisk: { id: "atrisk", name: "At-risk clients", type: "smart", count: 6, sub: "Auto-updates · alert", used: "Flagged today", alert: true, members: ["mj"] },
+    spring: { id: "spring", name: "Spring Challenge", type: "manual", count: 12, sub: "Created Mar 1", used: "Weekly check-in Fri", members: ["sc", "mj", "er", "jt", "ap", "rn"] },
+    pt3x: { id: "pt3x", name: "PT 3x/wk+", type: "smart", count: 8, sub: "Auto-updates", used: "Used Mon", members: ["sc", "ap"] },
+    newmonth: { id: "newmonth", name: "New this month", type: "smart", count: 4, sub: "Auto-updates", used: "Used last week", members: ["rn"] },
+  };
+
+  const BROADCASTS = [
+    { id: 1, title: "Quick update, team — grocery list template is live", audienceId: "online", time: "2m", read: 14, replied: 6, status: "sent", recent: true, replies: [
+      { clientId: "sc", body: "Love this, thanks Rachel!", time: "1m" },
+      { clientId: "er", body: "Adding to my list now", time: "3m" },
+      { clientId: "kl", body: "Question — is the grain-free version available too?", time: "5m" },
+    ]},
+    { id: 2, title: "Reminder: upload your Week 3 check-in", audienceId: "spring", time: "Yesterday", read: 12, replied: 9, status: "sent" },
+    { id: 3, title: "New protein powder restock is in", audienceId: "pt3x", time: "Mon", read: 28, replied: 4, status: "sent" },
+    { id: 4, title: "Heads up — gym closed Sunday", audienceId: null, audienceName: "All clients", count: 54, time: "Last wk", read: 51, replied: 12, status: "sent" },
   ];
-  
-  const conversations = [
-    { 
-      id: 1, name: "Sarah Chen", avatar: "SC", tag: "client",
-      lastMessage: "Thanks for the updated meal plan!", time: "2m",
-      unread: 2, online: true
-    },
-    { 
-      id: 2, name: "Coaching Team", avatar: "CT", tag: "team", isGroup: true,
-      lastMessage: "New protocol doc is ready for review", time: "15m",
-      unread: 0, members: 5
-    },
-    { 
-      id: 3, name: "Marcus Johnson", avatar: "MJ", tag: "client",
-      lastMessage: "Can we move tomorrow's session?", time: "1h",
-      unread: 1, online: false
-    },
-    { 
-      id: 4, name: "Platform Updates", avatar: "M", tag: "announcement", isGroup: true,
-      lastMessage: "New feature: Canvas templates are live!", time: "3h",
-      unread: 0
-    },
-    { 
-      id: 5, name: "Emily Rodriguez", avatar: "ER", tag: "client",
-      lastMessage: "Just finished week 3 of the program!", time: "5h",
-      unread: 0, online: true
-    },
-    { 
-      id: 6, name: "Nutrition Team", avatar: "NT", tag: "team", isGroup: true,
-      lastMessage: "Updated macro guidelines attached", time: "1d",
-      unread: 0, members: 3
-    }
+
+  const SCHEDULED = [
+    { id: 5, title: "Welcome to the Spring Challenge!", audienceId: "spring", firesIn: "in 3 days", fireTime: "Monday 7:00 AM" },
   ];
+
+  const RECURRING = [
+    { id: 101, name: "Weekly Friday check-in", audienceId: "spring", cadence: "Every Fri · 9:00 AM", lastSent: "2d ago", responded: "10/12 replied", active: true },
+    { id: 102, name: "Monthly wellness pulse", audienceId: "online", cadence: "1st of month · 8:00 AM", lastSent: "3w ago", responded: "16/18 replied", active: true },
+    { id: 103, name: "Daily streak nudge", audienceId: "atrisk", cadence: "Every day · 8:00 AM", lastSent: "Today", responded: "4/6 replied", active: true },
+    { id: 104, name: "Post-session feedback", audienceId: "pt3x", cadence: "After each session", lastSent: "Paused", responded: "—", active: false },
+  ];
+
+  const TEMPLATES = [
+    { id: 1, name: "Weekly Friday Check-in", sub: "Response form · 4 questions", tag: "SYSTEM" },
+    { id: 2, name: "Challenge Kickoff", sub: "Broadcast · personalized", tag: "SYSTEM" },
+    { id: 3, name: "Food Examples", sub: "Broadcast · static", tag: "SYSTEM" },
+    { id: 4, name: "How to Use the App", sub: "Broadcast · with video", tag: "SYSTEM" },
+    { id: 5, name: "Missed Session Follow-up", sub: "1:1 · trigger-based", tag: "SYSTEM" },
+    { id: 6, name: "Monday Boost", sub: "Broadcast · personalized", tag: "MINE" },
+  ];
+
+  const SEARCH_RESULTS = [
+    { who: "Sarah Chen", initials: "SC", date: "Apr 21 · today", snippet: "the <b>knee's</b> feeling better, but I'm still noticing it on the descent...", type: "PAIN" },
+    { who: "Marcus Johnson", initials: "MJ", date: "Apr 18", snippet: "been getting <b>knee</b> pain when I squat deep — not sure if it's form or load", type: "PAIN" },
+    { who: "Spring Challenge · group", initials: "SP", date: "Apr 15 · cohort call", snippet: "<b>3 members</b> flagged <b>knee</b> mobility today — shared theme across the cohort", type: "PATTERN" },
+    { who: "Sarah Chen", initials: "SC", date: "Mar 15", snippet: "flagged <b>knee</b> tightness during the deadlift warmup, especially on the right", type: "PAIN" },
+    { who: "Ana Prieto", initials: "AP", date: "Feb 28", snippet: "old <b>knee</b> issue from volleyball — been clean for 6 months, wants to avoid re-injury", type: "HISTORY" },
+  ];
+
+  // ================================================================
+  // REUSABLE COMPONENTS
+  // ================================================================
   
-  const filteredConvos = activeFilter === "all" 
-    ? conversations 
-    : conversations.filter(c => c.tag === activeFilter);
-  
-  const tagColors = { team: "#6366f1", client: TEAL, announcement: "#f59e0b" };
-  
-  return (
-    <div style={{
-      display: "flex", flexDirection: isMobile ? "column" : "row", height: "100%", background: WHITE
-    }}>
-      {/* Sidebar - Conversation List (show full on mobile if no conversation selected, or hide if conversation is selected) */}
-      <div style={{
-        width: isMobile ? "100%" : 300, 
-        borderRight: isMobile ? "none" : `1px solid ${BORDER}`,
-        display: isMobile && selectedConvo ? "none" : "flex", 
-        flexDirection: "column", 
-        background: "#fafcfb",
-        flex: isMobile ? 1 : "none"
-      }}>
-        {/* Header */}
-        <div style={{ padding: "16px 16px", borderBottom: `1px solid ${BORDER}` }}>
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            {[
-              { icon: "video", label: "Go Live", color: "#ef4444" },
-              { icon: "user", label: "1-on-1" },
-              { icon: "users", label: "Group" }
-            ].map(btn => (
-              <button
-                key={btn.label}
-                style={{
-                  flex: 1, padding: "10px 8px", borderRadius: 10,
-                  border: `1px solid ${BORDER}`, background: WHITE,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
-                  cursor: "pointer", fontSize: 11, fontWeight: 600, color: btn.color || TEXT,
-                  transition: "all 0.15s ease", minWidth: 0, whiteSpace: "nowrap"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color || TEAL; e.currentTarget.style.background = btn.color ? `${btn.color}10` : TEAL_LIGHT; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = WHITE; }}
-              >
-                {btn.icon === "video" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>}
-                {btn.icon === "user" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-                {btn.icon === "users" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
-                {btn.label}
-              </button>
-            ))}
-          </div>
-          
-          {/* Filter Tags */}
-          <div style={{ display: "flex", gap: 6 }}>
-            {filters.map(f => (
-              <button
-                key={f.id}
-                onClick={() => setActiveFilter(f.id)}
-                style={{
-                  padding: "6px 12px", borderRadius: 20,
-                  border: activeFilter === f.id ? "none" : `1px solid ${BORDER}`,
-                  background: activeFilter === f.id ? (f.color || TEXT) : "transparent",
-                  color: activeFilter === f.id ? WHITE : TEXT_SEC,
-                  fontSize: 12, fontWeight: 500, cursor: "pointer",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Conversation List */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {filteredConvos.map((convo, idx) => (
-            <div
-              key={convo.id}
-              onClick={() => setSelectedConvo(convo)}
-              style={{
-                padding: "12px 16px", display: "flex", gap: 10, cursor: "pointer",
-                background: selectedConvo?.id === convo.id ? TEAL_LIGHT : "transparent",
-                borderBottom: `1px solid ${BORDER}`,
-                animation: `fadeSlideIn 0.3s ease ${idx * 0.05}s both`
-              }}
-              onMouseEnter={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "#f5f7f6"; }}
-              onMouseLeave={e => { if (selectedConvo?.id !== convo.id) e.currentTarget.style.background = "transparent"; }}
-            >
-              {/* Avatar */}
-              <div style={{ position: "relative" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: convo.isGroup ? "#f0f4f3" : `${tagColors[convo.tag]}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 600, color: convo.isGroup ? TEXT_SEC : tagColors[convo.tag]
-                }}>
-                  {convo.avatar}
-                </div>
-                {convo.online && (
-                  <div style={{
-                    position: "absolute", bottom: 0, right: 0,
-                    width: 12, height: 12, borderRadius: "50%",
-                    background: "#22c55e", border: `2px solid ${WHITE}`
-                  }} />
-                )}
-              </div>
-              
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{convo.name}</span>
-                  <span style={{
-                    fontSize: 9, fontWeight: 600, color: tagColors[convo.tag],
-                    background: `${tagColors[convo.tag]}15`, padding: "2px 6px",
-                    borderRadius: 6, textTransform: "uppercase"
-                  }}>{convo.tag}</span>
-                </div>
-                <p style={{
-                  fontSize: 13, color: TEXT_SEC, margin: 0,
-                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                }}>{convo.lastMessage}</p>
-              </div>
-              
-              {/* Meta */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                <span style={{ fontSize: 11, color: TEXT_SEC }}>{convo.time}</span>
-                {convo.unread > 0 && (
-                  <div style={{
-                    minWidth: 18, height: 18, borderRadius: 9,
-                    background: TEAL, color: WHITE, fontSize: 11, fontWeight: 600,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: "0 5px"
-                  }}>{convo.unread}</div>
-                )}
-              </div>
-            </div>
-          ))}
+  const InboxAvatar = ({ client, size = 10, dot = false }) => {
+    const sizeClasses = {
+      5: { w: 20, h: 20, fs: 8 },
+      6: { w: 24, h: 24, fs: 9 },
+      7: { w: 28, h: 28, fs: 10 },
+      8: { w: 32, h: 32, fs: 10 },
+      9: { w: 36, h: 36, fs: 10 },
+      10: { w: 40, h: 40, fs: 11 },
+    };
+    const s = sizeClasses[size] || sizeClasses[10];
+    return (
+      <div style={{ position: "relative", width: s.w, height: s.h, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <span style={{ fontWeight: 600, color: TEAL, fontSize: s.fs }}>{client.initials}</span>
+        {dot && client.online && (
+          <div style={{ position: "absolute", bottom: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "#22c55e", border: `2px solid ${WHITE}` }} />
+        )}
+      </div>
+    );
+  };
+
+  const FilterChip = ({ label, active, onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        flexShrink: 0, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+        background: active ? "#1a2e2a" : WHITE, color: active ? WHITE : TEXT,
+        border: active ? "none" : `1px solid ${BORDER}`, cursor: "pointer", transition: "all 0.15s"
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  const TabBar = ({ active, onChange }) => {
+    const tabs = [
+      { id: "messages", label: "Messages" },
+      { id: "broadcasts", label: "Broadcasts" },
+      { id: "audiences", label: "Audiences" },
+    ];
+    return (
+      <div style={{ display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${BORDER}` }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            style={{
+              padding: "10px 8px", marginRight: 16, fontSize: 12, background: "none", border: "none", cursor: "pointer",
+              fontWeight: active === t.id ? 600 : 500, color: active === t.id ? TEAL : TEXT_SEC,
+              borderBottom: active === t.id ? `2px solid ${TEAL}` : "2px solid transparent", marginBottom: -1
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const InboxHeader = ({ tab, onCompose, onLongPressCompose }) => {
+    const composeIcons = {
+      messages: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4Z"/></svg>,
+      broadcasts: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+      audiences: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>,
+    };
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Inbox</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={onCompose}
+            onContextMenu={(e) => { e.preventDefault(); onLongPressCompose && onLongPressCompose(); }}
+            style={{ width: 28, height: 28, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+          >
+            {composeIcons[tab]}
+          </button>
+          <button
+            onClick={onLongPressCompose}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: TEXT_SEC }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
         </div>
       </div>
-      
-      {/* Main - Message View */}
-      <div style={{ 
-        flex: 1, display: isMobile && !selectedConvo ? "none" : "flex", 
-        flexDirection: "column", background: WHITE 
-      }}>
-        {selectedConvo ? (
-          <>
-            {/* Convo Header */}
-            <div style={{
-              padding: isMobile ? "12px 16px" : "14px 24px", borderBottom: `1px solid ${BORDER}`,
-              display: "flex", alignItems: "center", justifyContent: "space-between"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {isMobile && (
-                  <button
-                    onClick={() => setSelectedConvo(null)}
-                    style={{
-                      width: 32, height: 32, borderRadius: 8, border: "none",
-                      background: "transparent", display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", color: TEXT_SEC, marginRight: 4
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <polyline points="15,18 9,12 15,6"/>
-                    </svg>
-                  </button>
-                )}
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: selectedConvo.isGroup ? "#f0f4f3" : `${tagColors[selectedConvo.tag]}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 13, fontWeight: 600, color: selectedConvo.isGroup ? TEXT_SEC : tagColors[selectedConvo.tag]
-                }}>
-                  {selectedConvo.avatar}
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{selectedConvo.name}</div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                    {selectedConvo.online ? "Online" : selectedConvo.members ? `${selectedConvo.members} members` : "Offline"}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button style={{
-                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
-                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", color: TEXT_SEC
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/>
-                  </svg>
-                </button>
-                <button style={{
-                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
-                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", color: TEXT_SEC
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-                  </svg>
-                </button>
-                <button style={{
-                  width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
-                  background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", color: TEXT_SEC
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-                  </svg>
-                </button>
-                <button 
-                  onClick={onClose}
-                  style={{
-                    width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
-                    background: WHITE, display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: TEXT_SEC, transition: "all 0.15s ease"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT_SEC; e.currentTarget.style.color = TEXT; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_SEC; }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {/* Sample messages */}
-                <div style={{ display: "flex", gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: `${tagColors[selectedConvo.tag]}15`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 600, color: tagColors[selectedConvo.tag]
-                  }}>{selectedConvo.avatar}</div>
-                  <div>
-                    <div style={{
-                      background: "#f0f4f3", padding: "12px 16px", borderRadius: "4px 16px 16px 16px",
-                      maxWidth: 320
-                    }}>
-                      <p style={{ margin: 0, fontSize: 14, color: TEXT, lineHeight: 1.5 }}>
-                        Hey! Just wanted to check in about my progress this week.
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block" }}>10:32 AM</span>
-                  </div>
-                </div>
-                
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <div>
-                    <div style={{
-                      background: TEAL, padding: "12px 16px", borderRadius: "16px 4px 16px 16px",
-                      maxWidth: 320
-                    }}>
-                      <p style={{ margin: 0, fontSize: 14, color: WHITE, lineHeight: 1.5 }}>
-                        Great progress! Keep up the consistency.
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, display: "block", textAlign: "right" }}>10:35 AM</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Input area */}
-            <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}` }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "12px 16px", borderRadius: 12,
-                background: "#f8faf9", border: `1px solid ${BORDER}`
-              }}>
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  style={{
-                    flex: 1, border: "none", background: "transparent",
-                    fontSize: 14, color: TEXT, outline: "none"
-                  }}
-                />
-                <button style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: TEAL, border: "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer"
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round">
-                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
-            Select a conversation to start messaging
+    );
+  };
+
+  const ScreenHeader = ({ title, onBack, right, subtitle }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 9, color: TEXT_SEC }}>{subtitle}</div>}
+      </div>
+      <div style={{ minWidth: 20, textAlign: "right" }}>{right || <div style={{ width: 20 }} />}</div>
+    </div>
+  );
+
+  // ================================================================
+  // MESSAGES TAB
+  // ================================================================
+  
+  const MessagesTab = ({ filter, setFilter }) => {
+    const [rowMenuFor, setRowMenuFor] = useState(null);
+    const threadList = Object.values(THREADS);
+    const filtered = threadList.filter((t) => {
+      if (filter === "unread") return t.unread > 0;
+      return true;
+    });
+
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Unread" active={filter === "unread"} onClick={() => setFilter("unread")} />
+          <FilterChip label="Clients" active={filter === "clients"} onClick={() => setFilter("clients")} />
+          <FilterChip label="Pinned" active={filter === "pinned"} onClick={() => setFilter("pinned")} />
+        </div>
+        <div style={{ padding: "0 12px 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>Search messages...</span>
           </div>
+        </div>
+        {filtered.map((thread) => {
+          const client = CLIENTS[thread.clientId];
+          const lastMsg = thread.messages[thread.messages.length - 1];
+          const preview = lastMsg ? lastMsg.body : "";
+          const isMenuOpen = rowMenuFor === thread.clientId;
+          return (
+            <div key={thread.clientId} style={{ position: "relative", overflow: "hidden", borderBottom: `1px solid #f5f7f6` }}>
+              {isMenuOpen && (
+                <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, display: "flex", zIndex: 10 }}>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#f59e0b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="17" x2="12" y2="3"/><path d="M5 10l7-7 7 7"/><path d="M19 21H5"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>PIN</span>
+                  </button>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#6b7280", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>MUTE</span>
+                  </button>
+                  <button onClick={() => setRowMenuFor(null)} style={{ width: 56, background: "#ef4444", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: "none", cursor: "pointer", color: WHITE }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    <span style={{ fontSize: 8, fontWeight: 700 }}>ARCHIVE</span>
+                  </button>
+                </div>
+              )}
+              <div
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: WHITE, cursor: "pointer",
+                  transform: isMenuOpen ? "translateX(-168px)" : "translateX(0)", transition: "transform 0.2s"
+                }}
+                onClick={() => !isMenuOpen && nav.push({ view: "thread", clientId: thread.clientId })}
+              >
+                <InboxAvatar client={client} dot />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{client.name}</span>
+                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                  </div>
+                  <p style={{ fontSize: 11, color: TEXT_SEC, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "2px 0 0" }}>{preview}</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontSize: 9, color: TEXT_SEC }}>{thread.lastTime}</span>
+                  {thread.unread > 0 ? (
+                    <div style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", color: WHITE, fontSize: 9, fontWeight: 700 }}>
+                      {thread.unread}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRowMenuFor(thread.clientId); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#d1d5db" }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
+  // ================================================================
+  // BROADCASTS TAB
+  // ================================================================
+  
+  const BroadcastsTab = ({ filter, setFilter }) => {
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Sent" active={filter === "sent"} onClick={() => setFilter("sent")} />
+          <FilterChip label="Scheduled" active={filter === "scheduled"} onClick={() => setFilter("scheduled")} />
+          <FilterChip label="Recurring" active={filter === "recurring"} onClick={() => setFilter("recurring")} />
+          <FilterChip label="Drafts" active={filter === "drafts"} onClick={() => setFilter("drafts")} />
+        </div>
+
+        {(filter === "all" || filter === "scheduled") && SCHEDULED.length > 0 && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Going out soon</div>
+            </div>
+            {SCHEDULED.map((s) => {
+              const aud = AUDIENCES[s.audienceId];
+              return (
+                <div key={s.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, background: "rgba(245, 158, 11, 0.1)" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                      <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: "#fef3c7", color: "#b45309" }}>SCHEDULED</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{aud?.name} · {aud?.count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span style={{ fontSize: 9, color: "#b45309", fontWeight: 500 }}>{s.fireTime} · {s.firesIn}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
+
+        {(filter === "all" || filter === "recurring") && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {filter === "recurring" ? "Active check-ins · 3 running" : "Recurring"}
+              </div>
+            </div>
+            {RECURRING.map((r) => {
+              const aud = AUDIENCES[r.audienceId];
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => nav.push({ view: "check-in-builder", recurringId: r.id })}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: r.active ? "#ede9fe" : "#f5f7f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={r.active ? "#6d28d9" : TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                      {!r.active && <span style={{ padding: "2px 4px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: "#f5f7f6", color: TEXT_SEC }}>PAUSED</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{aud?.name} · {aud?.count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{r.cadence}</span>
+                      </div>
+                      {r.active && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                          <span style={{ fontSize: 9, fontWeight: 500, color: TEAL }}>{r.responded}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, color: TEXT_SEC }}>{r.lastSent}</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
+
+        {(filter === "all" || filter === "sent") && (
+          <>
+            <div style={{ padding: "8px 16px 4px" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Recently sent</div>
+            </div>
+            {BROADCASTS.map((b) => {
+              const aud = b.audienceId ? AUDIENCES[b.audienceId] : null;
+              const name = aud?.name || b.audienceName;
+              const count = aud?.count || b.count;
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => nav.push({ view: "broadcast-detail", broadcastId: b.id })}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left",
+                    background: b.recent ? "rgba(245, 158, 11, 0.1)" : "none", border: "none", cursor: "pointer"
+                  }}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                      <span style={{ fontSize: 9, color: TEXT_SEC }}>{name} · {count} people</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{b.read}/{count}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: TEAL }}>{b.replied} replied</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 9, color: TEXT_SEC }}>{b.time}</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </>
+    );
+  };
+
+  // ================================================================
+  // AUDIENCES TAB
+  // ================================================================
+  
+  const AudiencesTab = ({ filter, setFilter }) => {
+    const items = Object.values(AUDIENCES).filter((a) => {
+      if (filter === "smart") return a.type === "smart";
+      if (filter === "manual") return a.type === "manual";
+      return true;
+    });
+    return (
+      <>
+        <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterChip label="Smart" active={filter === "smart"} onClick={() => setFilter("smart")} />
+          <FilterChip label="Manual" active={filter === "manual"} onClick={() => setFilter("manual")} />
+        </div>
+        <div style={{ padding: "4px 16px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Your audiences · {items.length}</div>
+        </div>
+        {items.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => nav.push({ view: "audience-detail", audienceId: a.id })}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: a.alert ? "#fef3c7" : TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={a.alert ? "#b45309" : TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</span>
+                <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: a.type === "smart" ? "#ede9fe" : "#f5f7f6", color: a.type === "smart" ? "#6d28d9" : TEXT_SEC }}>{a.type.toUpperCase()}</span>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{a.count} members · {a.sub}</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>{a.used}</div>
+            </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+      </>
+    );
+  };
+
+  // ================================================================
+  // THREAD SCREEN
+  // ================================================================
+  
+  const ThreadScreen = ({ clientId }) => {
+    const client = CLIENTS[clientId];
+    const thread = THREADS[clientId];
+    const [messages, setMessages] = useState(thread?.messages || []);
+    const [draft, setDraft] = useState("");
+
+    function send() {
+      if (!draft.trim()) return;
+      setMessages([...messages, { id: Date.now(), from: "coach", body: draft, time: "Now" }]);
+      setDraft("");
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+          <button onClick={nav.back} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <InboxAvatar client={client} size={7} />
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{client.name}</span>
+                <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+              </div>
+              <div style={{ fontSize: 9, color: client.online ? "#22c55e" : TEXT_SEC, fontWeight: client.online ? 500 : 400 }}>
+                {client.online ? "Online" : "Last seen 3h ago"}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button
+              onClick={() => nav.setModal({ type: "video-menu", clientId })}
+              style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            </button>
+            <button style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${BORDER}`, background: WHITE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: "100%", gap: 8 }}>
+            {messages.map((m) => (
+              <div key={m.id}>
+                {m.from === "client" ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+                      <InboxAvatar client={client} size={5} />
+                      <button
+                        onClick={() => nav.setModal({ type: "message-long-press", messageId: m.id, clientId })}
+                        style={{ background: "#f5f7f6", color: TEXT, fontSize: 11, padding: "8px 12px", borderRadius: 16, borderBottomLeftRadius: 6, maxWidth: 220, border: "none", cursor: "pointer", textAlign: "left" }}
+                      >
+                        {m.body}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 8, color: TEXT_SEC, paddingLeft: 28, marginTop: 2 }}>{m.time}</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => nav.setModal({ type: "message-long-press", messageId: m.id, clientId })}
+                        style={{ background: TEAL, color: WHITE, fontSize: 11, padding: "8px 12px", borderRadius: 16, borderBottomRightRadius: 6, maxWidth: 220, border: "none", cursor: "pointer", textAlign: "left" }}
+                      >
+                        {m.body}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 8, color: TEXT_SEC, textAlign: "right", paddingRight: 4, marginTop: 2 }}>{m.time}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: "8px 12px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 20, background: WHITE, border: `1px solid ${BORDER}` }}>
+            <button
+              onClick={() => nav.setModal("attachment-sheet")}
+              style={{ padding: 4, background: "none", border: "none", cursor: "pointer" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Message"
+              style={{ flex: 1, fontSize: 11, border: "none", outline: "none", background: "transparent" }}
+            />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <button
+              onClick={send}
+              disabled={!draft.trim()}
+              style={{ width: 28, height: 28, borderRadius: "50%", background: draft.trim() ? TEAL : "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: draft.trim() ? "pointer" : "default" }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={draft.trim() ? WHITE : TEXT_SEC} strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // COMPOSE MESSAGE SCREEN
+  // ================================================================
+  
+  const ComposeMessageScreen = () => {
+    const [query, setQuery] = useState("");
+    const suggested = Object.values(CLIENTS).filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    return (
+      <>
+        <ScreenHeader title="New Message" onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_SEC }}>To:</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Type a name..."
+              autoFocus
+              style={{ flex: 1, fontSize: 12, color: TEXT, border: "none", outline: "none", background: "transparent" }}
+            />
+          </div>
+        </div>
+        <div style={{ padding: "12px 16px 4px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            {query ? "Matching clients" : "Suggested"}
+          </div>
+        </div>
+        {suggested.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => nav.replace({ view: "thread", clientId: c.id })}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <InboxAvatar client={c} size={9} dot />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{c.name}</div>
+              <div style={{ fontSize: 10, color: TEXT_SEC }}>{c.sub}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+        <div style={{ padding: "12px 16px 4px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick add</div>
+        </div>
+        <div style={{ padding: "0 16px" }}>
+          <button style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6", border: "none", cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>New client (not in system)</span>
+          </button>
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // COMPOSE BROADCAST SCREEN
+  // ================================================================
+  
+  const ComposeBroadcastScreen = ({ audienceId }) => {
+    const [selected, setSelected] = useState(audienceId || null);
+    const [body, setBody] = useState("Quick update, team — dropping the new grocery list template in the app today.");
+    const [when, setWhen] = useState("now");
+
+    const aud = selected ? AUDIENCES[selected] : null;
+
+    function sendIt() {
+      nav.push({ view: "broadcast-detail", broadcastId: 1, justSent: true });
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Broadcast" onBack={nav.back} right={<span style={{ fontSize: 12, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Save draft</span>} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>To</label>
+            {aud ? (
+              <button
+                onClick={() => nav.push({ view: "broadcast-audiences", selected })}
+                style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `1px solid ${TEAL}`, width: "100%", cursor: "pointer" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEAL }}>{aud.name}</span>
+                <span style={{ marginLeft: "auto", fontSize: 10, color: TEAL }}>{aud.count} people</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => nav.push({ view: "broadcast-audiences" })}
+                style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px dashed ${BORDER}`, background: WHITE, width: "100%", cursor: "pointer" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span style={{ fontSize: 11, color: TEXT_SEC }}>Pick recipients</span>
+              </button>
+            )}
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Message</label>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={3}
+              style={{ marginTop: 4, width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, fontSize: 11, color: TEXT, lineHeight: 1.5, resize: "none", outline: "none" }}
+            />
+            <button
+              onClick={() => nav.setModal("attachment-sheet")}
+              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"/></svg>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 4, background: "#f5f7f6" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span style={{ fontSize: 9, color: TEXT }}>grocery-list.pdf</span>
+              </div>
+            </button>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>When</label>
+            <div style={{ marginTop: 4, display: "flex", gap: 4, padding: 4, borderRadius: 8, background: "#f5f7f6" }}>
+              {["now", "schedule", "recurring"].map((w) => (
+                <button
+                  key={w}
+                  onClick={() => {
+                    if (w === "recurring") nav.push({ view: "check-in-builder", audienceId: selected });
+                    else setWhen(w);
+                  }}
+                  style={{
+                    flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 10, border: "none", cursor: "pointer",
+                    fontWeight: when === w ? 600 : 500, background: when === w ? WHITE : "transparent",
+                    boxShadow: when === w ? "0 1px 2px rgba(0,0,0,0.1)" : "none", color: when === w ? TEXT : TEXT_SEC
+                  }}
+                >
+                  {w === "now" ? "Send now" : w === "schedule" ? "Schedule" : "Recurring →"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={sendIt}
+            disabled={!selected}
+            style={{
+              width: "100%", fontWeight: 600, fontSize: 12, padding: "10px 0", borderRadius: 20, border: "none", cursor: selected ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              background: selected ? TEAL : "#e5e7eb", color: selected ? WHITE : TEXT_SEC
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9"/></svg>
+            Send now
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // BROADCAST AUDIENCE PICKER
+  // ================================================================
+  
+  const BroadcastAudiencePicker = () => {
+    return (
+      <>
+        <ScreenHeader title="Pick recipients" onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 11, color: TEXT_SEC }}>Search...</span>
+          </div>
+        </div>
+
+        <div style={{ padding: "0 16px 4px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Smart audiences · auto-updating</div>
+        </div>
+        <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.values(AUDIENCES).filter((a) => a.type === "smart").map((a) => (
+            <button
+              key={a.id}
+              onClick={() => nav.replace({ view: "compose-broadcast", audienceId: a.id })}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>{a.name}</span>
+              </div>
+              <span style={{ fontSize: 10, color: a.alert ? "#b45309" : TEXT_SEC, fontWeight: a.alert ? 600 : 400 }}>{a.count}</span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: "0 16px 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Your audiences</span>
+            <span onClick={() => nav.push({ view: "new-audience-config" })} style={{ fontSize: 10, fontWeight: 500, color: TEAL, display: "flex", alignItems: "center", gap: 2, cursor: "pointer" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New
+            </span>
+          </div>
+        </div>
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.values(AUDIENCES).filter((a) => a.type === "manual").map((a) => (
+            <button
+              key={a.id}
+              onClick={() => nav.replace({ view: "compose-broadcast", audienceId: a.id })}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>{a.name}</div>
+                  <div style={{ fontSize: 9, color: TEXT_SEC }}>{a.sub}</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 10, color: TEXT_SEC }}>{a.count}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // BROADCAST DETAIL SCREEN
+  // ================================================================
+  
+  const BroadcastDetailScreen = ({ broadcastId, justSent }) => {
+    const b = BROADCASTS.find((x) => x.id === broadcastId) || BROADCASTS[0];
+    const aud = b.audienceId ? AUDIENCES[b.audienceId] : null;
+    const name = aud?.name || b.audienceName;
+    const count = aud?.count || b.count;
+
+    return (
+      <>
+        <ScreenHeader title={justSent ? "Broadcast sent" : "Broadcast"} onBack={nav.back} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ borderRadius: 12, padding: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Sent to {name}</span>
+            </div>
+            <p style={{ fontSize: 10, color: TEXT, lineHeight: 1.4, margin: 0 }}>{b.title}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span style={{ fontSize: 9, color: TEXT_SEC }}>{justSent ? "Sent just now" : `Sent ${b.time}`} · {count} recipients</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "16px 16px 8px" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Delivery</div>
+        </div>
+        <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{count}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Delivered</div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{b.read}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Read</div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: TEAL }}>{b.replied}</div>
+            <div style={{ fontSize: 9, color: TEXT_SEC, marginTop: 2 }}>Replied</div>
+          </div>
+        </div>
+
+        {b.replies && b.replies.length > 0 && (
+          <>
+            <div style={{ padding: "16px 16px 4px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Replies ({b.replies.length})</div>
+              <span style={{ fontSize: 10, fontWeight: 500, color: TEAL }}>View all</span>
+            </div>
+            {b.replies.map((r) => {
+              const c = CLIENTS[r.clientId];
+              return (
+                <button
+                  key={r.clientId}
+                  onClick={() => nav.push({ view: "thread", clientId: r.clientId })}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <InboxAvatar client={c} size={8} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{c.name}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{r.body}</div>
+                  </div>
+                  <span style={{ fontSize: 9, color: TEXT_SEC, flexShrink: 0 }}>{r.time}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
+      </>
+    );
+  };
+
+  // ================================================================
+  // AUDIENCE DETAIL SCREEN
+  // ================================================================
+  
+  const AudienceDetailScreen = ({ audienceId }) => {
+    const a = AUDIENCES[audienceId];
+    return (
+      <>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+          <button onClick={nav.back} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: a.alert ? "#fef3c7" : TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={a.alert ? "#b45309" : TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{a.name}</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC }}>{a.count} members · {a.type === "smart" ? "Smart" : "Manual"}</div>
+            </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_SEC, textAlign: "center", marginTop: 4, lineHeight: 1.4, maxWidth: 260 }}>
+            {a.type === "smart" ? "Auto-updating based on rules." : "Hand-picked set of clients."} {a.used}
+          </div>
+
+          <div style={{ marginTop: 20, width: "100%", maxWidth: 280, display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              onClick={() => nav.push({ view: "compose-broadcast", audienceId })}
+              style={{ width: "100%", background: TEAL, color: WHITE, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Send a broadcast
+            </button>
+            <button
+              onClick={() => nav.push({ view: "check-in-builder", audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Schedule recurring check-in
+            </button>
+            <button
+              onClick={() => nav.push({ view: "schedule-call", targetType: "audience", targetId: audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              Schedule video call
+            </button>
+            <button
+              onClick={() => nav.push({ view: "audience-members", audienceId })}
+              style={{ width: "100%", background: WHITE, color: TEXT, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 20, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Manage members
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // ================================================================
+  // CHECK-IN BUILDER SCREEN
+  // ================================================================
+  
+  const CheckInBuilderScreen = ({ audienceId }) => {
+    const aud = audienceId ? AUDIENCES[audienceId] : AUDIENCES.spring;
+    const [autoSend, setAutoSend] = useState(false);
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Check-in" onBack={nav.back} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={() => nav.push({ view: "templates" })} style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Template</label>
+            <div style={{ marginTop: 6, padding: 10, borderRadius: 8, border: `1px solid ${TEXT}`, background: WHITE }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>Weekly Friday Check-in</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}><polyline points="9,18 15,12 9,6"/></svg>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>
+                How did this week go? Any wins, stuck points, or adjustments for next week?
+              </div>
+            </div>
+          </button>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Response form</label>
+            <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 6 }}>
+              {["How did this week go? (1-10)", "Biggest win", "Where you struggled", "Intentions for next week"].map((q) => (
+                <div key={q} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 6, background: "#f5f7f6" }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/></svg>
+                  <span style={{ fontSize: 11, color: TEXT }}>{q}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Recipients</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+              <span style={{ fontSize: 12, color: TEXT }}>{aud?.name}</span>
+              <span style={{ marginLeft: "auto", fontSize: 10, color: TEXT_SEC }}>{aud?.count} clients</span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cadence</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Every Friday</span>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>·</span>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>9:00 AM</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setAutoSend(!autoSend)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: "#f5f7f6", width: "100%", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Auto-send drafts</div>
+              <div style={{ fontSize: 9, color: TEXT_SEC }}>Review first for 2 weeks, then auto</div>
+            </div>
+            <div style={{ width: 32, height: 16, borderRadius: 8, display: "flex", alignItems: "center", padding: "0 2px", background: autoSend ? TEAL : "#d1d5db", justifyContent: autoSend ? "flex-end" : "flex-start" }}>
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: WHITE, boxShadow: "0 1px 2px rgba(0,0,0,0.15)" }} />
+            </div>
+          </button>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.resetTo({ view: "inbox", tab: "broadcasts" }, { broadcasts: "recurring" })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Activate check-in
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // TEMPLATES SCREEN
+  // ================================================================
+  
+  const TemplatesScreen = () => {
+    return (
+      <>
+        <ScreenHeader title="Templates" onBack={nav.back} right={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>} />
+        <div style={{ padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#f5f7f6" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style={{ fontSize: 12, color: TEXT_SEC }}>Search templates...</span>
+          </div>
+        </div>
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            onClick={nav.back}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid #f5f7f6`, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{t.name}</span>
+                <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 8, fontWeight: 600, background: t.tag === "MINE" ? TEAL_LIGHT : "#f5f7f6", color: t.tag === "MINE" ? TEAL : TEXT_SEC }}>{t.tag}</span>
+              </div>
+              <div style={{ fontSize: 10, color: TEXT_SEC, marginTop: 2 }}>{t.sub}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        ))}
+      </>
+    );
+  };
+
+  // ================================================================
+  // NEW AUDIENCE CONFIG SCREEN
+  // ================================================================
+  
+  const NewAudienceConfigScreen = () => {
+    const [name, setName] = useState("Spring Nutrition Challenge");
+    const [audType, setAudType] = useState("manual");
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="New Audience" onBack={nav.back} right={<span style={{ fontSize: 12, fontWeight: 600, color: "#d1d5db" }}>Next</span>} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "16px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ marginTop: 6, width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${TEXT}`, background: WHITE, fontSize: 13, color: TEXT, outline: "none" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>How it&apos;s built</label>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { id: "manual", label: "Manual", desc: "Hand-pick the clients in the next step" },
+                { id: "smart", label: "Smart (rule-based)", desc: "Auto-updates as clients meet the rules" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setAudType(t.id)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 8, cursor: "pointer",
+                    border: audType === t.id ? `1px solid ${TEAL}` : `1px solid ${BORDER}`,
+                    background: audType === t.id ? TEAL_LIGHT : WHITE
+                  }}
+                >
+                  <div style={{
+                    width: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: audType === t.id ? TEAL : "transparent", border: audType === t.id ? "none" : `1px solid ${BORDER}`
+                  }}>
+                    {audType === t.id && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: TEXT }}>{t.label}</div>
+                    <div style={{ fontSize: 10, color: TEXT_SEC }}>{t.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tag (optional)</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["Challenge", "Cohort", "Program", "Custom"].map((t, i) => (
+                <div key={t} style={{ padding: "6px 12px", borderRadius: 20, fontSize: 11, background: i === 0 ? TEAL : WHITE, color: i === 0 ? WHITE : TEXT, border: i === 0 ? "none" : `1px solid ${BORDER}`, fontWeight: i === 0 ? 500 : 400 }}>{t}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.push({ view: "new-audience-members", audienceName: name, audType })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Next: Pick members
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // SCHEDULE CALL SCREEN
+  // ================================================================
+  
+  const ScheduleCallScreen = ({ targetType, targetId }) => {
+    const target = targetType === "client" ? CLIENTS[targetId] : AUDIENCES[targetId];
+    const isAud = targetType === "audience";
+    const [milton, setMilton] = useState(true);
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <ScreenHeader title="Schedule Call" onBack={nav.back} />
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>With</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `1px solid ${TEAL}` }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {isAud ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                ) : (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: WHITE }}>{target?.initials}</span>
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: TEAL }}>{target?.name}</div>
+                <div style={{ fontSize: 9, color: "#0d6d6d" }}>{isAud ? `${target?.count} members · group call` : target?.sub}</div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d6d6d" strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Type</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["Check-in", "Consult", "Session", "Form check"].map((t, i) => (
+                <div key={t} style={{ padding: "6px 12px", borderRadius: 20, fontSize: 10, background: i === 0 ? TEAL : WHITE, color: i === 0 ? WHITE : TEXT, border: i === 0 ? "none" : `1px solid ${BORDER}`, fontWeight: i === 0 ? 500 : 400 }}>{t}</div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>When</label>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Thu, Apr 23</span>
+              <span style={{ fontSize: 12, color: TEXT_SEC }}>·</span>
+              <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>3:00 PM</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "auto" }}><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Duration</label>
+            <div style={{ marginTop: 6, display: "flex", gap: 6 }}>
+              {[15, 30, 45, 60].map((d) => (
+                <div key={d} style={{ flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 10, fontWeight: 500, background: d === 30 ? TEAL : WHITE, color: d === 30 ? WHITE : TEXT, border: d === 30 ? "none" : `1px solid ${BORDER}` }}>{d}m</div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setMilton(!milton)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, width: "100%", cursor: "pointer",
+              background: milton ? TEAL_LIGHT : WHITE, border: `1px solid ${milton ? "#9fd3d1" : BORDER}`
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={milton ? TEAL : TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ marginTop: 2 }}><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: milton ? "#0d6d6d" : TEXT }}>Milton attends &amp; transcribes</div>
+                <div style={{ fontSize: 9, marginTop: 2, color: milton ? "#0d6d6d" : TEXT_SEC }}>Auto-summary + action items in thread</div>
+              </div>
+            </div>
+            <div style={{ width: 32, height: 16, borderRadius: 8, display: "flex", alignItems: "center", padding: "0 2px", background: milton ? TEAL : "#d1d5db", justifyContent: milton ? "flex-end" : "flex-start" }}>
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: WHITE, boxShadow: "0 1px 2px rgba(0,0,0,0.15)" }} />
+            </div>
+          </button>
+        </div>
+        <div style={{ padding: "8px 16px 12px", flexShrink: 0, background: WHITE, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={() => nav.push({ view: "pre-call-brief", targetType, targetId })}
+            style={{ width: "100%", background: TEAL, color: WHITE, fontWeight: 600, fontSize: 13, padding: "12px 0", borderRadius: 20, border: "none", cursor: "pointer" }}
+          >
+            Schedule call
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // MODALS
+  // ================================================================
+
+  const AttachmentSheet = ({ onClose }) => {
+    const items = [
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>, label: "Camera", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, label: "Photo", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>, label: "Video", color: "#f5f7f6", textColor: TEXT },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>, label: "Voice", color: "#f5f7f6", textColor: TEXT },
+    ];
+    const miltonItems = [
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>, label: "Workout", color: TEAL_LIGHT, textColor: TEAL },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>, label: "Meal plan", color: TEAL_LIGHT, textColor: TEAL },
+      { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>, label: "Protocol", color: TEAL_LIGHT, textColor: TEAL },
+    ];
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-end" }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: WHITE, borderRadius: "16px 16px 0 0", borderTop: `1px solid ${BORDER}`, paddingBottom: 64, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#d1d5db" }} />
+          </div>
+          <div style={{ padding: "8px 16px 4px" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Attach</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "12px" }}>
+            {items.map((item) => (
+              <button key={item.label} onClick={onClose} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: item.color, color: item.textColor, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</div>
+                <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <div style={{ fontSize: 10, fontWeight: 600, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em" }}>From Milton</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "12px" }}>
+            {miltonItems.map((item) => (
+              <button key={item.label} onClick={onClose} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: item.color, color: item.textColor, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</div>
+                <span style={{ fontSize: 9, fontWeight: 500, color: TEXT }}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ComposeLongPressMenu = ({ onClose }) => {
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-start", paddingTop: 48 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ marginLeft: "auto", marginRight: 32, marginTop: 8 }}>
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: -4, right: 12, width: 8, height: 8, transform: "rotate(45deg)", background: WHITE, borderTop: `1px solid ${BORDER}`, borderLeft: `1px solid ${BORDER}` }} />
+            <div style={{ background: WHITE, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: `1px solid ${BORDER}`, overflow: "hidden", minWidth: 180 }}>
+              <button onClick={() => { onClose(); nav.push({ view: "compose-message" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>New message</span>
+              </button>
+              <button onClick={() => { onClose(); nav.push({ view: "schedule-call", targetType: "client", targetId: "sc" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: TEAL_LIGHT, border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Schedule a call</div>
+                  <div style={{ fontSize: 8, color: "#0d6d6d" }}>1:1 or audience</div>
+                </div>
+              </button>
+              <button onClick={() => { onClose(); nav.push({ view: "compose-broadcast" }); }} style={{ width: "100%", padding: "8px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>New broadcast</span>
+              </button>
+              <button onClick={onClose} style={{ width: "100%", padding: "8px 12px", display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 500, color: TEXT }}>Quick voice note</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const VideoMenuSheet = ({ clientId, onClose }) => {
+    const c = CLIENTS[clientId];
+    return (
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20, display: "flex", alignItems: "flex-end" }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: WHITE, borderRadius: "16px 16px 0 0", borderTop: `1px solid ${BORDER}`, paddingBottom: 64, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#d1d5db" }} />
+          </div>
+          <div style={{ padding: "4px 16px 8px" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Start a call with {c.name}</div>
+          </div>
+          <div style={{ padding: "0 12px 8px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <button onClick={() => { onClose(); nav.push({ view: "in-call", targetType: "client", targetId: clientId }); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Start video now</div>
+                <div style={{ fontSize: 9, color: TEXT_SEC }}>Go live · {c.name.split(" ")[0]} is {c.online ? "online" : "offline"}</div>
+              </div>
+            </button>
+            <button onClick={() => { onClose(); nav.push({ view: "schedule-call", targetType: "client", targetId: clientId }); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: TEAL_LIGHT, border: `2px solid ${TEAL}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEAL }}>Schedule for later</div>
+                <div style={{ fontSize: 9, color: "#0d6d6d" }}>Pick time + pre-call notes</div>
+              </div>
+            </button>
+            <button onClick={onClose} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f5f7f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>Audio only</div>
+                <div style={{ fontSize: 9, color: TEXT_SEC }}>Voice call, no video</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ================================================================
+  // SCREEN ROUTER
+  // ================================================================
+  
+  const InboxScreen = ({ tab, filters, setFilter }) => {
+    return (
+      <>
+        <InboxHeader
+          tab={tab}
+          onCompose={() => {
+            if (tab === "messages") nav.push({ view: "compose-message" });
+            else if (tab === "broadcasts") {
+              if (filters.broadcasts === "recurring") nav.push({ view: "check-in-builder" });
+              else nav.push({ view: "compose-broadcast" });
+            }
+            else if (tab === "audiences") nav.push({ view: "new-audience-config" });
+          }}
+          onLongPressCompose={() => nav.setModal("compose-long-press")}
+        />
+        <TabBar active={tab} onChange={nav.setTab} />
+        {tab === "messages" && <MessagesTab filter={filters.messages} setFilter={(f) => setFilter("messages", f)} />}
+        {tab === "broadcasts" && <BroadcastsTab filter={filters.broadcasts} setFilter={(f) => setFilter("broadcasts", f)} />}
+        {tab === "audiences" && <AudiencesTab filter={filters.audiences} setFilter={(f) => setFilter("audiences", f)} />}
+      </>
+    );
+  };
+
+  const ScreenRouter = () => {
+    switch (current.view) {
+      case "inbox": return <InboxScreen tab={current.tab} filters={filters} setFilter={setFilter} />;
+      case "thread": return <ThreadScreen clientId={current.clientId} />;
+      case "compose-message": return <ComposeMessageScreen />;
+      case "compose-broadcast": return <ComposeBroadcastScreen audienceId={current.audienceId} />;
+      case "broadcast-audiences": return <BroadcastAudiencePicker />;
+      case "broadcast-detail": return <BroadcastDetailScreen broadcastId={current.broadcastId} justSent={current.justSent} />;
+      case "new-audience-config": return <NewAudienceConfigScreen />;
+      case "audience-detail": return <AudienceDetailScreen audienceId={current.audienceId} />;
+      case "check-in-builder": return <CheckInBuilderScreen audienceId={current.audienceId} />;
+      case "templates": return <TemplatesScreen />;
+      case "schedule-call": return <ScheduleCallScreen targetType={current.targetType} targetId={current.targetId} />;
+      default: return <div style={{ padding: 24, textAlign: "center", fontSize: 13, color: TEXT_SEC }}>Unknown view: {current.view}</div>;
+    }
+  };
+
+  // ================================================================
+  // MAIN RENDER
+  // ================================================================
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: WHITE }}>
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, position: "relative" }}>
+        <ScreenRouter />
+        {modal === "attachment-sheet" && <AttachmentSheet onClose={() => setModal(null)} />}
+        {modal === "compose-long-press" && <ComposeLongPressMenu onClose={() => setModal(null)} />}
+        {modal?.type === "video-menu" && <VideoMenuSheet clientId={modal.clientId} onClose={() => setModal(null)} />}
       </div>
     </div>
   );
 }
 
-function ScheduleCanvas({ onClose, onHome, isMobile }) {
+function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = [], onSessionClick }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // March 15, 2026
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("week"); // week or month
@@ -5301,23 +8461,46 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
   
   const categories = [
     { id: "session", label: "Sessions", color: TEAL },
+    { id: "semi", label: "Semi-Private", color: "#1f7a3e" },
     { id: "meeting", label: "Meetings", color: "#6366f1" },
     { id: "backoffice", label: "Back Office", color: "#f59e0b" },
     { id: "work", label: "Work Hours", color: "#94a3b8" }
   ];
   
-  const events = [
-    { id: 1, title: "Sarah Chen - Check-in", category: "session", day: 0, start: 9, duration: 1 },
-    { id: 2, title: "Marcus Johnson - Training", category: "session", day: 0, start: 14, duration: 1.5 },
+  // Convert sessions to calendar events (for today - Sunday = day 0)
+  const sessionEvents = sessions.map((sess, idx) => {
+    const timeMatch = sess.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    let startHour = 8;
+    if (timeMatch) {
+      startHour = parseInt(timeMatch[1]);
+      if (timeMatch[3].toUpperCase() === "PM" && startHour !== 12) startHour += 12;
+      if (timeMatch[3].toUpperCase() === "AM" && startHour === 12) startHour = 0;
+    }
+    const clientNames = sess.clientIds.map(id => clients[id]?.name?.split(" ")[0] || "Client").join(", ");
+    return {
+      id: `sess_${sess.id}`,
+      sessionId: sess.id,
+      title: sess.sessionKind === "semi" 
+        ? `Semi-Private (${sess.clientIds.length})`
+        : `${clientNames} - ${getSessionKindLabel(sess.sessionKind)}`,
+      category: sess.sessionKind === "semi" ? "semi" : "session",
+      day: 0, // Today (Sunday in this demo)
+      start: startHour,
+      duration: 1,
+      isSession: true,
+      status: sess.status
+    };
+  });
+  
+  const staticEvents = [
     { id: 3, title: "Team Standup", category: "meeting", day: 1, start: 10, duration: 0.5 },
-    { id: 4, title: "Emily Rodriguez - Assessment", category: "session", day: 1, start: 13, duration: 1 },
     { id: 5, title: "Content Planning", category: "backoffice", day: 2, start: 9, duration: 2 },
-    { id: 6, title: "Alex Kim - Progress Review", category: "session", day: 2, start: 15, duration: 1 },
     { id: 7, title: "Client Onboarding Call", category: "meeting", day: 3, start: 11, duration: 1 },
     { id: 8, title: "Program Updates", category: "backoffice", day: 3, start: 14, duration: 1.5 },
-    { id: 9, title: "Group Session - Nutrition", category: "session", day: 4, start: 10, duration: 1.5 },
     { id: 10, title: "Admin & Billing", category: "backoffice", day: 4, start: 16, duration: 1 },
   ];
+  
+  const events = [...sessionEvents, ...staticEvents];
   
   const workHours = { start: 8, end: 18 };
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -5514,10 +8697,17 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
                   {/* Events */}
                   {dayEvents.map(event => {
                     const slotHeight = isMobile ? 50 : 60;
+                    const handleEventClick = () => {
+                      if (event.isSession && event.sessionId && onSessionClick) {
+                        onSessionClick(event.sessionId);
+                      } else {
+                        setSelectedEvent(event);
+                      }
+                    };
                     return (
                     <div
                       key={event.id}
-                      onClick={() => setSelectedEvent(event)}
+                      onClick={handleEventClick}
                       style={{
                         position: "absolute",
                         top: (event.start - workHours.start) * slotHeight + 2,
@@ -5532,14 +8722,23 @@ function ScheduleCanvas({ onClose, onHome, isMobile }) {
                       onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}25`; }}
                       onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = `${getCategoryColor(event.category)}15`; }}
                     >
-                      <div style={{
-                        fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
-                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-                      }}>
-                        {event.title}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{
+                          fontSize: isMobile ? 14 : 12, fontWeight: 600, color: getCategoryColor(event.category),
+                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1
+                        }}>
+                          {event.title}
+                        </div>
+                        {event.isSession && event.status === "in_progress" && (
+                          <div style={{
+                            width: 8, height: 8, borderRadius: "50%", background: TEAL,
+                            animation: "pulse 2s infinite"
+                          }} />
+                        )}
                       </div>
                       <div style={{ fontSize: isMobile ? 12 : 10, color: TEXT_SEC, marginTop: 2 }}>
                         {((event.start) % 12 || 12)}{event.start >= 12 ? "pm" : "am"} · {event.duration}hr
+                        {event.isSession && ` · ${event.status === "in_progress" ? "In progress" : (event.status === "completed" ? "Done" : "")}`}
                       </div>
                     </div>
                   );})}
@@ -5653,7 +8852,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       type: "audience",
       iconBg: C.teal50,
       iconColor: C.teal500,
-      meta: "Active PT clients · first of the month",
+      meta: "Active PT clients �� first of the month",
       signals: [{ text: "Next fires: May 1" }, { text: "76% reply rate" }, { text: "14 clients" }],
       navigateTo: "steady"
     },
@@ -7783,7 +10982,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ══════════════════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
-═════════════════════════════════════════════ */
+═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
@@ -8382,6 +11581,1543 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK CANVAS - The gym's operating system with 7 chapters
+// ═══════════════════════════════════════════════════════════════
+function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
+  const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadTargetChapter, setUploadTargetChapter] = useState(null);
+  
+  const gymName = "Optimal Performance"; // Could be from config
+  
+  // Chapter definitions with icons, colors, and default rules
+  const chapterDefs = {
+    programming: {
+      id: "programming",
+      title: "Programming",
+      icon: "dumbbell",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
+      description: "How your gym programs training — blocks, patterns, progressions, and exercise standards.",
+      defaultRules: [
+        { title: "Pattern-based programming", description: "Program at the movement pattern level, not the exercise level. Patterns scale to client capability automatically." },
+        { title: "Progressive overload first", description: "Progressive overload before variety. Repeat movement patterns for 4-6 weeks before swapping." },
+        { title: "Session structure", description: "Every session has one primary pattern, one secondary, and 1-2 accessory movements." },
+        { title: "Assessment period", description: "Assess new clients in their first 2 weeks before prescribing heavy loads." }
+      ]
+    },
+    coaching_standards: {
+      id: "coaching_standards",
+      title: "Coaching Standards",
+      icon: "clipboard",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      description: "How coaches run sessions — engagement, note-taking, and what quality looks like on the floor.",
+      defaultRules: [
+        { title: "Session recap", description: "Every session ends with a brief recap: what we did, how it went, what's next." },
+        { title: "Timely notes", description: "Log coach notes within 30 minutes of the session ending." },
+        { title: "Flag concerns", description: "Flag any form issue, injury concern, or energy anomaly in the client's profile immediately." },
+        { title: "No phones", description: "No phones out during active coaching time. Voice-to-Milton for notes is fine." }
+      ]
+    },
+    follow_ups: {
+      id: "follow_ups",
+      title: "Follow-ups",
+      icon: "message-clock",
+      color: "#7c3aed",
+      bgColor: "#ede9fe",
+      description: "How and when we reach out — missed sessions, check-ins, milestones.",
+      defaultRules: [
+        { title: "Missed session", description: "Missed session: text within 4 hours. Personal, not templated." },
+        { title: "10-day absence", description: "No session logged in 10 days: coach reaches out directly, not Milton." },
+        { title: "PR celebration", description: "Client hits a PR: celebrate same day, coach-sent." },
+        { title: "30-day check-in", description: "30-day check-in on goals for every active client." }
+      ]
+    },
+    reporting: {
+      id: "reporting",
+      title: "Reporting",
+      icon: "chart",
+      color: "#dc2626",
+      bgColor: "#fef3f2",
+      description: "What gets measured, by whom, on what rhythm.",
+      defaultRules: [
+        { title: "Weekly scorecard", description: "Coach submits a weekly session scorecard every Friday." },
+        { title: "Retention review", description: "Director reviews retention-at-risk list every Monday morning." },
+        { title: "Monthly review", description: "Monthly business review covers revenue, retention, and NPS." },
+        { title: "At-risk reporting", description: "Any client flagged as at-risk triggers a 48-hour report to the director." }
+      ]
+    },
+    onboarding: {
+      id: "onboarding",
+      title: "Onboarding",
+      icon: "door",
+      color: "#d97706",
+      bgColor: "#fef3c7",
+      description: "The new member experience — first touch through first 30 days.",
+      defaultRules: [
+        { title: "Assessment first", description: "First session is always an assessment, not programming." },
+        { title: "Welcome call", description: "New member gets a welcome call from the director within 24 hours of signup." },
+        { title: "Goals conversation", description: "Goals conversation in session 2. Capture in Milton." },
+        { title: "Week 2 check-in", description: "Week 2 check-in: how's it feeling so far? Any adjustments needed?" }
+      ]
+    },
+    sales: {
+      id: "sales",
+      title: "Sales",
+      icon: "handshake",
+      color: "#db2777",
+      bgColor: "#fef2f6",
+      description: "How we sell — discovery, pricing, offers, and objection handling.",
+      defaultRules: [
+        { title: "Discovery first", description: "Every prospect gets a discovery call before any pricing conversation." },
+        { title: "CLOSER framework", description: "Use the CLOSER framework on discovery calls." },
+        { title: "No discounting", description: "No discounting without director approval." },
+        { title: "Trial offer", description: "Offer a trial session, not a free consult." }
+      ]
+    },
+    culture: {
+      id: "culture",
+      title: "Culture",
+      icon: "star",
+      color: "#65a30d",
+      bgColor: "#f0f4e8",
+      description: "Who we are and how we show up — mission, voice, and brand.",
+      defaultRules: [
+        { title: "Movement first", description: "We coach movement, not just workouts." },
+        { title: "Visible progress", description: "Progress is always visible. Every client knows where they stand." },
+        { title: "Plain language", description: "We speak plainly. No jargon when a simple word works." },
+        { title: "Community", description: "Community first — members know each other by name." }
+      ]
+    }
+  };
+  
+  const chapters = Object.values(chapterDefs);
+  
+  // Get chapter stats
+  const getChapterStats = (chapterId) => {
+    const chapterData = playbook?.chapters?.[chapterId] || {};
+    const rules = chapterData.rules || chapterDefs[chapterId].defaultRules.map((r, i) => ({
+      ...r,
+      id: `${chapterId}_default_${i}`,
+      source: "milton_default",
+      status: "active",
+      priority: i + 1
+    }));
+    const documents = chapterData.documents || [];
+    const activeRules = rules.filter(r => r.status === "active").length;
+    const pendingRules = rules.filter(r => r.status === "pending_review").length;
+    const lastUpdated = chapterData.lastUpdated || null;
+    
+    return { rules, documents, activeRules, pendingRules, lastUpdated };
+  };
+  
+  // Calculate summary stats
+  const totalRules = chapters.reduce((sum, ch) => sum + getChapterStats(ch.id).activeRules, 0);
+  const totalDocs = chapters.reduce((sum, ch) => sum + getChapterStats(ch.id).documents.length, 0);
+  const chaptersNeedingReview = chapters.filter(ch => getChapterStats(ch.id).pendingRules > 0).length;
+  
+  // Render chapter icon
+  const renderChapterIcon = (iconName, size = 20, color = "currentColor") => {
+    const icons = {
+      dumbbell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 12v5.5M6 6.5V12M18 12v5.5M18 6.5V12"/></svg>,
+      clipboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>,
+      "message-clock": <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/><circle cx="12" cy="12" r="3"/></svg>,
+      chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+      door: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M18 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2z"/><path d="M14 12h.01"/></svg>,
+      handshake: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M11 17l-5-5 5-5M13 7l5 5-5 5"/></svg>,
+      star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>,
+      book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    };
+    return icons[iconName] || icons.book;
+  };
+  
+  // Format relative time
+  const formatRelativeTime = (dateStr) => {
+    if (!dateStr) return "Not updated yet";
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Updated today";
+    if (days === 1) return "Updated yesterday";
+    if (days < 7) return `Updated ${days} days ago`;
+    return `Updated ${Math.floor(days / 7)} weeks ago`;
+  };
+  
+  // If viewing a chapter detail, render that instead
+  if (activeChapter) {
+    return (
+      <PlaybookChapterDetail
+        chapter={chapterDefs[activeChapter]}
+        chapterData={playbook?.chapters?.[activeChapter]}
+        getChapterStats={() => getChapterStats(activeChapter)}
+        renderChapterIcon={renderChapterIcon}
+        formatRelativeTime={formatRelativeTime}
+        onBack={() => setActiveChapter(null)}
+        onClose={onClose}
+        isMobile={isMobile}
+        onUploadToChapter={() => { setUploadTargetChapter(activeChapter); setShowUploadModal(true); }}
+        playbook={playbook}
+        setPlaybook={setPlaybook}
+      />
+    );
+  }
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "20px 16px" : "28px 40px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            {/* Back button + Badge row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button
+                onClick={onHome}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: `1px solid ${BORDER}`, background: WHITE,
+                  cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f5f7f6"; e.currentTarget.style.color = TEXT; }}
+                onMouseLeave={e => { e.currentTarget.style.background = WHITE; e.currentTarget.style.color = TEXT_SEC; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
+              {/* Badge */}
+              <div style={{ 
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#e8f5f3", padding: "6px 12px", borderRadius: 20
+              }}>
+                {renderChapterIcon("book", 14, "#2B7A78")}
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#2B7A78" }}>Playbook</span>
+              </div>
+            </div>
+            <h1 style={{ 
+              fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0,
+              letterSpacing: "-0.02em", lineHeight: 1.2
+            }}>
+              {gymName} Playbook
+            </h1>
+            <p style={{ 
+              fontSize: isMobile ? 13 : 14, color: TEXT_SEC, margin: "8px 0 0", 
+              maxWidth: 500, lineHeight: 1.5
+            }}>
+              The rules, standards, and systems your gym runs on. Upload documents, edit through chat, or configure by hand.
+            </p>
+          </div>
+          
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Summary Strip */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+          background: "#f9fbfa", padding: "12px 16px", borderRadius: 12, marginTop: 20
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 13, color: TEXT_SEC }}>
+            <span><strong style={{ color: TEXT }}>{chapters.length}</strong> chapters</span>
+            <span style={{ color: BORDER }}>·</span>
+            <span><strong style={{ color: TEXT }}>{totalRules}</strong> active rules</span>
+            <span style={{ color: BORDER }}>·</span>
+            <span><strong style={{ color: TEXT }}>{totalDocs}</strong> documents uploaded</span>
+          </div>
+          {chaptersNeedingReview > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
+              <span style={{ fontSize: 12, color: "#d97706" }}>{chaptersNeedingReview} chapter{chaptersNeedingReview > 1 ? "s" : ""} need review</span>
+            </div>
+          )}
+          <button
+            onClick={() => setShowUploadModal(true)}
+            style={{
+              padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: "transparent", color: TEAL, border: `1.5px solid ${TEAL}`,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload to Playbook
+          </button>
+        </div>
+      </div>
+      
+      {/* Chapter Grid */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "28px 40px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: 16
+        }}>
+          {chapters.map((chapter) => {
+            const stats = getChapterStats(chapter.id);
+            const hasNone = stats.activeRules === 0 && stats.documents.length === 0;
+            const needsReview = stats.pendingRules > 0;
+            
+            return (
+              <div
+                key={chapter.id}
+                onClick={() => setActiveChapter(chapter.id)}
+                style={{
+                  background: WHITE,
+                  borderRadius: 12,
+                  border: `0.5px solid ${BORDER}`,
+                  padding: 20,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = chapter.color; e.currentTarget.style.boxShadow = `0 4px 12px ${chapter.color}15`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                {/* Top row: Icon + Status */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, background: chapter.bgColor,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {renderChapterIcon(chapter.icon, 20, chapter.color)}
+                  </div>
+                  <div style={{
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: needsReview ? "#f59e0b" : (hasNone ? "#8aa3a0" : "#3aaf6a")
+                  }} />
+                </div>
+                
+                {/* Title */}
+                <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
+                  {chapter.title}
+                </div>
+                
+                {/* Description */}
+                <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, marginBottom: 14, minHeight: 40 }}>
+                  {chapter.description}
+                </div>
+                
+                {/* Stats row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: TEXT_SEC, marginBottom: 14 }}>
+                  <span>{stats.activeRules} rules active</span>
+                  <span style={{ color: BORDER }}>·</span>
+                  <span>{stats.documents.length} documents</span>
+                  <span style={{ color: BORDER }}>·</span>
+                  <span>{formatRelativeTime(stats.lastUpdated)}</span>
+                </div>
+                
+                {/* Bottom row: Rule pills + Open link */}
+                <div style={{ 
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  paddingTop: 12, borderTop: `1px solid ${BORDER}`
+                }}>
+                  <div style={{ display: "flex", gap: 6, flex: 1, overflow: "hidden" }}>
+                    {stats.rules.slice(0, 2).map((rule, idx) => (
+                      <span key={idx} style={{
+                        fontSize: 10, padding: "4px 8px", borderRadius: 6,
+                        background: "#f5f7f6", color: TEXT_SEC,
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 100
+                      }}>
+                        {rule.title}
+                      </span>
+                    ))}
+                    {stats.rules.length > 2 && (
+                      <span style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "#f5f7f6", color: TEXT_SEC }}>
+                        +{stats.rules.length - 2}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: TEAL, fontWeight: 500, whiteSpace: "nowrap", marginLeft: 8 }}>
+                    Open →
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <PlaybookUploadModal
+          chapters={chapters}
+          renderChapterIcon={renderChapterIcon}
+          onClose={() => { setShowUploadModal(false); setUploadTargetChapter(null); }}
+          onUpload={(chapterId, files) => {
+            // Handle upload - add documents to chapter
+            console.log("[v0] Uploading to chapter:", chapterId, files);
+            setShowUploadModal(false);
+            setUploadTargetChapter(null);
+          }}
+          preselectedChapter={uploadTargetChapter}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MASTER PROGRAM SESSION DRAWER - Right-side detail view
+// ═══════════════════════════════════════════════════════════════
+function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
+  const [expandedPattern, setExpandedPattern] = useState(null);
+  
+  const roleStyles = {
+    primary: { bg: TEAL, color: WHITE, label: "Primary" },
+    secondary: { bg: "#e6f9ec", color: "#1f7a3e", label: "Secondary" },
+    accessory: { bg: "#f1f5f4", color: TEXT_SEC, label: "Accessory" },
+    finisher: { bg: "#ede9fe", color: "#6b46c1", label: "Finisher" }
+  };
+  
+  // Get full date for display
+  const getFullDate = () => {
+    if (!viewingBlock || !viewingBlock.startDate) return session.dayOfWeek;
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (session.weekNumber - 1) * 7 + (dayMap[session.dayOfWeek] || 0));
+    return start.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: isMobile ? "100%" : 440,
+        background: WHITE, boxShadow: "-8px 0 32px rgba(0,0,0,0.12)", zIndex: 100,
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.2s ease"
+      }}
+    >
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+      
+      {/* Header */}
+      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+          <div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 4 }}>
+              {getFullDate()} · Week {session.weekNumber}
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: 0 }}>
+              {session.focus}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "#f5f7f6", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Body - Scrollable */}
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          Pattern Breakdown
+        </div>
+        
+        {/* Pattern rows */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {session.patterns.map((pattern, idx) => {
+            const style = roleStyles[pattern.role] || roleStyles.accessory;
+            const isExpanded = expandedPattern === idx;
+            
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: "#fafcfb", borderRadius: 10, border: `0.5px solid ${BORDER}`,
+                  overflow: "hidden"
+                }}
+              >
+                {/* Pattern header */}
+                <div
+                  onClick={() => setExpandedPattern(isExpanded ? null : idx)}
+                  style={{
+                    padding: "14px 16px", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12
+                  }}
+                >
+                  {/* Role pill */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 6,
+                    background: style.bg, color: style.color, textTransform: "uppercase", letterSpacing: "0.5px"
+                  }}>
+                    {style.label}
+                  </span>
+                  
+                  {/* Pattern name */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>
+                      {formatPatternType(pattern.type)}
+                    </div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>
+                      {pattern.sets} sets × {pattern.reps} reps
+                      {pattern.tempo && <span> · {pattern.tempo} tempo</span>}
+                    </div>
+                  </div>
+                  
+                  {/* Edit + expand */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); }}
+                    style={{
+                      width: 28, height: 28, borderRadius: 6, border: "none",
+                      background: "transparent", cursor: "pointer", color: TEXT_SEC
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <svg 
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"
+                    style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}
+                  >
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </div>
+                
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div style={{ padding: "0 16px 14px", borderTop: `1px solid ${BORDER}` }}>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 12, marginBottom: 8 }}>Coach Notes</div>
+                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                      Focus on controlled eccentric. Pause at bottom position. Full ROM required.
+                    </div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 12, marginBottom: 8 }}>Suggested Exercises</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {pattern.type === "squat" && ["Back Squat", "Front Squat", "Goblet Squat"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "hinge" && ["Romanian Deadlift", "Trap Bar Deadlift", "Kettlebell Swing"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "horizontal_push" && ["Bench Press", "Dumbbell Press", "Push-Up"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {pattern.type === "vertical_pull" && ["Pull-Up", "Lat Pulldown", "Chin-Up"].map(ex => (
+                        <span key={ex} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#e8f5f3", color: TEAL }}>{ex}</span>
+                      ))}
+                      {!["squat", "hinge", "horizontal_push", "vertical_pull"].includes(pattern.type) && (
+                        <span style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#f5f7f6", color: TEXT_SEC }}>
+                          Coach selects based on client
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Usage context */}
+        <div style={{
+          marginTop: 24, padding: 16, borderRadius: 10, background: "#f5f7f6"
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Usage Context
+          </div>
+          <div style={{ fontSize: 13, color: TEXT, marginBottom: 8 }}>
+            <strong>12</strong> scheduled sessions will render from this template
+          </div>
+          <div style={{ fontSize: 13, color: TEXT }}>
+            <strong>3</strong> coaches will run sessions based on this plan
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer - Sticky actions */}
+      <div style={{ 
+        padding: "16px 20px", borderTop: `1px solid ${BORDER}`,
+        display: "flex", gap: 10
+      }}>
+        <button
+          style={{
+            flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+            background: "#f5f7f6", color: TEXT, border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          Ask Milton to modify
+        </button>
+        <button
+          style={{
+            padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+            background: "transparent", color: TEXT_SEC, border: `1px solid ${BORDER}`, cursor: "pointer"
+          }}
+        >
+          Replace day
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
+// ═══════════════════════════════════════════════════════════════
+function PlaybookChapterDetail({ 
+  chapter, 
+  chapterData, 
+  getChapterStats, 
+  renderChapterIcon, 
+  formatRelativeTime,
+  onBack, 
+  onClose, 
+  isMobile,
+  onUploadToChapter,
+  playbook,
+  setPlaybook
+}) {
+  const [activeTab, setActiveTab] = useState("active"); // active | pending | documents | archived
+  const [editingRule, setEditingRule] = useState(null);
+  const [showAddRule, setShowAddRule] = useState(false);
+  const [newRuleTitle, setNewRuleTitle] = useState("");
+  const [newRuleDesc, setNewRuleDesc] = useState("");
+  
+  // Master Program state (only for Programming chapter)
+  const [selectedSession, setSelectedSession] = useState(null); // For session detail drawer
+  const [viewingBlockId, setViewingBlockId] = useState(null); // null = active block
+  const [calendarWeekOffset, setCalendarWeekOffset] = useState(0); // 0 = current week centered
+  const [showBlockDropdown, setShowBlockDropdown] = useState(false);
+  
+  const stats = getChapterStats();
+  
+  // Master Program data (Programming chapter only)
+  const masterProgram = chapter.id === "programming" ? playbook?.chapters?.programming?.masterProgram : null;
+  const allBlocks = masterProgram?.blocks || [];
+  const activeBlock = allBlocks.find(b => b.id === masterProgram?.activeBlockId);
+  const viewingBlock = viewingBlockId ? allBlocks.find(b => b.id === viewingBlockId) : activeBlock;
+  
+  // Calculate current week number based on today's date
+  const getCurrentWeekNumber = () => {
+    if (!viewingBlock || !viewingBlock.startDate) return 1;
+    const start = new Date(viewingBlock.startDate);
+    const today = new Date("2026-04-29"); // Mock today for demo
+    const daysSinceStart = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    return Math.max(1, Math.min(viewingBlock.weekCount, Math.ceil((daysSinceStart + 1) / 7)));
+  };
+  const currentWeekNumber = getCurrentWeekNumber();
+  
+  // Get visible weeks for the calendar (3 weeks: prev, current, next)
+  const getVisibleWeeks = () => {
+    if (!viewingBlock || !viewingBlock.weeks) return [];
+    const centerWeek = currentWeekNumber + calendarWeekOffset;
+    const weeks = [];
+    for (let i = centerWeek - 1; i <= centerWeek + 1; i++) {
+      if (i >= 1 && i <= viewingBlock.weekCount) {
+        weeks.push(viewingBlock.weeks.find(w => w.weekNumber === i) || { weekNumber: i, sessions: [] });
+      }
+    }
+    return weeks;
+  };
+  
+  // Format pattern type for display
+  const formatPatternType = (type) => {
+    return type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  };
+  
+  // Get week date range
+  const getWeekDateRange = (weekNum) => {
+    if (!viewingBlock || !viewingBlock.startDate) return "";
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (weekNum - 1) * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${monthNames[start.getMonth()]} ${start.getDate()} – ${monthNames[end.getMonth()]} ${end.getDate()}`;
+  };
+  
+  // Get day date for a specific week and day
+  const getDayDate = (weekNum, dayOfWeek) => {
+    if (!viewingBlock || !viewingBlock.startDate) return "";
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock.startDate);
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    return start.getDate();
+  };
+  
+  // Check if a day is today
+  const isToday = (weekNum, dayOfWeek) => {
+    const today = new Date("2026-04-29"); // Mock today - Wednesday of week 2
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock?.startDate || "2026-04-20");
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    return start.toDateString() === today.toDateString();
+  };
+  
+  // Get relative day text
+  const getRelativeDayText = (weekNum, dayOfWeek) => {
+    const today = new Date("2026-04-29");
+    const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+    const start = new Date(viewingBlock?.startDate || "2026-04-20");
+    start.setDate(start.getDate() + (weekNum - 1) * 7 + (dayMap[dayOfWeek] || 0));
+    const diff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return { text: "Today", color: TEAL };
+    if (diff === 1) return { text: "Tomorrow", color: TEXT_SEC };
+    if (diff > 1 && diff <= 7) return { text: `In ${diff} days`, color: TEXT_SEC };
+    if (diff < 0) return { text: "Completed", color: "#16a34a" };
+    return { text: "", color: TEXT_SEC };
+  };
+  
+  const tabs = [
+    { id: "active", label: "Active rules", count: stats.activeRules },
+    { id: "pending", label: "Pending review", count: stats.pendingRules },
+    { id: "documents", label: "Documents", count: stats.documents.length },
+    { id: "archived", label: "Archived", count: stats.rules.filter(r => r.status === "archived").length }
+  ];
+  
+  const filteredRules = stats.rules.filter(r => {
+    if (activeTab === "active") return r.status === "active";
+    if (activeTab === "pending") return r.status === "pending_review";
+    if (activeTab === "archived") return r.status === "archived";
+    return false;
+  });
+  
+  const handleAddRule = () => {
+    if (!newRuleTitle.trim()) return;
+    // Add the new rule
+    console.log("[v0] Adding rule:", newRuleTitle, newRuleDesc);
+    setShowAddRule(false);
+    setNewRuleTitle("");
+    setNewRuleDesc("");
+  };
+  
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", height: "100%", 
+      position: "relative", background: "#fafcfb"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "20px 16px" : "24px 40px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`
+      }}>
+        {/* Breadcrumb */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={onBack}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              fontSize: 13, color: TEAL, fontWeight: 500, padding: 0,
+              display: "flex", alignItems: "center", gap: 4
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+            Playbook
+          </button>
+          <span style={{ color: TEXT_SEC, fontSize: 13 }}>/</span>
+          <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{chapter.title}</span>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+            {/* Large chapter icon */}
+            <div style={{
+              width: 56, height: 56, borderRadius: 14, background: chapter.bgColor,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              {renderChapterIcon(chapter.icon, 28, chapter.color)}
+            </div>
+            <div>
+              <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, margin: 0 }}>
+                {chapter.title}
+              </h1>
+              <p style={{ fontSize: 14, color: TEXT_SEC, margin: "6px 0 0", lineHeight: 1.5, maxWidth: 450 }}>
+                {chapter.description}
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+              background: WHITE, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginTop: 24 }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "10px 16px", fontSize: 13, fontWeight: 500,
+                background: activeTab === tab.id ? TEAL : "transparent",
+                color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                border: "none", borderRadius: 8, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                transition: "all 0.15s"
+              }}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{
+                  background: activeTab === tab.id ? "rgba(255,255,255,0.25)" : "#f0f4f3",
+                  color: activeTab === tab.id ? WHITE : TEXT_SEC,
+                  padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600
+                }}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "24px 40px" }}>
+        {/* Active Rules Tab */}
+        {activeTab === "active" && (
+          <div style={{ maxWidth: 700 }}>
+            {/* Add Rule Button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+              <button
+                onClick={() => setShowAddRule(true)}
+                style={{
+                  padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add rule
+              </button>
+            </div>
+            
+            {/* Add Rule Form */}
+            {showAddRule && (
+              <div style={{ 
+                background: WHITE, borderRadius: 12, border: `1px solid ${TEAL}`, padding: 20, marginBottom: 16
+              }}>
+                <input
+                  type="text"
+                  value={newRuleTitle}
+                  onChange={e => setNewRuleTitle(e.target.value)}
+                  placeholder="Rule title"
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, fontWeight: 500,
+                    border: `1px solid ${BORDER}`, marginBottom: 12
+                  }}
+                  autoFocus
+                />
+                <textarea
+                  value={newRuleDesc}
+                  onChange={e => setNewRuleDesc(e.target.value)}
+                  placeholder="Rule description (optional)"
+                  rows={3}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                    border: `1px solid ${BORDER}`, resize: "vertical", marginBottom: 12
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setShowAddRule(false)} style={{
+                    padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+                  }}>Cancel</button>
+                  <button onClick={handleAddRule} style={{
+                    padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    background: TEAL, color: WHITE, border: "none", cursor: "pointer"
+                  }}>Add rule</button>
+                </div>
+              </div>
+            )}
+            
+            {/* Rules List */}
+            {filteredRules.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>No active rules yet.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>Add a rule or upload a document to get started.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredRules.map((rule, idx) => (
+                  <div
+                    key={rule.id || idx}
+                    style={{
+                      background: WHITE, borderRadius: 12, border: `0.5px solid ${BORDER}`,
+                      padding: 16, display: "flex", alignItems: "flex-start", gap: 14
+                    }}
+                  >
+                    {/* Rule number */}
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8, background: "#f5f7f6",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 600, color: TEXT_SEC, flexShrink: 0
+                    }}>
+                      {idx + 1}
+                    </div>
+                    
+                    {/* Rule content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
+                        <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{rule.title}</span>
+                      </div>
+                      <p style={{ fontSize: 13, color: TEXT_SEC, margin: 0, lineHeight: 1.5 }}>
+                        {rule.description}
+                      </p>
+                    </div>
+                    
+                    {/* Source + Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: 11, padding: "4px 8px", borderRadius: 6,
+                        background: rule.source === "milton_default" ? "#f3e8ff" : "#f5f7f6",
+                        color: rule.source === "milton_default" ? "#8e7cc3" : TEXT_SEC
+                      }}>
+                        {rule.source === "milton_default" ? "Milton default" : "Manual"}
+                      </span>
+                      <button style={{
+                        width: 28, height: 28, borderRadius: 6, border: "none",
+                        background: "transparent", cursor: "pointer", color: TEXT_SEC
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Master Program Section for Programming chapter */}
+            {chapter.id === "programming" && viewingBlock && (
+              <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
+                {/* Master Program Header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    {/* Badge */}
+                    <div style={{ 
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      background: "#e6f9ec", padding: "5px 10px", borderRadius: 16, marginBottom: 10
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1f7a3e" strokeWidth="2" strokeLinecap="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "#1f7a3e" }}>Master Program</span>
+                    </div>
+                    
+                    {/* Block title */}
+                    <h2 style={{ fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 6px" }}>
+                      {viewingBlock.name}
+                    </h2>
+                    <p style={{ fontSize: 13, color: TEXT_SEC, margin: 0 }}>
+                      Week {currentWeekNumber} of {viewingBlock.weekCount} · {viewingBlock.sessionsPerWeek} sessions/week · Started {new Date(viewingBlock.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {/* Change block dropdown */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => setShowBlockDropdown(!showBlockDropdown)}
+                        style={{
+                          padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                          background: WHITE, color: TEXT, border: `1px solid ${BORDER}`,
+                          cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+                        }}
+                      >
+                        Change block
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polyline points="6,9 12,15 18,9"/>
+                        </svg>
+                      </button>
+                      
+                      {showBlockDropdown && (
+                        <div style={{
+                          position: "absolute", top: "100%", right: 0, marginTop: 4,
+                          background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`,
+                          boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: 220, zIndex: 50
+                        }}>
+                          {allBlocks.map(block => (
+                            <div
+                              key={block.id}
+                              onClick={() => { setViewingBlockId(block.id === masterProgram.activeBlockId ? null : block.id); setShowBlockDropdown(false); }}
+                              style={{
+                                padding: "10px 14px", cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                borderBottom: `1px solid ${BORDER}`,
+                                background: (viewingBlockId === block.id || (!viewingBlockId && block.id === masterProgram.activeBlockId)) ? "#f7faf9" : "transparent"
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{block.name}</div>
+                                <div style={{ fontSize: 11, color: TEXT_SEC }}>
+                                  {block.status === "active" ? "Active" : block.status === "draft" ? "Draft" : "Archived"}
+                                </div>
+                              </div>
+                              {block.id === masterProgram.activeBlockId && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* New block button */}
+                    <button
+                      style={{
+                        padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        background: "transparent", color: TEAL, border: `1.5px solid ${TEAL}`,
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      New block
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Viewing archived/draft banner */}
+                {viewingBlockId && viewingBlockId !== masterProgram.activeBlockId && (
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "#fef3c7", padding: "10px 14px", borderRadius: 8, marginBottom: 16
+                  }}>
+                    <span style={{ fontSize: 13, color: "#92400e" }}>
+                      Viewing {viewingBlock.status} block. Activate to make it live.
+                    </span>
+                    <button
+                      onClick={() => {
+                        setPlaybook(prev => ({
+                          ...prev,
+                          chapters: {
+                            ...prev.chapters,
+                            programming: {
+                              ...prev.chapters.programming,
+                              masterProgram: {
+                                ...prev.chapters.programming.masterProgram,
+                                activeBlockId: viewingBlockId
+                              }
+                            }
+                          }
+                        }));
+                        setViewingBlockId(null);
+                      }}
+                      style={{
+                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+                        background: "#d97706", color: WHITE, border: "none", cursor: "pointer"
+                      }}
+                    >
+                      Activate block
+                    </button>
+                  </div>
+                )}
+                
+                {/* Status bar */}
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                  background: "#e8f5f3", padding: "12px 16px", borderRadius: 10, marginBottom: 20
+                }}>
+                  <span style={{ fontSize: 13, color: TEXT }}>
+                    Today · Wednesday, April 29 · Week {currentWeekNumber}
+                  </span>
+                  
+                  {/* Progress bar */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, maxWidth: 200 }}>
+                    <div style={{ flex: 1, height: 6, background: "#c8e6e3", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ 
+                        width: `${((currentWeekNumber - 1) / viewingBlock.weekCount) * 100}%`, 
+                        height: "100%", background: TEAL, borderRadius: 3 
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 11, color: TEXT_SEC }}>{Math.round(((currentWeekNumber - 1) / viewingBlock.weekCount) * 100)}%</span>
+                  </div>
+                  
+                  <button
+                    style={{
+                      fontSize: 13, color: TEAL, fontWeight: 500, background: "transparent",
+                      border: "none", cursor: "pointer", padding: 0
+                    }}
+                  >
+                    Preview today&apos;s session →
+                  </button>
+                </div>
+                
+                {/* Week Strip Calendar */}
+                <div style={{ position: "relative" }}>
+                  {/* Navigation arrows */}
+                  <button
+                    onClick={() => setCalendarWeekOffset(prev => Math.max(prev - 1, -(currentWeekNumber - 1)))}
+                    disabled={currentWeekNumber + calendarWeekOffset <= 1}
+                    style={{
+                      position: "absolute", left: -16, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: "50%", border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: currentWeekNumber + calendarWeekOffset > 1 ? "pointer" : "not-allowed",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: currentWeekNumber + calendarWeekOffset > 1 ? TEXT : TEXT_SEC,
+                      zIndex: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                  </button>
+                  
+                  <button
+                    onClick={() => setCalendarWeekOffset(prev => Math.min(prev + 1, viewingBlock.weekCount - currentWeekNumber))}
+                    disabled={currentWeekNumber + calendarWeekOffset >= viewingBlock.weekCount}
+                    style={{
+                      position: "absolute", right: -16, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: "50%", border: `1px solid ${BORDER}`,
+                      background: WHITE, cursor: currentWeekNumber + calendarWeekOffset < viewingBlock.weekCount ? "pointer" : "not-allowed",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: currentWeekNumber + calendarWeekOffset < viewingBlock.weekCount ? TEXT : TEXT_SEC,
+                      zIndex: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="9,18 15,12 9,6"/>
+                    </svg>
+                  </button>
+                  
+                  {/* Week columns */}
+                  <div style={{ 
+                    display: "flex", gap: 12, overflowX: "auto", padding: "4px 0",
+                    scrollbarWidth: "none", msOverflowStyle: "none"
+                  }}>
+                    {getVisibleWeeks().map((week) => {
+                      const isCurrentWeek = week.weekNumber === currentWeekNumber;
+                      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                      
+                      return (
+                        <div 
+                          key={week.weekNumber}
+                          style={{
+                            flex: isMobile ? "1 0 100%" : "1 0 calc(33.33% - 8px)",
+                            minWidth: isMobile ? "100%" : 220,
+                            background: isCurrentWeek ? "#f0fdf8" : WHITE,
+                            borderRadius: 12,
+                            border: `1px solid ${isCurrentWeek ? "#bbf7d0" : BORDER}`,
+                            padding: 12
+                          }}
+                        >
+                          {/* Week header */}
+                          <div style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${BORDER}`
+                          }}>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Week {week.weekNumber}</div>
+                              <div style={{ fontSize: 11, color: TEXT_SEC }}>{getWeekDateRange(week.weekNumber)}</div>
+                            </div>
+                            {isCurrentWeek && (
+                              <span style={{ fontSize: 10, fontWeight: 600, color: TEAL, background: "#dcfce7", padding: "3px 8px", borderRadius: 10 }}>
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Day cells */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {days.map((day) => {
+                              const session = week.sessions?.find(s => s.dayOfWeek === day);
+                              const dayDate = getDayDate(week.weekNumber, day);
+                              const isTodayCell = isToday(week.weekNumber, day);
+                              const relativeDay = getRelativeDayText(week.weekNumber, day);
+                              
+                              if (!session) {
+                                // Rest day
+                                return (
+                                  <div
+                                    key={day}
+                                    style={{
+                                      background: "#f5f7f6", borderRadius: 8, padding: "10px 12px",
+                                      minHeight: 50, display: "flex", alignItems: "center", justifyContent: "center"
+                                    }}
+                                  >
+                                    <span style={{ fontSize: 12, color: TEXT_SEC, fontStyle: "italic" }}>Rest</span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Session day
+                              return (
+                                <div
+                                  key={day}
+                                  onClick={() => setSelectedSession({ ...session, weekNumber: week.weekNumber, dayDate })}
+                                  style={{
+                                    background: WHITE, borderRadius: 8, padding: 12,
+                                    border: `0.5px solid ${isTodayCell ? TEAL : "#e0ebe8"}`,
+                                    cursor: "pointer", transition: "all 0.15s",
+                                    boxShadow: isTodayCell ? `0 0 0 2px ${TEAL}20` : "none"
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.boxShadow = isTodayCell ? `0 0 0 2px ${TEAL}20` : "none"; }}
+                                >
+                                  {/* Day label + date */}
+                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                    <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                      {day.slice(0, 3)}
+                                    </span>
+                                    <span style={{ fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>{dayDate}</span>
+                                  </div>
+                                  
+                                  {/* Focus */}
+                                  <div style={{ fontSize: 13, fontWeight: 500, color: TEXT, marginBottom: 8 }}>
+                                    {session.focus}
+                                  </div>
+                                  
+                                  {/* Pattern pills */}
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+                                    {session.patterns.slice(0, 4).map((pattern, pIdx) => {
+                                      const roleStyles = {
+                                        primary: { bg: TEAL, color: WHITE },
+                                        secondary: { bg: "#e6f9ec", color: "#1f7a3e" },
+                                        accessory: { bg: "#f1f5f4", color: TEXT_SEC },
+                                        finisher: { bg: "#ede9fe", color: "#6b46c1" }
+                                      };
+                                      const style = roleStyles[pattern.role] || roleStyles.accessory;
+                                      return (
+                                        <span
+                                          key={pIdx}
+                                          style={{
+                                            fontSize: 10, padding: "3px 6px", borderRadius: 10,
+                                            background: style.bg, color: style.color, fontWeight: 500
+                                          }}
+                                        >
+                                          {formatPatternType(pattern.type)}
+                                        </span>
+                                      );
+                                    })}
+                                    {session.patterns.length > 4 && (
+                                      <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 10, background: "#f1f5f4", color: TEXT_SEC }}>
+                                        +{session.patterns.length - 4}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Status */}
+                                  {relativeDay.text && (
+                                    <div style={{ fontSize: 11, color: relativeDay.color, fontWeight: 500 }}>
+                                      {relativeDay.text === "Completed" && (
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginRight: 4, verticalAlign: "middle" }}>
+                                          <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                      )}
+                                      {relativeDay.text}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Session Detail Drawer */}
+            {selectedSession && (
+              <MasterProgramSessionDrawer
+                session={selectedSession}
+                viewingBlock={viewingBlock}
+                formatPatternType={formatPatternType}
+                onClose={() => setSelectedSession(null)}
+                isMobile={isMobile}
+              />
+            )}
+          </div>
+        )}
+        
+        {/* Pending Review Tab */}
+        {activeTab === "pending" && (
+          <div style={{ maxWidth: 700 }}>
+            {stats.pendingRules === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>Nothing waiting for review.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>When you upload a document, extracted rules show up here first.</div>
+              </div>
+            ) : (
+              <div>Pending rules would show here</div>
+            )}
+          </div>
+        )}
+        
+        {/* Documents Tab */}
+        {activeTab === "documents" && (
+          <div style={{ maxWidth: 700 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+              <button
+                onClick={onUploadToChapter}
+                style={{
+                  padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: TEAL, color: WHITE, border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload document
+              </button>
+            </div>
+            
+            {stats.documents.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+                <div style={{ fontSize: 14 }}>No documents uploaded yet.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>Upload your coaching manuals, SOPs, or guidelines.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {stats.documents.map((doc, idx) => (
+                  <div key={idx} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: 14, background: WHITE, borderRadius: 10, border: `0.5px solid ${BORDER}`
+                  }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{doc.name}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{doc.date} · {doc.rulesExtracted || 0} rules extracted</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Archived Tab */}
+        {activeTab === "archived" && (
+          <div style={{ maxWidth: 700, textAlign: "center", padding: "60px 20px", color: TEXT_SEC }}>
+            <div style={{ fontSize: 14 }}>No archived rules.</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>Rules you remove will appear here.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
+// ═══════════════════════════════════════════════════════════════
+function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
+  const [selectedChapter, setSelectedChapter] = useState(preselectedChapter || null);
+  const [letMiltonDecide, setLetMiltonDecide] = useState(false);
+  
+  const handleUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.txt,.md';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        onUpload(letMiltonDecide ? "auto" : selectedChapter, files);
+      }
+    };
+    input.click();
+  };
+  
+  return (
+    <div 
+      style={{
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 100, padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: WHITE, borderRadius: 16, width: "min(500px, 100%)",
+          maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Upload to Playbook</h2>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "transparent", cursor: "pointer", color: TEXT_SEC
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0" }}>
+            Which chapter does this belong to?
+          </p>
+        </div>
+        
+        {/* Chapter Options */}
+        <div style={{ flex: 1, overflow: "auto", padding: "16px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {chapters.map(chapter => (
+              <div
+                key={chapter.id}
+                onClick={() => { setSelectedChapter(chapter.id); setLetMiltonDecide(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: 14,
+                  borderRadius: 10, border: `1.5px solid ${selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : BORDER}`,
+                  background: selectedChapter === chapter.id && !letMiltonDecide ? `${chapter.bgColor}` : WHITE,
+                  cursor: "pointer", transition: "all 0.1s"
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, background: chapter.bgColor,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {renderChapterIcon(chapter.icon, 18, chapter.color)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{chapter.title}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{chapter.description.slice(0, 50)}...</div>
+                </div>
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%",
+                  border: `2px solid ${selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : BORDER}`,
+                  background: selectedChapter === chapter.id && !letMiltonDecide ? chapter.color : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {selectedChapter === chapter.id && !letMiltonDecide && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {/* Let Milton Decide Option */}
+            <div
+              onClick={() => { setLetMiltonDecide(true); setSelectedChapter(null); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: 14,
+                borderRadius: 10, border: `1.5px solid ${letMiltonDecide ? TEAL : BORDER}`,
+                background: letMiltonDecide ? "#e8f5f3" : WHITE,
+                cursor: "pointer", transition: "all 0.1s", marginTop: 8
+              }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: 8, background: "#e8f5f3",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Let Milton decide</div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>Milton will scan and route to the best chapter</div>
+              </div>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                border: `2px solid ${letMiltonDecide ? TEAL : BORDER}`,
+                background: letMiltonDecide ? TEAL : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                {letMiltonDecide && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div style={{ 
+          padding: "16px 24px", borderTop: `1px solid ${BORDER}`,
+          display: "flex", gap: 12, justifyContent: "flex-end"
+        }}>
+          <button onClick={onClose} style={{
+            padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+            background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer"
+          }}>Cancel</button>
+          <button
+            onClick={handleUpload}
+            disabled={!selectedChapter && !letMiltonDecide}
+            style={{
+              padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: (selectedChapter || letMiltonDecide) ? TEAL : "#e0e0e0",
+              color: (selectedChapter || letMiltonDecide) ? WHITE : TEXT_SEC,
+              border: "none", cursor: (selectedChapter || letMiltonDecide) ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload and process
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Legacy AIEngineCanvas kept for backwards compatibility - now redirects to PlaybookCanvas
 function AIEngineCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile }) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [activeTab, setActiveTab] = useState("upload"); // upload | review | settings
@@ -8991,11 +13727,21 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
     { 
       id: "workout",
       icon: "chart", 
-      title: "Workout Builder", 
-      desc: "Design structured training programs with exercises and progressions",
+      title: "1-on-1 Training", 
+      desc: "Design structured training programs for individual clients with exercises and progressions",
       color: "#3aafa9",
       available: true,
       number: 1
+    },
+    { 
+      id: "semiPrivate",
+      icon: "users", 
+      title: "Semi-Private", 
+      desc: "Manage sessions where 2-6 clients train together, each with their own program",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      available: true,
+      number: 2
     },
     { 
       id: "mealPlan",
@@ -9004,16 +13750,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       desc: "Build custom nutrition plans with daily meals, macros, and recipes",
       color: "#2B7A78",
       available: true,
-      number: 2
+      number: 3
     },
-{
-  id: "workflows",
-  icon: "message-circle",
-  title: "AI Workflows",
-  desc: "Automate client check-ins, reminders, and engagement triggers",
+    {
+      id: "workflows",
+      icon: "message-circle",
+      title: "AI Workflows",
+      desc: "Automate client check-ins, reminders, and engagement triggers",
       color: "#1D9E75",
       available: true,
-      number: 3
+      number: 4
     },
     { 
       id: "aiDashboards",
@@ -9022,16 +13768,17 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       desc: "Create customizable client dashboards with smart triggers",
       color: "#45818e",
       available: true,
-      number: 4
+      number: 5
     },
     { 
-      id: "aiEngine",
-      icon: "layers", 
-      title: "Your AI Engine", 
-      desc: "Upload videos, documents, and PDFs to train your AI assistant",
-      color: "#8e7cc3",
+      id: "playbook",
+      icon: "book", 
+      title: "Playbook", 
+      desc: "The rules your gym runs on. Programming, coaching standards, follow-ups, and more.",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
       available: true,
-      number: 5
+      number: 2
     }
   ];
   
@@ -9096,8 +13843,8 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
         
         {/* Templates Grid */}
         <div style={{ 
-          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", 
-          gap: isMobile ? 12 : 16, maxWidth: isMobile ? "100%" : 600
+          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", 
+          gap: isMobile ? 12 : 16, maxWidth: isMobile ? "100%" : 900
         }}>
           {templates.map((template, idx) => (
             <div
@@ -9124,7 +13871,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
               <div style={{
                 width: 48, height: 48, borderRadius: 12,
                 background: template.available 
-                  ? (hoveredTemplate === template.id ? template.color : `${template.color}15`)
+                  ? (hoveredTemplate === template.id ? template.color : (template.bgColor || `${template.color}15`))
                   : "#f0f0f0",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 marginBottom: 16, transition: "all 0.2s ease",
@@ -9132,7 +13879,21 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
                   ? (hoveredTemplate === template.id ? WHITE : template.color)
                   : TEXT_SEC
               }}>
-                <NavIcon icon={template.icon} size={24} />
+                {template.icon === "users" ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                ) : template.icon === "book" ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                ) : (
+                  <NavIcon icon={template.icon} size={24} />
+                )}
               </div>
               
               {/* Title + Badge */}
@@ -9719,6 +14480,25 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
   const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
   const [linkCopied, setLinkCopied] = useState(false);
+  
+  // Completed workouts tracking - key is "YYYY-MM-DD" date string
+  const [completedWorkouts, setCompletedWorkouts] = useState({});
+  
+  // Toggle workout completion for a specific date
+  const toggleWorkoutComplete = (date, e) => {
+    e.stopPropagation(); // Prevent opening the expanded day view
+    const dateKey = date.toISOString().split('T')[0];
+    setCompletedWorkouts(prev => ({
+      ...prev,
+      [dateKey]: !prev[dateKey]
+    }));
+  };
+  
+  // Check if a workout is completed
+  const isWorkoutCompleted = (date) => {
+    const dateKey = date.toISOString().split('T')[0];
+    return !!completedWorkouts[dateKey];
+  };
   
   // Calendar month navigation
   const [currentDate, setCurrentDate] = useState(() => {
@@ -10523,20 +15303,63 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                           Rest
                         </div>
                       ) : (
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                          {/* Workout title */}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+                          {/* Completion overlay when completed */}
+                          {isWorkoutCompleted(cellDate) && (
+                            <div style={{
+                              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                              background: "rgba(255,255,255,0.7)", zIndex: 1,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              pointerEvents: "none"
+                            }}>
+                              <div style={{
+                                width: 48, height: 48, borderRadius: "50%",
+                                background: "#dcfce7", border: "3px solid #16a34a",
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Workout title with completion toggle */}
                           <div style={{ 
                             padding: "8px 10px", 
-                            background: TEAL_LIGHT,
-                            borderBottom: `1px solid ${BORDER}`
+                            background: isWorkoutCompleted(cellDate) ? "#dcfce7" : TEAL_LIGHT,
+                            borderBottom: `1px solid ${BORDER}`,
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            gap: 8
                           }}>
                             <div style={{ 
-                              fontSize: 10, fontWeight: 700, color: TEXT,
+                              fontSize: 10, fontWeight: 700, color: isWorkoutCompleted(cellDate) ? "#16a34a" : TEXT,
                               textTransform: "uppercase", letterSpacing: "0.02em",
-                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                              flex: 1
                             }}>
                               {workout.title}
                             </div>
+                            {/* Completion checkbox */}
+                            <button
+                              onClick={(e) => toggleWorkoutComplete(cellDate, e)}
+                              style={{
+                                width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                                border: `2px solid ${isWorkoutCompleted(cellDate) ? "#16a34a" : BORDER}`,
+                                background: isWorkoutCompleted(cellDate) ? "#16a34a" : "transparent",
+                                cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                transition: "all 0.15s ease",
+                                zIndex: 2
+                              }}
+                              title={isWorkoutCompleted(cellDate) ? "Mark as incomplete" : "Mark as complete"}
+                            >
+                              {isWorkoutCompleted(cellDate) && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              )}
+                            </button>
                           </div>
                           
                           {/* Exercises list */}
@@ -10651,6 +15474,35 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
               </div>
             </div>
             
+            {/* Mark Complete Button */}
+            {expandedDay.date && (
+              <button
+                onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
+                style={{
+                  padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : "#f0f4f3",
+                  color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : TEXT,
+                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent"}`,
+                  cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8,
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: 4,
+                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : BORDER}`,
+                  background: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {isWorkoutCompleted(expandedDay.date) && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+                {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
+              </button>
+            )}
           </div>
           
           {/* Mobile: Card-based exercise list */}
@@ -10762,6 +15614,40 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   <div style={{ fontSize: 11, color: TEXT_SEC }}>Minutes</div>
                 </div>
               </div>
+              
+              {/* Mobile Mark Complete Button */}
+              {expandedDay.date && (
+                <button
+                  onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
+                  style={{
+                    width: "100%", padding: "16px", borderRadius: 12, marginTop: 12,
+                    fontSize: 15, fontWeight: 600,
+                    background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : TEAL,
+                    color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : WHITE,
+                    border: isWorkoutCompleted(expandedDay.date) ? "2px solid #16a34a" : "none",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  {isWorkoutCompleted(expandedDay.date) ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Workout Completed
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Mark as Complete
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           ) : (
           /* Desktop: Spreadsheet Style */
@@ -12398,6 +17284,8 @@ export default function MiltonDashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientFilter, setClientFilter] = useState(null);
+  const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
+  const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
   const [showAddClient, setShowAddClient] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [brainDocuments, setBrainDocuments] = useState([
@@ -12411,9 +17299,135 @@ export default function MiltonDashboard() {
   const chatEndRef = useRef(null);
   const [animatedKPIs, setAnimatedKPIs] = useState([false, false, false, false]);
 
+  // Session state for Semi-Private and PT sessions
+  const [sessions, setSessions] = useState([...initialSessions]);
+  const [activeSessionId, setActiveSessionId] = useState(null); // When set, shows SessionCanvas
+  
+  // Playbook state (the gym's operating system)
+  const [playbook, setPlaybook] = useState({
+    gymId: "gym_001",
+    name: "Optimal Performance Playbook",
+    chapters: {
+      programming: {
+        rules: [],
+        documents: [],
+        masterProgram: {
+          activeBlockId: "block_007",
+          blocks: [
+            {
+              id: "block_007",
+              name: "Spring Strength Block",
+              description: "6-week strength phase, focus on compound lifts and progressive overload",
+              startDate: "2026-04-20",
+              endDate: "2026-05-31",
+              weekCount: 6,
+              sessionsPerWeek: 4,
+              status: "active",
+              weeks: [
+                {
+                  weekNumber: 1,
+                  sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [
+                      { type: "squat", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "hinge", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "lunge", role: "accessory", sets: 3, reps: "10-12 each" },
+                      { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }
+                    ]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [
+                      { type: "horizontal_push", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "vertical_push", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "tricep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "carry", role: "finisher", sets: 3, reps: "40m" }
+                    ]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [
+                      { type: "hinge", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "squat", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" },
+                      { type: "core_flexion", role: "finisher", sets: 3, reps: "12-15" }
+                    ]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [
+                      { type: "vertical_pull", role: "primary", sets: 4, reps: "6-8" },
+                      { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "bicep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "rear_delt", role: "finisher", sets: 3, reps: "15-20" }
+                    ]}
+                  ]
+                },
+                {
+                  weekNumber: 2,
+                  sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [
+                      { type: "squat", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "hinge", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "lunge", role: "accessory", sets: 3, reps: "10-12 each" },
+                      { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "12 each" }
+                    ]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [
+                      { type: "horizontal_push", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "vertical_push", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "tricep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "carry", role: "finisher", sets: 3, reps: "50m" }
+                    ]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [
+                      { type: "hinge", role: "primary", sets: 4, reps: "4-5" },
+                      { type: "squat", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" },
+                      { type: "core_flexion", role: "finisher", sets: 3, reps: "15" }
+                    ]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [
+                      { type: "vertical_pull", role: "primary", sets: 4, reps: "5-6" },
+                      { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8-10" },
+                      { type: "bicep", role: "accessory", sets: 3, reps: "12-15" },
+                      { type: "rear_delt", role: "finisher", sets: 3, reps: "15-20" }
+                    ]}
+                  ]
+                },
+                { weekNumber: 3, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 5, reps: "5" }, { type: "hinge", role: "secondary", sets: 3, reps: "8" }, { type: "lunge", role: "accessory", sets: 3, reps: "10 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "12 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 5, reps: "5" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "8" }, { type: "tricep", role: "accessory", sets: 3, reps: "12" }, { type: "carry", role: "finisher", sets: 3, reps: "60m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 5, reps: "4" }, { type: "squat", role: "secondary", sets: 3, reps: "8" }, { type: "single_leg", role: "accessory", sets: 3, reps: "10 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "15" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 5, reps: "5" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "8" }, { type: "bicep", role: "accessory", sets: 3, reps: "12" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "15" }]}
+                ]},
+                { weekNumber: 4, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 4, reps: "4" }, { type: "hinge", role: "secondary", sets: 3, reps: "6" }, { type: "lunge", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 4, reps: "4" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "6" }, { type: "tricep", role: "accessory", sets: 3, reps: "10" }, { type: "carry", role: "finisher", sets: 3, reps: "60m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 4, reps: "3" }, { type: "squat", role: "secondary", sets: 3, reps: "6" }, { type: "single_leg", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "12" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 4, reps: "4" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "6" }, { type: "bicep", role: "accessory", sets: 3, reps: "10" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "12" }]}
+                ]},
+                { weekNumber: 5, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 5, reps: "3" }, { type: "hinge", role: "secondary", sets: 3, reps: "6" }, { type: "lunge", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 3, reps: "10 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 5, reps: "3" }, { type: "vertical_push", role: "secondary", sets: 3, reps: "6" }, { type: "tricep", role: "accessory", sets: 3, reps: "10" }, { type: "carry", role: "finisher", sets: 3, reps: "70m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 5, reps: "2-3" }, { type: "squat", role: "secondary", sets: 3, reps: "6" }, { type: "single_leg", role: "accessory", sets: 3, reps: "8 each" }, { type: "core_flexion", role: "finisher", sets: 3, reps: "12" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 5, reps: "3" }, { type: "horizontal_pull", role: "secondary", sets: 3, reps: "6" }, { type: "bicep", role: "accessory", sets: 3, reps: "10" }, { type: "rear_delt", role: "finisher", sets: 3, reps: "12" }]}
+                ]},
+                { weekNumber: 6, sessions: [
+                    { dayOfWeek: "Monday", focus: "Lower: Squat Primary", patterns: [{ type: "squat", role: "primary", sets: 3, reps: "2" }, { type: "hinge", role: "secondary", sets: 2, reps: "5" }, { type: "lunge", role: "accessory", sets: 2, reps: "8 each" }, { type: "core_anti_rotation", role: "finisher", sets: 2, reps: "8 each" }]},
+                    { dayOfWeek: "Tuesday", focus: "Upper: Push Primary", patterns: [{ type: "horizontal_push", role: "primary", sets: 3, reps: "2" }, { type: "vertical_push", role: "secondary", sets: 2, reps: "5" }, { type: "tricep", role: "accessory", sets: 2, reps: "8" }, { type: "carry", role: "finisher", sets: 2, reps: "40m" }]},
+                    { dayOfWeek: "Thursday", focus: "Lower: Hinge Primary", patterns: [{ type: "hinge", role: "primary", sets: 3, reps: "2" }, { type: "squat", role: "secondary", sets: 2, reps: "5" }, { type: "single_leg", role: "accessory", sets: 2, reps: "6 each" }, { type: "core_flexion", role: "finisher", sets: 2, reps: "10" }]},
+                    { dayOfWeek: "Friday", focus: "Upper: Pull Primary", patterns: [{ type: "vertical_pull", role: "primary", sets: 3, reps: "2" }, { type: "horizontal_pull", role: "secondary", sets: 2, reps: "5" }, { type: "bicep", role: "accessory", sets: 2, reps: "8" }, { type: "rear_delt", role: "finisher", sets: 2, reps: "10" }]}
+                ]}
+              ]
+            },
+            {
+              id: "block_006",
+              name: "Winter Hypertrophy",
+              description: "8-week hypertrophy phase with higher volume and moderate loads",
+              startDate: "2026-02-01",
+              endDate: "2026-03-28",
+              weekCount: 8,
+              sessionsPerWeek: 4,
+              status: "archived",
+              weeks: []
+            }
+          ]
+        }
+      }
+    }
+  });
+  
   // Canvas state
   const [canvasMode, setCanvasMode] = useState(false);
-  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'messageSequence' | 'report' | 'aiEngine'
+  const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'playbook' | 'messageSequence' | 'report'
   const [canvasData, setCanvasData] = useState(null);
   const [canvasClient, setCanvasClient] = useState(null);
   const [canvasHistory, setCanvasHistory] = useState([]);
@@ -12770,6 +17784,49 @@ export default function MiltonDashboard() {
         };
       }
       
+      // Detect service type tag changes
+      // Add: "add Sarah to Semi", "make Marcus a PT client", "add online tag to Emily"
+      const addTagMatch = low.match(/add\s+(\w+)\s+to\s+(pt|semi|online|hybrid)/i) 
+        || low.match(/add\s+(pt|semi|online|hybrid)\s+(?:tag\s+)?to\s+(\w+)/i)
+        || low.match(/make\s+(\w+)\s+(?:a\s+)?(pt|semi|online|hybrid)/i);
+      if (addTagMatch) {
+        const serviceType = (addTagMatch[2] || addTagMatch[1]).charAt(0).toUpperCase() + (addTagMatch[2] || addTagMatch[1]).slice(1).toLowerCase();
+        const validType = CLIENT_TYPE_ORDER.find(t => t.toLowerCase() === serviceType.toLowerCase());
+        if (validType && !(client.clientTypes || []).includes(validType)) {
+          return {
+            type: "addServiceType",
+            clientIndex,
+            client,
+            firstName,
+            serviceType: validType,
+            updates: {
+              clientTypes: [...(client.clientTypes || []), validType]
+            }
+          };
+        }
+      }
+      
+      // Remove: "remove Marcus's online tag", "take Sarah off Semi", "remove PT from Emily"
+      const removeTagMatch = low.match(/remove\s+(\w+)(?:'s)?\s+(pt|semi|online|hybrid)\s*tag?/i)
+        || low.match(/remove\s+(pt|semi|online|hybrid)\s+(?:tag\s+)?from\s+(\w+)/i)
+        || low.match(/take\s+(\w+)\s+off\s+(pt|semi|online|hybrid)/i);
+      if (removeTagMatch) {
+        const serviceType = (removeTagMatch[2] || removeTagMatch[1]).charAt(0).toUpperCase() + (removeTagMatch[2] || removeTagMatch[1]).slice(1).toLowerCase();
+        const validType = CLIENT_TYPE_ORDER.find(t => t.toLowerCase() === serviceType.toLowerCase());
+        if (validType && (client.clientTypes || []).includes(validType)) {
+          return {
+            type: "removeServiceType",
+            clientIndex,
+            client,
+            firstName,
+            serviceType: validType,
+            updates: {
+              clientTypes: (client.clientTypes || []).filter(t => t !== validType)
+            }
+          };
+        }
+      }
+      
       return null;
     })();
 
@@ -12795,6 +17852,10 @@ export default function MiltonDashboard() {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s protein target to ${clientUpdateCmd.newProteinTarget}g.**\n\nThe nutrition cards will now show progress against this new target. Should I also adjust their meal plan recommendations?`;
         } else if (clientUpdateCmd.type === "calories") {
           responseText = `**Updated ${clientUpdateCmd.firstName}'s calorie target to ${clientUpdateCmd.newCalorieTarget}.**\n\nThis change is now reflected in their dashboard. Want me to recalculate their macros based on this new target?`;
+        } else if (clientUpdateCmd.type === "addServiceType") {
+          responseText = `**Done! I've added ${clientUpdateCmd.firstName} to ${clientUpdateCmd.serviceType}.**\n\nThey'll now appear in the ${clientUpdateCmd.serviceType} filter tab, and you'll see the ${clientUpdateCmd.serviceType} tag on their profile.`;
+        } else if (clientUpdateCmd.type === "removeServiceType") {
+          responseText = `**Done! I've removed the ${clientUpdateCmd.serviceType} tag from ${clientUpdateCmd.firstName}.**\n\nThey'll no longer appear in the ${clientUpdateCmd.serviceType} filter tab.`;
         }
         
         setChatMessages(prev => [...prev, { type: "ai", text: responseText }]);
@@ -12872,9 +17933,32 @@ export default function MiltonDashboard() {
 
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
 
+  // Handler for updating sessions
+  const handleUpdateSession = (updatedSession) => {
+    setSessions(prev => prev.map(s => s.id === updatedSession.id ? updatedSession : s));
+  };
+
+  // Get active session
+  const activeSession = activeSessionId ? sessions.find(s => s.id === activeSessionId) : null;
+
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+      {/* ═══ SESSION CANVAS (Full-screen when active) ═══ */}
+      {activeSession && (
+        <SessionCanvas
+          session={activeSession}
+          clients={clients}
+          onBack={() => setActiveSessionId(null)}
+          onUpdateSession={handleUpdateSession}
+          onOpenFullProfile={(clientId) => {
+            setActiveSessionId(null);
+            setSelectedClient(clientId);
+          }}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* ═══ MOBILE HEADER BAR ═══ */}
       {isMobile && (
@@ -12938,14 +18022,14 @@ export default function MiltonDashboard() {
                         </svg>
                         <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Help Center</span>
                       </div>
-                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
+                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); }} style={{
                         display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
                         cursor: "pointer", transition: "background 0.15s ease"
                       }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
-                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B7A78" strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                         </svg>
-                        <span style={{ fontSize: 15, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                       </div>
                       <div style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px",
@@ -13053,14 +18137,17 @@ export default function MiltonDashboard() {
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "semiPrivate") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
   setCanvasData({});
   } else if (templateType === "aiDashboards") {
   setCanvasType("aiDashboards");
   setCanvasData({});
-  } else if (templateType === "aiEngine") {
-  setCanvasType("aiEngine");
+  } else if (templateType === "playbook") {
+  setCanvasType("playbook");
   setCanvasData({});
   }
   }}
@@ -13076,13 +18163,15 @@ export default function MiltonDashboard() {
     onEditProcessed={handleDashboardEditResult}
   />
 )}
-{canvasType === "aiEngine" && (
-  <AIEngineCanvas
+{canvasType === "playbook" && (
+  <PlaybookCanvas
     onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
     onHome={() => setCanvasType("templates")}
     brainDocuments={brainDocuments}
     setBrainDocuments={setBrainDocuments}
-isMobile={isMobile}
+    isMobile={isMobile}
+    playbook={playbook}
+    setPlaybook={setPlaybook}
   />
   )}
   {canvasType === "workflows" && (
@@ -13130,11 +18219,40 @@ isMobile={isMobile}
   onHome={() => setCanvasType("templates")}
   />
   )}
+  {canvasType === "semiPrivate" && (
+  <SemiPrivateList
+  sessions={sessions}
+  clients={clients}
+  isMobile={isMobile}
+  onClose={() => setCanvasType("templates")}
+  onHome={() => setCanvasType("templates")}
+  onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  />
+  )}
+  {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
+  <SessionCanvas
+  session={sessions.find(s => s.id === canvasData.sessionId)}
+  clients={clients}
+  isMobile={isMobile}
+  onBack={() => setCanvasType("semiPrivate")}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => {
+    setCanvasMode(false);
+    setCanvasData(null);
+    setCanvasType(null);
+    setSelectedClient(clientId);
+  }}
+  />
+  )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
   isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
+  sessions={sessions}
+  clients={clients}
+  onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
   />
   )}
   </div>
@@ -13157,6 +18275,9 @@ isMobile={isMobile}
                 title: `${client.name.split(" ")[0]}'s Report — Milton Insight`,
                 text: `${client.insight}\n\nCoaching angle: ${client.coachAngle}`
               }]);
+            }}
+            onUpdateClient={(updatedClient) => {
+              setClients(prev => prev.map((c, i) => i === selectedClient ? updatedClient : c));
             }}
           />
         </main>
@@ -13266,14 +18387,14 @@ isMobile={isMobile}
                           </svg>
                           <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Help Center</span>
                         </div>
-                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("aiEngine"); setCanvasData({}); setCanvasMode(true); }} style={{
+                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); }} style={{
                           display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
                           cursor: "pointer", transition: "background 0.15s ease"
                         }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e7cc3" strokeWidth="1.8" strokeLinecap="round">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B7A78" strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                           </svg>
-                          <span style={{ fontSize: 16, fontWeight: 500, color: "#8e7cc3" }}>Your AI Engine</span>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                         </div>
                         <div style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px",
@@ -13580,26 +18701,110 @@ isMobile={isMobile}
           </div>
         </div>
 
-        {/* Client Table / List */}
-        {clientFilter && (
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 16px", borderRadius: 12, background: TEAL_LIGHT,
-            border: `1px solid #b6dfd8`
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>
-              Showing: {clientFilter === "red" ? "Needs Attention" : clientFilter === "blue" ? "Report Ready" : "Made Progress"} ({clients.filter(c => c.alertType === clientFilter).length})
-            </span>
-            <div onClick={() => setClientFilter(null)} style={{ cursor: "pointer", color: TEAL, display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
-              Clear filter
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
-          </div>
-        )}
+        {/* Service Type Tab Bar */}
+        {(() => {
+          // Filter clients based on service type tab and dropdown
+          const getFilteredClients = () => {
+            let filtered = clients;
+            
+            // Apply alert type filter first
+            if (clientFilter) {
+              filtered = filtered.filter(c => c.alertType === clientFilter);
+            }
+            
+            // Apply service type tab filter (takes precedence)
+            if (serviceTypeTab !== "All") {
+              filtered = filtered.filter(c => c.clientTypes?.includes(serviceTypeTab));
+            } else if (serviceTypeDropdown.length > 0) {
+              // When on "All" tab, apply dropdown filter (OR logic)
+              filtered = filtered.filter(c => 
+                serviceTypeDropdown.some(type => c.clientTypes?.includes(type))
+              );
+            }
+            
+            return filtered;
+          };
+          
+          const filteredClients = getFilteredClients();
+          
+          // Count clients for each tab
+          const getCounts = () => {
+            const baseFiltered = clientFilter 
+              ? clients.filter(c => c.alertType === clientFilter) 
+              : clients;
+            return {
+              All: baseFiltered.length,
+              PT: baseFiltered.filter(c => c.clientTypes?.includes("PT")).length,
+              Semi: baseFiltered.filter(c => c.clientTypes?.includes("Semi")).length,
+              Online: baseFiltered.filter(c => c.clientTypes?.includes("Online")).length,
+              Hybrid: baseFiltered.filter(c => c.clientTypes?.includes("Hybrid")).length,
+            };
+          };
+          const counts = getCounts();
+          
+          return (
+            <>
+              {/* Tab Bar */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 0,
+                marginBottom: 12, borderBottom: `1px solid ${BORDER}`,
+                overflow: "auto", flexShrink: 0
+              }}>
+                {["All", "PT", "Semi", "Online", "Hybrid"].map((tab) => {
+                  const isActive = serviceTypeTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setServiceTypeTab(tab)}
+                      style={{
+                        padding: "12px 16px", fontSize: 14, fontWeight: isActive ? 500 : 400,
+                        color: isActive ? "#1a2e2a" : TEXT_SEC,
+                        background: "none", border: "none", cursor: "pointer",
+                        borderBottom: isActive ? `2px solid ${TEAL}` : "2px solid transparent",
+                        marginBottom: -1, whiteSpace: "nowrap", transition: "all 0.15s",
+                        display: "flex", alignItems: "center", gap: 4
+                      }}
+                    >
+                      {tab}
+                      <span style={{ color: "#8aa3a0", fontSize: 13 }}>({counts[tab]})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Alert Type Filter Banner */}
+              {clientFilter && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "10px 16px", borderRadius: 12, background: TEAL_LIGHT,
+                  border: `1px solid #b6dfd8`, marginBottom: 12
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEAL }}>
+                    Showing: {clientFilter === "red" ? "Needs Attention" : clientFilter === "blue" ? "Report Ready" : "Made Progress"} ({filteredClients.length})
+                  </span>
+                  <div onClick={() => setClientFilter(null)} style={{ cursor: "pointer", color: TEAL, display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
+                    Clear filter
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
         {isMobile ? (
           /* ─── Mobile: Individual client cards ─── */
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
+            {clients.filter(c => {
+              // Alert type filter
+              if (clientFilter && c.alertType !== clientFilter) return false;
+              // Service type tab filter
+              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
+              // Service type dropdown filter (when on All tab)
+              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
+                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
+              }
+              return true;
+            }).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i} onClick={() => setSelectedClient(i)} style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
                 boxShadow: "0 2px 6px rgba(0,0,0,0.04)", padding: "16px",
@@ -13609,7 +18814,10 @@ isMobile={isMobile}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={48} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{client.name}</span>
+                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                    </div>
                     <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -13662,7 +18870,17 @@ isMobile={isMobile}
               <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-            {clients.filter(c => !clientFilter || c.alertType === clientFilter).map((client, _fi) => { const i = clients.indexOf(client); return (
+            {clients.filter(c => {
+              // Alert type filter
+              if (clientFilter && c.alertType !== clientFilter) return false;
+              // Service type tab filter
+              if (serviceTypeTab !== "All" && !c.clientTypes?.includes(serviceTypeTab)) return false;
+              // Service type dropdown filter (when on All tab)
+              if (serviceTypeTab === "All" && serviceTypeDropdown.length > 0) {
+                if (!serviceTypeDropdown.some(type => c.clientTypes?.includes(type))) return false;
+              }
+              return true;
+            }).map((client, _fi) => { const i = clients.indexOf(client); return (
               <div key={i}
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
@@ -13676,7 +18894,10 @@ isMobile={isMobile}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Avatar name={client.name} size={34} />
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{client.name}</span>
+                      <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                    </div>
                     <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
@@ -13733,6 +18954,11 @@ isMobile={isMobile}
   setBrainDocuments={setBrainDocuments}
   pendingDashboardEdit={pendingDashboardEdit}
   onDashboardEditProcessed={handleDashboardEditResult}
+  sessions={sessions}
+  onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => { setCanvasMode(false); setSelectedClient(clientId); }}
   />
   )}
 
