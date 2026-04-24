@@ -696,24 +696,24 @@ function SessionClientTile({
   const [setWeights, setSetWeights] = useState({}); // { exerciseId: { 1: 185, 2: 185, 3: 195 } }
   const [showSwapModal, setShowSwapModal] = useState(null); // exerciseId to swap
   const [editingExercise, setEditingExercise] = useState(null); // { id, sets, reps, weight }
-  const [localExercises, setLocalExercises] = useState(exercises); // Local copy for editing
+  const [localExerciseEdits, setLocalExerciseEdits] = useState({}); // { exerciseId: { sets, reps, weightTarget, name } }
   
   if (!client || !workout) return null;
   
   const workoutExercises = workout.exercises || [];
-  // Use local state to allow editing
-  useEffect(() => {
-    setLocalExercises(workoutExercises);
-  }, [workout]);
-  const exercises = localExercises.length > 0 ? localExercises : workoutExercises;
+  // Merge local edits with workout exercises
+  const exercises = workoutExercises.map(ex => ({
+    ...ex,
+    ...(localExerciseEdits[ex.id] || {})
+  }));
   const completedCount = exercises.filter(e => e.completed).length;
   const isSessionActive = sessionStatus === "in_progress";
   
   // Find first incomplete exercise for auto-focus
   useEffect(() => {
-    const firstIncomplete = exercises.findIndex(e => !e.completed);
+    const firstIncomplete = workoutExercises.findIndex(e => !e.completed);
     if (firstIncomplete >= 0) setCurrentExerciseIdx(firstIncomplete);
-  }, [exercises]);
+  }, [workoutExercises.length]);
   
   const handleExerciseClick = (idx, exerciseId) => {
     // Toggle expand for this exercise
@@ -771,10 +771,11 @@ function SessionClientTile({
   };
   
   const handleSwapExercise = (exerciseId, newExercise) => {
-    // Update the local exercises with the swapped exercise
-    setLocalExercises(prev => prev.map(ex => 
-      ex.id === exerciseId ? { ...ex, name: newExercise } : ex
-    ));
+    // Update the local exercise edits with the swapped exercise name
+    setLocalExerciseEdits(prev => ({
+      ...prev,
+      [exerciseId]: { ...(prev[exerciseId] || {}), name: newExercise }
+    }));
     setShowSwapModal(null);
   };
   
@@ -790,11 +791,16 @@ function SessionClientTile({
   
   const handleSaveEdit = () => {
     if (!editingExercise) return;
-    setLocalExercises(prev => prev.map(ex => 
-      ex.id === editingExercise.id 
-        ? { ...ex, sets: editingExercise.sets, reps: editingExercise.reps, weightTarget: editingExercise.weight }
-        : ex
-    ));
+    // Update local exercise edits
+    setLocalExerciseEdits(prev => ({
+      ...prev,
+      [editingExercise.id]: {
+        ...(prev[editingExercise.id] || {}),
+        sets: editingExercise.sets,
+        reps: editingExercise.reps,
+        weightTarget: editingExercise.weight
+      }
+    }));
     // Re-initialize set completions/weights for the new set count
     const initialCompletions = {};
     const initialWeights = {};
