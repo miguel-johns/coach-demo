@@ -3912,7 +3912,7 @@ function generateAIResponse(msg) {
   if (lower.includes("programming") || lower.includes("needs program") || lower.includes("program this week")) {
     return { 
       title: "Programming Needed", 
-      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** ��� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
+      text: `**Clients who need programming:**\n\n- **Emily Rodriguez** — Her current program ends this week. Missed last 2 sessions, so I'd suggest a simpler 2x/week restart program.\n\n- **Daniel Torres** ���� Hasn't trained in a week. May need a modified program to re-engage.\n\n**Everyone else is on track** with current programming.\n\nWant me to build a program for Emily or Daniel?`
     };
   }
 
@@ -19174,94 +19174,75 @@ export default function MiltonDashboard() {
           background: WHITE, borderRadius: 16, padding: isMobile ? "16px" : "20px 24px",
           border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)", marginTop: 20
         }}>
-          {/* Header with title and filter chips */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Today&apos;s Coaching Queue</span>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 12, background: "#f5f7f6", fontSize: 11, fontWeight: 500, color: TEXT_SEC, cursor: "pointer" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEXT_SEC }} />
-                Show work ahead
-              </div>
-              <div style={{ padding: "5px 10px", borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 500, color: TEXT_SEC, cursor: "pointer" }}>
-                All cues
-              </div>
-            </div>
+          {/* Header */}
+          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>
+            Today&apos;s Coaching Queue
           </div>
           
-          {/* 4 Priority Cue Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
+          {/* Filter Pills Row */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
             {[
               { 
-                count: 2, label: "Celebrate", sublabel: "Recent wins to acknowledge", 
-                bg: "#FFF8E1", iconBg: "#FFF0B8", icon: "⭐", filterType: "green",
-                fresh: true
+                count: 3, label: "Clients Attention", filterType: "red",
+                icon: <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", border: "2px solid #FECACA" }} />
               },
               { 
-                count: 3, label: "Needs Attention", sublabel: "Red and yellow clients",
-                bg: "#FDECE8", iconBg: "#F9CFC7", icon: "●", filterType: "red"
+                count: 4, label: "Today's Sessions", filterType: "sessions",
+                icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="#8B5CF6" strokeWidth="1.5" fill="none"/><path d="M2 6h12" stroke="#8B5CF6" strokeWidth="1.5"/><path d="M5 1v3M11 1v3" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/></svg>
               },
               { 
-                count: 4, label: "Needs Response", sublabel: "Unanswered messages",
-                bg: "#E8F4FD", iconBg: "#C9E1F6", icon: "💬", filterType: "blue"
+                count: 5, label: "Client Milestone", filterType: "green",
+                icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="#F59E0B"><path d="M8 1l2.2 4.4 4.8.7-3.5 3.4.8 4.9L8 12l-4.3 2.4.8-4.9-3.5-3.4 4.8-.7z"/></svg>
               },
               { 
-                count: 5, label: "Needs Programming", sublabel: "Due this week",
-                bg: "#E6F7F4", iconBg: "#B8E5DE", icon: "📋", filterType: "program"
+                count: 2, label: "Needs Response", filterType: "blue",
+                icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="2" stroke="#3B82F6" strokeWidth="1.5"/><path d="M5 7h6M5 9.5h3" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round"/></svg>
               },
             ].map((cue, i) => {
               const isActive = clientFilter === cue.filterType;
               return (
-                <div 
+                <button 
                   key={i} 
                   onClick={() => setClientFilter(isActive ? null : cue.filterType)} 
                   style={{
-                    position: "relative",
-                    background: isActive ? TEAL : cue.bg, 
-                    borderRadius: 14, 
-                    padding: "16px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    transform: isActive ? "scale(1.02)" : "scale(1)",
-                    boxShadow: isActive ? "0 4px 16px rgba(43,122,120,0.25)" : "0 1px 3px rgba(0,0,0,0.03)"
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: isActive ? TEAL : WHITE,
+                    border: `1px solid ${isActive ? TEAL : "#E5E7EB"}`,
+                    borderRadius: 999, padding: "8px 16px",
+                    cursor: "pointer", transition: "all 0.15s ease",
+                    boxShadow: isActive ? "0 2px 8px rgba(43,122,120,0.25)" : "0 1px 2px rgba(0,0,0,0.05)"
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.transform = "scale(1)"; }}
                 >
-                  {/* Fresh badge */}
-                  {cue.fresh && !isActive && (
-                    <div style={{
-                      position: "absolute", top: -6, right: 12,
-                      background: "#0B1628", color: WHITE, fontSize: 9, fontWeight: 700,
-                      padding: "3px 8px", borderRadius: 8, letterSpacing: "0.06em"
-                    }}>
-                      FRESH
-                    </div>
-                  )}
-                  {/* Icon square */}
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10,
-                    background: isActive ? "rgba(255,255,255,0.2)" : cue.iconBg,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 16, marginBottom: 12
-                  }}>
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {cue.icon}
-                  </div>
-                  {/* Count */}
-                  <div style={{ 
-                    fontFamily: "'Cormorant Garamond', Georgia, serif", 
-                    fontSize: 20, fontWeight: 600, 
-                    color: isActive ? WHITE : "#0B1628", 
-                    marginBottom: 2 
+                  </span>
+                  <span style={{ 
+                    fontSize: 14, fontWeight: 500, 
+                    color: isActive ? WHITE : TEXT,
+                    whiteSpace: "nowrap"
                   }}>
                     {cue.count} {cue.label}
-                  </div>
-                  {/* Sublabel */}
-                  <div style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,0.8)" : TEXT_SEC }}>
-                    {cue.sublabel}
-                  </div>
-                </div>
+                  </span>
+                </button>
               );
             })}
+            
+            {/* Divider */}
+            <div style={{ width: 1, height: 24, background: BORDER, margin: "0 4px" }} />
+            
+            {/* Show work ahead toggle */}
+            <button 
+              onClick={() => {/* toggle work ahead */}} 
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: WHITE, border: `1px solid ${BORDER}`,
+                borderRadius: 999, padding: "8px 14px",
+                cursor: "pointer", fontSize: 13, fontWeight: 500, color: TEXT_SEC
+              }}
+            >
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#9CA3AF" }} />
+              Show work ahead
+            </button>
           </div>
         </div>
 
