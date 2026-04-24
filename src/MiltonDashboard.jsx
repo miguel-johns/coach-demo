@@ -19351,9 +19351,7 @@ export default function MiltonDashboard() {
                   </div>
                 </div>
               )}
-            </>
-          );
-        })()}
+              
         {isMobile ? (
           /* ─── Mobile: Individual client cards ─── */
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -19488,6 +19486,9 @@ export default function MiltonDashboard() {
             </div>
           </div>
         )}
+        </>
+      );
+      })()}
       </main>
       ) : null}
 
