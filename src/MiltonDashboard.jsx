@@ -692,6 +692,7 @@ function SessionClientTile({
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [setCompletions, setSetCompletions] = useState({}); // { exerciseId: { 1: true, 2: false, 3: false } }
   const [setWeights, setSetWeights] = useState({}); // { exerciseId: { 1: 185, 2: 185, 3: 195 } }
+  const [setReps, setSetReps] = useState({}); // { exerciseId: { 1: "6", 2: "6", 3: "5" } }
   const [showSwapModal, setShowSwapModal] = useState(null); // exerciseId to swap
   const [editingExercise, setEditingExercise] = useState(null); // { id, sets, reps, weight }
   const [localExerciseEdits, setLocalExerciseEdits] = useState({}); // { exerciseId: { sets, reps, weightTarget, name } }
@@ -719,17 +720,20 @@ function SessionClientTile({
       setExpandedExerciseId(null);
     } else {
       setExpandedExerciseId(exerciseId);
-      // Initialize set completions/weights if not set
+      // Initialize set completions/weights/reps if not set
       const exercise = exercises[idx];
       if (!setCompletions[exerciseId]) {
         const initialCompletions = {};
         const initialWeights = {};
+        const initialReps = {};
         for (let i = 1; i <= exercise.sets; i++) {
           initialCompletions[i] = false;
           initialWeights[i] = exercise.weightTarget || 0;
+          initialReps[i] = exercise.reps || "";
         }
         setSetCompletions(prev => ({ ...prev, [exerciseId]: initialCompletions }));
         setSetWeights(prev => ({ ...prev, [exerciseId]: initialWeights }));
+        setSetReps(prev => ({ ...prev, [exerciseId]: initialReps }));
       }
     }
     if (isSessionActive) setCurrentExerciseIdx(idx);
@@ -764,6 +768,16 @@ function SessionClientTile({
       [exerciseId]: {
         ...prev[exerciseId],
         [setNum]: parseInt(weight) || 0
+      }
+    }));
+  };
+  
+  const handleSetRepsChange = (exerciseId, setNum, reps) => {
+    setSetReps(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        [setNum]: reps
       }
     }));
   };
@@ -968,6 +982,10 @@ function SessionClientTile({
                       const setWeight = exerciseSetWeights[setNum] !== undefined 
                         ? exerciseSetWeights[setNum] 
                         : (exercise.weightTarget || 0);
+                      const exerciseSetReps = setReps[exercise.id] || {};
+                      const setRepsValue = exerciseSetReps[setNum] !== undefined
+                        ? exerciseSetReps[setNum]
+                        : exercise.reps;
                       
                       return (
                         <div 
@@ -1008,9 +1026,20 @@ function SessionClientTile({
                             </div>
                           )}
                           
-                          {/* Reps display */}
-                          <div style={{ flex: 1, fontSize: 13, color: TEXT_SEC }}>
-                            × {exercise.reps}
+                          {/* Reps input */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1 }}>
+                            <span style={{ fontSize: 13, color: TEXT_SEC }}>×</span>
+                            <input
+                              type="text"
+                              value={setRepsValue}
+                              onChange={(e) => handleSetRepsChange(exercise.id, setNum, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                width: 50, padding: "4px 6px", borderRadius: 6, fontSize: 14,
+                                border: `1px solid ${BORDER}`, textAlign: "center",
+                                background: WHITE, color: TEXT, fontWeight: 500
+                              }}
+                            />
                           </div>
                           
                           {/* Complete checkbox */}
