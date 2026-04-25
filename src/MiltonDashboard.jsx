@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════�����════
+// ══════════════════════════════════════════════════════════�������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -5813,6 +5813,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
   const [showServiceTypeEdit, setShowServiceTypeEdit] = useState(false);
+  const [detailTab, setDetailTab] = useState("program"); // "program" | "timeline" | "data" | "files" | "notes"
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -6022,6 +6023,120 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </div>
 
+      {/* ─── TAB NAVIGATION ─── */}
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 16 : 28, borderBottom: `1px solid ${BORDER}`, paddingBottom: 0 }}>
+        {[
+          { id: "program", label: "Program", count: 3 },
+          { id: "timeline", label: "Timeline", count: 42 },
+          { id: "data", label: "Data", count: null },
+          { id: "files", label: "Files", count: 12 },
+          { id: "notes", label: "Notes", count: null },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setDetailTab(tab.id)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "12px 0", border: "none", background: "transparent",
+              cursor: "pointer", position: "relative",
+              fontSize: 14, fontWeight: detailTab === tab.id ? 600 : 500,
+              color: detailTab === tab.id ? TEXT : TEXT_SEC,
+              transition: "all 0.15s ease"
+            }}
+          >
+            {tab.label}
+            {tab.count !== null && (
+              <span style={{
+                fontSize: 11, fontWeight: 600,
+                padding: "2px 7px", borderRadius: 10,
+                background: detailTab === tab.id ? `${TEAL}15` : "#f0f2f1",
+                color: detailTab === tab.id ? TEAL : TEXT_SEC
+              }}>
+                {tab.count}
+              </span>
+            )}
+            {/* Active indicator line */}
+            {detailTab === tab.id && (
+              <div style={{
+                position: "absolute", bottom: -1, left: 0, right: 0,
+                height: 2, background: TEAL, borderRadius: 1
+              }} />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── GOAL CARD (Program Tab) ─── */}
+      {detailTab === "program" && (() => {
+        const goals = client.goals || {};
+        const current = client.current || {};
+        const assessment = client.assessment || {};
+        const goalLabel = goals.primary || "Lose 20 lbs";
+        const startWeight = assessment.bodyweight || 158;
+        const currentWeight = current.bodyweight || 153;
+        const targetWeight = goals.targetWeight || 138;
+        const totalChange = Math.abs(targetWeight - startWeight);
+        const progressChange = Math.abs(currentWeight - startWeight);
+        const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
+        
+        return (
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+              <span style={{ fontSize: 14, color: TEXT_SEC, fontWeight: 500 }}>Goal</span>
+              {currentStreak > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 14px", borderRadius: 16,
+                  background: TEAL_LIGHT, color: TEAL,
+                  fontSize: 13, fontWeight: 600
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  {currentStreak} week streak
+                </div>
+              )}
+            </div>
+            
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 12 }}>{goalLabel}</div>
+                
+                {/* Progress bar */}
+                <div style={{ height: 10, borderRadius: 5, background: "#e8f0ee", overflow: "hidden", marginBottom: 10 }}>
+                  <div style={{
+                    height: "100%", borderRadius: 5,
+                    background: `linear-gradient(90deg, ${TEAL}, ${MINT})`,
+                    width: `${progressPct}%`, transition: "width 0.8s ease"
+                  }} />
+                </div>
+                
+                {/* Progress labels */}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+                  <span>{startWeight} lbs · Jan 20</span>
+                  <span style={{ fontWeight: 600, color: TEXT }}>{currentWeight} lbs · today</span>
+                  <span>{targetWeight} lbs · target</span>
+                </div>
+              </div>
+              
+              {/* Percentage display */}
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 48, fontWeight: 400, color: TEAL, lineHeight: 1 }}>
+                  {progressPct}%
+                </div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", marginTop: 4 }}>
+                  TO GOAL · ON PACE
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── PROGRAM TAB CONTENT ─── */}
+      {detailTab === "program" && (
+        <>
       {/* ─── 2. UPCOMING SESSIONS ─── */}
       {(() => {
         const today = new Date();
@@ -6297,7 +6412,12 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           </div>
         );
       })()}
+        </>
+      )}
 
+      {/* ─── DATA TAB CONTENT ─── */}
+      {detailTab === "data" && (
+        <>
       {/* ─── 30 DAY ACTIVITY CALENDAR ─── */}
       {(() => {
         const today = new Date();
@@ -6948,6 +7068,50 @@ return (
           </div>
         );
       })()}
+        </>
+      )}
+
+      {/* ─── TIMELINE TAB PLACEHOLDER ─── */}
+      {detailTab === "timeline" && (
+        <div style={{
+          background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+          padding: "40px", textAlign: "center", color: TEXT_SEC
+        }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" style={{ marginBottom: 16 }}>
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          </svg>
+          <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Timeline</div>
+          <div style={{ fontSize: 13 }}>Activity history and session logs will appear here.</div>
+        </div>
+      )}
+
+      {/* ─── FILES TAB PLACEHOLDER ─── */}
+      {detailTab === "files" && (
+        <div style={{
+          background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+          padding: "40px", textAlign: "center", color: TEXT_SEC
+        }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" style={{ marginBottom: 16 }}>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          </svg>
+          <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Files</div>
+          <div style={{ fontSize: 13 }}>Client documents, photos, and attachments will appear here.</div>
+        </div>
+      )}
+
+      {/* ─── NOTES TAB PLACEHOLDER ─── */}
+      {detailTab === "notes" && (
+        <div style={{
+          background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+          padding: "40px", textAlign: "center", color: TEXT_SEC
+        }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" style={{ marginBottom: 16 }}>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Notes</div>
+          <div style={{ fontSize: 13 }}>Coach notes and client communication will appear here.</div>
+        </div>
+      )}
 
       {/* ─── PROFILE & BASELINES (COLLAPSIBLE) ─── */}
       {(() => {
