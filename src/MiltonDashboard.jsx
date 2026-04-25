@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������������������������═══════════════════════════════
+// ═══════════════════════════════�����������������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -6213,6 +6213,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         const completedCount = weekSessions.filter(s => s.status === "complete").length;
         
         return (
+          <>
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
@@ -6718,6 +6719,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </div>
             </div>
           </div>
+          </>
         );
       })()}
 
