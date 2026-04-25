@@ -1714,7 +1714,7 @@ function SessionCanvas({
 
 // ═══════════════════════════════════════════════════════════════
 // CLIENT CONTEXT DRAWER - Quick reference pane during sessions
-// ═══════════════════════════════════════════════════════════���═���═
+// ══════════════════════════════════════════════════════════������═���═
 function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   if (!isOpen || !client) return null;
   
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ════════════════════════════════════════════���═══���════��������════���������════
+// ═════════════════════════════════════════���══���═══���════��������════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -6170,7 +6170,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               
               {/* Percentage display */}
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 48, fontWeight: 400, color: TEAL, lineHeight: 1 }}>
+                <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 36 : 48, fontWeight: 400, color: TEAL, lineHeight: 1 }}>
                   {progressPct}%
                 </div>
                 <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", marginTop: 4 }}>
@@ -6229,7 +6229,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Today&apos;s Session</div>
+                    <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Today&apos;s Session</div>
                     <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Scheduled 6:00 PM</div>
                   </div>
                   <button style={{
@@ -6252,7 +6252,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: TEAL_LIGHT, marginBottom: 8 }}>
                     {todaySession.type} · {todaySession.emphasis}
                   </div>
-                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, marginBottom: 16 }}>
+                  <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 26, fontWeight: 400, marginBottom: 16 }}>
                     {todaySession.exerciseCount} exercises · {todaySession.duration} min
                   </div>
                   
@@ -6284,7 +6284,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
                   <div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Program Structure</div>
+                    <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Program Structure</div>
                     <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
                       Fat Loss · 3 phases · Week 6 of 16
                     </div>
@@ -6342,7 +6342,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
                   <div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>This Week</div>
+                    <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 22, fontWeight: 500, color: TEXT }}>This Week</div>
                     <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
                       {formatShortDate(weekStart)} — {weekEnd.getDate()} · {completedCount} of {weekSessions.length} complete
                     </div>
@@ -6374,7 +6374,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                       }}>
                         {/* Date column */}
                         <div style={{ width: 50, textAlign: "center", flexShrink: 0 }}>
-                          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 400, color: isToday ? TEAL : TEXT }}>
+                          <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 24, fontWeight: 400, color: isToday ? TEAL : TEXT }}>
                             {session.day}
                           </div>
                           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: isToday ? TEAL : TEXT_SEC }}>
@@ -7363,7 +7363,7 @@ return (
                 padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Last Week</span>
+                  <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Last Week</span>
                   <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>MAR 10 — 16</span>
                 </div>
                 <p style={{ fontSize: 14, color: TEXT, fontWeight: 600, marginBottom: 12, lineHeight: 1.4 }}>
@@ -7394,7 +7394,7 @@ return (
                 padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>This Week</span>
+                  <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 20, fontWeight: 500, color: TEXT }}>This Week</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: TEAL, fontWeight: 600 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }}/>
                     MAR 17 — 23 · LIVE
@@ -7431,7 +7431,7 @@ return (
                 padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Next Move</span>
+                  <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Next Move</span>
                   <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>MAR 24+</span>
                 </div>
                 <p style={{ fontSize: 14, color: TEXT, fontWeight: 600, marginBottom: 12, lineHeight: 1.4 }}>
@@ -7485,7 +7485,7 @@ return (
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {timelineData.map((day, di) => (
                 <div key={di}>
-                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: TEXT_SEC, marginBottom: 12 }}>
+                  <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 18, color: TEXT_SEC, marginBottom: 12 }}>
                     {day.date}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -7589,7 +7589,7 @@ return (
             
             {/* PROGRESS PHOTOS */}
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT, marginBottom: 16 }}>
+              <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 22, fontWeight: 500, color: TEXT, marginBottom: 16 }}>
                 Progress Photos
               </div>
               <div style={{ 
@@ -7629,7 +7629,7 @@ return (
             
             {/* DOCUMENTS & CHECK-INS */}
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT, marginBottom: 16 }}>
+              <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 22, fontWeight: 500, color: TEXT, marginBottom: 16 }}>
                 Documents & Check-ins
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -8250,7 +8250,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
     jt: { id: "jt", initials: "JT", name: "Jeff Turner", sub: "1x/wk · PT client", online: false, clientTypes: ["PT"] },
     kl: { id: "kl", initials: "KL", name: "Kim Lawson", sub: "Online · 6mo", online: false, clientTypes: ["Online"] },
     ap: { id: "ap", initials: "AP", name: "Ana Prieto", sub: "3x/wk · PT client", online: false, clientTypes: ["PT", "Semi"] },
-    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk �� small group", online: false, clientTypes: ["Semi"] },
+    rn: { id: "rn", initials: "RN", name: "Ryan Nelson", sub: "2x/wk ���� small group", online: false, clientTypes: ["Semi"] },
   };
 
   const [THREADS, setTHREADS] = useState({
@@ -19687,7 +19687,7 @@ export default function MiltonDashboard() {
 
         {/* March at a Glance Banner */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
+          <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
           <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Day 22 of 31 · 71% through the month</div>
         </div>
 
@@ -19704,8 +19704,8 @@ export default function MiltonDashboard() {
           }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Monthly Revenue</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1 }}>$8,400</span>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 20 : 24, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: "-0.02em" }}>/ $12,000</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1 }}>$8,400</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 20 : 24, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: "-0.02em" }}>/ $12,000</span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 12 }}>70% to goal · $3,600 to go</div>
             {/* Progress bar */}
@@ -19733,8 +19733,8 @@ export default function MiltonDashboard() {
           }}>
             <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Sessions</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>68</span>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 18 : 22, fontWeight: 500, color: TEXT_SEC, letterSpacing: "-0.02em" }}>/ 80</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>68</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 18 : 22, fontWeight: 500, color: TEXT_SEC, letterSpacing: "-0.02em" }}>/ 80</span>
             </div>
             <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>Monthly target</div>
             {/* Progress bar */}
@@ -19762,7 +19762,7 @@ export default function MiltonDashboard() {
           }}>
             <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Plus-One Rule</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>+3</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>+3</span>
               <span style={{ fontSize: 14, fontWeight: 500, color: TEXT_SEC }}>net</span>
             </div>
             <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 8 }}>Client change this month</div>
@@ -19798,7 +19798,7 @@ export default function MiltonDashboard() {
           }}>
             <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Attendance Rate</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>83%</span>
+              <span style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isMobile ? 36 : 44, fontWeight: 500, color: TEXT, letterSpacing: "-0.02em", lineHeight: 1 }}>83%</span>
             </div>
             <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 10 }}>10 of 12 clients engaged</div>
             {/* Dots visualization */}
@@ -19842,7 +19842,7 @@ export default function MiltonDashboard() {
         {/* ══════ Today's Sessions Strip ══════ */}
         <div style={{ marginTop: 20 }}>
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 500, color: "#0B1628" }}>Today&apos;s Sessions</div>
+            <div style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 24, fontWeight: 500, color: "#0B1628" }}>Today&apos;s Sessions</div>
             <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Thursday, March 22 · 3 scheduled</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
