@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════���������════
+// ═════════════════════════════════════════════════════���════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -6261,7 +6261,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                         marginLeft: -16, marginRight: -16,
                         borderRadius: isToday ? 12 : 0,
                         background: isToday ? `${TEAL}08` : "transparent",
-                        borderTop: i > 0 && !isToday ? `1px solid ${BORDER}` : "none"
+                        borderTop: i > 0 ? `1px solid ${BORDER}` : "none"
                       }}>
                         {/* Date column */}
                         <div style={{ width: 50, textAlign: "center", flexShrink: 0 }}>
