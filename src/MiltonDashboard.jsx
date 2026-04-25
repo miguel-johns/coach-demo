@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����������������������������═══════════════════════════════
+// ═══════════════════════════════�������������������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -5816,6 +5816,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [detailTab, setDetailTab] = useState("program"); // "program" | "timeline" | "data" | "files" | "notes"
   const [timelineFilter, setTimelineFilter] = useState("all");
   const [showClientMenu, setShowClientMenu] = useState(false);
+  const [selectedCalDay, setSelectedCalDay] = useState(null);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -6211,6 +6212,42 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         };
         
         const completedCount = weekSessions.filter(s => s.status === "complete").length;
+        
+        // Calendar data for 30 Day Activity
+        const calendarDays = Array.from({ length: 30 }).map((_, i) => {
+          const date = new Date(today);
+          date.setDate(today.getDate() - 29 + i);
+          const dayNum = date.getDate();
+          const dayOfWeek = date.getDay();
+          const dayName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dayOfWeek];
+          const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][date.getMonth()];
+          // Sample data
+          const workout = [1,2,3,5,6,8,9,10,12,14,15,17,19,21,22,24,26,27,28,29].includes(i);
+          const nutrition = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,21,22,24,25,26,27,28,29].includes(i);
+          const sleep = [0,1,3,4,5,7,8,10,11,12,14,15,17,18,19,21,22,24,25,26,28,29].includes(i);
+          const steps = [7200,8100,6400,9200,11000,8400,7800,9100,10200,8600,7400,8900,9500,10100,8200,7600,8420,9300,8700,10500,7900,8100,9200,8400,7100,9800,10200,8900,9400,8200][i];
+          return { date, dayNum, dayOfWeek, dayName, month, workout, nutrition, sleep, steps };
+        });
+        
+        const firstDayOfMonth = new Date(today);
+        firstDayOfMonth.setDate(today.getDate() - 29);
+        const paddingDays = firstDayOfMonth.getDay();
+        
+        const intensityColors = {
+          0: "#f7faf9",
+          1: "#d4ebe7",
+          2: "#9dd4c8",
+          3: TEAL,
+          4: "#2a6b61"
+        };
+        
+        const getIntensity = (day) => {
+          let score = 0;
+          if (day.workout) score += 2;
+          if (day.nutrition) score += 1;
+          if (day.sleep) score += 1;
+          return Math.min(score, 4);
+        };
         
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
