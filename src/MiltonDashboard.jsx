@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������═══════════════════════════════
+// ═══════════════════════════════�����������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -18813,25 +18813,353 @@ export default function MiltonDashboard() {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MONTHLY PERFORMANCE COMMAND CENTER                              */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        
+        {/* Section Header */}
+        <div style={{ marginBottom: isMobile ? 4 : 8 }}>
+          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+            March at a glance
+          </div>
+          <div style={{ fontSize: 14, color: TEXT_SEC, marginTop: 4 }}>
+            Day 22 of 31 &middot; 71% through the month
+          </div>
+        </div>
 
-          {/* ── Card 1: Active Clients - Person Icons ── */}
+        {/* Performance Cards Grid */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr 1fr", 
+          gap: isMobile ? 12 : 16 
+        }}>
+
+          {/* ── HERO CARD: Monthly Revenue (2x width on desktop) ── */}
           <div style={{
-            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "14px" : "18px 20px",
-            opacity: animatedKPIs[0] ? 1 : 0, transform: animatedKPIs[0] ? "translateY(0)" : "translateY(12px)",
-            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", display: "flex", flexDirection: "column",
-            minWidth: 0, overflow: "hidden"
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.05)", 
+            padding: isMobile ? "20px" : "24px 28px",
+            opacity: animatedKPIs[0] ? 1 : 0, 
+            transform: animatedKPIs[0] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", 
+            display: "flex", 
+            flexDirection: "column",
+            gridColumn: isMobile ? "1" : "1 / 2",
+            position: "relative",
+            overflow: "hidden"
           }}>
-            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Active Clients</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: isMobile ? 12 : 16 }}>
-              <span style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>12</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "2px 7px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                +3
+            {/* Subtle gradient accent */}
+            <div style={{
+              position: "absolute", top: 0, right: 0, width: 200, height: 200,
+              background: `radial-gradient(circle at top right, ${TEAL}08 0%, transparent 70%)`,
+              pointerEvents: "none"
+            }} />
+            
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                  Monthly Revenue
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: isMobile ? 36 : 44, fontWeight: 800, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>
+                    $8,400
+                  </span>
+                  <span style={{ fontSize: 18, color: TEXT_SEC, fontWeight: 500 }}>/ $12,000</span>
+                </div>
+              </div>
+              {/* Status Badge */}
+              <div style={{
+                background: `${ALERT_GREEN}12`, 
+                border: `1px solid ${ALERT_GREEN}25`,
+                borderRadius: 20, 
+                padding: "6px 12px",
+                display: "flex", 
+                alignItems: "center", 
+                gap: 5
+              }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round">
+                  <polyline points="2,10 8,4 14,10" />
+                </svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: ALERT_GREEN }}>+2 days ahead</span>
+              </div>
+            </div>
+
+            {/* Subtext */}
+            <div style={{ fontSize: 14, color: TEXT_SEC, marginBottom: 16 }}>
+              <span style={{ fontWeight: 600, color: TEXT }}>70% to goal</span> &middot; $3,600 to go
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ 
+              position: "relative", 
+              height: 10, 
+              borderRadius: 5, 
+              background: `${TEAL}12`, 
+              marginBottom: 20,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                position: "absolute", left: 0, top: 0, bottom: 0,
+                width: "70%", borderRadius: 5,
+                background: `linear-gradient(90deg, ${TEAL}, ${SAGE})`,
+                transition: "width 1s cubic-bezier(0.16, 1, 0.3, 1)"
+              }} />
+            </div>
+
+            {/* Milton Insight */}
+            <div style={{
+              background: `${TEAL}06`,
+              border: `1px solid ${TEAL}12`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              marginTop: "auto"
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: TEAL, display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: WHITE, fontSize: 14, fontWeight: 700 }}>M</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                    <span style={{ fontWeight: 600 }}>Book 4 more sessions this week to stay ahead.</span>
+                    {" "}Tom and Sarah have open slots.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Card 2: Sessions ── */}
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 20px",
+            opacity: animatedKPIs[1] ? 1 : 0, 
+            transform: animatedKPIs[1] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", 
+            display: "flex", 
+            flexDirection: "column",
+            minWidth: 0, 
+            overflow: "hidden"
+          }}>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+              Sessions
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: isMobile ? 32 : 38, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>68</span>
+              <span style={{ fontSize: 16, color: TEXT_SEC, fontWeight: 500 }}>/ 80</span>
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 12 }}>Monthly target</div>
+
+            {/* Progress Bar */}
+            <div style={{ 
+              position: "relative", 
+              height: 8, 
+              borderRadius: 4, 
+              background: `${SAGE}15`, 
+              marginBottom: 14,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                position: "absolute", left: 0, top: 0, bottom: 0,
+                width: "85%", borderRadius: 4,
+                background: `linear-gradient(90deg, ${SAGE}, ${MINT})`,
+                transition: "width 1s cubic-bezier(0.16, 1, 0.3, 1)"
+              }} />
+            </div>
+
+            {/* Trend Badge */}
+            <div style={{ 
+              display: "inline-flex", 
+              alignItems: "center", 
+              gap: 5, 
+              marginBottom: 12,
+              alignSelf: "flex-start"
+            }}>
+              <span style={{ 
+                fontSize: 11, 
+                fontWeight: 600, 
+                color: ALERT_GREEN, 
+                background: "#e8f5e9", 
+                padding: "3px 8px", 
+                borderRadius: 10,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3
+              }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round">
+                  <polyline points="1,8 6,3 11,8" />
+                </svg>
+                +3 vs last week
               </span>
             </div>
+
+            {/* Insight */}
+            <div style={{ 
+              fontSize: 12, 
+              color: TEXT_SEC, 
+              marginTop: "auto",
+              paddingTop: 10,
+              borderTop: `1px solid ${BORDER}`
+            }}>
+              <span style={{ fontWeight: 600, color: TEXT }}>12 remaining</span> to hit target
+            </div>
+          </div>
+
+          {/* ── Card 3: Client Growth ── */}
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 20px",
+            opacity: animatedKPIs[2] ? 1 : 0, 
+            transform: animatedKPIs[2] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", 
+            display: "flex", 
+            flexDirection: "column",
+            minWidth: 0, 
+            overflow: "hidden"
+          }}>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+              Client Growth
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: isMobile ? 32 : 38, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>+3</span>
+              <span style={{ fontSize: 14, color: TEXT_SEC, fontWeight: 500 }}>net</span>
+            </div>
+
+            {/* Breakdown */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: ALERT_GREEN }} />
+                <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600, color: TEXT }}>+5</span> new
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef6c3e" }} />
+                <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontWeight: 600, color: TEXT }}>-2</span> lost
+                </span>
+              </div>
+            </div>
+
+            {/* Net Positive Badge */}
+            <div style={{ 
+              display: "inline-flex", 
+              alignItems: "center", 
+              gap: 5, 
+              marginBottom: 12,
+              alignSelf: "flex-start"
+            }}>
+              <span style={{ 
+                fontSize: 11, 
+                fontWeight: 600, 
+                color: ALERT_GREEN, 
+                background: "#e8f5e9", 
+                padding: "3px 8px", 
+                borderRadius: 10 
+              }}>
+                Net positive
+              </span>
+            </div>
+
+            {/* Insight */}
+            <div style={{ 
+              fontSize: 12, 
+              color: TEXT_SEC, 
+              marginTop: "auto",
+              paddingTop: 10,
+              borderTop: `1px solid ${BORDER}`
+            }}>
+              Already on track to <span style={{ fontWeight: 600, color: TEXT }}>stay in the green</span>
+            </div>
+          </div>
+
+          {/* ── Card 4: Attendance Rate ── */}
+          <div style={{
+            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 20px",
+            opacity: animatedKPIs[3] ? 1 : 0, 
+            transform: animatedKPIs[3] ? "translateY(0)" : "translateY(12px)",
+            transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)", 
+            display: "flex", 
+            flexDirection: "column",
+            minWidth: 0, 
+            overflow: "hidden"
+          }}>
+            <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+              Attendance Rate
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: isMobile ? 32 : 38, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>83%</span>
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 12 }}>
+              <span style={{ fontWeight: 600, color: TEXT }}>10</span> of 12 clients engaged
+            </div>
+
+            {/* Engagement Dots */}
+            {(() => {
+              const total = 12;
+              const engaged = 10;
+              const dotSize = isMobile ? 18 : 20;
+              const engagedColors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#2B7A78", "#3aafa9", "#6aa84f", "#5CDB95", "#45818e", "#2B7A78"];
+              return (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>
+                  {Array.from({ length: total }).map((_, j) => {
+                    const isEngaged = j < engaged;
+                    return (
+                      <div key={j} style={{
+                        width: dotSize, height: dotSize, borderRadius: "50%",
+                        background: isEngaged ? engagedColors[j] : "transparent",
+                        border: isEngaged ? "none" : `2px dashed #c8d8d4`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.4s ease",
+                        transitionDelay: `${j * 0.04}s`
+                      }}>
+                        {isEngaged && (
+                          <svg width={dotSize * 0.45} height={dotSize * 0.45} viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="2,6 5,9 10,3" />
+                          </svg>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Trend Badge */}
+            <div style={{ 
+              display: "inline-flex", 
+              alignItems: "center", 
+              gap: 5, 
+              marginBottom: 12,
+              alignSelf: "flex-start"
+            }}>
+              <span style={{ 
+                fontSize: 11, 
+                fontWeight: 600, 
+                color: ALERT_GREEN, 
+                background: "#e8f5e9", 
+                padding: "3px 8px", 
+                borderRadius: 10,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3
+              }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round">
+                  <polyline points="1,8 6,3 11,8" />
+                </svg>
+                +12% vs last month
+              </span>
+            </div>
+          </div>
+
+        </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: "auto" }}>
               {Array.from({ length: 12 }).map((_, j) => {
                 const colors = ["#2B7A78", "#3aafa9", "#5CDB95", "#45818e", "#6aa84f", "#e06666", "#f6b26b", "#8e7cc3", "#2B7A78", "#3aafa9", "#45818e", "#5CDB95"];
