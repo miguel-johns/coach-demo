@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����������������═══════════════════════════════
+// ═══════════════════════════════�������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════�������════
+// ══════════════════════════════════════════════════════════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -6136,156 +6136,12 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       {/* ─── PROGRAM TAB CONTENT ─── */}
       {detailTab === "program" && (
-        <>
-      {/* ─── 2. UPCOMING SESSIONS ─── */}
-      {(() => {
-        const today = new Date();
-        const upcomingSessions = [
-          { 
-            id: 1,
-            day: "Today", 
-            type: "Upper Body", 
-            time: "6:00 PM", 
-            isToday: true,
-            date: new Date(),
-            exercises: [
-              { name: "Barbell Bench Press", sets: 4, reps: "8, 8, 6, 6", weight: "155 lb" },
-              { name: "Incline Dumbbell Press", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
-              { name: "Barbell Shoulder Press", sets: 3, reps: "8, 8, 8", weight: "95 lb" },
-              { name: "Lateral Raises", sets: 3, reps: "12, 12, 10", weight: "20 lb" },
-            ]
-          },
-          { 
-            id: 2,
-            day: "Wed", 
-            type: "Lower Body", 
-            time: "7:00 AM", 
-            isToday: false,
-            date: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000),
-            exercises: [
-              { name: "Barbell Full Squat", sets: 4, reps: "8, 8, 6, 6", weight: "185 lb" },
-              { name: "Romanian Deadlift", sets: 3, reps: "10, 10, 8", weight: "135 lb" },
-              { name: "Leg Press", sets: 3, reps: "12, 12, 10", weight: "270 lb" },
-              { name: "Leg Curl", sets: 3, reps: "12, 10, 10", weight: "80 lb" },
-            ]
-          },
-          { 
-            id: 3,
-            day: "Fri", 
-            type: "Full Body", 
-            time: "6:00 PM", 
-            isToday: false,
-            date: new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000),
-            exercises: [
-              { name: "Barbell Deadlift", sets: 3, reps: "10-12 reps", weight: "185 lb" },
-              { name: "Pull-ups", sets: 3, reps: "8-10 reps", weight: "BW" },
-              { name: "Dumbbell Lunges", sets: 3, reps: "10 each leg", weight: "40 lb" },
-              { name: "Dumbbell Rows", sets: 3, reps: "10, 10, 8", weight: "50 lb" },
-            ]
-          },
-        ];
-        
-        const scrollSessions = (direction) => {
-          if (sessionsScrollRef.current) {
-            const scrollAmount = 200;
-            sessionsScrollRef.current.scrollBy({
-              left: direction === 'left' ? -scrollAmount : scrollAmount,
-              behavior: 'smooth'
-            });
-          }
-        };
-        
-        return (
-          <div style={{
-            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT }}>Upcoming Sessions</div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button
-                  onClick={() => scrollSessions('left')}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    background: "#f0f4f3", border: "none",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: TEXT_SEC,
-                    transition: "all 0.15s ease"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <polyline points="15,18 9,12 15,6"/>
-                  </svg>
-                </button>
-                <button
-                  onClick={() => scrollSessions('right')}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    background: "#f0f4f3", border: "none",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: TEXT_SEC,
-                    transition: "all 0.15s ease"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <polyline points="9,6 15,12 9,18"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div 
-              ref={sessionsScrollRef}
-              style={{ 
-                display: "flex", gap: 12, overflowX: "auto", 
-                padding: "4px 2px 8px 2px",
-                scrollbarWidth: "none", msOverflowStyle: "none"
-              }}
-              className="hide-scrollbar"
-            >
-              {upcomingSessions.map((session, i) => {
-                const isCompleted = completedSessions.includes(session.id);
-                return (
-                <div 
-                  key={i} 
-                  onClick={() => setExpandedSession(session)}
-                  style={{
-                    flex: "0 0 auto", minWidth: isMobile ? 140 : 160,
-                    padding: "16px", borderRadius: 14,
-                    background: isCompleted ? `${MINT}15` : (session.isToday ? `linear-gradient(135deg, ${TEAL}12, ${MINT}08)` : "#f7faf9"),
-                    border: isCompleted ? `2px solid ${MINT}` : (session.isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`),
-                    boxShadow: session.isToday ? `0 4px 12px ${TEAL}15` : "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    position: "relative"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.1)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = session.isToday ? `0 4px 12px ${TEAL}15` : "none"; }}
-                >
-                  {isCompleted && (
-                    <div style={{ 
-                      position: "absolute", top: 8, right: 8,
-                      width: 20, height: 20, borderRadius: "50%",
-                      background: MINT, display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                        <polyline points="20,6 9,17 4,12"/>
-                      </svg>
-                    </div>
-                  )}
-                  <div style={{ fontSize: 12, fontWeight: 700, color: isCompleted ? MINT : (session.isToday ? TEAL : TEXT_SEC), textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
-                    {isCompleted ? "Completed" : session.day}
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{session.type}</div>
-                  <div style={{ fontSize: 13, color: TEXT_SEC }}>{session.time}</div>
-                </div>
-              )})}
-            </div>
-            
-            {/* Expanded Session Modal */}
+        <div style={{ color: TEXT_SEC, fontSize: 14, textAlign: "center", padding: "20px 0" }}>
+          Program content coming soon.
+        </div>
+      )}
+
+      {/* Expanded Session Modal - moved outside tab content */}
             {expandedSession && (
               <div 
                 onClick={() => setExpandedSession(null)}
@@ -6409,11 +6265,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 </div>
               </div>
             )}
-          </div>
-        );
-      })()}
-        </>
-      )}
 
       {/* ─── DATA TAB CONTENT ─── */}
       {detailTab === "data" && (
@@ -7113,120 +6964,6 @@ return (
         </div>
       )}
 
-      {/* ─── PROFILE & BASELINES (COLLAPSIBLE) ─── */}
-      {(() => {
-        const current = client.current || {};
-        const goals = client.goals || {};
-        const profile = client.profile || {};
-        const assessment = client.assessment || {};
-        const strengthBaselines = assessment.strengthBaselines || {};
-        
-        const summaryText = `${current.bodyweight || 153} lbs · ${current.bodyFat || 25.2}% BF · ${profile.trainingStyle || "Barbell-focused"}`;
-        
-        return (
-          <div style={{
-            background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden"
-          }}>
-            {/* Collapsible header */}
-            <div
-              onClick={() => setProfileExpanded(!profileExpanded)}
-              style={{
-                padding: isMobile ? "16px 18px" : "18px 28px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                cursor: "pointer", background: profileExpanded ? "#f7faf9" : "transparent",
-                transition: "background 0.2s ease"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TEAL}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Profile & Baselines</div>
-                  {!profileExpanded && <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{summaryText}</div>}
-                </div>
-              </div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" style={{ transform: profileExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
-                <polyline points="6,9 12,15 18,9"/>
-              </svg>
-            </div>
-
-            {/* Expanded content */}
-            {profileExpanded && (
-              <div style={{ padding: isMobile ? "0 18px 18px" : "0 28px 24px" }}>
-                {/* Two-column grid */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 18 }}>
-                  {/* Body composition */}
-                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Body Composition</div>
-                    {[
-                      ["Weight", `${current.bodyweight || 153} lbs`],
-                      ["Goal Weight", `${goals.targetWeight || 138} lbs`],
-                      ["Body Fat", `${current.bodyFat || 25.2}%`],
-                      ["Lean Mass", `${current.leanMass || 114} lbs`],
-                      ["Height", profile.height || `5'6"`],
-                    ].map(([l, v], i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
-                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Training details */}
-                  <div style={{ padding: "16px", borderRadius: 14, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: MINT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Training Details</div>
-                    {[
-                      ["Style", profile.trainingStyle || "Barbell-focused"],
-                      ["Experience", profile.experience || "Intermediate"],
-                      ["Sessions/Week", `${client.sessionsPerWeek || 3} days`],
-                      ["Preferred Time", profile.preferredTime || "Morning"],
-                      ["Communication", profile.communication || "Text"],
-                    ].map(([l, v], i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
-                        <span style={{ fontSize: 13, color: TEXT_SEC }}>{l}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Strength baselines */}
-                {Object.keys(strengthBaselines).length > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Strength Baselines</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {Object.entries(strengthBaselines).map(([key, val], i) => {
-                        const names = { squat: "Back Squat", deadlift: "Deadlift", benchPress: "Bench Press", overheadPress: "OHP" };
-                        const currentVal = { squat: "120x6", deadlift: "155x5", benchPress: "85x8", overheadPress: "55x6" };
-                        return (
-                          <div key={i} style={{ padding: "8px 14px", borderRadius: 10, background: `${TEAL}08`, border: `1px solid ${TEAL}15` }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{names[key] || key}</span>
-                            <span style={{ fontSize: 12, color: TEXT_SEC, marginLeft: 6 }}>{val.weight}x{val.reps}</span>
-                            <span style={{ fontSize: 12, color: TEAL, marginLeft: 4 }}>→ {currentVal[key] || `${val.weight + 20}x${val.reps}`}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Coach notes */}
-                <div style={{ padding: "14px 16px", borderRadius: 12, background: "#fafbfa", borderLeft: `3px solid ${TEAL}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Coach Notes</div>
-                  <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>
-                    {client.coachNotes || `${client.name.split(" ")[0]} responds well to detailed form cues and progressive overload programming. Focus on hip mobility before squat sessions.`}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-      
       {/* Service Type Edit Modal */}
       <ServiceTypeEditModal 
         isOpen={showServiceTypeEdit}
