@@ -6024,7 +6024,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         </div>
       </div>
 
-      {/* ─── TAB NAVIGATION ─── */}
+      {/* ─���─ TAB NAVIGATION ─── */}
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 16 : 28, borderBottom: `1px solid ${BORDER}`, paddingBottom: 0 }}>
         {[
           { id: "program", label: "The Plan", count: 3 },
@@ -19367,14 +19367,9 @@ export default function MiltonDashboard() {
         </div>
 
         {/* March at a Glance Banner */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
-          <div>
-            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
-            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Day 22 of 31 · 71% through the month</div>
-          </div>
-          <div style={{ background: TEAL_LIGHT, color: TEAL, fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 12, letterSpacing: "0.02em" }}>
-            Director-set goals
-          </div>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
+          <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Day 22 of 31 · 71% through the month</div>
         </div>
 
         {/* Goal-Driven KPI Tiles */}
