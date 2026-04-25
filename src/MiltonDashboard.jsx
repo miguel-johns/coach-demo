@@ -6171,12 +6171,13 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             gap: 20,
             alignItems: "stretch"
           }}>
-            {/* TODAY'S SESSION - Left on desktop, first on mobile */}
-            <div style={{ order: isMobile ? 1 : 1, display: "flex" }}>
+            {/* LEFT COLUMN: Today's Session + Program Structure */}
+            <div style={{ order: isMobile ? 1 : 1, display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* TODAY'S SESSION */}
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
                 padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-                display: "flex", flexDirection: "column", flex: 1
+                display: "flex", flexDirection: "column"
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
@@ -6231,7 +6232,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               {/* PROGRAM STRUCTURE */}
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                padding: "20px 24px", marginTop: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
                   <div>
@@ -6283,12 +6284,13 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </div>
             </div>
             
-            {/* THIS WEEK - Right on desktop, second on mobile */}
-            <div style={{ order: isMobile ? 2 : 2, display: "flex" }}>
+            {/* RIGHT COLUMN: This Week + Bodyweight */}
+            <div style={{ order: isMobile ? 2 : 2, display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* THIS WEEK */}
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
                 padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-                display: "flex", flexDirection: "column", flex: 1
+                display: "flex", flexDirection: "column"
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
                   <div>
@@ -6375,7 +6377,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               {/* BODYWEIGHT PROGRESS GRAPH */}
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                padding: "20px 24px", marginTop: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
                   <div>
@@ -12260,7 +12262,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════���══════════════════════════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═══════════════════════════════════════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
