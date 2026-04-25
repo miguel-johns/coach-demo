@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�������������������������═══════════════════════════════
+// ═══════════════════════════════���������������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1714,7 +1714,7 @@ function SessionCanvas({
 
 // ═══════════════════════════════════════════════════════════════
 // CLIENT CONTEXT DRAWER - Quick reference pane during sessions
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════���═
 function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   if (!isOpen || !client) return null;
   
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═════════════════════════════════════════════════════��������════���������════
+// ════════════════════════════════════════════════���════��������════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -7633,19 +7633,157 @@ return (
         );
       })()}
 
-      {/* ─── NOTES TAB PLACEHOLDER ─── */}
-      {detailTab === "notes" && (
-        <div style={{
-          background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-          padding: "40px", textAlign: "center", color: TEXT_SEC
-        }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" style={{ marginBottom: 16 }}>
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
-          </svg>
-          <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Notes</div>
-          <div style={{ fontSize: 13 }}>Coach notes and client communication will appear here.</div>
-        </div>
-      )}
+      {/* ─── NOTES TAB ─── */}
+      {detailTab === "notes" && (() => {
+        const notes = [
+          { 
+            author: "Miguel", 
+            initials: "MJ", 
+            isAI: false, 
+            badge: "SESSION NOTE", 
+            badgeColor: TEAL,
+            date: "Mar 17", 
+            context: "After PR session",
+            content: "Huge moment today. Sarah hit 135 on squat for 3 reps. Bar speed was strong, could have gotten 140 but wanted her to walk out confident. Mental side is clicking. She asked about competing in a novice meet this fall, worth exploring in the next check-in."
+          },
+          { 
+            author: "Milton (auto)", 
+            initials: null, 
+            isAI: true, 
+            badge: "AUTO-GENERATED", 
+            badgeColor: "#c9a227",
+            date: "Mar 16", 
+            context: "Weekly summary",
+            content: "Week 5 recap: 3/3 sessions. Sleep improved +0.4h. Nutrition adherence 85% (up from 79%). HRV trending green. Recommended: bump squat working set to 130 lb this week. Strong candidate for early Phase 3 transition if PR lands."
+          },
+          { 
+            author: "Miguel", 
+            initials: "MJ", 
+            isAI: false, 
+            badge: "SESSION NOTE", 
+            badgeColor: TEAL,
+            date: "Mar 10", 
+            context: "Post-session",
+            content: "Good strength session. Squat felt light at 125, worked up to 128 for a single. Ready to push 130+ next week. Client mentioned lower back stiffness on Friday, monitoring but no red flag."
+          },
+          { 
+            author: "Miguel", 
+            initials: "MJ", 
+            isAI: false, 
+            badge: null, 
+            badgeColor: null,
+            date: "Feb 28", 
+            context: "Context",
+            content: "Sarah's wedding is in August. That's the real motivator even though she frames it as \"just feel better.\" Keep it in mind when programming and messaging. Don't make it the headline, but it's under everything."
+          },
+        ];
+        
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* NOTE COMPOSER */}
+            <div style={{
+              background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+              padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+            }}>
+              <div 
+                contentEditable 
+                suppressContentEditableWarning
+                style={{
+                  fontSize: 15, color: TEXT_SEC, outline: "none",
+                  minHeight: 40, marginBottom: 16
+                }}
+                data-placeholder="Add a note about Sarah..."
+              />
+              <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  {/* Attachment */}
+                  <button style={{ background: "transparent", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 4 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                  </button>
+                  {/* Mic */}
+                  <button style={{ background: "transparent", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 4 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                  </button>
+                  {/* Tag */}
+                  <button style={{ background: "transparent", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 4 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+                    </svg>
+                  </button>
+                </div>
+                <button style={{
+                  padding: "10px 20px", borderRadius: 10,
+                  border: "none", background: "#1e3a3a", color: WHITE,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer"
+                }}>
+                  Save note
+                </button>
+              </div>
+            </div>
+            
+            {/* NOTES LIST */}
+            {notes.map((note, i) => (
+              <div key={i} style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {note.isAI ? (
+                      <div style={{
+                        width: 32, height: 32, borderRadius: "50%",
+                        background: TEAL_LIGHT, color: TEAL,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                          <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z"/>
+                        </svg>
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: 32, height: 32, borderRadius: "50%",
+                        background: TEAL, color: WHITE,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, fontWeight: 700
+                      }}>
+                        {note.initials}
+                      </div>
+                    )}
+                    <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{note.author}</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: TEXT_SEC }}>{note.date} · {note.context}</span>
+                </div>
+                
+                {/* Badge */}
+                {note.badge && (
+                  <div style={{
+                    display: "inline-block",
+                    padding: "4px 10px", borderRadius: 6,
+                    background: `${note.badgeColor}15`,
+                    color: note.badgeColor,
+                    fontSize: 10, fontWeight: 700, letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    marginBottom: 12
+                  }}>
+                    {note.badge}
+                  </div>
+                )}
+                
+                {/* Content */}
+                <p style={{ fontSize: 14, color: TEXT, lineHeight: 1.6, margin: 0 }}>
+                  {note.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Service Type Edit Modal */}
       <ServiceTypeEditModal 
