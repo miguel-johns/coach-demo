@@ -6213,7 +6213,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         const completedCount = weekSessions.filter(s => s.status === "complete").length;
         
         return (
-          <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
@@ -6529,8 +6529,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
-            gap: 20,
-            marginTop: 20
+            gap: 20
           }}>
             {/* 30 DAY ACTIVITY CALENDAR */}
             <div style={{
@@ -6719,7 +6718,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </div>
             </div>
           </div>
-          </>
+          </div>
         );
       })()}
 
