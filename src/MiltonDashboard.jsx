@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����������������═══════════════════════════════
+// ═══════════════════════════════�������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════���════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -5937,22 +5937,353 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
     return <ReportView client={client} onBack={() => setShowReport(false)} isMobile={isMobile} autoOpenShare={true} />;
   }
 
-  return (
-    <div style={{
-      flex: 1, overflowY: "auto",
-      padding: isMobile ? "68px 14px 76px" : "24px 28px",
-      display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18
-    }}>
-      {/* Back */}
-      {!isMobile && <div onClick={onBack} style={{
-        display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-        color: TEXT_SEC, fontSize: 14, fontWeight: 600, width: "fit-content"
-      }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
-        Back to Dashboard
-      </div>}
+  // Get status info for pill
+  const statusPillInfo = client.alertType === "green" 
+    ? { label: "Celebrate", bg: "#FFF8E1", color: "#B8850C" }
+    : client.alertType === "red" 
+    ? { label: "Attention", bg: "#FDECE8", color: "#E04E3B" }
+    : client.alertType === "blue"
+    ? { label: "Steady", bg: TEAL_LIGHT, color: TEAL }
+    : { label: "On Track", bg: "#F5F7F8", color: TEXT_SEC };
 
-      {/* ─── HEADER CARD ─── */}
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Back Link */}
+      {!isMobile && (
+        <div style={{ padding: "18px 32px 0" }}>
+          <div onClick={onBack} style={{
+            display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer",
+            color: TEXT_SEC, fontSize: 13, fontWeight: 500
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+            All Clients
+          </div>
+        </div>
+      )}
+
+      {/* ─── MINIMAL HEADER ROW ─── */}
+      <div style={{
+        background: WHITE, borderBottom: `1px solid ${BORDER}`,
+        padding: isMobile ? "12px 16px" : "10px 32px",
+        display: "flex", alignItems: "center", gap: 12
+      }}>
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <Avatar name={client.name} size={30} />
+          <div style={{
+            position: "absolute", bottom: -1, right: -1,
+            width: 9, height: 9, borderRadius: "50%", border: "2px solid white",
+            background: client.alertType === "green" ? "#B8850C" : client.alertType === "red" ? "#E04E3B" : TEAL
+          }} />
+        </div>
+        <span style={{ fontSize: 15, fontWeight: 600, color: "#0B1628" }}>{client.name}</span>
+        <span style={{ color: BORDER, fontWeight: 300 }}>|</span>
+        <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>{client.program || "General Fitness"} · Week {client.weekNumber || 6}</span>
+        <span style={{
+          fontSize: 10, padding: "3px 9px", borderRadius: 20, fontWeight: 600,
+          letterSpacing: "0.04em", textTransform: "uppercase",
+          background: statusPillInfo.bg, color: statusPillInfo.color,
+          display: "inline-flex", alignItems: "center", gap: 4
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "currentColor" }} />
+          {statusPillInfo.label}
+        </span>
+        <div style={{ flex: 1 }} />
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowReport(true)} style={{
+              padding: "8px 14px", borderRadius: 10, border: `1px solid ${BORDER}`,
+              background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer"
+            }}>Generate Report</button>
+            <button style={{
+              padding: "8px 14px", borderRadius: 10, border: "none",
+              background: "#0B1628", color: WHITE, fontSize: 13, fontWeight: 500, cursor: "pointer"
+            }}>Message</button>
+          </div>
+        )}
+      </div>
+
+      {/* ─── TAB NAVIGATION ─── */}
+      <div style={{
+        display: "flex", gap: 4, padding: isMobile ? "0 16px" : "0 32px",
+        background: WHITE, borderBottom: `1px solid ${BORDER}`
+      }}>
+        {[
+          { key: "overview", label: "Program", count: 3 },
+          { key: "timeline", label: "Timeline", count: 42 },
+          { key: "data", label: "Data" },
+          { key: "files", label: "Files", count: 12 },
+          { key: "notes", label: "Notes" }
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              padding: "14px 18px", fontSize: 14, fontWeight: activeTab === tab.key ? 600 : 500,
+              color: activeTab === tab.key ? "#0B1628" : TEXT_SEC,
+              cursor: "pointer", background: "none", border: "none",
+              borderBottom: activeTab === tab.key ? `2px solid ${TEAL}` : "2px solid transparent",
+              marginBottom: -1, display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            {tab.label}
+            {tab.count && (
+              <span style={{
+                fontSize: 11, padding: "2px 7px", borderRadius: 10, fontWeight: 600,
+                background: activeTab === tab.key ? TEAL_LIGHT : "#F5F7F8",
+                color: activeTab === tab.key ? TEAL : TEXT_SEC
+              }}>{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── TAB CONTENT ─── */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px" : "24px 32px" }}>
+        
+        {activeTab === "overview" && (
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr", gap: 20, alignItems: "start" }}>
+            
+            {/* ─── GOAL CARD (full width) ─── */}
+            <div style={{
+              gridColumn: "1 / -1", background: WHITE, border: `1px solid ${BORDER}`,
+              borderRadius: 16, padding: "18px 20px"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 18, color: "#0B1628", letterSpacing: "-0.01em" }}>Goal</span>
+                {currentStreak > 0 && (
+                  <span style={{
+                    padding: "6px 12px", borderRadius: 20, background: "#EAFBE7", color: TEAL,
+                    fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    {currentStreak} week streak
+                  </span>
+                )}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0B1628", marginBottom: 8 }}>{client.goals?.primary || "Build Strength"}</div>
+                  <div style={{ height: 8, background: "#F5F7F8", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
+                    <div style={{ height: "100%", width: `${client.goalProgress || 25}%`, background: `linear-gradient(90deg, ${TEAL} 0%, ${MINT} 100%)`, borderRadius: 4 }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
+                    <span>{client.assessment?.bodyweight || 158} lbs · Start</span>
+                    <span style={{ color: TEXT, fontWeight: 600 }}>{client.current?.bodyweight || 153} lbs · today</span>
+                    <span>{client.goals?.targetWeight || 138} lbs · target</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, color: TEAL, lineHeight: 1, letterSpacing: "-0.01em" }}>{client.goalProgress || 25}%</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 4, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600 }}>To goal · on pace</div>
+                </div>
+              </div>
+            </div>
+
+            {/* ─── LEFT COLUMN: This Week + Program Structure ─── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              
+              {/* This Week */}
+              <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 22, color: "#0B1628", letterSpacing: "-0.01em" }}>This Week</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>Mar 17 — 23 · {sessionsThisWeek} of {sessionsPerWeek} complete</div>
+                  </div>
+                  <button style={{ fontSize: 12, color: TEAL, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>View full schedule →</button>
+                </div>
+                <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    { day: 17, weekday: "Mon", name: "Lower Body · Squat PR session", detail: "Completed 8:00 AM · Hit 135 lb squat", status: "complete", done: true },
+                    { day: 19, weekday: "Wed", name: "Cardio + Core", detail: "Completed 6:00 PM · 28 min Z2 + core circuit", status: "complete", done: true },
+                    { day: 22, weekday: "Fri", name: "Upper Body · Push emphasis", detail: "Today 6:00 PM · Bench, Row, Overhead", status: "today", today: true },
+                  ].map((sched, i) => (
+                    <div key={i} style={{
+                      display: "grid", gridTemplateColumns: "80px 1fr auto", gap: 14, alignItems: "center",
+                      padding: 12, borderRadius: 12, border: `1px solid ${sched.today ? "#B8E5DE" : BORDER}`,
+                      background: sched.today ? TEAL_LIGHT : "transparent", opacity: sched.done && !sched.today ? 0.6 : 1,
+                      cursor: "pointer", transition: "all 0.1s"
+                    }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, color: sched.today ? TEAL : "#0B1628", lineHeight: 1 }}>{sched.day}</div>
+                        <div style={{ fontSize: 10, color: TEXT_SEC, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, marginTop: 3 }}>{sched.weekday}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#0B1628" }}>{sched.name}</div>
+                        <div style={{ fontSize: 12, color: "#4A5568", marginTop: 2 }}>{sched.detail}</div>
+                      </div>
+                      <span style={{
+                        fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600,
+                        background: sched.status === "complete" ? "#EAFBE7" : sched.status === "today" ? "#0B1628" : WHITE,
+                        color: sched.status === "complete" ? TEAL : sched.status === "today" ? WHITE : "#4A5568",
+                        border: sched.status === "up" ? `1px solid ${BORDER}` : "none"
+                      }}>{sched.status === "complete" ? "✓ Complete" : "Today · in 4h"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Program Structure */}
+              <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 22, color: "#0B1628", letterSpacing: "-0.01em" }}>Program Structure</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{client.program || "Fat Loss"} · 3 phases · Week {client.weekNumber || 6} of 16</div>
+                  </div>
+                  <button style={{ fontSize: 12, color: TEAL, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Edit program →</button>
+                </div>
+                <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    { phase: 1, name: "Baseline (complete)", weeks: "Wks 1–4", targets: "Movement quality, aerobic base, nutrition habits.", hit: "consistent 3x weekly, 140 lb squat baseline.", current: false },
+                    { phase: 2, name: "Strength + Deficit", weeks: "Wks 5–10 · Current", targets: "Strength progression + 300 cal deficit.", hit: "135 lb squat ✓ early, 95 lb bench, 5 lb weight loss.", current: true },
+                    { phase: 3, name: "Strength Block", weeks: "Wks 11–16", targets: "Pure strength focus, maintenance calories.", hit: "155 lb squat, 105 lb bench, preserve weight loss.", current: false },
+                  ].map((phase, i) => (
+                    <div key={i} style={{
+                      background: phase.current ? `linear-gradient(135deg, ${TEAL_LIGHT} 0%, #EAFBE7 100%)` : "#F5F7F8",
+                      border: phase.current ? "1px solid #B8E5DE" : "none",
+                      borderRadius: 12, padding: "14px 16px"
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                        <b style={{ fontWeight: 600, color: "#0B1628", fontSize: 14 }}>Phase {phase.phase} · {phase.name}</b>
+                        <span style={{ fontSize: 11, color: TEXT_SEC }}>{phase.weeks}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#4A5568", lineHeight: 1.5 }}>
+                        {phase.targets} <b style={{ color: "#0B1628", fontWeight: 600 }}>Hit:</b> {phase.hit}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ─── RIGHT COLUMN: Today's Session ─── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 22, color: "#0B1628", letterSpacing: "-0.01em" }}>Today&apos;s Session</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>Scheduled 6:00 PM</div>
+                  </div>
+                  <button style={{ fontSize: 12, color: TEAL, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Edit →</button>
+                </div>
+                <div style={{ padding: "18px 20px" }}>
+                  <div style={{
+                    background: "#0B1628", color: WHITE, borderRadius: 14, padding: 20,
+                    position: "relative", overflow: "hidden"
+                  }}>
+                    <div style={{
+                      position: "absolute", top: -80, right: -80, width: 240, height: 240,
+                      background: "radial-gradient(circle, rgba(155,241,152,0.1) 0%, transparent 70%)", pointerEvents: "none"
+                    }} />
+                    <div style={{ fontSize: 10, fontWeight: 700, color: MINT, letterSpacing: "0.12em", textTransform: "uppercase", position: "relative" }}>Upper Body · Push emphasis</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 26, margin: "8px 0 14px", position: "relative" }}>4 exercises · 45 min</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", marginBottom: 16 }}>
+                      {[
+                        { name: "Bench Press", sets: "3 × 8 @ 85 lb" },
+                        { name: "Bent Row", sets: "3 × 10 @ 70 lb" },
+                        { name: "Overhead Press", sets: "3 × 8 @ 55 lb" },
+                        { name: "Face Pulls", sets: "3 × 12" },
+                      ].map((ex, i) => (
+                        <div key={i} style={{
+                          display: "flex", justifyContent: "space-between", padding: "10px 12px",
+                          background: "rgba(255,255,255,0.06)", borderRadius: 10, fontSize: 13
+                        }}>
+                          <span style={{ color: WHITE, fontWeight: 500 }}>{ex.name}</span>
+                          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>{ex.sets}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, position: "relative" }}>
+                      <button style={{
+                        padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                        border: "none", cursor: "pointer", background: MINT, color: "#0B1628"
+                      }}>Start session</button>
+                      <button style={{
+                        padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                        border: "none", cursor: "pointer", background: "rgba(255,255,255,0.1)", color: WHITE
+                      }}>Adjust</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "Sessions", value: totalSessions, delta: "+3 this week" },
+                    { label: "Attendance", value: `${attendanceRate}%`, delta: attendanceRate >= 80 ? "On target" : "Below target" },
+                    { label: "Streak", value: `${currentStreak}w`, delta: `Best: ${bestStreak}w` },
+                    { label: "Since Start", value: `${daysSinceAssessment}d`, delta: client.assessment?.date || "Jan 20" },
+                  ].map((stat, i) => (
+                    <div key={i} style={{ background: "#F5F7F8", borderRadius: 12, padding: 14 }}>
+                      <div style={{ fontSize: 10, color: TEXT_SEC, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>{stat.label}</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, color: "#0B1628", lineHeight: 1 }}>{stat.value}</div>
+                      <div style={{ fontSize: 11, color: TEAL, fontWeight: 600, marginTop: 4 }}>{stat.delta}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Other tabs - Timeline, Data, Files, Notes */}
+        {activeTab === "timeline" && (
+          <div style={{ maxWidth: 900 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 18, color: "#4A5568", marginBottom: 10 }}>Today</div>
+            {/* Timeline items would go here */}
+            <div style={{ padding: "14px 16px", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, marginBottom: 8 }}>
+              <div style={{ fontWeight: 600, color: "#0B1628", fontSize: 14 }}>Session scheduled</div>
+              <div style={{ fontSize: 13, color: "#4A5568", marginTop: 3 }}>Upper Body · Push emphasis at 6:00 PM</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "data" && (
+          <div>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 22, color: "#0B1628", marginBottom: 14 }}>Data &amp; Progress</div>
+            {/* Data content would go here - reuse existing data visualization */}
+          </div>
+        )}
+
+        {activeTab === "files" && (
+          <div>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: 22, color: "#0B1628", marginBottom: 14 }}>Files</div>
+            {/* Files list would go here */}
+          </div>
+        )}
+
+        {activeTab === "notes" && (
+          <div style={{ maxWidth: 820 }}>
+            <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+              <textarea
+                placeholder="Add a note about this client..."
+                value={coachNoteText}
+                onChange={e => setCoachNoteText(e.target.value)}
+                style={{
+                  width: "100%", border: "none", outline: "none", resize: "none",
+                  fontFamily: font, fontSize: 14, color: TEXT, lineHeight: 1.5, minHeight: 60, padding: "4px 0"
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
+                <div style={{ display: "flex", gap: 14, color: TEXT_SEC, fontSize: 14 }}>
+                  <span style={{ cursor: "pointer" }}>📎</span>
+                  <span style={{ cursor: "pointer" }}>🎤</span>
+                  <span style={{ cursor: "pointer" }}>🏷️</span>
+                </div>
+                <button style={{
+                  background: "#0B1628", color: WHITE, border: "none", padding: "8px 16px",
+                  borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: "pointer"
+                }}>Save note</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Legacy content for overview tab - keeping existing detailed sections hidden for now */}
+      {activeTab === "overview_legacy" && (
+      <>
+      {/* ─── HEADER CARD (legacy) ─── */}
       <div style={{
         background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
         padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
