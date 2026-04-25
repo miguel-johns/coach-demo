@@ -6429,7 +6429,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>Bodyweight</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>Progress</div>
                     <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
                       158 lbs <span style={{ color: TEXT }}>→</span> 153 lbs <span style={{ color: TEXT }}>→</span> <span style={{ fontWeight: 600, color: TEAL }}>138 lbs goal</span>
                     </div>
@@ -13187,7 +13187,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��══════════════════════════════════════════════════════════════
+// ��══════════��═══════════════════════════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
