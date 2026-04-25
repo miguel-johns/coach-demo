@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������������������═══════════════════════════════
+// ═══════════════════════════════�����������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═════════════════════════════════════════════════════�����════���������════
+// ═════════════════════════════════════════════════════�������════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -5814,6 +5814,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [breakdownPeriod, setBreakdownPeriod] = useState(0); // 0: Today, 1: Last 7 Days, 2: Last 30 Days
   const [showServiceTypeEdit, setShowServiceTypeEdit] = useState(false);
   const [detailTab, setDetailTab] = useState("program"); // "program" | "timeline" | "data" | "files" | "notes"
+  const [timelineFilter, setTimelineFilter] = useState("all");
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
@@ -7261,8 +7262,6 @@ return (
 
       {/* ─── TIMELINE TAB ─── */}
       {detailTab === "timeline" && (() => {
-        const [timelineFilter, setTimelineFilter] = useState("all");
-        
         const timelineFilters = [
           { id: "all", label: "All", count: 42 },
           { id: "sessions", label: "Sessions", count: 14 },
