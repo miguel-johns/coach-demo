@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════���════
+// ══════════════════════════════════════════════════════════�����════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -5954,108 +5954,72 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
 
       {/* ─── HEADER CARD ─── */}
       <div style={{
-        background: WHITE, borderRadius: 20, border: `1px solid ${BORDER}`,
-        padding: isMobile ? "18px" : "24px 28px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+        background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+        padding: isMobile ? "14px 16px" : "16px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
       }}>
-        <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 16 }}>
-            <Avatar name={client.name} size={isMobile ? 48 : 56} />
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>{client.name}</h2>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <ClientTypePills types={client.clientTypes} size="md" />
-                  <button
-                    onClick={() => setShowServiceTypeEdit(true)}
-                    style={{
-                      width: 20, height: 20, borderRadius: 4, border: "none",
-                      background: "transparent", cursor: "pointer", padding: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: TEXT_SEC, transition: "all 0.15s"
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                    </svg>
-                  </button>
-                </div>
-                <div style={{ padding: "4px 10px", borderRadius: 10, background: `${TEAL}12`, color: TEAL, fontSize: 12, fontWeight: 600 }}>{client.program || "General Fitness"}</div>
-                {currentStreak > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 10, background: `${MINT}12`, color: MINT, fontSize: 12, fontWeight: 600 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    {currentStreak} streak
-                  </div>
-                )}
-              </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 14 }}>
+            {/* Avatar with status indicator */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <Avatar name={client.name} size={isMobile ? 40 : 44} />
+              <div style={{
+                position: "absolute", bottom: 0, right: 0,
+                width: 12, height: 12, borderRadius: "50%",
+                background: client.alertType === "green" ? MINT : client.alertType === "red" ? "#ef6c3e" : TEAL,
+                border: "2px solid white"
+              }} />
             </div>
+            
+            {/* Name */}
+            <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 600, color: TEXT, letterSpacing: "-0.01em" }}>{client.name}</span>
+            
+            {/* Separator */}
+            <div style={{ width: 1, height: 20, background: BORDER, flexShrink: 0 }} />
+            
+            {/* Program info */}
+            <span style={{ fontSize: 13, color: TEXT_SEC, fontWeight: 500 }}>
+              {client.program || "Fat Loss"} · Phase {client.phase || 2} · Week {client.weekNumber || 6}
+            </span>
+            
+            {/* Status pill */}
+            {(() => {
+              const statusConfig = {
+                green: { label: "CELEBRATE", bg: "#FFF8E1", color: "#B8860B", dotColor: "#F4C430" },
+                red: { label: "ATTENTION", bg: "#FDECE8", color: "#C0392B", dotColor: "#E74C3C" },
+                blue: { label: "ON TRACK", bg: TEAL_LIGHT, color: TEAL, dotColor: TEAL }
+              };
+              const status = statusConfig[client.alertType] || statusConfig.blue;
+              return (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px", borderRadius: 14,
+                  background: status.bg, fontSize: 11, fontWeight: 700,
+                  color: status.color, letterSpacing: "0.04em"
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: status.dotColor }} />
+                  {status.label}
+                </div>
+              );
+            })()}
           </div>
+          
+          {/* Three-dot menu */}
           <button
-            onClick={() => setShowReport(true)}
+            onClick={() => setShowServiceTypeEdit(true)}
             style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: isMobile ? "10px 16px" : "12px 20px", borderRadius: 12,
-              background: TEAL, color: WHITE, border: "none",
-              fontSize: 13, fontWeight: 600, cursor: "pointer",
-              boxShadow: `0 2px 8px ${TEAL}40`, transition: "all 0.2s ease"
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "transparent", cursor: "pointer", padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: TEXT_SEC, transition: "all 0.15s"
             }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
             </svg>
-            Generate Report
           </button>
         </div>
-
-        {/* Stat chips row */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{sessionsThisWeek}/{sessionsPerWeek}</span>
-            <span style={{ fontSize: 12, color: TEXT_SEC }}>this week</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, background: "#f7faf9", border: `1px solid ${BORDER}` }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round">
-              <rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{totalSessions}</span>
-            <span style={{ fontSize: 12, color: TEXT_SEC }}>total sessions</span>
-          </div>
-        </div>
-
-        {/* Goal progress bar */}
-        {(() => {
-          const goals = client.goals || {};
-          const current = client.current || {};
-          const assessment = client.assessment || {};
-          const goalLabel = goals.primary || "Lose 20 lbs";
-          const startWeight = assessment.bodyweight || 175;
-          const currentWeight = current.bodyweight || 170;
-          const targetWeight = goals.targetWeight || 155;
-          const totalChange = Math.abs(targetWeight - startWeight);
-          const progressChange = Math.abs(currentWeight - startWeight);
-          const progressPct = totalChange > 0 ? Math.min(100, Math.round((progressChange / totalChange) * 100)) : 0;
-          
-          return (
-            <div style={{ marginTop: 16, padding: "14px 16px", borderRadius: 14, background: `linear-gradient(135deg, ${TEAL}06, ${MINT}04)`, border: `1px solid ${TEAL}15` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{goalLabel}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: TEAL }}>{progressPct}%</span>
-              </div>
-              <div style={{ height: 8, borderRadius: 4, background: "#e8f0ee", overflow: "hidden", marginBottom: 8 }}>
-                <div style={{ height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${TEAL}, ${MINT})`, width: `${progressPct}%`, transition: "width 0.8s ease" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: TEXT_SEC }}>
-                <span>{startWeight} lbs</span>
-                <span style={{ fontWeight: 600, color: TEXT }}>{currentWeight} lbs</span>
-                <span>{targetWeight} lbs</span>
-              </div>
-            </div>
-          );
-        })()}
       </div>
 
       {/* ─── 2. UPCOMING SESSIONS ─── */}
