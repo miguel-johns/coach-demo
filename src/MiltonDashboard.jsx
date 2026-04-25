@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════���════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -18958,7 +18958,7 @@ export default function MiltonDashboard() {
             <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1628", letterSpacing: "-0.01em" }}>March at a glance</div>
             <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>Day 22 of 31 · 71% through the month</div>
           </div>
-          <div style={{ background: "#F1EDFB", color: "#8B6FE0", fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 12 }}>
+          <div style={{ background: TEAL_LIGHT, color: TEAL, fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 12, letterSpacing: "0.02em" }}>
             Director-set goals
           </div>
         </div>
