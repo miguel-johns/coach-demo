@@ -19116,6 +19116,272 @@ export default function MiltonDashboard() {
 
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TODAY'S SESSIONS                                                */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        
+        {/* Section Header */}
+        <div style={{ marginTop: isMobile ? 28 : 36, marginBottom: isMobile ? 16 : 20 }}>
+          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
+            Today&apos;s Sessions
+          </div>
+          <div style={{ fontSize: 14, color: TEXT_SEC, marginTop: 6, opacity: 0.8 }}>
+            Thursday, March 22 &middot; 3 scheduled
+          </div>
+        </div>
+
+        {/* Session Cards */}
+        <div style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: isMobile ? 12 : 14 
+        }}>
+          
+          {/* Session 1: David Park - 8:00 AM Strength */}
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 24px",
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 16 : 24
+          }}>
+            {/* Left: Time & Type Badge */}
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: isMobile ? "flex-start" : "center",
+              minWidth: isMobile ? "auto" : 90,
+              gap: 6
+            }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>8:00 AM</span>
+              <span style={{ 
+                fontSize: 10, 
+                fontWeight: 600, 
+                color: TEAL, 
+                background: `${TEAL}12`, 
+                padding: "4px 10px", 
+                borderRadius: 8,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em"
+              }}>
+                Strength
+              </span>
+            </div>
+
+            {/* Center: Client Info */}
+            <div style={{ 
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 4
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: WHITE, fontSize: 14, fontWeight: 700 }}>DP</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>David Park</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC, opacity: 0.85 }}>Gain strength &middot; Week 6</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Milton Cue */}
+            <div style={{ 
+              flex: isMobile ? "none" : 1.5,
+              background: `${TEAL}06`,
+              border: `1px solid ${TEAL}10`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10
+            }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: 6,
+                background: TEAL, display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0
+              }}>
+                <span style={{ color: WHITE, fontSize: 11, fontWeight: 700 }}>M</span>
+              </div>
+              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 600 }}>Hit 315lb deadlift PR yesterday.</span>
+                <span style={{ color: TEXT_SEC, opacity: 0.9 }}>{" "}Open with it. Recovery is green, push him on bench today.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Session 2: Sarah Chen - 10:00 AM Fat Loss */}
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 24px",
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 16 : 24
+          }}>
+            {/* Left: Time & Type Badge */}
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: isMobile ? "flex-start" : "center",
+              minWidth: isMobile ? "auto" : 90,
+              gap: 6
+            }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>10:00 AM</span>
+              <span style={{ 
+                fontSize: 10, 
+                fontWeight: 600, 
+                color: "#e85d04", 
+                background: "#fff4e6", 
+                padding: "4px 10px", 
+                borderRadius: 8,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em"
+              }}>
+                Fat Loss
+              </span>
+            </div>
+
+            {/* Center: Client Info */}
+            <div style={{ 
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 4
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: `linear-gradient(135deg, #e85d04, #f59e0b)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: WHITE, fontSize: 14, fontWeight: 700 }}>SC</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>Sarah Chen</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC, opacity: 0.85 }}>Lose 20 lbs &middot; Phase 2</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Milton Cue */}
+            <div style={{ 
+              flex: isMobile ? "none" : 1.5,
+              background: `${TEAL}06`,
+              border: `1px solid ${TEAL}10`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10
+            }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: 6,
+                background: TEAL, display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0
+              }}>
+                <span style={{ color: WHITE, fontSize: 11, fontWeight: 700 }}>M</span>
+              </div>
+              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 600 }}>Sleep down over the weekend, HRV trending down.</span>
+                <span style={{ color: TEXT_SEC, opacity: 0.9 }}>{" "}Consider swapping heavy squat for tempo work. Ask her about stress.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Session 3: Marcus Johnson - 4:30 PM Hypertrophy */}
+          <div style={{
+            background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+            padding: isMobile ? "18px" : "22px 24px",
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 16 : 24
+          }}>
+            {/* Left: Time & Type Badge */}
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: isMobile ? "flex-start" : "center",
+              minWidth: isMobile ? "auto" : 90,
+              gap: 6
+            }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>4:30 PM</span>
+              <span style={{ 
+                fontSize: 10, 
+                fontWeight: 600, 
+                color: "#7c3aed", 
+                background: "#f3e8ff", 
+                padding: "4px 10px", 
+                borderRadius: 8,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em"
+              }}>
+                Hypertrophy
+              </span>
+            </div>
+
+            {/* Center: Client Info */}
+            <div style={{ 
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 4
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: `linear-gradient(135deg, #7c3aed, #a78bfa)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: WHITE, fontSize: 14, fontWeight: 700 }}>MJ</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>Marcus Johnson</div>
+                  <div style={{ fontSize: 13, color: TEXT_SEC, opacity: 0.85 }}>Gain 15 lbs muscle</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Milton Cue */}
+            <div style={{ 
+              flex: isMobile ? "none" : 1.5,
+              background: `${TEAL}06`,
+              border: `1px solid ${TEAL}10`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10
+            }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: 6,
+                background: TEAL, display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0
+              }}>
+                <span style={{ color: WHITE, fontSize: 11, fontWeight: 700 }}>M</span>
+              </div>
+              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 600 }}>Assessment due this week.</span>
+                <span style={{ color: TEXT_SEC, opacity: 0.9 }}>{" "}Ask 3 intake questions before the session starts.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
         {/* Coaching Queue */}
         <div style={{
           background: WHITE, borderRadius: 16, padding: isMobile ? "16px" : "20px 24px",
