@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�����������������������═══════════════════════════════
+// ═══════════════════════════════�������������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═════════════════════════════════════════════════════�������════���������════
+// ═════════════════════════════════════════════════════��������════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -6027,8 +6027,8 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
       {/* ─── TAB NAVIGATION ─── */}
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 16 : 28, borderBottom: `1px solid ${BORDER}`, paddingBottom: 0 }}>
         {[
-          { id: "program", label: "Program", count: 3 },
-          { id: "timeline", label: "Timeline", count: 42 },
+          { id: "program", label: "The Plan", count: 3 },
+          { id: "timeline", label: "The Journey", count: 42 },
           { id: "data", label: "Data", count: null },
           { id: "files", label: "Files", count: 12 },
           { id: "notes", label: "Notes", count: null },
@@ -18898,7 +18898,7 @@ export default function MiltonDashboard() {
         />
       )}
 
-      {/* ═══ MOBILE HEADER BAR ═══ */}
+      {/* ═══ MOBILE HEADER BAR ══��� */}
       {isMobile && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
