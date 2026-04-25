@@ -5816,7 +5816,6 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
   const [detailTab, setDetailTab] = useState("program"); // "program" | "timeline" | "data" | "files" | "notes"
   const [timelineFilter, setTimelineFilter] = useState("all");
   const [showClientMenu, setShowClientMenu] = useState(false);
-  const [selectedCalDay, setSelectedCalDay] = useState(null);
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const wData = client.weightData || [0,0,0,0,0,0,0,0];
   const wMin = Math.min(...wData) - 1;
