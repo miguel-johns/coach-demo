@@ -6227,6 +6227,60 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                   </div>
                 </div>
               </div>
+              
+              {/* PROGRAM STRUCTURE */}
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", marginTop: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Program Structure</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
+                      Fat Loss · 3 phases · Week 6 of 16
+                    </div>
+                  </div>
+                  <button style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    background: "transparent", border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 600, color: TEAL
+                  }}>
+                    Edit program
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Phase cards */}
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    { phase: 1, name: "Baseline", status: "complete", weeks: "1-4", description: "Movement quality, aerobic base, nutrition habits.", hit: "consistent 3x weekly, 140 lb squat baseline." },
+                    { phase: 2, name: "Strength + Deficit", status: "current", weeks: "5-10", description: "Strength progression + 300 cal deficit.", targets: "135 lb squat early, 95 lb bench, 5 lb weight loss.", transition: "Milton suggests Phase 3 reset." },
+                    { phase: 3, name: "Strength Block", status: "future", weeks: "11-16", description: "Pure strength focus, maintenance calories.", targets: "155 lb squat, 105 lb bench, preserve weight loss." },
+                  ].map((p, i) => (
+                    <div key={i} style={{
+                      padding: "16px 20px", borderRadius: 12,
+                      background: p.status === "current" ? `${MINT}12` : "#f7faf9",
+                      border: p.status === "current" ? `1.5px solid ${MINT}40` : `1px solid ${BORDER}`
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>
+                          Phase {p.phase} · {p.name} {p.status === "complete" && <span style={{ fontWeight: 500 }}>(complete)</span>}
+                        </div>
+                        <div style={{ fontSize: 12, color: p.status === "current" ? TEAL : TEXT_SEC, fontWeight: 500 }}>
+                          Wks {p.weeks}{p.status === "current" && " · Current"}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5 }}>
+                        {p.description} {p.hit && <><span style={{ fontWeight: 600, color: TEXT }}>Hit:</span> {p.hit}</>}
+                        {p.targets && <><span style={{ fontWeight: 600, color: TEXT }}>Targets:</span> {p.targets}</>}
+                        {p.transition && <> <span style={{ fontWeight: 600, color: TEAL }}>Ready to transition:</span> {p.transition}</>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             
             {/* THIS WEEK - Right on desktop, second on mobile */}
@@ -6315,6 +6369,106 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                       </div>
                     );
                   })}
+                </div>
+              </div>
+              
+              {/* BODYWEIGHT PROGRESS GRAPH */}
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", marginTop: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>Bodyweight</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>
+                      158 lbs <span style={{ color: TEXT }}>→</span> 153 lbs <span style={{ color: TEXT }}>→</span> <span style={{ fontWeight: 600, color: TEAL }}>138 lbs goal</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ padding: "8px 14px", borderRadius: 10, background: TEAL_LIGHT, color: TEAL, fontSize: 14, fontWeight: 700 }}>
+                      -5.0 lbs
+                    </div>
+                    <div style={{ padding: "8px 14px", borderRadius: 10, background: "#f0f4f3", color: TEXT, fontSize: 13, fontWeight: 600, textAlign: "center" }}>
+                      <div>25%</div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: TEXT_SEC }}>to goal</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* SVG Chart */}
+                <div style={{ padding: "16px 0", borderLeft: `1px solid ${BORDER}`, marginLeft: 8, marginTop: 16 }}>
+                  <svg viewBox="0 0 400 180" style={{ width: "100%", height: 180 }}>
+                    {/* Y-axis labels */}
+                    <text x="0" y="25" fontSize="11" fill={TEXT_SEC}>158</text>
+                    <text x="0" y="85" fontSize="11" fill={TEXT_SEC}>148</text>
+                    <text x="0" y="155" fontSize="11" fill={TEXT_SEC}>135</text>
+                    
+                    {/* Goal line (dashed) */}
+                    <line x1="35" y1="140" x2="390" y2="140" stroke={MINT} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.6"/>
+                    
+                    {/* Actual progress line */}
+                    <polyline 
+                      points="50,30 100,45 150,55 200,70 230,90" 
+                      fill="none" 
+                      stroke={TEAL} 
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    
+                    {/* Area fill under actual line */}
+                    <polygon 
+                      points="50,30 100,45 150,55 200,70 230,90 230,160 50,160" 
+                      fill={`${TEAL}15`}
+                    />
+                    
+                    {/* Projected line (dashed) */}
+                    <line x1="230" y1="90" x2="380" y2="140" stroke={MINT} strokeWidth="2" strokeDasharray="6,4"/>
+                    
+                    {/* Data points */}
+                    <circle cx="50" cy="30" r="5" fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+                    <circle cx="100" cy="45" r="4" fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+                    <circle cx="150" cy="55" r="4" fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+                    <circle cx="200" cy="70" r="4" fill={WHITE} stroke={TEAL} strokeWidth="2"/>
+                    <circle cx="230" cy="90" r="5" fill={TEAL} stroke={TEAL} strokeWidth="2"/>
+                    
+                    {/* Start label */}
+                    <rect x="35" y="12" width="32" height="22" rx="4" fill="#1e3a3a"/>
+                    <text x="51" y="27" fontSize="11" fill={WHITE} textAnchor="middle" fontWeight="600">158</text>
+                    
+                    {/* Current label */}
+                    <rect x="200" y="96" width="60" height="24" rx="6" fill={TEAL}/>
+                    <text x="230" y="113" fontSize="11" fill={WHITE} textAnchor="middle" fontWeight="600">153 lbs</text>
+                    
+                    {/* Goal label */}
+                    <rect x="350" y="126" width="55" height="24" rx="6" fill={TEAL}/>
+                    <text x="378" y="143" fontSize="11" fill={WHITE} textAnchor="middle" fontWeight="600">138 lbs</text>
+                    
+                    {/* Now line */}
+                    <line x1="230" y1="30" x2="230" y2="160" stroke={BORDER} strokeWidth="1" strokeDasharray="4,3"/>
+                    
+                    {/* X-axis labels */}
+                    <text x="50" y="175" fontSize="11" fill={TEXT_SEC} textAnchor="middle">Start</text>
+                    <text x="230" y="175" fontSize="11" fill={TEXT} textAnchor="middle" fontWeight="600">Now</text>
+                    <text x="380" y="175" fontSize="11" fill={TEXT_SEC} textAnchor="middle">W12</text>
+                  </svg>
+                </div>
+                
+                {/* Legend */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 20, height: 2, background: TEAL, borderRadius: 1 }}/>
+                      <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Actual</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 20, height: 0, borderTop: `2px dashed ${MINT}` }}/>
+                      <span style={{ fontSize: 12, color: TEXT, fontWeight: 500 }}>Projected</span>
+                    </div>
+                  </div>
+                  <div style={{ padding: "6px 12px", borderRadius: 8, background: "#f7faf9", fontSize: 12, color: TEXT }}>
+                    Est. Goal: <span style={{ fontWeight: 600, color: TEAL }}>Week 10-12</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -12363,7 +12517,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 13, color: TEXT_SEC }}>
             <span><strong style={{ color: TEXT }}>{chapters.length}</strong> chapters</span>
-            <span style={{ color: BORDER }}>·</span>
+            <span style={{ color: BORDER }}>��</span>
             <span><strong style={{ color: TEXT }}>{totalRules}</strong> active rules</span>
             <span style={{ color: BORDER }}>·</span>
             <span><strong style={{ color: TEXT }}>{totalDocs}</strong> documents uploaded</span>
