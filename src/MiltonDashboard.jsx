@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════�������������������═══════════════════════════════
+// ═══════════════════════════════���������������������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -6134,12 +6134,188 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
         );
       })()}
 
-      {/* ─── PROGRAM TAB CONTENT ─── */}
-      {detailTab === "program" && (
-        <div style={{ color: TEXT_SEC, fontSize: 14, textAlign: "center", padding: "20px 0" }}>
-          Program content coming soon.
-        </div>
-      )}
+      {/* ─── PROGRAM TAB CONTENT: Today's Session + This Week ─── */}
+      {detailTab === "program" && (() => {
+        const today = new Date();
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        const formatShortDate = (d) => `${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]} ${d.getDate()}`;
+        
+        const weekSessions = [
+          { id: 1, day: 17, dayName: "MON", type: "Lower Body", subtype: "Squat PR session", time: "8:00 AM", status: "complete", note: "Hit 135 lb squat (target 120)" },
+          { id: 2, day: 19, dayName: "WED", type: "Cardio + Core", subtype: null, time: "6:00 PM", status: "complete", note: "28 min Z2 + core circuit" },
+          { id: 3, day: 22, dayName: "FRI", type: "Upper Body", subtype: "Push emphasis", time: "6:00 PM", status: "today", note: "Bench, Row, Overhead" },
+        ];
+        
+        const todaySession = {
+          type: "UPPER BODY",
+          emphasis: "PUSH EMPHASIS",
+          exerciseCount: 4,
+          duration: 45,
+          exercises: [
+            { name: "Bench Press", sets: 3, reps: 8, weight: "85 lb" },
+            { name: "Bent Row", sets: 3, reps: 10, weight: "70 lb" },
+            { name: "Overhead Press", sets: 3, reps: 8, weight: "55 lb" },
+            { name: "Face Pulls", sets: 3, reps: 12, weight: null },
+          ]
+        };
+        
+        const completedCount = weekSessions.filter(s => s.status === "complete").length;
+        
+        return (
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
+            gap: 20,
+            alignItems: "start"
+          }}>
+            {/* TODAY'S SESSION - Left on desktop, first on mobile */}
+            <div style={{ order: isMobile ? 1 : 1 }}>
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>Today&apos;s Session</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Scheduled 6:00 PM</div>
+                  </div>
+                  <button style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    background: "transparent", border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 600, color: TEAL
+                  }}>
+                    Edit
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Dark session card */}
+                <div style={{
+                  background: "#1e3a3a", borderRadius: 14, padding: "20px",
+                  color: WHITE
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: TEAL_LIGHT, marginBottom: 8 }}>
+                    {todaySession.type} · {todaySession.emphasis}
+                  </div>
+                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, marginBottom: 16 }}>
+                    {todaySession.exerciseCount} exercises · {todaySession.duration} min
+                  </div>
+                  
+                  {/* Exercise list */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {todaySession.exercises.map((ex, i) => (
+                      <div key={i} style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                        padding: "12px 0",
+                        borderTop: i > 0 ? "1px solid rgba(255,255,255,0.1)" : "none"
+                      }}>
+                        <span style={{ fontSize: 14, fontWeight: 500 }}>{ex.name}</span>
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+                          {ex.sets} × {ex.reps}{ex.weight ? ` @ ${ex.weight}` : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* THIS WEEK - Right on desktop, second on mobile */}
+            <div style={{ order: isMobile ? 2 : 2 }}>
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 500, color: TEXT }}>This Week</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
+                      {formatShortDate(weekStart)} — {weekEnd.getDate()} · {completedCount} of {weekSessions.length} complete
+                    </div>
+                  </div>
+                  <button style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    background: "transparent", border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 600, color: TEAL
+                  }}>
+                    View full schedule
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Session list */}
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 0 }}>
+                  {weekSessions.map((session, i) => {
+                    const isToday = session.status === "today";
+                    return (
+                      <div key={session.id} style={{
+                        display: "flex", alignItems: "center", gap: 16,
+                        padding: "16px",
+                        marginLeft: -16, marginRight: -16,
+                        borderRadius: isToday ? 12 : 0,
+                        background: isToday ? `${TEAL}08` : "transparent",
+                        borderTop: i > 0 && !isToday ? `1px solid ${BORDER}` : "none"
+                      }}>
+                        {/* Date column */}
+                        <div style={{ width: 50, textAlign: "center", flexShrink: 0 }}>
+                          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 400, color: isToday ? TEAL : TEXT }}>
+                            {session.day}
+                          </div>
+                          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: isToday ? TEAL : TEXT_SEC }}>
+                            {session.dayName}
+                          </div>
+                        </div>
+                        
+                        {/* Session info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+                            {session.type}{session.subtype ? ` · ${session.subtype}` : ""}
+                          </div>
+                          <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>
+                            {isToday ? `Today ${session.time}` : `Completed ${session.time}`} · {session.note}
+                          </div>
+                        </div>
+                        
+                        {/* Status badge */}
+                        <div style={{ flexShrink: 0 }}>
+                          {session.status === "complete" ? (
+                            <div style={{
+                              display: "flex", alignItems: "center", gap: 4,
+                              padding: "6px 12px", borderRadius: 8,
+                              border: `1.5px solid ${MINT}`, background: "transparent",
+                              fontSize: 12, fontWeight: 600, color: MINT
+                            }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                <polyline points="20,6 9,17 4,12"/>
+                              </svg>
+                              Complete
+                            </div>
+                          ) : (
+                            <div style={{
+                              padding: "6px 12px", borderRadius: 8,
+                              background: "#1e3a3a",
+                              fontSize: 12, fontWeight: 600, color: WHITE
+                            }}>
+                              Today · in 4h
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Expanded Session Modal - moved outside tab content */}
             {expandedSession && (
