@@ -6169,13 +6169,14 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             display: "grid", 
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
             gap: 20,
-            alignItems: "start"
+            alignItems: "stretch"
           }}>
             {/* TODAY'S SESSION - Left on desktop, first on mobile */}
-            <div style={{ order: isMobile ? 1 : 1 }}>
+            <div style={{ order: isMobile ? 1 : 1, display: "flex" }}>
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                display: "flex", flexDirection: "column", flex: 1
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
@@ -6197,7 +6198,7 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                 {/* Dark session card */}
                 <div style={{
                   background: "#1e3a3a", borderRadius: 14, padding: "20px",
-                  color: WHITE
+                  color: WHITE, flex: 1, display: "flex", flexDirection: "column"
                 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: TEAL_LIGHT, marginBottom: 8 }}>
                     {todaySession.type} · {todaySession.emphasis}
@@ -6206,8 +6207,11 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
                     {todaySession.exerciseCount} exercises · {todaySession.duration} min
                   </div>
                   
-                  {/* Exercise list */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {/* Exercise list - scrollable */}
+                  <div style={{ 
+                    display: "flex", flexDirection: "column", gap: 0,
+                    flex: 1, overflowY: "auto", maxHeight: isMobile ? "none" : 200
+                  }}>
                     {todaySession.exercises.map((ex, i) => (
                       <div key={i} style={{
                         display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -6226,10 +6230,11 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
             </div>
             
             {/* THIS WEEK - Right on desktop, second on mobile */}
-            <div style={{ order: isMobile ? 2 : 2 }}>
+            <div style={{ order: isMobile ? 2 : 2, display: "flex" }}>
               <div style={{
                 background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                display: "flex", flexDirection: "column", flex: 1
               }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
                   <div>
@@ -13475,7 +13480,7 @@ function PlaybookChapterDetail({
 
 // ═══════════════════════════════════════════════════════════════
 // PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════��═════════════════════════════════
 function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
   const [selectedChapter, setSelectedChapter] = useState(preselectedChapter || null);
   const [letMiltonDecide, setLetMiltonDecide] = useState(false);
