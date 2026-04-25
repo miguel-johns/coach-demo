@@ -1894,7 +1894,7 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   );
 }
 
-// ═════════════════════════════════════════════════════���════���������════
+// ═════════════════════════════════════════════════════�����════���������════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -7259,19 +7259,232 @@ return (
         </>
       )}
 
-      {/* ─── TIMELINE TAB PLACEHOLDER ─── */}
-      {detailTab === "timeline" && (
-        <div style={{
-          background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-          padding: "40px", textAlign: "center", color: TEXT_SEC
-        }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={BORDER} strokeWidth="1.5" style={{ marginBottom: 16 }}>
-            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-          </svg>
-          <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Timeline</div>
-          <div style={{ fontSize: 13 }}>Activity history and session logs will appear here.</div>
-        </div>
-      )}
+      {/* ─── TIMELINE TAB ─── */}
+      {detailTab === "timeline" && (() => {
+        const [timelineFilter, setTimelineFilter] = useState("all");
+        
+        const timelineFilters = [
+          { id: "all", label: "All", count: 42 },
+          { id: "sessions", label: "Sessions", count: 14 },
+          { id: "messages", label: "Messages", count: 18 },
+          { id: "checkins", label: "Check-ins", count: 6 },
+          { id: "milestones", label: "Milestones", count: 2 },
+          { id: "program", label: "Program changes", count: 2 },
+        ];
+        
+        const timelineData = [
+          { date: "Today · Friday, Mar 22", entries: [
+            { type: "message", title: "You sent: celebration message", desc: '"So proud of you for hitting 135! Four weeks ahead of schedule. Let\'s set the next target when you come in tonight."', time: "9:14 AM" },
+            { type: "weight", title: "Weight logged: 153 lb", desc: "On pace. 5 lb lost over 6 weeks. Target 138 lb.", time: "7:02 AM" },
+          ]},
+          { date: "Yesterday · Thursday, Mar 21", entries: [
+            { type: "checkin", title: "Weekly check-in submitted", desc: "Sleep: good · Stress: low · Energy: 8/10 · Adherence: high", quote: "Feeling strong this week. Stress at work is lower. I'm sleeping better and actually looking forward to Wednesday sessions again.", time: "6:48 PM" },
+          ]},
+          { date: "Wednesday, Mar 19", entries: [
+            { type: "session", title: "Session complete: Cardio + Core", desc: "28 min Z2 treadmill · Dead bug 3x12 · Plank 3x45s · Bird dog 3x10", time: "6:00 PM" },
+          ]},
+          { date: "Monday, Mar 17", entries: [
+            { type: "milestone", title: "135 lb back squat", badge: "PR", desc: "Set at 3 reps. Target was 120 lb by end of Phase 2. Hit the goal 4 weeks ahead of schedule.", time: "8:34 AM" },
+            { type: "session", title: "Session complete: Lower Body", desc: "Back squat 5x3 (worked up to 135) · RDL 3x8 @ 95 lb · Leg press 3x10 · Calf raises 3x15", time: "8:00 AM" },
+          ]},
+          { date: "Sunday, Mar 16", entries: [
+            { type: "program", title: "Program adjustment", desc: "You bumped squat working set from 125 → 130 lb based on last week's RPE. This set up the PR Monday.", time: "8:15 PM" },
+          ]},
+          { date: "Friday, Mar 14", entries: [
+            { type: "message", title: "Sarah sent: progress photo", desc: "Week 5 photo. Attached to Files.", time: "7:22 AM" },
+          ]},
+        ];
+        
+        const getIcon = (type) => {
+          switch(type) {
+            case "message": return { bg: "#e8f4f8", color: "#5b9aa9", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> };
+            case "weight": return { bg: TEAL_LIGHT, color: TEAL, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M8 6h6v6"/></svg> };
+            case "checkin": return { bg: "#f0f4f3", color: TEXT_SEC, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> };
+            case "session": return { bg: TEAL_LIGHT, color: TEAL, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20 4v6h-6"/><path d="M4 20v-6h6"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/></svg> };
+            case "milestone": return { bg: "#FFF8E1", color: "#B8860B", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 118 0v14"/></svg> };
+            case "program": return { bg: "#FFF8E1", color: "#B8860B", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> };
+            default: return { bg: "#f0f4f3", color: TEXT_SEC, icon: null };
+          }
+        };
+        
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* THREE SUMMARY CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 16 }}>
+              {/* Last Week */}
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Last Week</span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>MAR 10 — 16</span>
+                </div>
+                <p style={{ fontSize: 14, color: TEXT, fontWeight: 600, marginBottom: 12, lineHeight: 1.4 }}>
+                  Sarah hit her 135 lb squat goal four weeks early.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: "#FFF8E1", color: "#B8860B", fontSize: 12, fontWeight: 600 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 22V8a4 4 0 118 0v14"/></svg>
+                    135 lb PR
+                  </div>
+                  <div style={{ padding: "4px 10px", borderRadius: 8, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 600 }}>3 of 3 sessions</div>
+                  <div style={{ padding: "4px 10px", borderRadius: 8, background: `${MINT}15`, color: MINT, fontSize: 12, fontWeight: 600 }}>Adherence 85%</div>
+                </div>
+                <div style={{ padding: "12px 14px", borderRadius: 10, background: TEAL_LIGHT, borderLeft: `3px solid ${TEAL}`, marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Sarah&apos;s Check-in</div>
+                  <p style={{ fontSize: 13, color: TEXT, fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>
+                    &quot;Feeling strong. Stress at work is lower. Sleeping better and actually looking forward to Wednesday sessions again.&quot;
+                  </p>
+                </div>
+                <button style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, fontSize: 13, fontWeight: 500, color: TEXT, cursor: "pointer" }}>
+                  View full week
+                </button>
+              </div>
+              
+              {/* This Week */}
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `2px solid ${TEAL}40`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>This Week</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: TEAL, fontWeight: 600 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }}/>
+                    MAR 17 — 23 · LIVE
+                  </div>
+                </div>
+                <p style={{ fontSize: 14, color: TEXT, fontWeight: 600, marginBottom: 12, lineHeight: 1.4 }}>
+                  Coming off the PR, momentum is open. Conservative bench today.
+                </p>
+                <ul style={{ margin: "0 0 16px 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { text: <><strong>2 of 3 sessions</strong> complete · HRV trending green · sleep up 0.4h</> },
+                    { text: <><strong>Today 6 PM</strong> · Upper Body · push row volume, ease off bench</> },
+                    { text: <><strong>Nutrition adherence</strong> 85%, last meal logged yesterday 7:42 PM</> },
+                  ].map((item, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: TEXT_SEC }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, marginTop: 6, flexShrink: 0 }}/>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "#1e3a3a", color: WHITE, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    Open today&apos;s session
+                  </button>
+                  <button style={{ padding: "10px 16px", borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                    Send check-in
+                  </button>
+                </div>
+              </div>
+              
+              {/* Next Move */}
+              <div style={{
+                background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, color: TEXT }}>Next Move</span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 500 }}>MAR 24+</span>
+                </div>
+                <p style={{ fontSize: 14, color: TEXT, fontWeight: 600, marginBottom: 12, lineHeight: 1.4 }}>
+                  Graduate to Phase 3 strength block. Reset squat target to 155 lb.
+                </p>
+                <ul style={{ margin: "0 0 16px 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { text: <><strong>Deload microcycle</strong> week of Mar 31 before the ramp.</> },
+                    { text: <><strong>Hold caloric deficit</strong> — fat loss is on pace, no change needed.</> },
+                    { text: <><strong>Ask Sarah</strong>: what feels like a stretch goal for the next 8 weeks?</> },
+                  ].map((item, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: TEXT_SEC }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: BORDER, marginTop: 6, flexShrink: 0 }}/>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button style={{ padding: "10px 16px", borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                    Plan Phase 3
+                  </button>
+                  <button style={{ padding: "10px 16px", borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                    Send the question
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* FILTER PILLS */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {timelineFilters.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setTimelineFilter(f.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "8px 14px", borderRadius: 20,
+                    border: timelineFilter === f.id ? "none" : `1px solid ${BORDER}`,
+                    background: timelineFilter === f.id ? "#1e3a3a" : WHITE,
+                    color: timelineFilter === f.id ? WHITE : TEXT,
+                    fontSize: 13, fontWeight: 500, cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  {f.label} · {f.count}
+                </button>
+              ))}
+            </div>
+            
+            {/* TIMELINE LIST */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {timelineData.map((day, di) => (
+                <div key={di}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: TEXT_SEC, marginBottom: 12 }}>
+                    {day.date}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {day.entries.map((entry, ei) => {
+                      const iconData = getIcon(entry.type);
+                      return (
+                        <div key={ei} style={{
+                          background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`,
+                          padding: "16px 20px", display: "flex", alignItems: "flex-start", gap: 14
+                        }}>
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: iconData.bg, color: iconData.color,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0
+                          }}>
+                            {iconData.icon}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{entry.title}</span>
+                              {entry.badge && (
+                                <span style={{ padding: "2px 8px", borderRadius: 6, background: "#FFF8E1", color: "#B8860B", fontSize: 11, fontWeight: 700 }}>{entry.badge}</span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5 }}>{entry.desc}</div>
+                            {entry.quote && (
+                              <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 10, background: TEAL_LIGHT, borderLeft: `3px solid ${TEAL}` }}>
+                                <p style={{ fontSize: 13, color: TEXT, fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>
+                                  &quot;{entry.quote}&quot;
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <span style={{ fontSize: 12, color: TEXT_SEC, flexShrink: 0 }}>{entry.time}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ─── FILES TAB PLACEHOLDER ─── */}
       {detailTab === "files" && (
