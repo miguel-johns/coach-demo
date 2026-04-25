@@ -6523,6 +6523,201 @@ function ClientProfile({ client, onBack, isMobile, onReportOpen, reportBlocks, s
               </div>
             </div>
           </div>
+          
+          {/* SECOND ROW: Calendar + Daily Breakdown */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", 
+            gap: 20,
+            marginTop: 20
+          }}>
+            {/* 30 DAY ACTIVITY CALENDAR */}
+            <div style={{
+              background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+              padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>30 Day Activity</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Tap any day to see details</div>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  {[
+                    { label: "Workout", color: TEAL },
+                    { label: "Nutrition", color: "#ef6c3e" },
+                  ].map((l, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: l.color }} />
+                      <span style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 500 }}>{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Day headers */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                  <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>{d}</div>
+                ))}
+              </div>
+              
+              {/* Calendar grid - compact */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                {Array.from({ length: paddingDays }).map((_, i) => (
+                  <div key={`pad-${i}`} style={{ aspectRatio: "1" }} />
+                ))}
+                {calendarDays.map((day, i) => {
+                  const intensity = getIntensity(day);
+                  const isSelected = selectedCalDay === i;
+                  const isToday = day.date.toDateString() === today.toDateString();
+                  
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedCalDay(isSelected ? null : i)}
+                      style={{
+                        aspectRatio: "1", borderRadius: 6,
+                        background: intensityColors[intensity],
+                        border: isSelected ? `2px solid ${TEAL}` : isToday ? `2px solid ${MINT}` : `1px solid ${intensity > 0 ? "transparent" : BORDER}`,
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer", transition: "all 0.15s ease",
+                        transform: isSelected ? "scale(1.08)" : "scale(1)"
+                      }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: isToday ? 800 : 600, color: intensity >= 3 ? WHITE : TEXT }}>
+                        {day.dayNum}
+                      </div>
+                      <div style={{ display: "flex", gap: 2, marginTop: 1 }}>
+                        {day.workout && <div style={{ width: 3, height: 3, borderRadius: "50%", background: intensity >= 3 ? WHITE : TEAL }} />}
+                        {day.nutrition && <div style={{ width: 3, height: 3, borderRadius: "50%", background: intensity >= 3 ? WHITE : "#ef6c3e" }} />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Selected day mini-details */}
+              {selectedCalDay !== null && (() => {
+                const day = calendarDays[selectedCalDay];
+                const hasAny = day.workout || day.nutrition || day.sleep || day.steps;
+                return (
+                  <div style={{
+                    marginTop: 14, padding: "12px 14px", borderRadius: 10,
+                    background: "#f7faf9", border: `1px solid ${BORDER}`
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{day.dayName}, {day.month} {day.dayNum}</span>
+                      <span 
+                        onClick={() => setSelectedCalDay(null)} 
+                        style={{ fontSize: 11, color: TEXT_SEC, cursor: "pointer" }}
+                      >Close</span>
+                    </div>
+                    {hasAny ? (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {day.workout && <span style={{ padding: "4px 8px", borderRadius: 6, background: TEAL_LIGHT, color: TEAL, fontSize: 11, fontWeight: 600 }}>Workout</span>}
+                        {day.nutrition && <span style={{ padding: "4px 8px", borderRadius: 6, background: "#fef3ed", color: "#ef6c3e", fontSize: 11, fontWeight: 600 }}>Nutrition</span>}
+                        {day.sleep && <span style={{ padding: "4px 8px", borderRadius: 6, background: "#f3f0fa", color: "#8e7cc3", fontSize: 11, fontWeight: 600 }}>Sleep logged</span>}
+                        {day.steps && <span style={{ padding: "4px 8px", borderRadius: 6, background: "#e8f6f6", color: "#3aafa9", fontSize: 11, fontWeight: 600 }}>{day.steps.toLocaleString()} steps</span>}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: TEXT_SEC }}>No activity logged</div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+            
+            {/* DAILY BREAKDOWN */}
+            <div style={{
+              background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+              padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+            }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 14 }}>Daily Breakdown</div>
+              
+              {/* Swipable cards container */}
+              <div style={{
+                display: "flex", gap: 12, overflowX: "auto", scrollSnapType: "x mandatory",
+                paddingBottom: 8, WebkitOverflowScrolling: "touch",
+                msOverflowStyle: "none", scrollbarWidth: "none"
+              }}>
+                {[
+                  {
+                    title: "Nutrition", color: "#ef6c3e",
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3Q13 2 14.5 3 Q13 4 12 5.5"/><path d="M12 5.5 Q7 5 5 9 Q3 13 5 17 Q7 21 11.5 21 Q12 20 12.5 21 Q17 21 19 17 Q21 13 19 9 Q17 5 12 5.5Z"/></svg>,
+                    rows: [
+                      { l: "Calories", v: "1,620", g: "1,800" },
+                      { l: "Protein", v: "118g", g: "130g" },
+                      { l: "Carbs", v: "180g", g: "200g" },
+                    ]
+                  },
+                  {
+                    title: "Activity", color: TEAL,
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="10" width="4" height="4" rx="1"/><rect x="19" y="10" width="4" height="4" rx="1"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+                    rows: [
+                      { l: "Steps", v: "8,420", g: "10,000" },
+                      { l: "Workouts", v: "1", g: "1" },
+                      { l: "Active Min", v: "48", g: "45" },
+                    ]
+                  },
+                  {
+                    title: "Sleep", color: "#8e7cc3",
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+                    rows: [
+                      { l: "Duration", v: "7.2h", g: "8h" },
+                      { l: "Quality", v: "Good" },
+                      { l: "Deep", v: "1.8h", g: "2h" },
+                    ]
+                  },
+                ].map((card, ci) => (
+                  <div
+                    key={ci}
+                    style={{
+                      flex: "0 0 140px", scrollSnapAlign: "start",
+                      padding: "14px", borderRadius: 12,
+                      background: `${card.color}08`, border: `1px solid ${card.color}20`
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: 6,
+                        background: `${card.color}15`, color: card.color,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        {card.icon}
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: card.color }}>{card.title}</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {card.rows.map((row, ri) => (
+                        <div key={ri} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 11, color: TEXT_SEC }}>{row.l}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{row.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Period toggle */}
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                {["Today", "7 Days", "30 Days"].map((p, i) => (
+                  <button
+                    key={p}
+                    style={{
+                      padding: "6px 12px", borderRadius: 8,
+                      border: i === 0 ? "none" : `1px solid ${BORDER}`,
+                      background: i === 0 ? "#1e3a3a" : WHITE,
+                      color: i === 0 ? WHITE : TEXT_SEC,
+                      fontSize: 11, fontWeight: 600, cursor: "pointer"
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         );
       })()}
 
