@@ -14868,22 +14868,109 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [linkCopied, setLinkCopied] = useState(false);
   
   // Completed workouts tracking - key is "YYYY-MM-DD" date string
-  const [completedWorkouts, setCompletedWorkouts] = useState({});
+  // Each entry has: { completed: boolean, hasImportantNote: boolean, note?: string }
+  const [completedWorkouts, setCompletedWorkouts] = useState(() => {
+    // Generate example completed workouts for the previous month
+    const now = new Date();
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const daysInPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    
+    const exampleWorkouts = {};
+    
+    // Generate workouts for each workout day in the previous month
+    for (let day = 1; day <= daysInPrevMonth; day++) {
+      const date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), day);
+      const dayOfWeek = date.getDay(); // 0 = Sunday
+      const dateKey = date.toISOString().split('T')[0];
+      
+      // Only add workouts on Mon (1), Wed (3), Fri (5), Sat (6) to match the schedule
+      if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5 || dayOfWeek === 6) {
+        // Create varied completion statuses for demo purposes
+        const rand = Math.random();
+        if (rand < 0.7) {
+          // 70% fully completed
+          exampleWorkouts[dateKey] = { 
+            completed: true, 
+            hasImportantNote: false,
+            note: null
+          };
+        } else if (rand < 0.85) {
+          // 15% completed with important note
+          const notes = [
+            "Felt shoulder tightness on bench press - dropped weight 10%",
+            "Cut workout short due to time - skipped last 2 exercises",
+            "Hip felt tight during squats - modified ROM",
+            "Lower back fatigue - switched to machine exercises",
+            "Grip strength failing on deadlifts - used straps"
+          ];
+          exampleWorkouts[dateKey] = { 
+            completed: true, 
+            hasImportantNote: true,
+            note: notes[Math.floor(Math.random() * notes.length)]
+          };
+        } else {
+          // 15% not completed (skipped)
+          const reasons = [
+            "Sick day",
+            "Travel",
+            "No show",
+            "Rescheduled"
+          ];
+          exampleWorkouts[dateKey] = { 
+            completed: false, 
+            hasImportantNote: false,
+            note: reasons[Math.floor(Math.random() * reasons.length)]
+          };
+        }
+      }
+    }
+    
+    return exampleWorkouts;
+  });
   
-  // Toggle workout completion for a specific date
+  // Toggle workout completion for a specific date (only for current/future dates)
   const toggleWorkoutComplete = (date, e) => {
     e.stopPropagation(); // Prevent opening the expanded day view
     const dateKey = date.toISOString().split('T')[0];
-    setCompletedWorkouts(prev => ({
-      ...prev,
-      [dateKey]: !prev[dateKey]
-    }));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Don't allow toggling past month workouts
+    if (date < today && date.getMonth() !== today.getMonth()) {
+      return;
+    }
+    
+    setCompletedWorkouts(prev => {
+      const existing = prev[dateKey];
+      if (existing?.completed) {
+        // Remove the entry
+        const { [dateKey]: _, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [dateKey]: { completed: true, hasImportantNote: false, note: null }
+      };
+    });
   };
   
   // Check if a workout is completed
   const isWorkoutCompleted = (date) => {
     const dateKey = date.toISOString().split('T')[0];
-    return !!completedWorkouts[dateKey];
+    return completedWorkouts[dateKey]?.completed === true;
+  };
+  
+  // Get workout status for a date
+  const getWorkoutStatus = (date) => {
+    const dateKey = date.toISOString().split('T')[0];
+    return completedWorkouts[dateKey] || null;
+  };
+  
+  // Check if a date is in the past (before current month)
+  const isPastMonth = (date) => {
+    const today = new Date();
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    return date < currentMonthStart;
   };
   
   // Calendar month navigation
@@ -15636,20 +15723,40 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   const isCurrentMonth = cellDate.getMonth() === currentDate.getMonth();
                   const isToday = cellDate.toDateString() === new Date().toDateString();
                   
+                  // Get workout status for past workouts
+                  const workoutStatus = getWorkoutStatus(cellDate);
+                  const isPast = isPastMonth(cellDate);
+                  const isViewOnly = isPast && !isRest;
+                  
+                  // Determine status icon colors
+                  const getStatusColors = () => {
+                    if (!workoutStatus) return null;
+                    if (workoutStatus.completed && workoutStatus.hasImportantNote) {
+                      return { bg: "#fef3c7", border: "#f59e0b", icon: "alert" }; // Yellow for notes
+                    }
+                    if (workoutStatus.completed) {
+                      return { bg: "#dcfce7", border: "#16a34a", icon: "check" }; // Green for completed
+                    }
+                    return { bg: "#fee2e2", border: "#dc2626", icon: "x" }; // Red for not completed
+                  };
+                  
+                  const statusColors = getStatusColors();
+                  
                   return (
                     <div
                       key={`${weekNum}-${day}-${dayNumber}`}
-                      onClick={() => !isRest && setExpandedDay({ weekNum, dayIdx, workout, dayLabel: day, date: cellDate })}
+                      onClick={() => !isRest && setExpandedDay({ weekNum, dayIdx, workout, dayLabel: day, date: cellDate, viewOnly: isViewOnly, workoutStatus })}
                       style={{
                         minWidth: 160, width: 160,
-                        background: WHITE, borderRadius: 12,
-                        border: isToday ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
+                        background: isPast ? "#f8f9f8" : WHITE, borderRadius: 12,
+                        border: isToday ? `2px solid ${TEAL}` : `1px solid ${isPast ? "#e5e7e5" : BORDER}`,
                         overflow: "hidden",
                         opacity: 0, transform: "scale(0.95)",
                         animation: `canvasCellReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}s forwards`,
                         display: "flex", flexDirection: "column",
                         cursor: isRest ? "default" : "pointer",
-                        transition: "box-shadow 0.2s ease, transform 0.2s ease"
+                        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+                        filter: isPast ? "saturate(0.6)" : "none"
                       }}
                       onMouseEnter={e => { if (!isRest) { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "scale(1.02)"; }}}
                       onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "scale(1)"; }}
@@ -15657,12 +15764,12 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       {/* Day header */}
                       <div style={{ 
                         padding: "8px 12px", 
-                        borderBottom: isRest ? "none" : `1px solid ${BORDER}`,
-                        background: isToday ? TEAL_LIGHT : (isRest ? "#fafcfb" : WHITE),
+                        borderBottom: isRest ? "none" : `1px solid ${isPast ? "#e5e7e5" : BORDER}`,
+                        background: isToday ? TEAL_LIGHT : (isRest ? "#fafcfb" : (isPast ? "#f5f6f5" : WHITE)),
                         display: "flex", alignItems: "center", justifyContent: "space-between"
                       }}>
                         <div style={{ 
-                          fontSize: 10, fontWeight: 600, color: isCurrentMonth ? TEXT_SEC : "#c0c8c5",
+                          fontSize: 10, fontWeight: 600, color: isCurrentMonth ? (isPast ? "#9ca3af" : TEXT_SEC) : "#c0c8c5",
                           textTransform: "uppercase", letterSpacing: "0.04em"
                         }}>
                           {day}
@@ -15673,7 +15780,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                           display: "flex", alignItems: "center", justifyContent: "center",
                           borderRadius: "50%",
                           background: isToday ? TEAL : "transparent",
-                          color: isToday ? WHITE : (isCurrentMonth ? TEXT : "#c0c8c5")
+                          color: isToday ? WHITE : (isCurrentMonth ? (isPast ? "#9ca3af" : TEXT) : "#c0c8c5")
                         }}>
                           {dayNumber}
                         </div>
@@ -15684,14 +15791,49 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         <div style={{ 
                           flex: 1, minHeight: 120, 
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          color: TEXT_SEC, fontSize: 11, fontStyle: "italic"
+                          color: isPast ? "#c0c8c5" : TEXT_SEC, fontSize: 11, fontStyle: "italic"
                         }}>
                           Rest
                         </div>
                       ) : (
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
-                          {/* Completion overlay when completed */}
-                          {isWorkoutCompleted(cellDate) && (
+                          {/* Status overlay for past workouts */}
+                          {isPast && statusColors && (
+                            <div style={{
+                              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                              background: "rgba(255,255,255,0.5)", zIndex: 1,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              pointerEvents: "none"
+                            }}>
+                              <div style={{
+                                width: 40, height: 40, borderRadius: "50%",
+                                background: statusColors.bg, border: `2px solid ${statusColors.border}`,
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                {statusColors.icon === "check" && (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={statusColors.border} strokeWidth="3" strokeLinecap="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                )}
+                                {statusColors.icon === "alert" && (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={statusColors.border} strokeWidth="2.5" strokeLinecap="round">
+                                    <path d="M12 9v4"/>
+                                    <path d="M12 17h.01"/>
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                  </svg>
+                                )}
+                                {statusColors.icon === "x" && (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={statusColors.border} strokeWidth="3" strokeLinecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Completion overlay for current month completed workouts */}
+                          {!isPast && isWorkoutCompleted(cellDate) && (
                             <div style={{
                               position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                               background: "rgba(255,255,255,0.7)", zIndex: 1,
@@ -15710,42 +15852,81 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                             </div>
                           )}
                           
-                          {/* Workout title with completion toggle */}
+                          {/* Workout title with completion toggle or status indicator */}
                           <div style={{ 
                             padding: "8px 10px", 
-                            background: isWorkoutCompleted(cellDate) ? "#dcfce7" : TEAL_LIGHT,
-                            borderBottom: `1px solid ${BORDER}`,
+                            background: isPast 
+                              ? (statusColors ? statusColors.bg : "#f0f0f0")
+                              : (isWorkoutCompleted(cellDate) ? "#dcfce7" : TEAL_LIGHT),
+                            borderBottom: `1px solid ${isPast ? "#e5e7e5" : BORDER}`,
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             gap: 8
                           }}>
                             <div style={{ 
-                              fontSize: 10, fontWeight: 700, color: isWorkoutCompleted(cellDate) ? "#16a34a" : TEXT,
+                              fontSize: 10, fontWeight: 700, 
+                              color: isPast 
+                                ? (statusColors ? statusColors.border : "#9ca3af")
+                                : (isWorkoutCompleted(cellDate) ? "#16a34a" : TEXT),
                               textTransform: "uppercase", letterSpacing: "0.02em",
                               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                               flex: 1
                             }}>
                               {workout.title}
                             </div>
-                            {/* Completion checkbox */}
-                            <button
-                              onClick={(e) => toggleWorkoutComplete(cellDate, e)}
-                              style={{
-                                width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-                                border: `2px solid ${isWorkoutCompleted(cellDate) ? "#16a34a" : BORDER}`,
-                                background: isWorkoutCompleted(cellDate) ? "#16a34a" : "transparent",
-                                cursor: "pointer",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                transition: "all 0.15s ease",
-                                zIndex: 2
-                              }}
-                              title={isWorkoutCompleted(cellDate) ? "Mark as incomplete" : "Mark as complete"}
-                            >
-                              {isWorkoutCompleted(cellDate) && (
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                                  <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                              )}
-                            </button>
+                            {/* Status indicator for past workouts (view-only) */}
+                            {isPast && statusColors && (
+                              <div
+                                style={{
+                                  width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                                  border: `2px solid ${statusColors.border}`,
+                                  background: statusColors.bg,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  cursor: "default"
+                                }}
+                                title={workoutStatus?.note || (workoutStatus?.completed ? "Completed" : "Not completed")}
+                              >
+                                {statusColors.icon === "check" && (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={statusColors.border} strokeWidth="3" strokeLinecap="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                )}
+                                {statusColors.icon === "alert" && (
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill={statusColors.border} stroke="none">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 8v4" stroke={statusColors.bg} strokeWidth="2" strokeLinecap="round"/>
+                                    <circle cx="12" cy="16" r="1" fill={statusColors.bg}/>
+                                  </svg>
+                                )}
+                                {statusColors.icon === "x" && (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={statusColors.border} strokeWidth="3" strokeLinecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                            {/* Completion checkbox for current/future workouts */}
+                            {!isPast && (
+                              <button
+                                onClick={(e) => toggleWorkoutComplete(cellDate, e)}
+                                style={{
+                                  width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                                  border: `2px solid ${isWorkoutCompleted(cellDate) ? "#16a34a" : BORDER}`,
+                                  background: isWorkoutCompleted(cellDate) ? "#16a34a" : "transparent",
+                                  cursor: "pointer",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  transition: "all 0.15s ease",
+                                  zIndex: 2
+                                }}
+                                title={isWorkoutCompleted(cellDate) ? "Mark as incomplete" : "Mark as complete"}
+                              >
+                                {isWorkoutCompleted(cellDate) && (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                )}
+                              </button>
+                            )}
                           </div>
                           
                           {/* Exercises list */}
@@ -15756,28 +15937,28 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                                 style={{
                                   padding: "6px 10px",
                                   display: "flex", alignItems: "flex-start", gap: 8,
-                                  borderBottom: exIdx < workout.exercises.length - 1 ? `1px solid #f0f4f3` : "none",
-                                  cursor: "pointer",
+                                  borderBottom: exIdx < workout.exercises.length - 1 ? `1px solid ${isPast ? "#eeefee" : "#f0f4f3"}` : "none",
+                                  cursor: isViewOnly ? "default" : "pointer",
                                   transition: "background 0.15s ease"
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = "#fafcfb"}
+                                onMouseEnter={e => !isPast && (e.currentTarget.style.background = "#fafcfb")}
                                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                               >
                                 <div style={{ 
-                                  fontSize: 10, fontWeight: 600, color: TEAL,
+                                  fontSize: 10, fontWeight: 600, color: isPast ? "#9ca3af" : TEAL,
                                   minWidth: 20
                                 }}>
                                   {ex.sets}x
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ 
-                                    fontSize: 12, fontWeight: 600, color: TEXT,
+                                    fontSize: 12, fontWeight: 600, color: isPast ? "#9ca3af" : TEXT,
                                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                                   }}>
                                     {ex.name}
                                   </div>
                                   <div style={{ 
-                                    fontSize: 10, color: TEXT_SEC, marginTop: 2,
+                                    fontSize: 10, color: isPast ? "#c0c8c5" : TEXT_SEC, marginTop: 2,
                                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                                   }}>
                                     {ex.reps}, {ex.weight}
@@ -15803,17 +15984,48 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
         <div style={{
           padding: "12px 20px", borderTop: `1px solid ${BORDER}`,
           background: WHITE, fontSize: 12, color: TEXT_SEC,
-          display: "flex", alignItems: "center", gap: 10
+          display: "flex", alignItems: "center", justifyContent: "space-between"
         }}>
-          <div style={{
-            width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, background: TEAL_LIGHT,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span>Click any workout day to expand it</span>
           </div>
-          <span>Click any workout day to expand it</span>
+          
+          {/* Status Legend */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 14, height: 14, borderRadius: 3, background: "#dcfce7", border: "1.5px solid #16a34a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <span style={{ color: TEXT_SEC }}>Completed</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 14, height: 14, borderRadius: 3, background: "#fef3c7", border: "1.5px solid #f59e0b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="#f59e0b" stroke="none">
+                  <circle cx="12" cy="12" r="8"/>
+                </svg>
+              </div>
+              <span style={{ color: TEXT_SEC }}>Has Note</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 14, height: 14, borderRadius: 3, background: "#fee2e2", border: "1.5px solid #dc2626", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="3" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </div>
+              <span style={{ color: TEXT_SEC }}>Missed</span>
+            </div>
+          </div>
         </div>
       )}
       
@@ -15830,64 +16042,149 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           {/* Expanded Header */}
           <div style={{ 
             padding: isMobile ? "16px" : "20px 24px", 
-            background: WHITE,
+            background: expandedDay.viewOnly ? "#f8f9f8" : WHITE,
             borderBottom: `1px solid ${BORDER}`,
-            display: "flex", alignItems: "center", justifyContent: "space-between"
+            display: "flex", flexDirection: "column", gap: 12
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={() => setExpandedDay(null)}
-                style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: "#f0f4f3", border: "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", transition: "all 0.15s ease"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
-                  <polyline points="15,18 9,12 15,6"/>
-                </svg>
-              </button>
-              <div>
-                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>
-                  {expandedDay.date ? formatMobileDate(expandedDay.date) : `Week ${expandedDay.weekNum} - ${expandedDay.dayLabel}`}
-                </div>
-                <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  {expandedDay.workout?.title || "Workout Day"}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button
+                  onClick={() => setExpandedDay(null)}
+                  style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: "#f0f4f3", border: "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = TEAL_LIGHT; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f0f4f3"; }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round">
+                    <polyline points="15,18 9,12 15,6"/>
+                  </svg>
+                </button>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>
+                      {expandedDay.date ? formatMobileDate(expandedDay.date) : `Week ${expandedDay.weekNum} - ${expandedDay.dayLabel}`}
+                    </span>
+                    {expandedDay.viewOnly && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4,
+                        background: "#e5e7eb", color: "#6b7280", textTransform: "uppercase"
+                      }}>
+                        View Only
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>
+                    {expandedDay.workout?.title || "Workout Day"}
+                  </div>
                 </div>
               </div>
+              
+              {/* Status Badge or Mark Complete Button */}
+              {expandedDay.date && expandedDay.viewOnly ? (
+                // View-only status badge
+                (() => {
+                  const status = expandedDay.workoutStatus;
+                  if (!status) return null;
+                  
+                  let bgColor, textColor, borderColor, icon, label;
+                  if (status.completed && status.hasImportantNote) {
+                    bgColor = "#fef3c7"; textColor = "#92400e"; borderColor = "#f59e0b"; icon = "alert"; label = "Note";
+                  } else if (status.completed) {
+                    bgColor = "#dcfce7"; textColor = "#16a34a"; borderColor = "#16a34a"; icon = "check"; label = "Completed";
+                  } else {
+                    bgColor = "#fee2e2"; textColor = "#dc2626"; borderColor = "#dc2626"; icon = "x"; label = "Missed";
+                  }
+                  
+                  return (
+                    <div style={{
+                      padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                      background: bgColor, color: textColor, border: `2px solid ${borderColor}`,
+                      display: "flex", alignItems: "center", gap: 8
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: 4,
+                        border: `2px solid ${borderColor}`, background: borderColor,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        {icon === "check" && (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                        {icon === "alert" && (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill={WHITE} stroke="none">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v4" stroke={borderColor} strokeWidth="2" strokeLinecap="round"/>
+                            <circle cx="12" cy="16" r="1" fill={borderColor}/>
+                          </svg>
+                        )}
+                        {icon === "x" && (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        )}
+                      </div>
+                      {label}
+                    </div>
+                  );
+                })()
+              ) : expandedDay.date && (
+                <button
+                  onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
+                  style={{
+                    padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                    background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : "#f0f4f3",
+                    color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : TEXT,
+                    border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent"}`,
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 8,
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{
+                    width: 18, height: 18, borderRadius: 4,
+                    border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : BORDER}`,
+                    background: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {isWorkoutCompleted(expandedDay.date) && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+                  {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
+                </button>
+              )}
             </div>
             
-            {/* Mark Complete Button */}
-            {expandedDay.date && (
-              <button
-                onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
-                style={{
-                  padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                  background: isWorkoutCompleted(expandedDay.date) ? "#dcfce7" : "#f0f4f3",
-                  color: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : TEXT,
-                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent"}`,
-                  cursor: "pointer",
-                  display: "flex", alignItems: "center", gap: 8,
-                  transition: "all 0.15s ease"
-                }}
-              >
-                <div style={{
-                  width: 18, height: 18, borderRadius: 4,
-                  border: `2px solid ${isWorkoutCompleted(expandedDay.date) ? "#16a34a" : BORDER}`,
-                  background: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent",
-                  display: "flex", alignItems: "center", justifyContent: "center"
+            {/* Note banner for past workouts with notes */}
+            {expandedDay.viewOnly && expandedDay.workoutStatus?.note && (
+              <div style={{
+                padding: "12px 14px", borderRadius: 8,
+                background: expandedDay.workoutStatus.hasImportantNote ? "#fef3c7" : "#f3f4f6",
+                border: `1px solid ${expandedDay.workoutStatus.hasImportantNote ? "#fcd34d" : "#e5e7eb"}`,
+                display: "flex", alignItems: "flex-start", gap: 10
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                  stroke={expandedDay.workoutStatus.hasImportantNote ? "#d97706" : "#6b7280"} 
+                  strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div style={{ 
+                  fontSize: 13, color: expandedDay.workoutStatus.hasImportantNote ? "#92400e" : "#4b5563",
+                  lineHeight: 1.5
                 }}>
-                  {isWorkoutCompleted(expandedDay.date) && (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                  )}
+                  <strong style={{ fontWeight: 600 }}>Note:</strong> {expandedDay.workoutStatus.note}
                 </div>
-                {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
-              </button>
+              </div>
             )}
           </div>
           
@@ -15898,111 +16195,117 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 <div 
                   key={exIdx}
                   style={{
-                    background: "#f8faf9", borderRadius: 12, border: `1px solid ${BORDER}`,
-                    padding: "16px", position: "relative"
+                    background: expandedDay.viewOnly ? "#f5f5f5" : "#f8faf9", 
+                    borderRadius: 12, border: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`,
+                    padding: "16px", position: "relative",
+                    opacity: expandedDay.viewOnly ? 0.85 : 1
                   }}
                 >
-                  {/* Delete button */}
-                  <button
-                    onClick={() => handleDeleteExercise(exIdx)}
-                    style={{
-                      position: "absolute", top: 12, right: 12,
-                      width: 24, height: 24, borderRadius: 6, border: "none",
-                      background: "transparent", cursor: "pointer", color: TEXT_SEC,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
+                  {/* Delete button - hidden for view-only */}
+                  {!expandedDay.viewOnly && (
+                    <button
+                      onClick={() => handleDeleteExercise(exIdx)}
+                      style={{
+                        position: "absolute", top: 12, right: 12,
+                        width: 24, height: 24, borderRadius: 6, border: "none",
+                        background: "transparent", cursor: "pointer", color: TEXT_SEC,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
                   
                   {/* Exercise name */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingRight: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingRight: expandedDay.viewOnly ? 0 : 24 }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                      background: TEAL, color: WHITE,
+                      background: expandedDay.viewOnly ? "#9ca3af" : TEAL, color: WHITE,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 13, fontWeight: 700
                     }}>
                       {exIdx + 1}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>{ex.name}</div>
                   </div>
                   
                   {/* Stats grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
                     <div style={{ 
                       background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
-                      border: `1px solid ${BORDER}`
+                      border: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`
                     }}>
                       <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Sets</div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{ex.sets}</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>{ex.sets}</div>
                     </div>
                     <div style={{ 
                       background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
-                      border: `1px solid ${BORDER}`
+                      border: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`
                     }}>
                       <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Reps</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{ex.reps}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>{ex.reps}</div>
                     </div>
                     <div style={{ 
                       background: WHITE, borderRadius: 8, padding: "10px 8px", textAlign: "center",
-                      border: `1px solid ${BORDER}`
+                      border: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`
                     }}>
                       <div style={{ fontSize: 10, fontWeight: 600, color: TEXT_SEC, textTransform: "uppercase", marginBottom: 4 }}>Weight</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{ex.weight}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEAL }}>{ex.weight}</div>
                     </div>
                     <div style={{ 
-                      background: "#fff7ed", borderRadius: 8, padding: "10px 8px", textAlign: "center",
-                      border: `1px solid #fed7aa`
+                      background: expandedDay.viewOnly ? "#f5f5f5" : "#fff7ed", borderRadius: 8, padding: "10px 8px", textAlign: "center",
+                      border: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : "#fed7aa"}`
                     }}>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: "#c2410c", textTransform: "uppercase", marginBottom: 4 }}>Rest</div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#c2410c" }}>{ex.rest}</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: expandedDay.viewOnly ? TEXT_SEC : "#c2410c", textTransform: "uppercase", marginBottom: 4 }}>Rest</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : "#c2410c" }}>{ex.rest}</div>
                     </div>
                   </div>
                 </div>
               ))}
               
-              {/* Add exercise button */}
-              <button
-                onClick={() => setIsAddingRow(true)}
-                style={{
-                  padding: "16px", borderRadius: 12, border: `2px dashed ${BORDER}`,
-                  background: "transparent", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  color: TEXT_SEC, fontSize: 14, fontWeight: 500
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add Exercise
-              </button>
+              {/* Add exercise button - hidden for view-only */}
+              {!expandedDay.viewOnly && (
+                <button
+                  onClick={() => setIsAddingRow(true)}
+                  style={{
+                    padding: "16px", borderRadius: 12, border: `2px dashed ${BORDER}`,
+                    background: "transparent", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    color: TEXT_SEC, fontSize: 14, fontWeight: 500
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add Exercise
+                </button>
+              )}
               
               {/* Mobile Summary */}
               <div style={{ 
-                padding: "16px", background: "#f8faf9", borderRadius: 12,
+                padding: "16px", background: expandedDay.viewOnly ? "#f0f0f0" : "#f8faf9", borderRadius: 12,
                 display: "flex", justifyContent: "space-around", marginTop: 8
               }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{exercises.length}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>{exercises.length}</div>
                   <div style={{ fontSize: 11, color: TEXT_SEC }}>Exercises</div>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>
                     {exercises.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
                   </div>
                   <div style={{ fontSize: 11, color: TEXT_SEC }}>Total Sets</div>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>45-60</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>45-60</div>
                   <div style={{ fontSize: 11, color: TEXT_SEC }}>Minutes</div>
                 </div>
               </div>
               
-              {/* Mobile Mark Complete Button */}
-              {expandedDay.date && (
+              {/* Mobile Mark Complete Button - hidden for view-only */}
+              {expandedDay.date && !expandedDay.viewOnly && (
                 <button
                   onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
                   style={{
@@ -16037,7 +16340,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
             </div>
           ) : (
           /* Desktop: Spreadsheet Style */
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", opacity: expandedDay.viewOnly ? 0.85 : 1 }}>
             {/* Spreadsheet Table */}
             <div style={{ flex: 1, overflow: "auto" }}>
               <table style={{ 
@@ -16046,7 +16349,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
               }}>
                 {/* Header Row */}
                 <thead>
-                  <tr style={{ background: "#f8faf9", position: "sticky", top: 0, zIndex: 10 }}>
+                  <tr style={{ background: expandedDay.viewOnly ? "#f0f0f0" : "#f8faf9", position: "sticky", top: 0, zIndex: 10 }}>
                     <th style={{ 
                       width: 40, padding: "12px 8px", 
                       borderBottom: `2px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
@@ -16093,16 +16396,16 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 </thead>
                 <tbody>
                   {exercises.map((ex, exIdx) => {
-                    const isEditing = (field) => editingCell?.rowIdx === exIdx && editingCell?.field === field;
+                    const isEditing = (field) => !expandedDay.viewOnly && editingCell?.rowIdx === exIdx && editingCell?.field === field;
                     
                     const EditableCell = ({ field, value, style, inputStyle }) => (
                       <td 
                         style={{ 
                           ...style,
-                          cursor: "text",
+                          cursor: expandedDay.viewOnly ? "default" : "text",
                           position: "relative"
                         }}
-                        onClick={() => setEditingCell({ rowIdx: exIdx, field })}
+                        onClick={() => !expandedDay.viewOnly && setEditingCell({ rowIdx: exIdx, field })}
                       >
                         {isEditing(field) ? (
                           <input
@@ -16147,26 +16450,28 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         {/* Row Number */}
                         <td style={{ 
                           padding: "14px 8px", 
-                          borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                          textAlign: "center", fontWeight: 600, color: TEXT_SEC, fontSize: 12
+                          borderBottom: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`, borderRight: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`,
+                          textAlign: "center", fontWeight: 600, color: expandedDay.viewOnly ? "#9ca3af" : TEXT_SEC, fontSize: 12
                         }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                             {exIdx + 1}
-                            <button
-                              onClick={() => handleDeleteExercise(exIdx)}
-                              style={{
-                                width: 18, height: 18, borderRadius: 4, border: "none",
-                                background: "transparent", cursor: "pointer", color: TEXT_SEC,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                opacity: 0.5, transition: "all 0.15s ease"
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = "#ef4444"; }}
-                              onMouseLeave={e => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = TEXT_SEC; }}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                              </svg>
-                            </button>
+                            {!expandedDay.viewOnly && (
+                              <button
+                                onClick={() => handleDeleteExercise(exIdx)}
+                                style={{
+                                  width: 18, height: 18, borderRadius: 4, border: "none",
+                                  background: "transparent", cursor: "pointer", color: TEXT_SEC,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  opacity: 0.5, transition: "all 0.15s ease"
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = "#ef4444"; }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = TEXT_SEC; }}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </td>
                         
@@ -16174,15 +16479,15 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         <td 
                           style={{ 
                             padding: "14px 16px", 
-                            borderBottom: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}`,
-                            fontWeight: 600, color: TEXT, cursor: "text"
+                            borderBottom: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`, borderRight: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`,
+                            fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT, cursor: expandedDay.viewOnly ? "default" : "text"
                           }}
-                          onClick={() => setEditingCell({ rowIdx: exIdx, field: "name" })}
+                          onClick={() => !expandedDay.viewOnly && setEditingCell({ rowIdx: exIdx, field: "name" })}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <div style={{
                               width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-                              background: TEAL, color: WHITE,
+                              background: expandedDay.viewOnly ? "#9ca3af" : TEAL, color: WHITE,
                               display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: 11, fontWeight: 700
                             }}>
@@ -16345,8 +16650,8 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     );
                   })}
                   
-                  {/* Add Row - inline form or button */}
-                  {isAddingRow ? (
+                  {/* Add Row - inline form or button (hidden for view-only) */}
+                  {!expandedDay.viewOnly && isAddingRow ? (
                     <tr style={{ background: TEAL_LIGHT }}>
                       <td style={{ 
                         padding: "14px 8px", 
@@ -16476,7 +16781,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         </div>
                       </td>
                     </tr>
-                  ) : (
+                  ) : !expandedDay.viewOnly ? (
                     <tr>
                       <td colSpan={6} style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}` }}>
                         <div 
@@ -16504,45 +16809,60 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         </div>
                       </td>
                     </tr>
-                  )}
+                  ) : null}
                 </tbody>
               </table>
             </div>
             
             {/* Summary Bar */}
             <div style={{ 
-              padding: "12px 20px", background: "#f8faf9", 
-              borderTop: `1px solid ${BORDER}`,
+              padding: "12px 20px", background: expandedDay.viewOnly ? "#f0f0f0" : "#f8faf9", 
+              borderTop: `1px solid ${expandedDay.viewOnly ? "#e5e5e5" : BORDER}`,
               display: "flex", alignItems: "center", justifyContent: "space-between"
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  <span style={{ fontWeight: 600, color: TEXT }}>{exercises.length}</span> exercises
+                  <span style={{ fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>{exercises.length}</span> exercises
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  <span style={{ fontWeight: 600, color: TEXT }}>
+                  <span style={{ fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>
                     {exercises.reduce((sum, ex) => sum + parseInt(ex.sets || 0), 0)}
                   </span> total sets
                 </div>
                 <div style={{ fontSize: 12, color: TEXT_SEC }}>
-                  Est. duration: <span style={{ fontWeight: 600, color: TEXT }}>45-60 min</span>
+                  Est. duration: <span style={{ fontWeight: 600, color: expandedDay.viewOnly ? "#6b7280" : TEXT }}>45-60 min</span>
                 </div>
               </div>
-              <div style={{ 
-                padding: "6px 12px", borderRadius: 6, 
-                background: TEAL_LIGHT, fontSize: 11, fontWeight: 600, color: TEAL,
-                display: "flex", alignItems: "center", gap: 6
-              }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                Click any cell to edit
-              </div>
+              {expandedDay.viewOnly ? (
+                <div style={{ 
+                  padding: "6px 12px", borderRadius: 6, 
+                  background: "#e5e7eb", fontSize: 11, fontWeight: 600, color: "#6b7280",
+                  display: "flex", alignItems: "center", gap: 6
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                  Past workout - View only
+                </div>
+              ) : (
+                <div style={{ 
+                  padding: "6px 12px", borderRadius: 6, 
+                  background: TEAL_LIGHT, fontSize: 11, fontWeight: 600, color: TEAL,
+                  display: "flex", alignItems: "center", gap: 6
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Click any cell to edit
+                </div>
+              )}
             </div>
           </div>
           )}
           
-          {/* Footer Actions */}
+          {/* Footer Actions - hidden for view-only */}
+          {!expandedDay.viewOnly && (
           <div style={{
             padding: isMobile ? "12px 16px" : "16px 24px", borderTop: `1px solid ${BORDER}`,
             background: WHITE, display: "flex", alignItems: "center", justifyContent: isMobile ? "stretch" : "flex-end"
@@ -16577,6 +16897,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
               {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
               </button>
           </div>
+          )}
         </div>
       )}
       
