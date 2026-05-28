@@ -308,7 +308,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������═══════════════════════════════
+// ═��═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -4734,6 +4734,12 @@ isMobile={true}
               }}
             />
           )}
+          {canvasType === "helpCenter" && (
+            <HelpCenterCanvas
+              onClose={onClose}
+              isMobile={true}
+            />
+          )}
         </div>
         
         {/* Chat Input at Bottom */}
@@ -4794,7 +4800,7 @@ isMobile={true}
 
 /* ═══════════════════���═════���══════════════���══
    REPORT VISUALIZATION SCREEN
-   ═════════════════════════════════════════════ */
+   ═��═══════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showShare, setShowShare] = useState(autoOpenShare);
@@ -11967,6 +11973,467 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
+
+// ═══════════════════════════════════════════════════════════════
+// HELP CENTER CANVAS - Documentation and support wiki
+// ═══════════════════════════════════════════════════════════════
+function HelpCenterCanvas({ onClose, isMobile }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [expandedFaq, setExpandedFaq] = useState(null);
+  
+  // Help center categories
+  const categories = [
+    {
+      id: "getting-started",
+      title: "Getting Started",
+      icon: "rocket",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
+      description: "New to Milton? Start here to learn the basics.",
+      articles: [
+        { id: "gs-1", title: "Welcome to Milton", content: "Milton is your AI-powered coaching assistant that helps you manage clients, create programs, track progress, and automate follow-ups. This guide will walk you through the core features." },
+        { id: "gs-2", title: "Setting up your profile", content: "Navigate to your profile settings to add your gym name, logo, and coaching preferences. This information personalizes Milton's responses and client communications." },
+        { id: "gs-3", title: "Adding your first client", content: "Click the + button in the top right corner to add a new client. Fill in their basic information, goals, and any relevant health history to get started." },
+        { id: "gs-4", title: "Understanding the dashboard", content: "Your dashboard shows active clients, today's sessions, and key metrics at a glance. Use the sidebar navigation to access different areas of Milton." }
+      ]
+    },
+    {
+      id: "workouts",
+      title: "Workouts & Programming",
+      icon: "dumbbell",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      description: "Create and manage training programs.",
+      articles: [
+        { id: "wo-1", title: "Creating a workout template", content: "Use the Canvas > Workout Templates to build reusable workout structures. Add exercises, sets, reps, and notes that can be assigned to any client." },
+        { id: "wo-2", title: "Assigning programs to clients", content: "Open a client's profile and navigate to their Program tab. Select from your templates or ask Milton to generate a custom program based on their goals." },
+        { id: "wo-3", title: "Tracking workout completion", content: "During sessions, mark exercises as complete to track progress. Milton automatically logs weights, reps, and any notes you add." },
+        { id: "wo-4", title: "Progressive overload suggestions", content: "Milton analyzes client history and suggests weight increases when appropriate. You'll see these recommendations highlighted in the workout view." }
+      ]
+    },
+    {
+      id: "nutrition",
+      title: "Nutrition & Meal Plans",
+      icon: "utensils",
+      color: "#d97706",
+      bgColor: "#fef3c7",
+      description: "Manage nutrition guidance and recipes.",
+      articles: [
+        { id: "nu-1", title: "Creating meal plans", content: "Use the Canvas > Meal Plan Builder to create custom nutrition plans. Set macros, meal timing, and add specific recipes." },
+        { id: "nu-2", title: "Recipe library", content: "Access hundreds of coach-approved recipes in the Recipe Dashboard. Filter by dietary preferences, prep time, or macros." },
+        { id: "nu-3", title: "Client food logging", content: "Clients can log meals through their dashboard. You'll see summaries and can provide feedback directly through Milton." },
+        { id: "nu-4", title: "Macro calculations", content: "Milton can calculate recommended macros based on client goals, activity level, and current metrics. Just ask in the chat." }
+      ]
+    },
+    {
+      id: "clients",
+      title: "Client Management",
+      icon: "users",
+      color: "#7c3aed",
+      bgColor: "#ede9fe",
+      description: "Organize and track your client roster.",
+      articles: [
+        { id: "cl-1", title: "Client profiles overview", content: "Each client has a comprehensive profile with their goals, history, measurements, and communication preferences. Access it by clicking their name anywhere in Milton." },
+        { id: "cl-2", title: "Service types (PT, Semi, Hybrid)", content: "Categorize clients by service type to filter your roster and customize their experience. Semi-private clients can be grouped into sessions." },
+        { id: "cl-3", title: "Progress tracking", content: "View client progress through charts, photos, and milestone tracking. Milton surfaces trends and alerts you to potential issues." },
+        { id: "cl-4", title: "Client communication", content: "Use the Inbox to message clients directly. Milton can automate check-ins, reminders, and celebration messages." }
+      ]
+    },
+    {
+      id: "reports",
+      title: "Reports & Analytics",
+      icon: "chart",
+      color: "#dc2626",
+      bgColor: "#fef3f2",
+      description: "Generate insights and business metrics.",
+      articles: [
+        { id: "re-1", title: "Dashboard metrics explained", content: "Your KPI cards show active clients, sessions this week, retention rate, and revenue. Click any card to see detailed breakdowns." },
+        { id: "re-2", title: "Client progress reports", content: "Generate shareable progress reports for clients showing their journey, achievements, and upcoming goals." },
+        { id: "re-3", title: "Business analytics", content: "Track revenue, session volume, and client retention over time. Export data for your own analysis." },
+        { id: "re-4", title: "AI-generated insights", content: "Milton surfaces actionable insights based on your data, like clients at risk of churning or optimal times for check-ins." }
+      ]
+    },
+    {
+      id: "integrations",
+      title: "Integrations & Data",
+      icon: "plug",
+      color: "#0891b2",
+      bgColor: "#ecfeff",
+      description: "Connect external devices and services.",
+      articles: [
+        { id: "in-1", title: "Connecting wearables", content: "Milton supports data from Apple Watch, Garmin, WHOOP, and other fitness trackers. Connect them in Settings > Integrations." },
+        { id: "in-2", title: "Smart scale setup", content: "Sync smart scales to automatically track client weigh-ins. Supported brands include Withings and Renpho." },
+        { id: "in-3", title: "CGM integration", content: "For clients using continuous glucose monitors, Milton can import and analyze their data for nutrition insights." },
+        { id: "in-4", title: "Calendar sync", content: "Connect Google Calendar or Apple Calendar to automatically sync client sessions and avoid double-booking." }
+      ]
+    }
+  ];
+
+  // FAQ items
+  const faqs = [
+    { id: "faq-1", question: "How do I reset a client's password?", answer: "Clients can reset their own password from the login screen. As a coach, you can also send them a password reset link from their profile under Settings > Account." },
+    { id: "faq-2", question: "Can I use Milton on my phone?", answer: "Yes! Milton is fully responsive and works on any device. We recommend adding it to your home screen for the best experience." },
+    { id: "faq-3", question: "How do I cancel a client's membership?", answer: "Navigate to the client's profile, go to Settings, and select 'End membership'. You can set an end date or make it effective immediately." },
+    { id: "faq-4", question: "Is my client data secure?", answer: "Absolutely. Milton uses bank-level encryption and is fully HIPAA compliant. Your data is never shared or sold to third parties." },
+    { id: "faq-5", question: "How do I export my data?", answer: "Go to Settings > Data Export to download your client list, session history, and other data in CSV format." },
+    { id: "faq-6", question: "What if Milton gives incorrect advice?", answer: "Milton is a tool to assist your coaching, not replace it. Always review AI suggestions before sharing with clients. You can provide feedback to improve responses." }
+  ];
+
+  // Render category icon
+  const renderIcon = (iconName, size = 20, color = "currentColor") => {
+    const icons = {
+      rocket: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>,
+      dumbbell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 12v5.5M6 6.5V12M18 12v5.5M18 6.5V12"/></svg>,
+      utensils: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>,
+      users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+      chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+      plug: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 01-12 0V8z"/></svg>,
+      search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+      chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>,
+      chevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>,
+      mail: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>,
+      messageCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
+      book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
+      x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    };
+    return icons[iconName] || icons.book;
+  };
+
+  // Filter categories and articles by search
+  const filteredCategories = searchQuery
+    ? categories.map(cat => ({
+        ...cat,
+        articles: cat.articles.filter(a => 
+          a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          a.content.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      })).filter(cat => cat.articles.length > 0)
+    : categories;
+
+  const filteredFaqs = searchQuery
+    ? faqs.filter(f => 
+        f.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.answer.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : faqs;
+
+  // Get current category data
+  const currentCategory = activeCategory ? categories.find(c => c.id === activeCategory) : null;
+
+  return (
+    <div style={{
+      flex: 1, display: "flex", flexDirection: "column",
+      background: BG, overflow: "hidden"
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "16px 16px 12px" : "20px 28px 16px",
+        background: WHITE,
+        borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {activeCategory && (
+            <div 
+              onClick={() => setActiveCategory(null)}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", background: "#f7faf9"
+              }}
+            >
+              {renderIcon("chevronLeft", 18, TEXT_SEC)}
+            </div>
+          )}
+          <div>
+            <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>
+              {activeCategory ? currentCategory?.title : "Help Center"}
+            </div>
+            {!activeCategory && (
+              <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
+                Find answers and learn how to use Milton
+              </div>
+            )}
+          </div>
+        </div>
+        <div 
+          onClick={onClose}
+          style={{
+            width: 32, height: 32, borderRadius: 8,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", background: "#f7faf9"
+          }}
+        >
+          {renderIcon("x", 18, TEXT_SEC)}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? 16 : 24 }}>
+        {/* Search Bar */}
+        {!activeCategory && (
+          <div style={{
+            position: "relative",
+            marginBottom: 24
+          }}>
+            <div style={{
+              position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+              color: TEXT_SEC, opacity: 0.6
+            }}>
+              {renderIcon("search", 18, TEXT_SEC)}
+            </div>
+            <input
+              type="text"
+              placeholder="Search for help..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%", padding: "14px 14px 14px 44px",
+                borderRadius: 12, border: `1px solid ${BORDER}`,
+                background: WHITE, fontSize: 15, color: TEXT,
+                outline: "none", transition: "border-color 0.15s ease"
+              }}
+              onFocus={(e) => e.target.style.borderColor = TEAL}
+              onBlur={(e) => e.target.style.borderColor = BORDER}
+            />
+          </div>
+        )}
+
+        {/* Category Grid or Article List */}
+        {!activeCategory ? (
+          <>
+            {/* Categories */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ 
+                fontSize: 12, fontWeight: 600, color: TEXT_SEC, 
+                textTransform: "uppercase", letterSpacing: "0.05em",
+                marginBottom: 14
+              }}>
+                Browse by topic
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+                gap: 12
+              }}>
+                {filteredCategories.map(category => (
+                  <div
+                    key={category.id}
+                    onClick={() => { setActiveCategory(category.id); setSearchQuery(""); }}
+                    style={{
+                      background: WHITE,
+                      borderRadius: 14,
+                      border: `1px solid ${BORDER}`,
+                      padding: 18,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      display: "flex", alignItems: "flex-start", gap: 14
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = category.color; e.currentTarget.style.boxShadow = `0 4px 12px ${category.color}15`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: category.bgColor,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0
+                    }}>
+                      {renderIcon(category.icon, 20, category.color)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
+                        {category.title}
+                      </div>
+                      <div style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.4 }}>
+                        {category.description}
+                      </div>
+                      {searchQuery && (
+                        <div style={{ fontSize: 12, color: category.color, marginTop: 6 }}>
+                          {category.articles.length} matching article{category.articles.length !== 1 ? "s" : ""}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* FAQ Section */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ 
+                fontSize: 12, fontWeight: 600, color: TEXT_SEC, 
+                textTransform: "uppercase", letterSpacing: "0.05em",
+                marginBottom: 14
+              }}>
+                Frequently asked questions
+              </div>
+              <div style={{
+                background: WHITE,
+                borderRadius: 14,
+                border: `1px solid ${BORDER}`,
+                overflow: "hidden"
+              }}>
+                {filteredFaqs.map((faq, idx) => (
+                  <div key={faq.id}>
+                    {idx > 0 && <div style={{ height: 1, background: BORDER, margin: "0 18px" }} />}
+                    <div
+                      onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
+                      style={{
+                        padding: "16px 18px",
+                        cursor: "pointer",
+                        display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12
+                      }}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT, lineHeight: 1.4 }}>
+                        {faq.question}
+                      </div>
+                      <div style={{
+                        flexShrink: 0,
+                        transform: expandedFaq === faq.id ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s ease"
+                      }}>
+                        {renderIcon("chevronDown", 16, TEXT_SEC)}
+                      </div>
+                    </div>
+                    {expandedFaq === faq.id && (
+                      <div style={{
+                        padding: "0 18px 16px",
+                        fontSize: 14, color: TEXT_SEC, lineHeight: 1.6
+                      }}>
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact Support */}
+            <div>
+              <div style={{ 
+                fontSize: 12, fontWeight: 600, color: TEXT_SEC, 
+                textTransform: "uppercase", letterSpacing: "0.05em",
+                marginBottom: 14
+              }}>
+                Still need help?
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+                gap: 12
+              }}>
+                <div style={{
+                  background: WHITE,
+                  borderRadius: 14,
+                  border: `1px solid ${BORDER}`,
+                  padding: 18,
+                  display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer"
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: "#e8f5f3",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {renderIcon("mail", 20, TEAL)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Email Support</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>support@joinmmnt.com</div>
+                  </div>
+                </div>
+                <div style={{
+                  background: WHITE,
+                  borderRadius: 14,
+                  border: `1px solid ${BORDER}`,
+                  padding: 18,
+                  display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer"
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: "#ede9fe",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {renderIcon("messageCircle", 20, "#7c3aed")}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Live Chat</div>
+                    <div style={{ fontSize: 13, color: TEXT_SEC }}>Available 9am - 6pm EST</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Article List for selected category */
+          <div>
+            <div style={{ 
+              fontSize: 13, color: TEXT_SEC, marginBottom: 16, lineHeight: 1.5
+            }}>
+              {currentCategory?.description}
+            </div>
+            <div style={{
+              display: "flex", flexDirection: "column", gap: 10
+            }}>
+              {currentCategory?.articles.map((article, idx) => (
+                <div
+                  key={article.id}
+                  style={{
+                    background: WHITE,
+                    borderRadius: 14,
+                    border: `1px solid ${BORDER}`,
+                    overflow: "hidden"
+                  }}
+                >
+                  <div
+                    onClick={() => setExpandedFaq(expandedFaq === article.id ? null : article.id)}
+                    style={{
+                      padding: "16px 18px",
+                      cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: currentCategory.bgColor,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, fontWeight: 600, color: currentCategory.color
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>
+                        {article.title}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0,
+                      transform: expandedFaq === article.id ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease"
+                    }}>
+                      {renderIcon("chevronDown", 16, TEXT_SEC)}
+                    </div>
+                  </div>
+                  {expandedFaq === article.id && (
+                    <div style={{
+                      padding: "0 18px 16px 58px",
+                      fontSize: 14, color: TEXT_SEC, lineHeight: 1.6
+                    }}>
+                      {article.content}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═══════════════════════════════════════════════════════════════
@@ -18720,7 +19187,7 @@ export default function MiltonDashboard() {
                         </svg>
                         <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Profile</span>
                       </div>
-                      <div onClick={() => setShowProfileMenu(false)} style={{
+                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("helpCenter"); setCanvasData({}); setCanvasMode(true); }} style={{
                         display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
                         cursor: "pointer", transition: "background 0.15s ease"
                       }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -18880,6 +19347,12 @@ export default function MiltonDashboard() {
     playbook={playbook}
     setPlaybook={setPlaybook}
   />
+  )}
+  {canvasType === "helpCenter" && (
+    <HelpCenterCanvas
+      onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+      isMobile={isMobile}
+    />
   )}
   {canvasType === "workflows" && (
   <WorkflowsCanvas
@@ -19085,7 +19558,7 @@ export default function MiltonDashboard() {
                           </svg>
                           <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Profile</span>
                         </div>
-                        <div onClick={() => setShowProfileMenu(false)} style={{
+                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("helpCenter"); setCanvasData({}); setCanvasMode(true); }} style={{
                           display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
                           cursor: "pointer", transition: "background 0.15s ease"
                         }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
