@@ -7,6 +7,7 @@ import RecipeDashboard from "./dashboards/RecipeDashboard";
 import MorningDashboard from "./dashboards/MorningDashboard";
 import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
+import WelcomeVideoModal from "./components/WelcomeVideoModal";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -308,7 +309,7 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═══════════════════════════════���������═══════════════════════════════
+// ═��═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -17983,6 +17984,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
    ══════════════════════════���═════��════════════ */
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
+  const [showWelcomeVideo, setShowWelcomeVideo] = useState(true);
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
@@ -19631,6 +19633,9 @@ export default function MiltonDashboard() {
 
 {/* ═══ ADD CLIENT MODAL ═══ */}
   {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} isMobile={isMobile} />}
+
+{/* ═══ WELCOME VIDEO MODAL ═══ */}
+  {showWelcomeVideo && <WelcomeVideoModal onClose={() => setShowWelcomeVideo(false)} />}
 
     {/* ═══ MOBILE GLASS CHAT BAR + SHEET ═══ */}
   {isMobile && (
