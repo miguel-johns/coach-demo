@@ -192,10 +192,11 @@ export default function WelcomeVideoModal({ onClose }) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // BOOKING SCREEN (Calendly-style)
+  // BOOKING SCREEN (Calendly-style) - Mobile Responsive
   // ═══════════════════════════════════════════════════════════════
   if (screen === "booking") {
     const dates = generateDates();
+    const isMobileView = typeof window !== "undefined" && window.innerWidth < 600;
     
     return (
       <div style={{
@@ -206,141 +207,138 @@ export default function WelcomeVideoModal({ onClose }) {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 9999,
-        padding: 20,
+        padding: 12,
+        overflow: "auto",
       }}>
         <div style={{
           background: WHITE,
           borderRadius: 16,
           width: "100%",
           maxWidth: 720,
-          overflow: "hidden",
+          maxHeight: "95vh",
+          overflow: "auto",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           display: "flex",
-          flexDirection: "row",
-          minHeight: 520,
+          flexDirection: "column",
         }}>
-          {/* Left sidebar */}
+          {/* Header section - always visible on mobile */}
           <div style={{
-            width: 260,
             background: "#f8faf9",
-            borderRight: `1px solid ${BORDER}`,
-            padding: 28,
-            display: "flex",
-            flexDirection: "column",
+            borderBottom: `1px solid ${BORDER}`,
+            padding: "16px 20px",
           }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: TEAL,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 20,
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
-            
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: "0 0 8px" }}>
-              Milton AI Workshop
-            </h3>
-            <p style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.5, margin: "0 0 20px" }}>
-              A personalized 30-minute session to set up your coaching business for success.
-            </p>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: "auto" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12,6 12,12 16,14"/>
-                </svg>
-                <span style={{ fontSize: 13, color: TEXT_SEC }}>30 minutes</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 10l5 5-5 5"/>
-                  <path d="M4 4v7a4 4 0 004 4h12"/>
-                </svg>
-                <span style={{ fontSize: 13, color: TEXT_SEC }}>Video call</span>
-              </div>
-            </div>
-
-            {tutorialWatched && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
-                marginTop: 20,
-                padding: 12,
-                background: "#f0fdf4",
-                borderRadius: 8,
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: TEAL,
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                justifyContent: "center",
+                flexShrink: 0,
               }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20,6 9,17 4,12"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
-                <span style={{ fontSize: 12, color: "#166534", fontWeight: 500 }}>Tutorial completed</span>
               </div>
-            )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: 0 }}>
+                  Milton AI Workshop
+                </h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                    <span style={{ fontSize: 12, color: TEXT_SEC }}>30 min</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 10l5 5-5 5"/>
+                      <path d="M4 4v7a4 4 0 004 4h12"/>
+                    </svg>
+                    <span style={{ fontSize: 12, color: TEXT_SEC }}>Video call</span>
+                  </div>
+                </div>
+              </div>
+              {tutorialWatched && (
+                <div style={{
+                  padding: "6px 10px",
+                  background: "#f0fdf4",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  flexShrink: 0,
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                  <span style={{ fontSize: 11, color: "#166534", fontWeight: 500 }}>Tutorial done</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Right content */}
-          <div style={{ flex: 1, padding: 28, display: "flex", flexDirection: "column" }}>
-            <h4 style={{ fontSize: 15, fontWeight: 600, color: TEXT, margin: "0 0 16px" }}>
-              Select a Date
-            </h4>
-            
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, 1fr)",
-              gap: 8,
-              marginBottom: 24,
-            }}>
-              {dates.map((date, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
-                  style={{
-                    padding: "12px 8px",
-                    borderRadius: 8,
-                    border: selectedDate?.getTime() === date.getTime() ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
-                    background: selectedDate?.getTime() === date.getTime() ? "#e8f5f3" : WHITE,
-                    cursor: "pointer",
-                    textAlign: "center",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: 11, color: TEXT_SEC, marginBottom: 2 }}>
-                    {date.toLocaleDateString("en-US", { weekday: "short" })}
-                  </div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>
-                    {date.getDate()}
-                  </div>
-                </button>
-              ))}
+          {/* Calendar content */}
+          <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Date selection */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 600, color: TEXT, margin: "0 0 12px" }}>
+                Select a Date
+              </h4>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: 6,
+              }}>
+                {dates.map((date, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
+                    style={{
+                      padding: "10px 4px",
+                      borderRadius: 8,
+                      border: selectedDate?.getTime() === date.getTime() ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
+                      background: selectedDate?.getTime() === date.getTime() ? "#e8f5f3" : WHITE,
+                      cursor: "pointer",
+                      textAlign: "center",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: TEXT_SEC, marginBottom: 2 }}>
+                      {date.toLocaleDateString("en-US", { weekday: "short" })}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>
+                      {date.getDate()}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* Time selection */}
             {selectedDate && (
-              <>
-                <h4 style={{ fontSize: 15, fontWeight: 600, color: TEXT, margin: "0 0 12px" }}>
+              <div>
+                <h4 style={{ fontSize: 14, fontWeight: 600, color: TEXT, margin: "0 0 12px" }}>
                   Select a Time
                 </h4>
                 <div style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gridTemplateColumns: "repeat(3, 1fr)",
                   gap: 8,
-                  marginBottom: 24,
                 }}>
                   {timeSlots.map((time, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedTime(time)}
                       style={{
-                        padding: "10px 8px",
+                        padding: "12px 8px",
                         borderRadius: 8,
                         border: selectedTime === time ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
                         background: selectedTime === time ? "#e8f5f3" : WHITE,
@@ -355,34 +353,34 @@ export default function WelcomeVideoModal({ onClose }) {
                     </button>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
-            <div style={{ marginTop: "auto", display: "flex", gap: 12 }}>
-              <button
-                onClick={handleBookingComplete}
-                disabled={!selectedDate || !selectedTime}
-                style={{
-                  flex: 1,
-                  padding: "14px 24px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: (!selectedDate || !selectedTime) ? "#ccc" : TEAL,
-                  color: WHITE,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: (!selectedDate || !selectedTime) ? "default" : "pointer",
-                  transition: "all 0.2s",
-                }}
-                onMouseOver={(e) => (selectedDate && selectedTime) && (e.currentTarget.style.background = "#236563")}
-                onMouseOut={(e) => (selectedDate && selectedTime) && (e.currentTarget.style.background = TEAL)}
-              >
-                {selectedDate && selectedTime 
-                  ? `Confirm ${formatDate(selectedDate)} at ${selectedTime}`
-                  : "Select date & time to continue"
-                }
-              </button>
-            </div>
+            {/* Confirm button */}
+            <button
+              onClick={handleBookingComplete}
+              disabled={!selectedDate || !selectedTime}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                borderRadius: 10,
+                border: "none",
+                background: (!selectedDate || !selectedTime) ? "#ccc" : TEAL,
+                color: WHITE,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: (!selectedDate || !selectedTime) ? "default" : "pointer",
+                transition: "all 0.2s",
+                marginTop: 4,
+              }}
+              onMouseOver={(e) => (selectedDate && selectedTime) && (e.currentTarget.style.background = "#236563")}
+              onMouseOut={(e) => (selectedDate && selectedTime) && (e.currentTarget.style.background = TEAL)}
+            >
+              {selectedDate && selectedTime 
+                ? `Confirm ${formatDate(selectedDate)} at ${selectedTime}`
+                : "Select date & time"
+              }
+            </button>
           </div>
         </div>
       </div>
