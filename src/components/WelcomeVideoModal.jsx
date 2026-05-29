@@ -79,7 +79,7 @@ export default function WelcomeVideoModal({ onClose }) {
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // CONFIRMATION SCREEN
+  // CONFIRMATION SCREEN - Mobile Responsive
   // ═══════════════════════════════════════════════════════════════
   if (screen === "confirmation") {
     return (
@@ -91,65 +91,68 @@ export default function WelcomeVideoModal({ onClose }) {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 9999,
-        padding: 20,
+        padding: 12,
+        overflow: "auto",
       }}>
         <div style={{
           background: WHITE,
           borderRadius: 16,
           width: "100%",
-          maxWidth: 480,
-          padding: 32,
+          maxWidth: 400,
+          maxHeight: "95vh",
+          overflow: "auto",
+          padding: "24px 20px",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           textAlign: "center",
         }}>
           <div style={{
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             borderRadius: "50%",
             background: "#fef3c7",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 20px",
+            margin: "0 auto 16px",
           }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/>
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
           </div>
           
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: TEXT, margin: "0 0 12px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: "0 0 10px" }}>
             Are you sure?
           </h2>
           
-          <p style={{ fontSize: 15, color: TEXT_SEC, lineHeight: 1.6, margin: "0 0 24px" }}>
-            Learning how to use this platform effectively is crucial to maximizing your results and growing your coaching business. Many coaches see a <strong style={{ color: TEXT }}>40% increase in client retention</strong> after completing our training.
+          <p style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.6, margin: "0 0 16px" }}>
+            Learning how to use this platform effectively is crucial to maximizing your results. Many coaches see a <strong style={{ color: TEXT }}>40% increase in client retention</strong> after completing our training.
           </p>
 
           <div style={{
             background: "#f0fdf4",
             border: "1px solid #bbf7d0",
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 24,
+            borderRadius: 10,
+            padding: 14,
+            marginBottom: 20,
           }}>
-            <p style={{ fontSize: 14, color: "#166534", margin: 0, fontWeight: 500 }}>
+            <p style={{ fontSize: 13, color: "#166534", margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
               The workshop and tutorial take less than 15 minutes and can help you make more money with every client.
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <button
               onClick={() => setScreen("intro")}
               style={{
                 width: "100%",
-                padding: "14px 24px",
+                padding: "12px 20px",
                 borderRadius: 10,
                 border: "none",
                 background: TEAL,
                 color: WHITE,
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 600,
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -164,12 +167,12 @@ export default function WelcomeVideoModal({ onClose }) {
               onClick={onClose}
               style={{
                 width: "100%",
-                padding: "14px 24px",
+                padding: "12px 20px",
                 borderRadius: 10,
                 border: `1px solid ${BORDER}`,
                 background: WHITE,
                 color: TEXT_SEC,
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 500,
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -388,7 +391,7 @@ export default function WelcomeVideoModal({ onClose }) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // TUTORIAL SCREEN
+  // TUTORIAL SCREEN - Mobile Responsive
   // ═══════════════════════════════════════════════════════════════
   if (screen === "tutorial") {
     return (
@@ -400,14 +403,16 @@ export default function WelcomeVideoModal({ onClose }) {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 9999,
-        padding: 20,
+        padding: 12,
+        overflow: "auto",
       }}>
         <div style={{
           background: WHITE,
           borderRadius: 16,
           width: "100%",
-          maxWidth: 800,
-          overflow: "hidden",
+          maxWidth: 500,
+          maxHeight: "95vh",
+          overflow: "auto",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
         }}>
           {/* Video area */}
@@ -427,34 +432,34 @@ export default function WelcomeVideoModal({ onClose }) {
           >
             {/* Play button */}
             <div style={{
-              width: 80,
-              height: 80,
+              width: 64,
+              height: 64,
               borderRadius: "50%",
               background: "rgba(255,255,255,0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: 16,
+              marginBottom: 12,
             }}>
               <div style={{
-                width: 60,
-                height: 60,
+                width: 48,
+                height: 48,
                 borderRadius: "50%",
                 background: WHITE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill={TEAL} stroke="none">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={TEAL} stroke="none">
                   <polygon points="8,5 19,12 8,19"/>
                 </svg>
               </div>
             </div>
-            <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 18, fontWeight: 600, margin: 0 }}>
+            <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 15, fontWeight: 600, margin: 0 }}>
               Platform Tutorial
             </p>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, margin: "8px 0 0" }}>
-              Click to simulate tutorial completion
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: "6px 0 0" }}>
+              Tap to simulate completion
             </p>
 
             {/* Progress indicator */}
@@ -463,7 +468,7 @@ export default function WelcomeVideoModal({ onClose }) {
               bottom: 0,
               left: 0,
               right: 0,
-              height: 4,
+              height: 3,
               background: "rgba(255,255,255,0.2)",
             }}>
               <div style={{
@@ -475,29 +480,30 @@ export default function WelcomeVideoModal({ onClose }) {
           </div>
 
           {/* Content section */}
-          <div style={{ padding: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: "0 0 4px" }}>
+          <div style={{ padding: "16px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14, gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "0 0 4px" }}>
                   Getting Started with Milton AI
                 </h2>
-                <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0 }}>
+                <p style={{ fontSize: 13, color: TEXT_SEC, margin: 0 }}>
                   Learn the essentials in under 10 minutes
                 </p>
               </div>
               {workshopBooked && (
                 <div style={{
-                  padding: "8px 12px",
+                  padding: "6px 10px",
                   background: "#f0fdf4",
-                  borderRadius: 8,
+                  borderRadius: 6,
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 4,
+                  flexShrink: 0,
                 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20,6 9,17 4,12"/>
                   </svg>
-                  <span style={{ fontSize: 12, color: "#166534", fontWeight: 500 }}>Workshop booked</span>
+                  <span style={{ fontSize: 11, color: "#166534", fontWeight: 500 }}>Booked</span>
                 </div>
               )}
             </div>
@@ -506,43 +512,44 @@ export default function WelcomeVideoModal({ onClose }) {
             <div style={{
               display: "flex",
               flexDirection: "column",
-              gap: 8,
+              gap: 6,
               background: "#f8faf9",
-              borderRadius: 12,
-              padding: 16,
+              borderRadius: 10,
+              padding: 10,
             }}>
               {[
                 { title: "Dashboard Overview", duration: "2:30" },
-                { title: "Setting Up Client Profiles", duration: "3:15" },
-                { title: "Creating Workout Programs", duration: "2:45" },
-                { title: "Tracking Progress & Analytics", duration: "1:30" },
+                { title: "Setting Up Clients", duration: "3:15" },
+                { title: "Creating Programs", duration: "2:45" },
+                { title: "Tracking Progress", duration: "1:30" },
               ].map((chapter, idx) => (
                 <div key={idx} style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 12,
-                  padding: "10px 12px",
+                  gap: 10,
+                  padding: "8px 10px",
                   background: WHITE,
-                  borderRadius: 8,
+                  borderRadius: 6,
                 }}>
                   <div style={{
-                    width: 28,
-                    height: 28,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
                     background: TEAL,
                     color: WHITE,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 600,
+                    flexShrink: 0,
                   }}>
                     {idx + 1}
                   </div>
-                  <span style={{ flex: 1, fontSize: 14, color: TEXT, fontWeight: 500 }}>
+                  <span style={{ flex: 1, fontSize: 13, color: TEXT, fontWeight: 500, minWidth: 0 }}>
                     {chapter.title}
                   </span>
-                  <span style={{ fontSize: 12, color: TEXT_SEC }}>
+                  <span style={{ fontSize: 11, color: TEXT_SEC, flexShrink: 0 }}>
                     {chapter.duration}
                   </span>
                 </div>
@@ -555,7 +562,7 @@ export default function WelcomeVideoModal({ onClose }) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // CONGRATULATIONS SCREEN
+  // CONGRATULATIONS SCREEN - Mobile Responsive
   // ═══════════════════════════════════════════════════════════════
   if (screen === "congratulations") {
     return (
@@ -567,52 +574,54 @@ export default function WelcomeVideoModal({ onClose }) {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 9999,
-        padding: 20,
+        padding: 12,
+        overflow: "auto",
       }}>
         <div style={{
           background: WHITE,
           borderRadius: 16,
           width: "100%",
-          maxWidth: 520,
-          overflow: "hidden",
+          maxWidth: 400,
+          maxHeight: "95vh",
+          overflow: "auto",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           textAlign: "center",
         }}>
           {/* Header with gradient */}
           <div style={{
             background: `linear-gradient(135deg, ${TEAL} 0%, ${MINT} 100%)`,
-            padding: "40px 32px",
+            padding: "28px 20px",
           }}>
             <div style={{
-              width: 80,
-              height: 80,
+              width: 64,
+              height: 64,
               borderRadius: "50%",
               background: WHITE,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              margin: "0 auto 20px",
+              margin: "0 auto 16px",
               boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
             </div>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: WHITE, margin: "0 0 8px" }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: WHITE, margin: "0 0 6px" }}>
               Congratulations!
             </h2>
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.9)", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", margin: 0 }}>
               You just made an incredible investment in yourself
             </p>
           </div>
 
           {/* Content */}
-          <div style={{ padding: 32 }}>
+          <div style={{ padding: "20px 16px" }}>
             <p style={{
-              fontSize: 15,
+              fontSize: 14,
               color: TEXT_SEC,
-              lineHeight: 1.7,
-              margin: "0 0 24px",
+              lineHeight: 1.6,
+              margin: "0 0 18px",
             }}>
               By taking the time to learn Milton AI properly, you&apos;re setting yourself up for success. Coaches who complete onboarding see an average <strong style={{ color: TEXT }}>3x increase in client engagement</strong> within the first month.
             </p>
@@ -621,62 +630,64 @@ export default function WelcomeVideoModal({ onClose }) {
             <div style={{
               display: "flex",
               flexDirection: "column",
-              gap: 12,
-              marginBottom: 28,
+              gap: 10,
+              marginBottom: 20,
             }}>
               <div style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "14px 16px",
+                gap: 10,
+                padding: "12px 14px",
                 background: "#f0fdf4",
                 borderRadius: 10,
                 border: "1px solid #bbf7d0",
               }}>
                 <div style={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: "50%",
                   background: "#16a34a",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20,6 9,17 4,12"/>
                   </svg>
                 </div>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#166534" }}>Workshop Booked</div>
-                  <div style={{ fontSize: 12, color: "#15803d" }}>Personalized guidance scheduled</div>
+                <div style={{ textAlign: "left", minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#166534" }}>Workshop Booked</div>
+                  <div style={{ fontSize: 11, color: "#15803d" }}>Personalized guidance scheduled</div>
                 </div>
               </div>
 
               <div style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "14px 16px",
+                gap: 10,
+                padding: "12px 14px",
                 background: "#f0fdf4",
                 borderRadius: 10,
                 border: "1px solid #bbf7d0",
               }}>
                 <div style={{
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   borderRadius: "50%",
                   background: "#16a34a",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20,6 9,17 4,12"/>
                   </svg>
                 </div>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#166534" }}>Tutorial Completed</div>
-                  <div style={{ fontSize: 12, color: "#15803d" }}>Platform essentials mastered</div>
+                <div style={{ textAlign: "left", minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#166534" }}>Tutorial Completed</div>
+                  <div style={{ fontSize: 11, color: "#15803d" }}>Platform essentials mastered</div>
                 </div>
               </div>
             </div>
@@ -685,12 +696,12 @@ export default function WelcomeVideoModal({ onClose }) {
               onClick={handleFinish}
               style={{
                 width: "100%",
-                padding: "16px 24px",
+                padding: "14px 20px",
                 borderRadius: 10,
                 border: "none",
                 background: TEAL,
                 color: WHITE,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: 600,
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -703,7 +714,7 @@ export default function WelcomeVideoModal({ onClose }) {
               onMouseOut={(e) => e.currentTarget.style.background = TEAL}
             >
               Start Growing Your Business
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12,5 19,12 12,19"/>
               </svg>
@@ -715,7 +726,7 @@ export default function WelcomeVideoModal({ onClose }) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // INTRO SCREEN (Welcome Video)
+  // INTRO SCREEN (Welcome Video) - Mobile Responsive
   // ═══════════════════════════════════════════════════════════════
   return (
     <div style={{
@@ -726,14 +737,16 @@ export default function WelcomeVideoModal({ onClose }) {
       alignItems: "center",
       justifyContent: "center",
       zIndex: 9999,
-      padding: 20,
+      padding: 12,
+      overflow: "auto",
     }}>
       <div style={{
         background: WHITE,
         borderRadius: 16,
         width: "100%",
-        maxWidth: 640,
-        overflow: "hidden",
+        maxWidth: 400,
+        maxHeight: "95vh",
+        overflow: "auto",
         boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
         position: "relative",
       }}>
@@ -742,10 +755,10 @@ export default function WelcomeVideoModal({ onClose }) {
           onClick={handleClose}
           style={{
             position: "absolute",
-            top: 12,
-            right: 12,
-            width: 36,
-            height: 36,
+            top: 10,
+            right: 10,
+            width: 32,
+            height: 32,
             borderRadius: "50%",
             border: "none",
             background: "rgba(0,0,0,0.5)",
@@ -760,7 +773,7 @@ export default function WelcomeVideoModal({ onClose }) {
           onMouseOver={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.7)"}
           onMouseOut={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.5)"}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -784,53 +797,53 @@ export default function WelcomeVideoModal({ onClose }) {
           {!videoEnded ? (
             <>
               <div style={{
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
                 borderRadius: "50%",
                 background: "rgba(255,255,255,0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 16,
+                marginBottom: 12,
               }}>
                 <div style={{
-                  width: 60,
-                  height: 60,
+                  width: 48,
+                  height: 48,
                   borderRadius: "50%",
                   background: WHITE,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill={TEAL} stroke="none">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill={TEAL} stroke="none">
                     <polygon points="8,5 19,12 8,19"/>
                   </svg>
                 </div>
               </div>
-              <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 16, fontWeight: 500, margin: 0 }}>
+              <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 500, margin: 0 }}>
                 Welcome to Milton AI
               </p>
-              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, margin: "8px 0 0" }}>
-                Click to simulate video completion
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: "6px 0 0" }}>
+                Tap to simulate completion
               </p>
             </>
           ) : (
             <>
               <div style={{
-                width: 64,
-                height: 64,
+                width: 52,
+                height: 52,
                 borderRadius: "50%",
                 background: MINT,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 16,
+                marginBottom: 12,
               }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20,6 9,17 4,12"/>
                 </svg>
               </div>
-              <p style={{ color: WHITE, fontSize: 18, fontWeight: 600, margin: 0 }}>
+              <p style={{ color: WHITE, fontSize: 16, fontWeight: 600, margin: 0 }}>
                 Video Complete
               </p>
             </>
@@ -838,12 +851,12 @@ export default function WelcomeVideoModal({ onClose }) {
         </div>
 
         {/* Content section */}
-        <div style={{ padding: 24 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: "0 0 8px", textAlign: "center" }}>
+        <div style={{ padding: "16px" }}>
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: TEXT, margin: "0 0 6px", textAlign: "center" }}>
             {videoEnded ? "Ready to get started?" : "Welcome to Milton AI"}
           </h2>
           
-          <p style={{ fontSize: 14, color: TEXT_SEC, margin: "0 0 20px", textAlign: "center", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 16px", textAlign: "center", lineHeight: 1.5 }}>
             {videoEnded 
               ? "Choose how you'd like to learn the platform and start growing your business."
               : "Watch this quick video to learn how to maximize your coaching business with Milton AI."
@@ -852,7 +865,8 @@ export default function WelcomeVideoModal({ onClose }) {
 
           <div style={{
             display: "flex",
-            gap: 12,
+            flexDirection: "column",
+            gap: 10,
             opacity: videoEnded ? 1 : 0.4,
             pointerEvents: videoEnded ? "auto" : "none",
             transition: "opacity 0.3s",
@@ -861,13 +875,13 @@ export default function WelcomeVideoModal({ onClose }) {
               onClick={handleBookWorkshop}
               disabled={!videoEnded}
               style={{
-                flex: 1,
-                padding: "14px 20px",
+                width: "100%",
+                padding: "12px 16px",
                 borderRadius: 10,
                 border: "none",
                 background: TEAL,
                 color: WHITE,
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 600,
                 cursor: videoEnded ? "pointer" : "default",
                 transition: "all 0.2s",
@@ -879,7 +893,7 @@ export default function WelcomeVideoModal({ onClose }) {
               onMouseOver={(e) => videoEnded && (e.currentTarget.style.background = "#236563")}
               onMouseOut={(e) => videoEnded && (e.currentTarget.style.background = TEAL)}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
                 <line x1="8" y1="2" x2="8" y2="6"/>
@@ -892,13 +906,13 @@ export default function WelcomeVideoModal({ onClose }) {
               onClick={handleWatchTutorial}
               disabled={!videoEnded}
               style={{
-                flex: 1,
-                padding: "14px 20px",
+                width: "100%",
+                padding: "12px 16px",
                 borderRadius: 10,
                 border: `2px solid ${TEAL}`,
                 background: WHITE,
                 color: TEAL,
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 600,
                 cursor: videoEnded ? "pointer" : "default",
                 transition: "all 0.2s",
@@ -910,7 +924,7 @@ export default function WelcomeVideoModal({ onClose }) {
               onMouseOver={(e) => videoEnded && (e.currentTarget.style.background = "#e8f5f3")}
               onMouseOut={(e) => videoEnded && (e.currentTarget.style.background = WHITE)}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="5,3 19,12 5,21"/>
               </svg>
               Watch Tutorial
@@ -918,7 +932,7 @@ export default function WelcomeVideoModal({ onClose }) {
           </div>
 
           {!videoEnded && (
-            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "16px 0 0", textAlign: "center" }}>
+            <p style={{ fontSize: 11, color: TEXT_SEC, margin: "14px 0 0", textAlign: "center" }}>
               Actions will be available after watching the video
             </p>
           )}
