@@ -5514,7 +5514,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ──���� ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──����� ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -18581,9 +18581,32 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
   };
   const niceDate = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  const [editingCell, setEditingCell] = useState(null); // { idx, field }
+
   const generate = () => {
     onUpdate({ status: "generated", program: PROGRAM_TEMPLATES[session.classType].map(e => ({ ...e })) });
     onFlash("Programming generated");
+  };
+
+  const editExercise = (idx, field, value) => {
+    const next = session.program.map((ex, i) => i === idx ? { ...ex, [field]: value } : ex);
+    onUpdate({ program: next });
+  };
+  const deleteExercise = (idx) => {
+    onUpdate({ program: session.program.filter((_, i) => i !== idx) });
+    setEditingCell(null);
+  };
+  const addExercise = () => {
+    const next = [...(session.program || []), { name: "New exercise", scheme: "3 x 10", target: "" }];
+    onUpdate({ program: next });
+    setEditingCell({ idx: next.length - 1, field: "name" });
+  };
+  const moveExercise = (idx, dir) => {
+    const target = idx + dir;
+    if (target < 0 || target >= session.program.length) return;
+    const next = [...session.program];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onUpdate({ program: next });
   };
 
   return (
@@ -18660,15 +18683,69 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
             </div>
             {session.program ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {session.program.map((ex, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}` }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{ex.name}</span>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 700, color: TEAL }}>{ex.scheme}</div>
-                      <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{ex.target}</div>
+                {session.program.map((ex, i) => {
+                  const isEditing = (field) => editingCell?.idx === i && editingCell?.field === field;
+                  const cellInput = (field, val, style) => (
+                    <input
+                      autoFocus
+                      value={val}
+                      onChange={(e) => editExercise(i, field, e.target.value)}
+                      onBlur={() => setEditingCell(null)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingCell(null); }}
+                      style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: 0, ...style }}
+                    />
+                  );
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+                      {/* reorder + index */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        <button onClick={() => moveExercise(i, -1)} disabled={i === 0} style={{ width: 16, height: 13, border: "none", background: "transparent", cursor: i === 0 ? "default" : "pointer", color: TEXT_SEC, padding: 0, opacity: i === 0 ? 0.3 : 1 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="6,15 12,9 18,15"/></svg>
+                        </button>
+                        <button onClick={() => moveExercise(i, 1)} disabled={i === session.program.length - 1} style={{ width: 16, height: 13, border: "none", background: "transparent", cursor: i === session.program.length - 1 ? "default" : "pointer", color: TEXT_SEC, padding: 0, opacity: i === session.program.length - 1 ? 0.3 : 1 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+                        </button>
+                      </div>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: TEAL, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+
+                      {/* name */}
+                      <div onClick={() => setEditingCell({ idx: i, field: "name" })} style={{ flex: 1, minWidth: 0, cursor: "text" }}>
+                        {isEditing("name")
+                          ? cellInput("name", ex.name, { fontSize: 13, fontWeight: 600, color: TEXT })
+                          : <span style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{ex.name}</span>}
+                      </div>
+
+                      {/* scheme + target */}
+                      <div style={{ textAlign: "right", minWidth: 90 }}>
+                        <div onClick={() => setEditingCell({ idx: i, field: "scheme" })} style={{ cursor: "text" }}>
+                          {isEditing("scheme")
+                            ? cellInput("scheme", ex.scheme, { fontSize: 12.5, fontWeight: 700, color: TEAL, textAlign: "right" })
+                            : <span style={{ fontSize: 12.5, fontWeight: 700, color: TEAL }}>{ex.scheme}</span>}
+                        </div>
+                        <div onClick={() => setEditingCell({ idx: i, field: "target" })} style={{ cursor: "text" }}>
+                          {isEditing("target")
+                            ? cellInput("target", ex.target, { fontSize: 10.5, color: TEXT_SEC, textAlign: "right" })
+                            : <span style={{ fontSize: 10.5, color: TEXT_SEC }}>{ex.target || "Add cue"}</span>}
+                        </div>
+                      </div>
+
+                      {/* delete */}
+                      <button onClick={() => deleteExercise(i)} style={{ width: 24, height: 24, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.color = "#c0432a"}
+                        onMouseLeave={e => e.currentTarget.style.color = TEXT_SEC}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+                <button onClick={addExercise} style={{
+                  padding: "10px", borderRadius: 10, border: `2px dashed ${BORDER}`, background: "transparent",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  color: TEXT_SEC, fontSize: 12.5, fontWeight: 600,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add exercise
+                </button>
               </div>
             ) : (
               <div style={{ padding: 20, textAlign: "center", background: "#fff7ed", borderRadius: 10, border: "1px dashed #fbcb96", fontSize: 12.5, color: "#92400e" }}>
