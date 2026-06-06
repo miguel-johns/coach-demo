@@ -2459,6 +2459,7 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
 // ═══════════════════════════════════════════════════════════════
 function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [notesClientId, setNotesClientId] = useState(null);
   const ORANGE = "#c2410c";
   const ORANGE_BG = "#fff1ea";
 
@@ -2493,6 +2494,34 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
     mw[clientId] = { ...(mw[clientId] || {}), [exId]: value };
     onUpdateSession?.({ ...session, memberWeights: mw });
   };
+
+  // Build a deterministic "last note" history for a client (mock data).
+  const CHECK_IN_QUESTIONS = [
+    { q: "How rested do you feel?", answers: ["Fully recovered", "Pretty good", "A little tired", "Running on empty"] },
+    { q: "Soreness from last session?", answers: ["None", "Mild — legs", "Moderate — upper body", "High all over"] },
+    { q: "Energy level today (1-10)?", answers: ["9 — fired up", "7 — solid", "5 — average", "3 — sluggish"] },
+    { q: "Any aches or pain to flag?", answers: ["All clear", "Tight left shoulder", "Lower back a bit cranky", "Right knee sensitive"] },
+  ];
+  const getLastNote = (clientId) => {
+    const seed = (clientId * 31 + session.classType.length * 7) % 97;
+    const daysAgo = 2 + (seed % 5);
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    const dateLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const lifts = exercises.map((ex, i) => {
+      const base = 95 + ((seed + i * 13) % 12) * 10; // 95–215
+      const reps = ex.scheme || "";
+      return { name: ex.name, weight: ex.pct && ex.pct !== "—" ? `${base} lb` : "Bodyweight", scheme: reps };
+    });
+    const answers = CHECK_IN_QUESTIONS.map((item, i) => ({ q: item.q, a: item.answers[(seed + i) % item.answers.length] }));
+    const coachNotes = [
+      "Strong session — squat depth looked great, kept positions tight under fatigue.",
+      "Felt a little flat early but warmed up well. Watch the RDL lockout next time.",
+      "Big PR energy. Loved the intent on every rep. Mobility before next heavy day.",
+      "Managed load smartly given the soreness. Backed off the last set, smart call.",
+    ];
+    return { dateLabel, daysAgo, lifts, answers, coachNote: coachNotes[seed % coachNotes.length] };
+  };
+  const notesClient = notesClientId != null ? { id: notesClientId, ...clients[notesClientId] } : null;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column" }}>
@@ -2555,39 +2584,29 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {sessionClients.map(client => {
                 const present = !!(session.attendance || {})[client.id];
-                const weights = (session.memberWeights || {})[client.id] || {};
                 return (
-                  <div key={client.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${present ? coach.color : BORDER}`, overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}>
-                      <button onClick={() => onOpenFullProfile?.(client.id)} style={{ width: 38, height: 38, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", flexShrink: 0 }}>
-                        {client.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                      </button>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{client.name}</div>
-                        <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{client.program || "Member"}</div>
-                      </div>
-                      <button onClick={() => toggleAttendance(client.id)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${present ? coach.color : BORDER}`, background: present ? `${coach.color}14` : WHITE, color: present ? coach.color : TEXT_SEC, flexShrink: 0 }}>
-                        {present ? "Checked in" : "Check in"}
-                      </button>
+                  <div
+                    key={client.id}
+                    onClick={() => setNotesClientId(client.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: WHITE, borderRadius: 12, border: `1px solid ${present ? coach.color : BORDER}`, cursor: "pointer" }}
+                    onMouseEnter={e => { if (!present) e.currentTarget.style.borderColor = "#d4dedb"; }}
+                    onMouseLeave={e => { if (!present) e.currentTarget.style.borderColor = BORDER; }}
+                  >
+                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {client.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </div>
-                    {present && (
-                      <div style={{ borderTop: `1px solid ${BORDER}`, padding: "10px 14px", background: "#fbfdfc" }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Personalized weights</div>
-                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 8 }}>
-                          {exercises.map(ex => (
-                            <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ flex: 1, fontSize: 12, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.name}</span>
-                              <input
-                                value={weights[ex.id] || ""}
-                                onChange={(e) => setMemberWeight(client.id, ex.id, e.target.value)}
-                                placeholder={ex.pct && ex.pct !== "—" ? ex.pct : "lbs"}
-                                style={{ width: 64, padding: "6px 8px", borderRadius: 7, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT, textAlign: "center", flexShrink: 0 }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{client.name}</div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{client.program || "Member"} · Tap for history</div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleAttendance(client.id); }}
+                      style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${present ? coach.color : BORDER}`, background: present ? `${coach.color}14` : WHITE, color: present ? coach.color : TEXT_SEC, flexShrink: 0 }}
+                    >
+                      {present ? "Checked in" : "Check in"}
+                    </button>
                   </div>
                 );
               })}
@@ -2595,6 +2614,79 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
           </div>
         </div>
       </div>
+
+      {/* Client notes / history slide-over */}
+      {notesClient && (() => {
+        const note = getLastNote(notesClient.id);
+        return (
+          <>
+            <div onClick={() => setNotesClientId(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,20,0.4)", zIndex: 110 }} />
+            <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: isMobile ? "100%" : 420, maxWidth: "100%", background: "#fafcfb", zIndex: 111, display: "flex", flexDirection: "column", boxShadow: "-12px 0 40px rgba(0,0,0,0.16)" }}>
+              {/* Panel header */}
+              <div style={{ padding: "16px 20px", background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {notesClient.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{notesClient.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{notesClient.program || "Member"} · Notes & history</div>
+                </div>
+                <button onClick={() => setNotesClientId(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Last note meta */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.5 }}>Last session</span>
+                  <span style={{ fontSize: 12.5, color: TEXT_SEC }}>{note.dateLabel} · {note.daysAgo} days ago</span>
+                </div>
+
+                {/* Weights done */}
+                <div style={{ background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px", background: "#fbfdfc", borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4 }}>Weights logged</div>
+                  <div style={{ padding: "4px 14px" }}>
+                    {note.lifts.map((lift, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: i < note.lifts.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{lift.name}</div>
+                          <div style={{ fontSize: 11, color: TEXT_SEC }}>{lift.scheme}</div>
+                        </div>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: coach.color, flexShrink: 0 }}>{lift.weight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Check-in answers */}
+                <div style={{ background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px", background: "#fbfdfc", borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4 }}>Check-in answers</div>
+                  <div style={{ padding: "4px 14px" }}>
+                    {note.answers.map((item, i) => (
+                      <div key={i} style={{ padding: "9px 0", borderBottom: i < note.answers.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                        <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 2 }}>{item.q}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT }}>{item.a}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Coach note */}
+                <div style={{ background: `${coach.color}0c`, borderRadius: 12, border: `1px solid ${coach.color}33`, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>Coach note</div>
+                  <div style={{ fontSize: 13.5, color: TEXT, lineHeight: 1.5 }}>{note.coachNote}</div>
+                </div>
+
+                <button onClick={() => { setNotesClientId(null); onOpenFullProfile?.(notesClient.id); }} style={{ marginTop: 4, padding: "11px", borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  Open full profile
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -11751,7 +11843,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════��═════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
