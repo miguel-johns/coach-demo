@@ -5514,7 +5514,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──�� ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -18281,7 +18281,15 @@ function ProgrammingCanvas({ onClose, onHome, isMobile, clients = [] }) {
             onSelect={(id) => setSelected(id)}
           />
         ) : (
-          <ProgrammingList isMobile={isMobile} sessions={filtered} clients={clients} onSelect={(id) => setSelected(id)} />
+          <ProgrammingWeekView
+            isMobile={isMobile}
+            year={year}
+            month={month}
+            kind={tab}
+            sessions={filtered}
+            onAdd={(dateStr) => setAddingDay(dateStr)}
+            onSelect={(id) => setSelected(id)}
+          />
         )}
       </div>
 
@@ -18380,50 +18388,106 @@ function ProgrammingMonth({ isMobile, firstDow, daysInMonth, sessionsOnDay, onAd
   );
 }
 
-// List view for group / semi-private
-function ProgrammingList({ isMobile, sessions, clients, onSelect }) {
-  if (sessions.length === 0) {
-    return <div style={{ textAlign: "center", padding: 60, color: TEXT_SEC, fontSize: 14 }}>No classes match this filter.</div>;
+// Week view for group / semi-private: 7 days across, weeks stacked & scrollable through the month
+function ProgrammingWeekView({ isMobile, year, month, kind, sessions, onAdd, onSelect }) {
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay();
+  const monthName = new Date(year, month, 1).toLocaleDateString("en-US", { month: "long" });
+
+  const keyFor = (day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const byDay = {};
+  sessions.forEach(s => { (byDay[s.date] = byDay[s.date] || []).push(s); });
+
+  // Build week rows (arrays of {day|null})
+  const weeks = [];
+  let cursor = [];
+  for (let i = 0; i < firstDow; i++) cursor.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cursor.push(d);
+    if (cursor.length === 7) { weeks.push(cursor); cursor = []; }
   }
-  const grouped = {};
-  sessions.forEach(s => { (grouped[s.date] = grouped[s.date] || []).push(s); });
-  const dates = Object.keys(grouped).sort();
+  if (cursor.length) { while (cursor.length < 7) cursor.push(null); weeks.push(cursor); }
+
+  const todayKey = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`; })();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {dates.map(date => {
-        const d = new Date(date + "T00:00:00");
-        const label = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-        const daySessions = grouped[date].sort((a, b) => a.time.localeCompare(b.time));
+    <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 22 }}>
+      {weeks.map((week, wi) => {
+        const visibleDays = week.filter(Boolean);
+        const first = visibleDays[0];
+        const last = visibleDays[visibleDays.length - 1];
         return (
-          <div key={date}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT_SEC, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</div>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
-              {daySessions.map(s => {
-                const coach = getCoach(s.coachId);
-                const ct = getClassType(s.classType);
-                const st = PROGRAM_STATUS[s.status];
+          <div key={wi}>
+            {/* Week label */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: 0.5 }}>Week {wi + 1}</span>
+              <span style={{ fontSize: 11.5, color: TEXT_SEC }}>{monthName} {first}{last !== first ? `–${last}` : ""}</span>
+              <div style={{ flex: 1, height: 1, background: BORDER }} />
+            </div>
+
+            {/* 7-day row */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isMobile ? 4 : 8,
+            }}>
+              {week.map((day, di) => {
+                const isToday = day && keyFor(day) === todayKey;
+                const dayKey = day ? keyFor(day) : null;
+                const sess = day ? (byDay[dayKey] || []).slice().sort((a, b) => a.time.localeCompare(b.time)) : [];
                 return (
-                  <button key={s.id} onClick={() => onSelect(s.id)} style={{
-                    textAlign: "left", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12,
-                    padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10,
-                    borderLeft: `4px solid ${coach.color}`,
+                  <div key={di} style={{
+                    background: day ? WHITE : "transparent",
+                    border: day ? `1px solid ${isToday ? TEAL : BORDER}` : "1px dashed transparent",
+                    borderRadius: 10, padding: isMobile ? 5 : 8, minHeight: isMobile ? 96 : 150,
+                    display: "flex", flexDirection: "column", gap: 6,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{ct.label}{s.kind === "semi" ? " · Semi-Private" : ""}</div>
-                        <div style={{ fontSize: 12, color: TEXT_SEC }}>{s.time} · {ct.focus}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: st.color, background: st.bg, padding: "3px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>{st.label}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 22, height: 22, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 9.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{coach.name.split(" ")[0]}</span>
-                      </div>
-                      <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{s.booked}/{s.capacity} booked</span>
-                    </div>
-                  </button>
+                    {day && (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase" }}>{dayLabels[di][0]}{!isMobile ? dayLabels[di].slice(1) : ""}</span>
+                            <span style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: isToday ? TEAL : TEXT, marginTop: 2 }}>{day}</span>
+                          </div>
+                          <button onClick={() => onAdd(dayKey)} title="Add class" style={{
+                            width: 18, height: 18, borderRadius: 5, border: `1px solid ${BORDER}`, background: WHITE,
+                            cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0,
+                          }}>
+                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                          </button>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                          {sess.length === 0 && (
+                            <span style={{ fontSize: 9.5, color: "#c2cecb", fontStyle: "italic" }}>{isMobile ? "" : "No classes"}</span>
+                          )}
+                          {sess.map(s => {
+                            const coach = getCoach(s.coachId);
+                            const ct = getClassType(s.classType);
+                            const st = PROGRAM_STATUS[s.status];
+                            return (
+                              <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                                display: "flex", flexDirection: "column", gap: 2, padding: isMobile ? "4px 5px" : "6px 7px",
+                                borderRadius: 7, border: "none", cursor: "pointer", textAlign: "left", width: "100%",
+                                background: `${coach.color}12`, borderLeft: `3px solid ${coach.color}`,
+                              }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                                  <span style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: TEXT, whiteSpace: "nowrap" }}>{s.time.replace(":00 ", "")}</span>
+                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: st.color, flexShrink: 0 }} title={st.label} />
+                                </div>
+                                {!isMobile && (
+                                  <span style={{ fontSize: 10, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.label}</span>
+                                )}
+                                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ width: 14, height: 14, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{coach.initials}</span>
+                                  {!isMobile && <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 600 }}>{s.booked}/{s.capacity}</span>}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 );
               })}
             </div>
