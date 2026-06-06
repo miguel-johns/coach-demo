@@ -2740,7 +2740,7 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
               </button>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: TEAL_LIGHT, padding: "5px 10px", borderRadius: 16 }}>
-                <span style={{ color: TEAL, display: "flex" }}><NavIcon icon="settings" size={14} /></span>
+                <span style={{ color: TEAL, display: "flex" }}><NavIcon icon="users" size={14} /></span>
                 <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Settings</span>
               </div>
             </div>
@@ -20443,7 +20443,7 @@ export default function MiltonDashboard() {
                   { icon: "program", label: "Programming", action: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "settings", label: "Settings", action: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } }
+                  { icon: "users", label: "Settings", action: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
                     key={item.icon}
