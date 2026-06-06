@@ -263,6 +263,7 @@ function NavIcon({ icon, size = 20 }) {
   file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
   chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   layout: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><rect x="11" y="11" width="8" height="4" rx="1"/><rect x="11" y="17" width="5" height="2" rx="0.5"/></svg>,
+  program: <svg {...s} viewBox="0 0 24 24"><path d="M9 2h6a1 1 0 011 1v1h1a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1z"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -306,6 +307,62 @@ const CLIENT_TYPES = {
   Hybrid: { label: "Hybrid", bg: "#fef3c7", color: "#92400e", description: "Self-led with coach oversight" },
 };
 const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
+
+// ═══════════════════════════════════════════════════════════════
+// COACH ROSTER - owners of group / semi-private sessions
+// ═══════════════════════════════════════════════════════════════
+const COACHES = [
+  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength" },
+  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning" },
+  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility" },
+  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid" },
+];
+const getCoach = (id) => COACHES.find(c => c.id === id) || COACHES[0];
+
+// Group class & semi-private templates used when generating programming
+const GROUP_CLASS_TYPES = [
+  { id: "strength", label: "Strength", color: "#2B7A78", focus: "Compound lifts + accessory" },
+  { id: "conditioning", label: "Conditioning", color: "#6366f1", focus: "Engine + intervals" },
+  { id: "hiit", label: "HIIT", color: "#ef6c3e", focus: "High intensity circuits" },
+  { id: "mobility", label: "Mobility & Core", color: "#0d9488", focus: "Movement + stability" },
+];
+const getClassType = (id) => GROUP_CLASS_TYPES.find(c => c.id === id) || GROUP_CLASS_TYPES[0];
+
+// Programming review status for admin-generated sessions
+const PROGRAM_STATUS = {
+  unscheduled: { label: "Empty", color: "#94a3b8", bg: "#f1f5f9" },
+  generated:   { label: "Draft",   color: "#92400e", bg: "#fef3c7" },
+  pending:     { label: "In Review", color: "#6366f1", bg: "#eef2ff" },
+  published:   { label: "Published", color: "#1f7a3e", bg: "#e6f9ec" },
+};
+
+// Templated exercise blocks used by the mock generator
+const PROGRAM_TEMPLATES = {
+  strength: [
+    { name: "Back Squat", scheme: "5 x 5", target: "RPE 7-8" },
+    { name: "Romanian Deadlift", scheme: "4 x 8", target: "Controlled tempo" },
+    { name: "Walking Lunge", scheme: "3 x 10/leg", target: "Goblet load" },
+    { name: "Plank Hold", scheme: "3 x 45s", target: "Brace hard" },
+  ],
+  conditioning: [
+    { name: "Row Intervals", scheme: "6 x 250m", target: "90s rest" },
+    { name: "KB Swing", scheme: "5 x 15", target: "Hip drive" },
+    { name: "Air Bike Sprint", scheme: "8 x 20s", target: "All out" },
+    { name: "Farmer Carry", scheme: "4 x 40m", target: "Heavy" },
+  ],
+  hiit: [
+    { name: "Burpee", scheme: "4 x 12", target: "Steady pace" },
+    { name: "Box Jump", scheme: "4 x 10", target: "Soft landing" },
+    { name: "Wall Ball", scheme: "4 x 15", target: "20/14 lb" },
+    { name: "Mountain Climber", scheme: "4 x 30s", target: "Tight core" },
+  ],
+  mobility: [
+    { name: "World's Greatest Stretch", scheme: "2 x 6/side", target: "Slow" },
+    { name: "Dead Bug", scheme: "3 x 10", target: "Low back flat" },
+    { name: "Hip 90/90", scheme: "3 x 8/side", target: "Full range" },
+    { name: "Bird Dog", scheme: "3 x 10/side", target: "Anti-rotation" },
+  ],
+};
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
@@ -4519,6 +4576,7 @@ function MobileCanvasSheet({
   const getTitle = () => {
     switch(canvasType) {
       case "schedule": return "Schedule";
+      case "programming": return "Programming";
       case "inbox": return "Inbox";
       case "templates": return "Canvas";
       case "mealPlan": return "Meal Plan";
@@ -17982,6 +18040,617 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 /* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
    ══════════════════════════���═════��════════════ */
+// ═══════════════════════════════════════════════════════════════
+// PROGRAMMING CANVAS - Admin group / semi-private scheduling + generation
+// ═══════════════════════════════════════════════════════════════
+const CLASS_TIME_SLOTS = ["6:00 AM", "7:00 AM", "9:00 AM", "12:00 PM", "4:30 PM", "5:30 PM", "6:30 PM"];
+
+function buildSeedSchedule() {
+  // Seed a few weeks of March 2026 with recurring group + semi sessions
+  const out = [];
+  let uid = 1;
+  const recurring = [
+    { dow: 1, time: "6:00 AM", kind: "group", classType: "strength", coachId: "miguel", capacity: 12 },
+    { dow: 1, time: "5:30 PM", kind: "semi", classType: "strength", coachId: "alana", capacity: 4 },
+    { dow: 2, time: "7:00 AM", kind: "group", classType: "conditioning", coachId: "jordan", capacity: 14 },
+    { dow: 3, time: "6:00 AM", kind: "group", classType: "hiit", coachId: "alana", capacity: 12 },
+    { dow: 3, time: "6:30 PM", kind: "semi", classType: "mobility", coachId: "devon", capacity: 4 },
+    { dow: 4, time: "7:00 AM", kind: "group", classType: "strength", coachId: "miguel", capacity: 12 },
+    { dow: 5, time: "9:00 AM", kind: "group", classType: "conditioning", coachId: "jordan", capacity: 14 },
+    { dow: 6, time: "9:00 AM", kind: "semi", classType: "strength", coachId: "miguel", capacity: 4 },
+  ];
+  // March 2026 starts on a Sunday
+  for (let day = 2; day <= 21; day++) {
+    const date = new Date(2026, 2, day);
+    const dow = date.getDay();
+    recurring.filter(r => r.dow === dow).forEach(r => {
+      const booked = Math.floor(Math.random() * (r.capacity - 1)) + 1;
+      out.push({
+        id: `cls_${String(uid++).padStart(3, "0")}`,
+        date: `2026-03-${String(day).padStart(2, "0")}`,
+        time: r.time,
+        kind: r.kind,
+        classType: r.classType,
+        coachId: r.coachId,
+        capacity: r.capacity,
+        booked,
+        status: day <= 14 ? "published" : "generated",
+        program: day <= 14 ? PROGRAM_TEMPLATES[r.classType].map(e => ({ ...e })) : null,
+        attendance: {},
+      });
+    });
+  }
+  return out;
+}
+
+function ProgrammingCanvas({ onClose, onHome, isMobile, clients = [] }) {
+  const [schedule, setSchedule] = useState(() => buildSeedSchedule());
+  const [tab, setTab] = useState("schedule"); // schedule | group | semi
+  const [coachFilter, setCoachFilter] = useState("all");
+  const [monthDate] = useState(new Date(2026, 2, 1)); // March 2026
+  const [selected, setSelected] = useState(null); // session id for drawer
+  const [addingDay, setAddingDay] = useState(null); // date string for add modal
+  const [toast, setToast] = useState(null);
+
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthLabel = monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2200); };
+
+  const dateKey = (day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const sessionsOnDay = (day) => schedule.filter(s => s.date === dateKey(day));
+
+  const filtered = schedule.filter(s => {
+    if (tab === "group" && s.kind !== "group") return false;
+    if (tab === "semi" && s.kind !== "semi") return false;
+    if (coachFilter !== "all" && s.coachId !== coachFilter) return false;
+    return true;
+  });
+
+  const addSession = (newSess) => {
+    setSchedule(prev => [...prev, { ...newSess, id: `cls_${Date.now()}`, status: "unscheduled", program: null, attendance: {}, booked: 0 }]);
+    setAddingDay(null);
+    flash("Class added to schedule");
+  };
+
+  const removeSession = (id) => {
+    setSchedule(prev => prev.filter(s => s.id !== id));
+    setSelected(null);
+  };
+
+  const generateAll = () => {
+    const targets = schedule.filter(s => s.status === "unscheduled");
+    if (targets.length === 0) { flash("Every scheduled class already has programming"); return; }
+    setSchedule(prev => prev.map(s => s.status === "unscheduled"
+      ? { ...s, status: "generated", program: PROGRAM_TEMPLATES[s.classType].map(e => ({ ...e })) }
+      : s));
+    flash(`Generated programming for ${targets.length} ${targets.length === 1 ? "class" : "classes"}`);
+  };
+
+  const sendToReview = () => {
+    const drafts = schedule.filter(s => s.status === "generated");
+    if (drafts.length === 0) { flash("No drafts to send for review"); return; }
+    setSchedule(prev => prev.map(s => s.status === "generated" ? { ...s, status: "pending" } : s));
+    flash(`Sent ${drafts.length} ${drafts.length === 1 ? "class" : "classes"} to coaches for review`);
+  };
+
+  const publishAll = () => {
+    const ready = schedule.filter(s => s.status === "pending");
+    if (ready.length === 0) { flash("Nothing approved is waiting to publish"); return; }
+    setSchedule(prev => prev.map(s => s.status === "pending" ? { ...s, status: "published" } : s));
+    flash(`Published ${ready.length} ${ready.length === 1 ? "class" : "classes"} — members can now book`);
+  };
+
+  const updateSession = (id, patch) => setSchedule(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+
+  // Pipeline counts
+  const counts = {
+    unscheduled: schedule.filter(s => s.status === "unscheduled").length,
+    generated: schedule.filter(s => s.status === "generated").length,
+    pending: schedule.filter(s => s.status === "pending").length,
+    published: schedule.filter(s => s.status === "published").length,
+  };
+
+  const selectedSession = schedule.find(s => s.id === selected);
+
+  const headerBtn = (label, onClick, primary, disabled) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: "8px 14px", borderRadius: 9, fontSize: 12.5, fontWeight: 600,
+        cursor: disabled ? "not-allowed" : "pointer",
+        border: primary ? "none" : `1px solid ${BORDER}`,
+        background: disabled ? "#eef2f1" : primary ? TEAL : WHITE,
+        color: disabled ? "#9fb3af" : primary ? "#fff" : TEXT,
+        boxShadow: primary && !disabled ? "0 2px 8px rgba(43,122,120,0.28)" : "none",
+        transition: "all 0.15s ease", whiteSpace: "nowrap",
+      }}
+    >{label}</button>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "10px 14px" : "12px 18px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12, flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: TEXT }}>Programming</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{monthLabel} · group & semi-private</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {!isMobile && headerBtn("Generate", generateAll, false, counts.unscheduled === 0)}
+          {!isMobile && headerBtn("Send to coaches", sendToReview, false, counts.generated === 0)}
+          {headerBtn("Publish", publishAll, true, counts.pending === 0)}
+          <div onClick={onClose} style={{
+            width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`, background: WHITE,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Pipeline strip */}
+      <div style={{
+        display: "flex", gap: isMobile ? 6 : 10, padding: isMobile ? "10px 14px" : "12px 18px",
+        background: WHITE, borderBottom: `1px solid ${BORDER}`, overflowX: "auto"
+      }}>
+        {[
+          { key: "unscheduled", label: "Needs program" },
+          { key: "generated", label: "Drafts" },
+          { key: "pending", label: "In review" },
+          { key: "published", label: "Published" },
+        ].map((step, i) => {
+          const cfg = PROGRAM_STATUS[step.key];
+          return (
+            <React.Fragment key={step.key}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 10,
+                background: cfg.bg, flexShrink: 0
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: cfg.color, lineHeight: 1 }}>{counts[step.key]}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: cfg.color }}>{step.label}</span>
+              </div>
+              {i < 3 && !isMobile && (
+                <div style={{ display: "flex", alignItems: "center", color: "#cbd5cf", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Tabs + coach filter */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        padding: isMobile ? "10px 14px" : "10px 18px", background: WHITE, borderBottom: `1px solid ${BORDER}`, flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", gap: 6, background: "#f0f4f3", padding: 4, borderRadius: 10 }}>
+          {[
+            { id: "schedule", label: "Month Schedule" },
+            { id: "group", label: "Group Classes" },
+            { id: "semi", label: "Semi-Private" },
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              padding: "7px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+              fontSize: 12.5, fontWeight: 600,
+              background: tab === t.id ? WHITE : "transparent",
+              color: tab === t.id ? TEAL : TEXT_SEC,
+              boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+            }}>{t.label}</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <button onClick={() => setCoachFilter("all")} style={{
+            padding: "5px 10px", borderRadius: 20, fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+            border: `1px solid ${coachFilter === "all" ? TEAL : BORDER}`,
+            background: coachFilter === "all" ? TEAL_LIGHT : WHITE, color: coachFilter === "all" ? TEAL : TEXT_SEC, flexShrink: 0,
+          }}>All coaches</button>
+          {COACHES.map(c => (
+            <button key={c.id} onClick={() => setCoachFilter(c.id)} style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 20,
+              fontSize: 11.5, fontWeight: 600, cursor: "pointer", flexShrink: 0,
+              border: `1px solid ${coachFilter === c.id ? c.color : BORDER}`,
+              background: coachFilter === c.id ? c.color : WHITE, color: coachFilter === c.id ? "#fff" : TEXT_SEC,
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: coachFilter === c.id ? "#fff" : c.color }} />
+              {c.name.split(" ")[0]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 12 : 18 }}>
+        {tab === "schedule" ? (
+          <ProgrammingMonth
+            isMobile={isMobile} firstDow={firstDow} daysInMonth={daysInMonth} dateKey={dateKey}
+            sessionsOnDay={(d) => sessionsOnDay(d).filter(s => coachFilter === "all" || s.coachId === coachFilter)}
+            onAdd={(day) => setAddingDay(dateKey(day))}
+            onSelect={(id) => setSelected(id)}
+          />
+        ) : (
+          <ProgrammingList isMobile={isMobile} sessions={filtered} clients={clients} onSelect={(id) => setSelected(id)} />
+        )}
+      </div>
+
+      {/* Add class modal */}
+      {addingDay && (
+        <AddClassModal date={addingDay} onCancel={() => setAddingDay(null)} onAdd={addSession} />
+      )}
+
+      {/* Session detail drawer */}
+      {selectedSession && (
+        <SessionProgramDrawer
+          session={selectedSession} clients={clients} isMobile={isMobile}
+          onClose={() => setSelected(null)}
+          onUpdate={(patch) => updateSession(selectedSession.id, patch)}
+          onRemove={() => removeSession(selectedSession.id)}
+          onFlash={flash}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)",
+          background: TEXT, color: "#fff", padding: "10px 18px", borderRadius: 10,
+          fontSize: 13, fontWeight: 600, boxShadow: "0 6px 24px rgba(0,0,0,0.2)", zIndex: 50,
+          animation: "fadeUp 0.2s ease",
+        }}>{toast}</div>
+      )}
+    </div>
+  );
+}
+
+// Month grid for programming
+function ProgrammingMonth({ isMobile, firstDow, daysInMonth, sessionsOnDay, onAdd, onSelect }) {
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
+        {dayLabels.map(d => (
+          <div key={d} style={{
+            padding: "10px 8px", fontSize: 11, fontWeight: 700, color: TEXT_SEC, textAlign: "center",
+            borderBottom: `1px solid ${BORDER}`, background: "#f7faf9",
+          }}>{isMobile ? d[0] : d}</div>
+        ))}
+        {cells.map((day, idx) => {
+          const sess = day ? sessionsOnDay(day) : [];
+          return (
+            <div key={idx} style={{
+              minHeight: isMobile ? 88 : 116, borderRight: (idx % 7 !== 6) ? `1px solid ${BORDER}` : "none",
+              borderBottom: `1px solid ${BORDER}`, padding: 6, background: day ? WHITE : "#fbfdfc",
+              display: "flex", flexDirection: "column", gap: 4, position: "relative",
+            }}>
+              {day && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day}</span>
+                    <button onClick={() => onAdd(day)} title="Add class" style={{
+                      width: 18, height: 18, borderRadius: 5, border: `1px solid ${BORDER}`, background: WHITE,
+                      cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                    }}>
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}>
+                    {sess.slice(0, isMobile ? 2 : 4).map(s => {
+                      const coach = getCoach(s.coachId);
+                      const st = PROGRAM_STATUS[s.status];
+                      return (
+                        <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                          display: "flex", alignItems: "center", gap: 4, padding: "3px 5px", borderRadius: 6,
+                          border: "none", cursor: "pointer", textAlign: "left", width: "100%",
+                          background: `${coach.color}14`, borderLeft: `3px solid ${coach.color}`,
+                        }}>
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: st.color, flexShrink: 0 }} />
+                          <span style={{ fontSize: 9.5, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {s.kind === "semi" ? "SP" : ""} {s.time.replace(":00", "")}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {sess.length > (isMobile ? 2 : 4) && (
+                      <span style={{ fontSize: 9, color: TEXT_SEC, paddingLeft: 4 }}>+{sess.length - (isMobile ? 2 : 4)} more</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// List view for group / semi-private
+function ProgrammingList({ isMobile, sessions, clients, onSelect }) {
+  if (sessions.length === 0) {
+    return <div style={{ textAlign: "center", padding: 60, color: TEXT_SEC, fontSize: 14 }}>No classes match this filter.</div>;
+  }
+  const grouped = {};
+  sessions.forEach(s => { (grouped[s.date] = grouped[s.date] || []).push(s); });
+  const dates = Object.keys(grouped).sort();
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {dates.map(date => {
+        const d = new Date(date + "T00:00:00");
+        const label = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+        const daySessions = grouped[date].sort((a, b) => a.time.localeCompare(b.time));
+        return (
+          <div key={date}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT_SEC, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+              {daySessions.map(s => {
+                const coach = getCoach(s.coachId);
+                const ct = getClassType(s.classType);
+                const st = PROGRAM_STATUS[s.status];
+                return (
+                  <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                    textAlign: "left", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12,
+                    padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10,
+                    borderLeft: `4px solid ${coach.color}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{ct.label}{s.kind === "semi" ? " · Semi-Private" : ""}</div>
+                        <div style={{ fontSize: 12, color: TEXT_SEC }}>{s.time} · {ct.focus}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: st.color, background: st.bg, padding: "3px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>{st.label}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 22, height: 22, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 9.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{coach.name.split(" ")[0]}</span>
+                      </div>
+                      <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{s.booked}/{s.capacity} booked</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Add class modal
+function AddClassModal({ date, onCancel, onAdd }) {
+  const [kind, setKind] = useState("group");
+  const [time, setTime] = useState(CLASS_TIME_SLOTS[0]);
+  const [classType, setClassType] = useState("strength");
+  const [coachId, setCoachId] = useState(COACHES[0].id);
+  const [capacity, setCapacity] = useState(12);
+  const niceDate = new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const field = (label, children) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{label}</label>
+      {children}
+    </div>
+  );
+  const selStyle = { padding: "10px 12px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, background: WHITE, width: "100%" };
+
+  return (
+    <div onClick={onCancel} style={{
+      position: "absolute", inset: 0, background: "rgba(26,46,42,0.45)", zIndex: 60,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: WHITE, borderRadius: 16, width: "100%", maxWidth: 420, padding: 22,
+        boxShadow: "0 16px 48px rgba(0,0,0,0.22)", animation: "fadeUp 0.2s ease",
+      }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>Add class</div>
+        <div style={{ fontSize: 12.5, color: TEXT_SEC, marginBottom: 18 }}>{niceDate}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {field("Type", (
+            <div style={{ display: "flex", gap: 8 }}>
+              {[{ id: "group", label: "Group Class", cap: 12 }, { id: "semi", label: "Semi-Private", cap: 4 }].map(o => (
+                <button key={o.id} onClick={() => { setKind(o.id); setCapacity(o.cap); }} style={{
+                  flex: 1, padding: "10px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+                  border: `1px solid ${kind === o.id ? TEAL : BORDER}`,
+                  background: kind === o.id ? TEAL_LIGHT : WHITE, color: kind === o.id ? TEAL : TEXT_SEC,
+                }}>{o.label}</button>
+              ))}
+            </div>
+          ))}
+          {field("Time", (
+            <select value={time} onChange={e => setTime(e.target.value)} style={selStyle}>
+              {CLASS_TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          ))}
+          {field("Focus", (
+            <select value={classType} onChange={e => setClassType(e.target.value)} style={selStyle}>
+              {GROUP_CLASS_TYPES.map(c => <option key={c.id} value={c.id}>{c.label} — {c.focus}</option>)}
+            </select>
+          ))}
+          {field("Coach owner", (
+            <select value={coachId} onChange={e => setCoachId(e.target.value)} style={selStyle}>
+              {COACHES.map(c => <option key={c.id} value={c.id}>{c.name} ({c.specialty})</option>)}
+            </select>
+          ))}
+          {field("Capacity", (
+            <input type="number" min={1} max={30} value={capacity} onChange={e => setCapacity(Number(e.target.value))} style={selStyle} />
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button onClick={onCancel} style={{ flex: 1, padding: "11px", borderRadius: 9, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={() => onAdd({ date, kind, time, classType, coachId, capacity })} style={{ flex: 1, padding: "11px", borderRadius: 9, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Add class</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Session detail drawer: program, attendance, per-client weights / notes
+function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, onRemove, onFlash }) {
+  const coach = getCoach(session.coachId);
+  const ct = getClassType(session.classType);
+  const st = PROGRAM_STATUS[session.status];
+  const niceDate = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  // Build a roster of booked members (mock: first N clients)
+  const roster = clients.slice(0, Math.min(session.booked || 0, clients.length)).map((c, i) => ({ idx: i, ...c }));
+
+  const toggleAttendance = (idx) => {
+    const att = { ...(session.attendance || {}) };
+    att[idx] = !att[idx];
+    onUpdate({ attendance: att });
+  };
+
+  const generate = () => {
+    onUpdate({ status: "generated", program: PROGRAM_TEMPLATES[session.classType].map(e => ({ ...e })) });
+    onFlash("Programming generated");
+  };
+
+  const presentCount = Object.values(session.attendance || {}).filter(Boolean).length;
+
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,46,42,0.4)", zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: isMobile ? "100%" : 440, height: "100%", background: "#fafcfb", overflowY: "auto",
+        boxShadow: "-8px 0 32px rgba(0,0,0,0.18)", animation: "fadeSlideIn 0.22s ease",
+        display: "flex", flexDirection: "column",
+      }}>
+        {/* Drawer header */}
+        <div style={{ padding: 18, background: WHITE, borderBottom: `1px solid ${BORDER}`, borderTop: `4px solid ${coach.color}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>{ct.label}{session.kind === "semi" ? " · Semi-Private" : " · Group"}</div>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{niceDate} · {session.time}</div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 24, height: 24, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{coach.name}</span>
+            </div>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: st.color, background: st.bg, padding: "3px 9px", borderRadius: 20 }}>{st.label}</span>
+            <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{session.booked}/{session.capacity} booked</span>
+          </div>
+        </div>
+
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 18 }}>
+          {/* Programming block */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Programming</span>
+              {!session.program && (
+                <button onClick={generate} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>Generate</button>
+              )}
+            </div>
+            {session.program ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {session.program.map((ex, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{ex.name}</span>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: TEAL }}>{ex.scheme}</div>
+                      <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{ex.target}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: 20, textAlign: "center", background: "#fff7ed", borderRadius: 10, border: "1px dashed #fbcb96", fontSize: 12.5, color: "#92400e" }}>
+                No programming yet. Generate to draft this class.
+              </div>
+            )}
+          </div>
+
+          {/* Attendance + member weights/notes */}
+          {session.status === "published" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Roster & Attendance</span>
+                <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{presentCount}/{roster.length} present</span>
+              </div>
+              {roster.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: TEXT_SEC, padding: 12 }}>No members booked yet.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {roster.map(m => {
+                    const present = !!(session.attendance || {})[m.idx];
+                    return (
+                      <div key={m.idx} style={{ background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`, padding: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ width: 28, height: 28, borderRadius: "50%", background: TEAL_LIGHT, color: TEAL, fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              {m.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                            </span>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{m.name}</div>
+                              <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{m.program || "Member"}</div>
+                            </div>
+                          </div>
+                          <button onClick={() => toggleAttendance(m.idx)} style={{
+                            padding: "5px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                            border: `1px solid ${present ? "#1f7a3e" : BORDER}`,
+                            background: present ? "#e6f9ec" : WHITE, color: present ? "#1f7a3e" : TEXT_SEC,
+                          }}>{present ? "Present" : "Mark in"}</button>
+                        </div>
+                        {present && (
+                          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                            <input
+                              placeholder="Top set (e.g. 185x5)"
+                              defaultValue={(session.notes && session.notes[m.idx]?.weight) || ""}
+                              onBlur={e => {
+                                const notes = { ...(session.notes || {}) };
+                                notes[m.idx] = { ...(notes[m.idx] || {}), weight: e.target.value };
+                                onUpdate({ notes });
+                              }}
+                              style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT }}
+                            />
+                            <input
+                              placeholder="Coach note"
+                              defaultValue={(session.notes && session.notes[m.idx]?.note) || ""}
+                              onBlur={e => {
+                                const notes = { ...(session.notes || {}) };
+                                notes[m.idx] = { ...(notes[m.idx] || {}), note: e.target.value };
+                                onUpdate({ notes });
+                              }}
+                              style={{ flex: 1.4, padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <button onClick={onRemove} style={{ alignSelf: "flex-start", padding: "8px 14px", borderRadius: 9, border: `1px solid #f0c9c0`, background: "#fdf2ef", color: "#c0432a", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Remove class</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [showWelcomeVideo, setShowWelcomeVideo] = useState(true);
@@ -18964,6 +19633,14 @@ export default function MiltonDashboard() {
   onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
   />
   )}
+  {canvasType === "programming" && (
+  <ProgrammingCanvas
+  isMobile={isMobile}
+  clients={clients}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  />
+  )}
   </div>
   )}
   
@@ -19001,6 +19678,7 @@ export default function MiltonDashboard() {
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "program", label: "Programming", action: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
