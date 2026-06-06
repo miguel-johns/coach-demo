@@ -5514,7 +5514,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ──�� ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──��� ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -18568,9 +18568,17 @@ function AddClassModal({ date, onCancel, onAdd }) {
 
 // Session detail drawer: program, attendance, per-client weights / notes
 function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, onRemove, onFlash }) {
+  const [editingCoach, setEditingCoach] = useState(false);
   const coach = getCoach(session.coachId);
   const ct = getClassType(session.classType);
   const st = PROGRAM_STATUS[session.status];
+
+  const reassignCoach = (id) => {
+    setEditingCoach(false);
+    if (id === session.coachId) return;
+    onUpdate({ coachId: id });
+    onFlash(`Reassigned to ${getCoach(id).name}`);
+  };
   const niceDate = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   // Build a roster of booked members (mock: first N clients)
@@ -18608,9 +18616,44 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
             </button>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 24, height: 24, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{coach.name}</span>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setEditingCoach(v => !v)} style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 20,
+                border: `1px solid ${editingCoach ? coach.color : BORDER}`, background: WHITE, cursor: "pointer",
+              }}>
+                <span style={{ width: 24, height: 24, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{coach.name}</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+              </button>
+              {editingCoach && (
+                <>
+                  <div onClick={() => setEditingCoach(false)} style={{ position: "fixed", inset: 0, zIndex: 70 }} />
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 71, width: 230,
+                    background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, boxShadow: "0 10px 32px rgba(0,0,0,0.16)",
+                    padding: 6, display: "flex", flexDirection: "column", gap: 2,
+                  }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4, padding: "6px 8px 4px" }}>Assign coach</div>
+                    {COACHES.map(c => {
+                      const active = c.id === session.coachId;
+                      return (
+                        <button key={c.id} onClick={() => reassignCoach(c.id)} style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "8px", borderRadius: 8, border: "none",
+                          cursor: "pointer", textAlign: "left", width: "100%",
+                          background: active ? `${c.color}14` : "transparent",
+                        }}>
+                          <span style={{ width: 26, height: 26, borderRadius: "50%", background: c.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{c.initials}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{c.name}</div>
+                            <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{c.specialty}</div>
+                          </div>
+                          {active && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
             <span style={{ fontSize: 10.5, fontWeight: 700, color: st.color, background: st.bg, padding: "3px 9px", borderRadius: 20 }}>{st.label}</span>
             <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{session.booked}/{session.capacity} booked</span>
