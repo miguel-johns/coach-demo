@@ -319,6 +319,19 @@ const COACHES = [
 ];
 const getCoach = (id) => COACHES.find(c => c.id === id) || COACHES[0];
 
+const COACH_COLORS = ["#2B7A78", "#6366f1", "#ef6c3e", "#9333ea", "#d97706", "#0891b2", "#be123c", "#15803d"];
+const makeInitials = (name) => name.trim().split(/\s+/).map(n => n[0]).join("").slice(0, 2).toUpperCase() || "?";
+// Mutate the shared roster in place so module-level getCoach() stays in sync everywhere.
+const addCoach = ({ name, specialty, color }) => {
+  const id = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
+  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General" });
+  return id;
+};
+const removeCoach = (id) => {
+  const idx = COACHES.findIndex(c => c.id === id);
+  if (idx !== -1) COACHES.splice(idx, 1);
+};
+
 // Group class & semi-private templates used when generating programming
 const GROUP_CLASS_TYPES = [
   { id: "strength", label: "Strength", color: "#2B7A78", focus: "Compound lifts + accessory" },
@@ -2687,6 +2700,136 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
           </>
         );
       })()}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS CANVAS - Manage coaches (add / delete)
+// ═══════════════════════════════════════════════════════════════
+function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
+  const [name, setName] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [color, setColor] = useState(COACH_COLORS[0]);
+  const [confirmDelete, setConfirmDelete] = useState(null); // coach id
+
+  const sessionCountFor = (coachId) => sessions.filter(s => s.coachId === coachId).length;
+
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    addCoach({ name, specialty, color });
+    setName(""); setSpecialty(""); setColor(COACH_COLORS[0]);
+    onCoachesChanged?.();
+  };
+  const handleDelete = (id) => {
+    removeCoach(id);
+    setConfirmDelete(null);
+    onCoachesChanged?.();
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{ padding: isMobile ? "16px" : "24px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+              </button>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: TEAL_LIGHT, padding: "5px 10px", borderRadius: 16 }}>
+                <span style={{ color: TEAL, display: "flex" }}><NavIcon icon="settings" size={14} /></span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Settings</span>
+              </div>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Coaches</h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Add or remove the coaches who can be assigned to classes and sessions.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Add coach */}
+          <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, padding: isMobile ? 16 : 20 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: "0 0 14px" }}>Add a coach</h2>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "stretch" : "flex-end" }}>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Full name</span>
+                <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. Riley Chen" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Specialty</span>
+                <input value={specialty} onChange={e => setSpecialty(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. Olympic lifting" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Color</span>
+              {COACH_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)} aria-label={`Color ${c}`} style={{ width: 26, height: 26, borderRadius: "50%", background: c, border: color === c ? `3px solid ${TEXT}` : `2px solid ${WHITE}`, boxShadow: color === c ? "none" : `0 0 0 1px ${BORDER}`, cursor: "pointer", padding: 0 }} />
+              ))}
+            </div>
+            <button onClick={handleAdd} disabled={!name.trim()} style={{ marginTop: 16, padding: "10px 18px", borderRadius: 9, border: "none", background: name.trim() ? TEAL : "#cbd5d3", color: WHITE, fontSize: 13.5, fontWeight: 700, cursor: name.trim() ? "pointer" : "default", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add coach
+            </button>
+          </div>
+
+          {/* Roster */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Coach roster</h2>
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{COACHES.length} coaches</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {COACHES.map(coach => {
+                const count = sessionCountFor(coach.id);
+                const isConfirming = confirmDelete === coach.id;
+                return (
+                  <div key={coach.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${isConfirming ? "#f0c9c0" : BORDER}`, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, borderLeft: `4px solid ${coach.color}` }}>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {coach.initials}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{coach.name}</div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{coach.specialty} · {count} {count === 1 ? "session" : "sessions"}</div>
+                    </div>
+                    {isConfirming ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, color: "#c0432a", fontWeight: 600, display: isMobile ? "none" : "block" }}>Delete?</span>
+                        <button onClick={() => handleDelete(coach.id)} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#c0432a", color: WHITE, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Delete</button>
+                        <button onClick={() => setConfirmDelete(null)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(coach.id)}
+                        disabled={COACHES.length <= 1}
+                        title={COACHES.length <= 1 ? "At least one coach is required" : "Remove coach"}
+                        style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: COACHES.length <= 1 ? "default" : "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: COACHES.length <= 1 ? 0.4 : 1 }}
+                        onMouseEnter={e => { if (COACHES.length > 1) { e.currentTarget.style.color = "#c0432a"; e.currentTarget.style.borderColor = "#f0c9c0"; } }}
+                        onMouseLeave={e => { e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {COACHES.some(c => sessionCountFor(c.id) > 0) && (
+              <p style={{ fontSize: 11.5, color: TEXT_SEC, margin: "12px 2px 0", lineHeight: 1.5 }}>
+                Deleting a coach with assigned sessions reassigns those sessions to the first remaining coach.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -5269,7 +5412,7 @@ isMobile={true}
   );
 }
 
-/* ═══════════════════���═════���══════════════���══
+/* ═══════════════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -7500,7 +7643,7 @@ return (
 
 /* ════════════════════════════════════════════
    SEND REPORT MODAL
-   ═════════════════════════════════════════════ */
+   ═══════════════════════════════════════��═════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -19226,6 +19369,7 @@ export default function MiltonDashboard() {
   // Session state for Semi-Private and PT sessions
   const [sessions, setSessions] = useState([...initialSessions]);
   const [activeSessionId, setActiveSessionId] = useState(null); // When set, shows SessionCanvas
+  const [coachVersion, setCoachVersion] = useState(0); // bump to re-render after coach add/delete
   
   // Playbook state (the gym's operating system)
   const [playbook, setPlaybook] = useState({
@@ -20215,6 +20359,22 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   />
   )}
+  {canvasType === "settings" && (
+  <SettingsCanvas
+  key={coachVersion}
+  isMobile={isMobile}
+  sessions={sessions}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  onCoachesChanged={() => {
+    // Reassign any sessions whose coach was removed to the first remaining coach.
+    const validIds = new Set(COACHES.map(c => c.id));
+    const fallback = COACHES[0]?.id;
+    setSessions(prev => prev.map(s => (s.coachId && !validIds.has(s.coachId)) ? { ...s, coachId: fallback } : s));
+    setCoachVersion(v => v + 1);
+  }}
+  />
+  )}
   </div>
   )}
   
@@ -20254,7 +20414,8 @@ export default function MiltonDashboard() {
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "program", label: "Programming", action: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
+                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "settings", label: "Settings", action: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
                     key={item.icon}
