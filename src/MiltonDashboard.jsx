@@ -2705,6 +2705,76 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
 }
 
 // ═══════════════════════════════════════════════════════════════
+// COACH ASSIGN SELECT - Assign a coach to a client from the list
+// ═══════════════════════════════════════════════════════════════
+function CoachAssignSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const coach = value ? getCoach(value) : null;
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: coach ? "5px 9px 5px 6px" : "6px 11px",
+          borderRadius: 20, border: `1px solid ${coach ? `${coach.color}40` : BORDER}`,
+          background: coach ? `${coach.color}12` : WHITE, cursor: "pointer",
+          fontSize: 12.5, fontWeight: 600, color: coach ? coach.color : TEXT_SEC,
+          maxWidth: 170, whiteSpace: "nowrap",
+        }}
+      >
+        {coach ? (
+          <>
+            <span style={{ width: 22, height: 22, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{coach.initials}</span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{coach.name}</span>
+          </>
+        ) : (
+          <span>Assign coach</span>
+        )}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.7 }}><polyline points="6,9 12,15 18,9"/></svg>
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 30,
+          minWidth: 200, background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`,
+          boxShadow: "0 8px 28px rgba(0,0,0,0.14)", padding: 6, maxHeight: 280, overflowY: "auto",
+        }}>
+          {COACHES.map(c => {
+            const isSel = c.id === value;
+            return (
+              <button key={c.id} onClick={() => { onChange(c.id); setOpen(false); }} style={{
+                display: "flex", alignItems: "center", gap: 9, width: "100%",
+                padding: "8px 9px", borderRadius: 8, border: "none",
+                background: isSel ? `${c.color}14` : "transparent", cursor: "pointer", textAlign: "left",
+              }}
+                onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = "#f5f7f6"; }}
+                onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = "transparent"; }}
+              >
+                <span style={{ width: 26, height: 26, borderRadius: "50%", background: c.color, color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{c.initials}</span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: TEXT }}>{c.name}</span>
+                  <span style={{ display: "block", fontSize: 11, color: TEXT_SEC }}>{c.specialty}</span>
+                </span>
+                {isSel && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20,6 9,17 4,12"/></svg>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ═══════════════════════════════════════════════════════════════
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -20915,9 +20985,11 @@ export default function MiltonDashboard() {
                     </div>
                     <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                    <AlertBadge type={client.alertType} label={client.alert} />
-                    <StreakBadge streak={client.streak?.current || client.streaks || 0} compact />
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <CoachAssignSelect
+                      value={client.coachId}
+                      onChange={(coachId) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, coachId } : c))}
+                    />
                   </div>
                 </div>
 
@@ -20962,7 +21034,7 @@ export default function MiltonDashboard() {
               color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
               flexShrink: 0
             }}>
-              <span>Client</span><span>Status</span><span>Sessions</span><span>Goal</span><span />
+              <span>Client</span><span>Coach</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {clients.filter(c => {
@@ -20996,7 +21068,12 @@ export default function MiltonDashboard() {
                     <div style={{ fontSize: 11, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertBadge type={client.alertType} label={client.alert} /><StreakBadge streak={client.streak?.current || client.streaks || 0} compact /></div>
+                <div onClick={e => e.stopPropagation()}>
+                  <CoachAssignSelect
+                    value={client.coachId}
+                    onChange={(coachId) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, coachId } : c))}
+                  />
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: TEAL }}>{client.sessionsThisWeek || 0}</span>
                   <span style={{ fontSize: 12, color: TEXT_SEC }}>/ {client.sessionsPerWeek || 3}</span>
