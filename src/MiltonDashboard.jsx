@@ -263,6 +263,7 @@ function NavIcon({ icon, size = 20 }) {
   file: <svg {...s} viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>,
   chart: <svg {...s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   layout: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><rect x="11" y="11" width="8" height="4" rx="1"/><rect x="11" y="17" width="5" height="2" rx="0.5"/></svg>,
+  program: <svg {...s} viewBox="0 0 24 24"><path d="M9 2h6a1 1 0 011 1v1h1a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1z"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -308,8 +309,77 @@ const CLIENT_TYPES = {
 const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 
 // ═══════════════════════════════════════════════════════════════
+// COACH ROSTER - owners of group / semi-private sessions
+// ═══════════════════════════════════════════════════════════════
+const COACHES = [
+  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength", email: "miguel@coachhub.com", phone: "(555) 201-4480" },
+  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning", email: "jordan@coachhub.com", phone: "(555) 201-3392" },
+  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility", email: "alana@coachhub.com", phone: "(555) 201-7715" },
+  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid", email: "devon@coachhub.com", phone: "(555) 201-6628" },
+];
+const getCoach = (id) => COACHES.find(c => c.id === id) || COACHES[0];
+
+const COACH_COLORS = ["#2B7A78", "#6366f1", "#ef6c3e", "#9333ea", "#d97706", "#0891b2", "#be123c", "#15803d"];
+const makeInitials = (name) => name.trim().split(/\s+/).map(n => n[0]).join("").slice(0, 2).toUpperCase() || "?";
+// Mutate the shared roster in place so module-level getCoach() stays in sync everywhere.
+const addCoach = ({ name, specialty, color, email, phone }) => {
+  const id = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
+  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General", email: email?.trim() || "", phone: phone?.trim() || "" });
+  return id;
+};
+const removeCoach = (id) => {
+  const idx = COACHES.findIndex(c => c.id === id);
+  if (idx !== -1) COACHES.splice(idx, 1);
+};
+
+// Group class & semi-private templates used when generating programming
+const GROUP_CLASS_TYPES = [
+  { id: "strength", label: "Strength", color: "#2B7A78", focus: "Compound lifts + accessory" },
+  { id: "conditioning", label: "Conditioning", color: "#6366f1", focus: "Engine + intervals" },
+  { id: "hiit", label: "HIIT", color: "#ef6c3e", focus: "High intensity circuits" },
+  { id: "mobility", label: "Mobility & Core", color: "#0d9488", focus: "Movement + stability" },
+];
+const getClassType = (id) => GROUP_CLASS_TYPES.find(c => c.id === id) || GROUP_CLASS_TYPES[0];
+
+// Programming review status for admin-generated sessions
+const PROGRAM_STATUS = {
+  unscheduled: { label: "Empty", color: "#94a3b8", bg: "#f1f5f9" },
+  generated:   { label: "Draft",   color: "#92400e", bg: "#fef3c7" },
+  pending:     { label: "In Review", color: "#6366f1", bg: "#eef2ff" },
+  published:   { label: "Published", color: "#1f7a3e", bg: "#e6f9ec" },
+};
+
+// Templated exercise blocks used by the mock generator
+const PROGRAM_TEMPLATES = {
+  strength: [
+    { name: "Back Squat", scheme: "5 x 5", pct: "75%", target: "RPE 7-8" },
+    { name: "Romanian Deadlift", scheme: "4 x 8", pct: "65%", target: "Controlled tempo" },
+    { name: "Walking Lunge", scheme: "3 x 10/leg", pct: "—", target: "Goblet load" },
+    { name: "Plank Hold", scheme: "3 x 45s", pct: "—", target: "Brace hard" },
+  ],
+  conditioning: [
+    { name: "Row Intervals", scheme: "6 x 250m", pct: "—", target: "90s rest" },
+    { name: "KB Swing", scheme: "5 x 15", pct: "—", target: "Hip drive" },
+    { name: "Air Bike Sprint", scheme: "8 x 20s", pct: "—", target: "All out" },
+    { name: "Farmer Carry", scheme: "4 x 40m", pct: "—", target: "Heavy" },
+  ],
+  hiit: [
+    { name: "Burpee", scheme: "4 x 12", pct: "—", target: "Steady pace" },
+    { name: "Box Jump", scheme: "4 x 10", pct: "—", target: "Soft landing" },
+    { name: "Wall Ball", scheme: "4 x 15", pct: "—", target: "20/14 lb" },
+    { name: "Mountain Climber", scheme: "4 x 30s", pct: "—", target: "Tight core" },
+  ],
+  mobility: [
+    { name: "World's Greatest Stretch", scheme: "2 x 6/side", pct: "—", target: "Slow" },
+    { name: "Dead Bug", scheme: "3 x 10", pct: "—", target: "Low back flat" },
+    { name: "Hip 90/90", scheme: "3 x 8/side", pct: "—", target: "Full range" },
+    { name: "Bird Dog", scheme: "3 x 10/side", pct: "—", target: "Anti-rotation" },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═��═════════════════════════════���������═══════════════════════════════
+// ═���═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -468,6 +538,56 @@ const initialSessions = [
         ]
       }
     }
+  },
+  // ── GROUP CLASSES ─────────────────────────────────────────────
+  // One shared workout board; each member checks in and logs their own weights.
+  {
+    id: "sess_g01",
+    time: "6:00 AM",
+    duration: "45 min",
+    sessionKind: "group",
+    classType: "strength",
+    coachId: "miguel",
+    capacity: 12,
+    clientIds: [12, 13, 4, 5, 14, 15, 6],
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    attendance: {},            // clientId -> true when checked in
+    memberWeights: {},         // clientId -> { exId: "185" }
+    sharedWorkout: {
+      title: "Strength · Lower Body",
+      exercises: [
+        { id: "g1a", name: "Back Squat", scheme: "5 x 5", pct: "75%", target: "RPE 7-8" },
+        { id: "g1b", name: "Romanian Deadlift", scheme: "4 x 8", pct: "65%", target: "Controlled" },
+        { id: "g1c", name: "Walking Lunge", scheme: "3 x 10/leg", pct: "—", target: "Goblet load" },
+        { id: "g1d", name: "Plank Hold", scheme: "3 x 45s", pct: "—", target: "Brace hard" },
+      ],
+    },
+  },
+  {
+    id: "sess_g02",
+    time: "5:30 PM",
+    duration: "45 min",
+    sessionKind: "group",
+    classType: "conditioning",
+    coachId: "jordan",
+    capacity: 14,
+    clientIds: [12, 4, 14, 15],
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    attendance: {},
+    memberWeights: {},
+    sharedWorkout: {
+      title: "Conditioning · Engine Builder",
+      exercises: [
+        { id: "g2a", name: "Row Intervals", scheme: "6 x 250m", pct: "—", target: "90s rest" },
+        { id: "g2b", name: "KB Swing", scheme: "5 x 15", pct: "—", target: "Hip drive" },
+        { id: "g2c", name: "Air Bike Sprint", scheme: "8 x 20s", pct: "—", target: "All out" },
+        { id: "g2d", name: "Farmer Carry", scheme: "4 x 40m", pct: "—", target: "Heavy" },
+      ],
+    },
   },
 ];
 
@@ -1686,7 +1806,7 @@ function SessionCanvas({
 
 // ═══════════════════════════════════════════════════════════════
 // CLIENT CONTEXT DRAWER - Quick reference pane during sessions
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════���════════════════════════════════
 function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   if (!isOpen || !client) return null;
   
@@ -2215,6 +2335,529 @@ function SemiPrivateList({
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
+// ═══════════════════════════════════════════════════════════════
+function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, isMobile }) {
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const ORANGE = "#c2410c";
+  const ORANGE_BG = "#fff1ea";
+
+  const groupSessions = sessions.filter(s => s.sessionKind === "group");
+  const upcomingCount = groupSessions.filter(s => s.status === "scheduled").length;
+  const inProgressCount = groupSessions.filter(s => s.status === "in_progress").length;
+  const completedCount = groupSessions.filter(s => s.status === "completed").length;
+
+  const filtered = groupSessions.filter(s => {
+    if (activeTab === "upcoming") return s.status === "scheduled";
+    if (activeTab === "inProgress") return s.status === "in_progress";
+    if (activeTab === "completedToday") return s.status === "completed";
+    return true;
+  });
+
+  const tabs = [
+    { id: "upcoming", label: "Upcoming", count: upcomingCount },
+    { id: "inProgress", label: "In progress", count: inProgressCount },
+    { id: "completedToday", label: "Completed today", count: completedCount },
+    { id: "all", label: "All", count: groupSessions.length },
+  ];
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "scheduled": return { bg: "#f5f7f6", color: TEXT_SEC, label: "Not started" };
+      case "in_progress": return { bg: ORANGE_BG, color: ORANGE, label: "In progress" };
+      case "completed": return { bg: "#dcfce7", color: "#16a34a", label: "Completed" };
+      default: return { bg: "#f5f7f6", color: TEXT_SEC, label: status };
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb", position: "relative" }}>
+      {/* Header */}
+      <div style={{ padding: isMobile ? "16px" : "24px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+              </button>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ORANGE_BG, padding: "5px 10px", borderRadius: 16 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: ORANGE }}>Group Class</span>
+              </div>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Group Classes</h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Run a class off one shared board and check in each member&apos;s personalized weights. Click a class to open the control panel.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8 }}>
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: "10px 16px", fontSize: 13, fontWeight: 500, background: "transparent", border: "none", cursor: "pointer", color: activeTab === tab.id ? ORANGE : TEXT_SEC, borderBottom: activeTab === tab.id ? `2px solid ${ORANGE}` : "2px solid transparent", marginBottom: -1 }}>
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        {filtered.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: ORANGE_BG, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: ORANGE }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes in this view</h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 280 }}>Group classes scheduled in Programming will appear here.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 760 }}>
+            {filtered.map(session => {
+              const sessionClients = session.clientIds.map(id => clients[id]).filter(Boolean);
+              const statusStyle = getStatusStyle(session.status);
+              const coach = getCoach(session.coachId);
+              const ct = getClassType(session.classType);
+              const checkedIn = Object.values(session.attendance || {}).filter(Boolean).length;
+              return (
+                <div key={session.id} onClick={() => onSessionClick?.(session.id)} style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer", borderLeft: `4px solid ${coach.color}` }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = ORANGE; e.currentTarget.style.borderLeftColor = coach.color; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.borderLeftColor = coach.color; }}>
+                  <div style={{ minWidth: 76 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{session.time}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.duration}</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{ct.label} · {session.sharedWorkout?.title || "Class"}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", marginLeft: 4 }}>
+                        {sessionClients.slice(0, 5).map((c, i) => (
+                          <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", background: `${coach.color}22`, border: `2px solid ${WHITE}`, marginLeft: i > 0 ? -10 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: coach.color, position: "relative", zIndex: 5 - i }}>
+                            {c?.name?.split(" ").map(n => n[0]).join("")}
+                          </div>
+                        ))}
+                        {sessionClients.length > 5 && (
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#f0f4f3", border: `2px solid ${WHITE}`, marginLeft: -10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>+{sessionClients.length - 5}</div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                        {sessionClients.length}/{session.capacity} booked{checkedIn > 0 ? ` · ${checkedIn} in` : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                    <div style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: statusStyle.bg, color: statusStyle.color }}>{statusStyle.label}</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════���════════
+// GROUP CLASS SESSION - Live control panel: shared board + check-in roster
+// ═══════════════════════════════════════════════════════════════
+function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [notesClientId, setNotesClientId] = useState(null);
+  const ORANGE = "#c2410c";
+  const ORANGE_BG = "#fff1ea";
+
+  useEffect(() => {
+    if (session?.status !== "in_progress") return;
+    const startTime = session.startedAt ? new Date(session.startedAt).getTime() : Date.now();
+    const tick = () => setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [session?.status, session?.startedAt]);
+
+  if (!session) return null;
+
+  const coach = getCoach(session.coachId);
+  const ct = getClassType(session.classType);
+  const exercises = session.sharedWorkout?.exercises || [];
+  const sessionClients = session.clientIds.map(id => ({ id, ...clients[id] })).filter(c => c.name);
+  const elapsedMin = Math.floor(elapsedSeconds / 60);
+  const checkedIn = Object.values(session.attendance || {}).filter(Boolean).length;
+
+  const startSession = () => onUpdateSession?.({ ...session, status: "in_progress", startedAt: new Date().toISOString() });
+  const endSession = () => onUpdateSession?.({ ...session, status: "completed", completedAt: new Date().toISOString() });
+
+  const toggleAttendance = (clientId) => {
+    const att = { ...(session.attendance || {}) };
+    att[clientId] = !att[clientId];
+    onUpdateSession?.({ ...session, attendance: att });
+  };
+  const setMemberWeight = (clientId, exId, value) => {
+    const mw = { ...(session.memberWeights || {}) };
+    mw[clientId] = { ...(mw[clientId] || {}), [exId]: value };
+    onUpdateSession?.({ ...session, memberWeights: mw });
+  };
+
+  // Build a deterministic "last note" history for a client (mock data).
+  const CHECK_IN_QUESTIONS = [
+    { q: "How rested do you feel?", answers: ["Fully recovered", "Pretty good", "A little tired", "Running on empty"] },
+    { q: "Soreness from last session?", answers: ["None", "Mild — legs", "Moderate — upper body", "High all over"] },
+    { q: "Energy level today (1-10)?", answers: ["9 — fired up", "7 — solid", "5 — average", "3 — sluggish"] },
+    { q: "Any aches or pain to flag?", answers: ["All clear", "Tight left shoulder", "Lower back a bit cranky", "Right knee sensitive"] },
+  ];
+  const getLastNote = (clientId) => {
+    const seed = (clientId * 31 + session.classType.length * 7) % 97;
+    const daysAgo = 2 + (seed % 5);
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    const dateLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const lifts = exercises.map((ex, i) => {
+      const base = 95 + ((seed + i * 13) % 12) * 10; // 95–215
+      const reps = ex.scheme || "";
+      return { name: ex.name, weight: ex.pct && ex.pct !== "—" ? `${base} lb` : "Bodyweight", scheme: reps };
+    });
+    const answers = CHECK_IN_QUESTIONS.map((item, i) => ({ q: item.q, a: item.answers[(seed + i) % item.answers.length] }));
+    const coachNotes = [
+      "Strong session — squat depth looked great, kept positions tight under fatigue.",
+      "Felt a little flat early but warmed up well. Watch the RDL lockout next time.",
+      "Big PR energy. Loved the intent on every rep. Mobility before next heavy day.",
+      "Managed load smartly given the soreness. Backed off the last set, smart call.",
+    ];
+    return { dateLabel, daysAgo, lifts, answers, coachNote: coachNotes[seed % coachNotes.length] };
+  };
+  const notesClient = notesClientId != null ? { id: notesClientId, ...clients[notesClientId] } : null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column" }}>
+      {/* Header */}
+      <div style={{ minHeight: 64, padding: isMobile ? "12px 16px" : "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+          <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.label} · {session.sharedWorkout?.title}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.time} · {coach.name} · {checkedIn}/{sessionClients.length} checked in{session.status === "in_progress" ? ` · ${elapsedMin} min` : ""}</div>
+          </div>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          {session.status === "scheduled" && (
+            <button onClick={startSession} style={{ padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600, background: ORANGE, color: WHITE, border: "none", cursor: "pointer", boxShadow: `0 2px 8px ${ORANGE}40` }}>Start Class</button>
+          )}
+          {session.status === "in_progress" && (
+            <button onClick={endSession} style={{ padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600, background: "transparent", color: ORANGE, border: `2px solid ${ORANGE}`, cursor: "pointer" }}>End Class</button>
+          )}
+          {session.status === "completed" && (
+            <span style={{ padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "#dcfce7", color: "#16a34a" }}>Completed</span>
+          )}
+        </div>
+      </div>
+
+      {/* Body: shared board (left) + roster (right) */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        <div style={{ display: isMobile ? "flex" : "grid", flexDirection: "column", gridTemplateColumns: "minmax(0, 340px) 1fr", gap: 20, maxWidth: 1100, margin: "0 auto", alignItems: "start" }}>
+          {/* Shared workout board */}
+          <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: "hidden", position: isMobile ? "static" : "sticky", top: 0 }}>
+            <div style={{ padding: "14px 16px", background: `${coach.color}0c`, borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.5 }}>Today&apos;s Board</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginTop: 2 }}>{session.sharedWorkout?.title}</div>
+            </div>
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {exercises.map((ex, i) => (
+                <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 6px", borderBottom: i < exercises.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 6, background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    {ex.target && <div style={{ fontSize: 11, color: TEXT_SEC }}>{ex.target}</div>}
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: coach.color }}>{ex.scheme}</div>
+                    {ex.pct && ex.pct !== "—" && <div style={{ fontSize: 10.5, fontWeight: 700, color: "#ef6c3e" }}>{ex.pct} max</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Check-in roster with per-member weights */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Roster & Check-in</h2>
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{checkedIn}/{sessionClients.length} checked in</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {sessionClients.map(client => {
+                const present = !!(session.attendance || {})[client.id];
+                return (
+                  <div
+                    key={client.id}
+                    onClick={() => setNotesClientId(client.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: WHITE, borderRadius: 12, border: `1px solid ${present ? coach.color : BORDER}`, cursor: "pointer" }}
+                    onMouseEnter={e => { if (!present) e.currentTarget.style.borderColor = "#d4dedb"; }}
+                    onMouseLeave={e => { if (!present) e.currentTarget.style.borderColor = BORDER; }}
+                  >
+                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {client.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{client.name}</div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{client.program || "Member"} · Tap for history</div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleAttendance(client.id); }}
+                      style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${present ? coach.color : BORDER}`, background: present ? `${coach.color}14` : WHITE, color: present ? coach.color : TEXT_SEC, flexShrink: 0 }}
+                    >
+                      {present ? "Checked in" : "Check in"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Client notes / history slide-over */}
+      {notesClient && (() => {
+        const note = getLastNote(notesClient.id);
+        return (
+          <>
+            <div onClick={() => setNotesClientId(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,20,0.4)", zIndex: 110 }} />
+            <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: isMobile ? "100%" : 420, maxWidth: "100%", background: "#fafcfb", zIndex: 111, display: "flex", flexDirection: "column", boxShadow: "-12px 0 40px rgba(0,0,0,0.16)" }}>
+              {/* Panel header */}
+              <div style={{ padding: "16px 20px", background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {notesClient.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{notesClient.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{notesClient.program || "Member"} · Notes & history</div>
+                </div>
+                <button onClick={() => setNotesClientId(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Last note meta */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.5 }}>Last session</span>
+                  <span style={{ fontSize: 12.5, color: TEXT_SEC }}>{note.dateLabel} · {note.daysAgo} days ago</span>
+                </div>
+
+                {/* Weights done */}
+                <div style={{ background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px", background: "#fbfdfc", borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4 }}>Weights logged</div>
+                  <div style={{ padding: "4px 14px" }}>
+                    {note.lifts.map((lift, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: i < note.lifts.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{lift.name}</div>
+                          <div style={{ fontSize: 11, color: TEXT_SEC }}>{lift.scheme}</div>
+                        </div>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: coach.color, flexShrink: 0 }}>{lift.weight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Check-in answers */}
+                <div style={{ background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px", background: "#fbfdfc", borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4 }}>Check-in answers</div>
+                  <div style={{ padding: "4px 14px" }}>
+                    {note.answers.map((item, i) => (
+                      <div key={i} style={{ padding: "9px 0", borderBottom: i < note.answers.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                        <div style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 2 }}>{item.q}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT }}>{item.a}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Coach note */}
+                <div style={{ background: `${coach.color}0c`, borderRadius: 12, border: `1px solid ${coach.color}33`, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>Coach note</div>
+                  <div style={{ fontSize: 13.5, color: TEXT, lineHeight: 1.5 }}>{note.coachNote}</div>
+                </div>
+
+                <button onClick={() => { setNotesClientId(null); onOpenFullProfile?.(notesClient.id); }} style={{ marginTop: 4, padding: "11px", borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  Open full profile
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS CANVAS - Manage coaches (add / delete)
+// ═══════════════════════════════════════════════════════════════
+function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
+  const [name, setName] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [color, setColor] = useState(COACH_COLORS[0]);
+  const [confirmDelete, setConfirmDelete] = useState(null); // coach id
+
+  const sessionCountFor = (coachId) => sessions.filter(s => s.coachId === coachId).length;
+
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    addCoach({ name, specialty, color, email, phone });
+    setName(""); setSpecialty(""); setEmail(""); setPhone(""); setColor(COACH_COLORS[0]);
+    onCoachesChanged?.();
+  };
+  const handleDelete = (id) => {
+    removeCoach(id);
+    setConfirmDelete(null);
+    onCoachesChanged?.();
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{ padding: isMobile ? "16px" : "24px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+              </button>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: TEAL_LIGHT, padding: "5px 10px", borderRadius: 16 }}>
+                <span style={{ color: TEAL, display: "flex" }}><NavIcon icon="users" size={14} /></span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Settings</span>
+              </div>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Coaches</h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Add or remove the coaches who can be assigned to classes and sessions.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Add coach */}
+          <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, padding: isMobile ? 16 : 20 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: "0 0 14px" }}>Add a coach</h2>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "stretch" : "flex-end" }}>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Full name</span>
+                <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. Riley Chen" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Specialty</span>
+                <input value={specialty} onChange={e => setSpecialty(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. Olympic lifting" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+            </div>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "stretch" : "flex-end", marginTop: 12 }}>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Email</span>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. riley@coachhub.com" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Phone</span>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. (555) 201-0000" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Color</span>
+              {COACH_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)} aria-label={`Color ${c}`} style={{ width: 26, height: 26, borderRadius: "50%", background: c, border: color === c ? `3px solid ${TEXT}` : `2px solid ${WHITE}`, boxShadow: color === c ? "none" : `0 0 0 1px ${BORDER}`, cursor: "pointer", padding: 0 }} />
+              ))}
+            </div>
+            <button onClick={handleAdd} disabled={!name.trim()} style={{ marginTop: 16, padding: "10px 18px", borderRadius: 9, border: "none", background: name.trim() ? TEAL : "#cbd5d3", color: WHITE, fontSize: 13.5, fontWeight: 700, cursor: name.trim() ? "pointer" : "default", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add coach
+            </button>
+          </div>
+
+          {/* Roster */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Coach roster</h2>
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{COACHES.length} coaches</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {COACHES.map(coach => {
+                const count = sessionCountFor(coach.id);
+                const isConfirming = confirmDelete === coach.id;
+                return (
+                  <div key={coach.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${isConfirming ? "#f0c9c0" : BORDER}`, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12, borderLeft: `4px solid ${coach.color}` }}>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {coach.initials}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{coach.name}</div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{coach.specialty} · {count} {count === 1 ? "session" : "sessions"}</div>
+                      {(coach.email || coach.phone) && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 14px", marginTop: 5 }}>
+                          {coach.email && (
+                            <a href={`mailto:${coach.email}`} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: coach.color, textDecoration: "none", maxWidth: "100%", minWidth: 0 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{coach.email}</span>
+                            </a>
+                          )}
+                          {coach.phone && (
+                            <a href={`tel:${coach.phone.replace(/[^0-9+]/g, "")}`} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: TEXT_SEC, textDecoration: "none" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                              <span>{coach.phone}</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {isConfirming ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, color: "#c0432a", fontWeight: 600, display: isMobile ? "none" : "block" }}>Delete?</span>
+                        <button onClick={() => handleDelete(coach.id)} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#c0432a", color: WHITE, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Delete</button>
+                        <button onClick={() => setConfirmDelete(null)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(coach.id)}
+                        disabled={COACHES.length <= 1}
+                        title={COACHES.length <= 1 ? "At least one coach is required" : "Remove coach"}
+                        style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: COACHES.length <= 1 ? "default" : "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: COACHES.length <= 1 ? 0.4 : 1 }}
+                        onMouseEnter={e => { if (COACHES.length > 1) { e.currentTarget.style.color = "#c0432a"; e.currentTarget.style.borderColor = "#f0c9c0"; } }}
+                        onMouseLeave={e => { e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {COACHES.some(c => sessionCountFor(c.id) > 0) && (
+              <p style={{ fontSize: 11.5, color: TEXT_SEC, margin: "12px 2px 0", lineHeight: 1.5 }}>
+                Deleting a coach with assigned sessions reassigns those sessions to the first remaining coach.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4476,6 +5119,7 @@ function MobileCanvasSheet({
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
+  const [coachVersion, setCoachVersion] = useState(0);
   const startY = useRef(0);
   const startH = useRef(96);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
@@ -4519,6 +5163,7 @@ function MobileCanvasSheet({
   const getTitle = () => {
     switch(canvasType) {
       case "schedule": return "Schedule";
+      case "programming": return "Programming";
       case "inbox": return "Inbox";
       case "templates": return "Canvas";
       case "mealPlan": return "Meal Plan";
@@ -4607,7 +5252,13 @@ function MobileCanvasSheet({
             <CanvasTemplates 
               isMobile={true}
               onSelect={(templateType) => {
-                if (templateType === "mealPlan") {
+                if (templateType === "settings") {
+                  setCanvasType("settings");
+                  setCanvasData({});
+                } else if (templateType === "programming") {
+                  setCanvasType("programming");
+                  setCanvasData({});
+                } else if (templateType === "mealPlan") {
                   setCanvasType("mealPlan");
                   setCanvasData({
                     client: "New Client",
@@ -4623,6 +5274,9 @@ clientName: "New Client",
   });
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
+  setCanvasData({});
+  } else if (templateType === "groupClass") {
+  setCanvasType("groupClass");
   setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
@@ -4662,6 +5316,24 @@ isMobile={true}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "programming" && (
+            <ProgrammingCanvas
+              isMobile={true}
+              clients={clients}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "settings" && (
+            <SettingsCanvas
+              key={coachVersion}
+              isMobile={true}
+              sessions={sessions}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+              onCoachesChanged={() => setCoachVersion(v => v + 1)}
             />
           )}
           {canvasType === "mealPlan" && (
@@ -4793,7 +5465,7 @@ isMobile={true}
   );
 }
 
-/* ═══════════════════���═════���══════════════���══
+/* ═══════════════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
    ═════════════════════════════════════════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -5456,7 +6128,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ─── ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──������ ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -7024,7 +7696,7 @@ return (
 
 /* ════════════════════════════════════════════
    SEND REPORT MODAL
-   ═════════════════════════════════════════════ */
+   ═══════════════════════════════════════��═════ */
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -11367,7 +12039,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════��═════════════════════════════════
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
@@ -14111,6 +14783,26 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
   const templates = [
+    {
+      id: "settings",
+      icon: "users",
+      title: "Coaches",
+      desc: "Manage your coaching team — add or remove coaches and keep their contact details up to date",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
+      available: true,
+      number: 1
+    },
+    {
+      id: "programming",
+      icon: "program",
+      title: "Master Programming",
+      desc: "Build and maintain the master training calendar that every client program draws from",
+      color: "#45818e",
+      bgColor: "#e9f2f4",
+      available: true,
+      number: 2
+    },
     { 
       id: "workout",
       icon: "chart", 
@@ -14129,6 +14821,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       bgColor: "#e6f9ec",
       available: true,
       number: 2
+    },
+    {
+      id: "groupClass",
+      icon: "users",
+      title: "Group Class",
+      desc: "Run a class for up to 12 members off one shared board, checking in each member's personalized weights",
+      color: "#c2410c",
+      bgColor: "#fff1ea",
+      available: true,
+      number: 3
     },
     { 
       id: "mealPlan",
@@ -17982,6 +18684,735 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 /* ═════════════════════════════════════════════
    MAIN DASHBOARD COMPONENT
    ══════════════════════════���═════��════════════ */
+// ═══════════════════════════════════════════════════════════════
+// PROGRAMMING CANVAS - Admin group / semi-private scheduling + generation
+// ═══════════════════════════════════════════════════════════════
+const CLASS_TIME_SLOTS = ["6:00 AM", "7:00 AM", "9:00 AM", "12:00 PM", "4:30 PM", "5:30 PM", "6:30 PM"];
+
+function buildSeedSchedule() {
+  // Seed a few weeks of March 2026 with recurring group + semi sessions
+  const out = [];
+  let uid = 1;
+  const recurring = [
+    { dow: 1, time: "6:00 AM", kind: "group", classType: "strength", coachId: "miguel", capacity: 12 },
+    { dow: 1, time: "5:30 PM", kind: "semi", classType: "strength", coachId: "alana", capacity: 4 },
+    { dow: 2, time: "7:00 AM", kind: "group", classType: "conditioning", coachId: "jordan", capacity: 14 },
+    { dow: 3, time: "6:00 AM", kind: "group", classType: "hiit", coachId: "alana", capacity: 12 },
+    { dow: 3, time: "6:30 PM", kind: "semi", classType: "mobility", coachId: "devon", capacity: 4 },
+    { dow: 4, time: "7:00 AM", kind: "group", classType: "strength", coachId: "miguel", capacity: 12 },
+    { dow: 5, time: "9:00 AM", kind: "group", classType: "conditioning", coachId: "jordan", capacity: 14 },
+    { dow: 6, time: "9:00 AM", kind: "semi", classType: "strength", coachId: "miguel", capacity: 4 },
+  ];
+  // March 2026 starts on a Sunday
+  for (let day = 2; day <= 21; day++) {
+    const date = new Date(2026, 2, day);
+    const dow = date.getDay();
+    recurring.filter(r => r.dow === dow).forEach(r => {
+      const booked = Math.floor(Math.random() * (r.capacity - 1)) + 1;
+      out.push({
+        id: `cls_${String(uid++).padStart(3, "0")}`,
+        date: `2026-03-${String(day).padStart(2, "0")}`,
+        time: r.time,
+        kind: r.kind,
+        classType: r.classType,
+        coachId: r.coachId,
+        capacity: r.capacity,
+        booked,
+        status: day <= 14 ? "published" : "generated",
+        program: day <= 14 ? PROGRAM_TEMPLATES[r.classType].map(e => ({ ...e })) : null,
+        attendance: {},
+      });
+    });
+  }
+  return out;
+}
+
+function ProgrammingCanvas({ onClose, onHome, isMobile, clients = [] }) {
+  const [schedule, setSchedule] = useState(() => buildSeedSchedule());
+  const [tab, setTab] = useState("schedule"); // schedule | group | semi
+  const [coachFilter, setCoachFilter] = useState("all");
+  const [monthDate] = useState(new Date(2026, 2, 1)); // March 2026
+  const [selected, setSelected] = useState(null); // session id for drawer
+  const [addingDay, setAddingDay] = useState(null); // date string for add modal
+  const [toast, setToast] = useState(null);
+
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthLabel = monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2200); };
+
+  const dateKey = (day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const sessionsOnDay = (day) => schedule.filter(s => s.date === dateKey(day));
+
+  const filtered = schedule.filter(s => {
+    if (tab === "group" && s.kind !== "group") return false;
+    if (tab === "semi" && s.kind !== "semi") return false;
+    if (coachFilter !== "all" && s.coachId !== coachFilter) return false;
+    return true;
+  });
+
+  const addSession = (newSess) => {
+    setSchedule(prev => [...prev, { ...newSess, id: `cls_${Date.now()}`, status: "unscheduled", program: null, attendance: {}, booked: 0 }]);
+    setAddingDay(null);
+    flash("Class added to schedule");
+  };
+
+  const removeSession = (id) => {
+    setSchedule(prev => prev.filter(s => s.id !== id));
+    setSelected(null);
+  };
+
+  const generateAll = () => {
+    const targets = schedule.filter(s => s.status === "unscheduled");
+    if (targets.length === 0) { flash("Every scheduled class already has programming"); return; }
+    setSchedule(prev => prev.map(s => s.status === "unscheduled"
+      ? { ...s, status: "generated", program: PROGRAM_TEMPLATES[s.classType].map(e => ({ ...e })) }
+      : s));
+    flash(`Generated programming for ${targets.length} ${targets.length === 1 ? "class" : "classes"}`);
+  };
+
+  const sendToReview = () => {
+    const drafts = schedule.filter(s => s.status === "generated");
+    if (drafts.length === 0) { flash("No drafts to send for review"); return; }
+    setSchedule(prev => prev.map(s => s.status === "generated" ? { ...s, status: "pending" } : s));
+    flash(`Sent ${drafts.length} ${drafts.length === 1 ? "class" : "classes"} to coaches for review`);
+  };
+
+  const publishAll = () => {
+    const ready = schedule.filter(s => s.status === "pending");
+    if (ready.length === 0) { flash("Nothing approved is waiting to publish"); return; }
+    setSchedule(prev => prev.map(s => s.status === "pending" ? { ...s, status: "published" } : s));
+    flash(`Published ${ready.length} ${ready.length === 1 ? "class" : "classes"} — members can now book`);
+  };
+
+  const updateSession = (id, patch) => setSchedule(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+
+  // Pipeline counts
+  const counts = {
+    unscheduled: schedule.filter(s => s.status === "unscheduled").length,
+    generated: schedule.filter(s => s.status === "generated").length,
+    pending: schedule.filter(s => s.status === "pending").length,
+    published: schedule.filter(s => s.status === "published").length,
+  };
+
+  const selectedSession = schedule.find(s => s.id === selected);
+
+  const headerBtn = (label, onClick, primary, disabled) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: "8px 14px", borderRadius: 9, fontSize: 12.5, fontWeight: 600,
+        cursor: disabled ? "not-allowed" : "pointer",
+        border: primary ? "none" : `1px solid ${BORDER}`,
+        background: disabled ? "#eef2f1" : primary ? TEAL : WHITE,
+        color: disabled ? "#9fb3af" : primary ? "#fff" : TEXT,
+        boxShadow: primary && !disabled ? "0 2px 8px rgba(43,122,120,0.28)" : "none",
+        transition: "all 0.15s ease", whiteSpace: "nowrap",
+      }}
+    >{label}</button>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb" }}>
+      {/* Header */}
+      <div style={{
+        padding: isMobile ? "10px 14px" : "12px 18px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between", background: WHITE, gap: 12, flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: TEXT }}>Programming</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{monthLabel} · group & semi-private</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {!isMobile && headerBtn("Generate", generateAll, false, counts.unscheduled === 0)}
+          {!isMobile && headerBtn("Send to coaches", sendToReview, false, counts.generated === 0)}
+          {headerBtn("Publish", publishAll, true, counts.pending === 0)}
+          <div onClick={onClose} style={{
+            width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC, border: `1px solid ${BORDER}`, background: WHITE,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Pipeline strip */}
+      <div style={{
+        display: "flex", gap: isMobile ? 6 : 10, padding: isMobile ? "10px 14px" : "12px 18px",
+        background: WHITE, borderBottom: `1px solid ${BORDER}`, overflowX: "auto"
+      }}>
+        {[
+          { key: "unscheduled", label: "Needs program" },
+          { key: "generated", label: "Drafts" },
+          { key: "pending", label: "In review" },
+          { key: "published", label: "Published" },
+        ].map((step, i) => {
+          const cfg = PROGRAM_STATUS[step.key];
+          return (
+            <React.Fragment key={step.key}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 10,
+                background: cfg.bg, flexShrink: 0
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: cfg.color, lineHeight: 1 }}>{counts[step.key]}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: cfg.color }}>{step.label}</span>
+              </div>
+              {i < 3 && !isMobile && (
+                <div style={{ display: "flex", alignItems: "center", color: "#cbd5cf", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Tabs + coach filter */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        padding: isMobile ? "10px 14px" : "10px 18px", background: WHITE, borderBottom: `1px solid ${BORDER}`, flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", gap: 6, background: "#f0f4f3", padding: 4, borderRadius: 10 }}>
+          {[
+            { id: "schedule", label: "Month Schedule" },
+            { id: "group", label: "Group Classes" },
+            { id: "semi", label: "Semi-Private" },
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              padding: "7px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+              fontSize: 12.5, fontWeight: 600,
+              background: tab === t.id ? WHITE : "transparent",
+              color: tab === t.id ? TEAL : TEXT_SEC,
+              boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+            }}>{t.label}</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+          <button onClick={() => setCoachFilter("all")} style={{
+            padding: "5px 10px", borderRadius: 20, fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+            border: `1px solid ${coachFilter === "all" ? TEAL : BORDER}`,
+            background: coachFilter === "all" ? TEAL_LIGHT : WHITE, color: coachFilter === "all" ? TEAL : TEXT_SEC, flexShrink: 0,
+          }}>All coaches</button>
+          {COACHES.map(c => (
+            <button key={c.id} onClick={() => setCoachFilter(c.id)} style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 20,
+              fontSize: 11.5, fontWeight: 600, cursor: "pointer", flexShrink: 0,
+              border: `1px solid ${coachFilter === c.id ? c.color : BORDER}`,
+              background: coachFilter === c.id ? c.color : WHITE, color: coachFilter === c.id ? "#fff" : TEXT_SEC,
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: coachFilter === c.id ? "#fff" : c.color }} />
+              {c.name.split(" ")[0]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 12 : 18 }}>
+        {tab === "schedule" ? (
+          <ProgrammingMonth
+            isMobile={isMobile} firstDow={firstDow} daysInMonth={daysInMonth} dateKey={dateKey}
+            sessionsOnDay={(d) => sessionsOnDay(d).filter(s => coachFilter === "all" || s.coachId === coachFilter)}
+            onAdd={(day) => setAddingDay(dateKey(day))}
+            onSelect={(id) => setSelected(id)}
+          />
+        ) : (
+          <ProgrammingWeekView
+            isMobile={isMobile}
+            year={year}
+            month={month}
+            kind={tab}
+            sessions={filtered}
+            onAdd={(dateStr) => setAddingDay(dateStr)}
+            onSelect={(id) => setSelected(id)}
+          />
+        )}
+      </div>
+
+      {/* Add class modal */}
+      {addingDay && (
+        <AddClassModal date={addingDay} onCancel={() => setAddingDay(null)} onAdd={addSession} />
+      )}
+
+      {/* Session detail drawer */}
+      {selectedSession && (
+        <SessionProgramDrawer
+          session={selectedSession} clients={clients} isMobile={isMobile}
+          onClose={() => setSelected(null)}
+          onUpdate={(patch) => updateSession(selectedSession.id, patch)}
+          onRemove={() => removeSession(selectedSession.id)}
+          onFlash={flash}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)",
+          background: TEXT, color: "#fff", padding: "10px 18px", borderRadius: 10,
+          fontSize: 13, fontWeight: 600, boxShadow: "0 6px 24px rgba(0,0,0,0.2)", zIndex: 50,
+          animation: "fadeUp 0.2s ease",
+        }}>{toast}</div>
+      )}
+    </div>
+  );
+}
+
+// Month grid for programming
+function ProgrammingMonth({ isMobile, firstDow, daysInMonth, sessionsOnDay, onAdd, onSelect }) {
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
+        {dayLabels.map(d => (
+          <div key={d} style={{
+            padding: "10px 8px", fontSize: 11, fontWeight: 700, color: TEXT_SEC, textAlign: "center",
+            borderBottom: `1px solid ${BORDER}`, background: "#f7faf9",
+          }}>{isMobile ? d[0] : d}</div>
+        ))}
+        {cells.map((day, idx) => {
+          const sess = day ? sessionsOnDay(day) : [];
+          return (
+            <div key={idx} style={{
+              minHeight: isMobile ? 88 : 116, borderRight: (idx % 7 !== 6) ? `1px solid ${BORDER}` : "none",
+              borderBottom: `1px solid ${BORDER}`, padding: 6, background: day ? WHITE : "#fbfdfc",
+              display: "flex", flexDirection: "column", gap: 4, position: "relative",
+            }}>
+              {day && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{day}</span>
+                    <button onClick={() => onAdd(day)} title="Add class" style={{
+                      width: 18, height: 18, borderRadius: 5, border: `1px solid ${BORDER}`, background: WHITE,
+                      cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                    }}>
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}>
+                    {sess.slice(0, isMobile ? 2 : 4).map(s => {
+                      const coach = getCoach(s.coachId);
+                      const st = PROGRAM_STATUS[s.status];
+                      return (
+                        <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                          display: "flex", alignItems: "center", gap: 4, padding: "3px 5px", borderRadius: 6,
+                          border: "none", cursor: "pointer", textAlign: "left", width: "100%",
+                          background: `${coach.color}14`, borderLeft: `3px solid ${coach.color}`,
+                        }}>
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: st.color, flexShrink: 0 }} />
+                          <span style={{ fontSize: 9.5, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {s.kind === "semi" ? "SP" : ""} {s.time.replace(":00", "")}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {sess.length > (isMobile ? 2 : 4) && (
+                      <span style={{ fontSize: 9, color: TEXT_SEC, paddingLeft: 4 }}>+{sess.length - (isMobile ? 2 : 4)} more</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Week view for group / semi-private: 7 days across, weeks stacked & scrollable through the month
+function ProgrammingWeekView({ isMobile, year, month, kind, sessions, onAdd, onSelect }) {
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay();
+  const monthName = new Date(year, month, 1).toLocaleDateString("en-US", { month: "long" });
+
+  const keyFor = (day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const byDay = {};
+  sessions.forEach(s => { (byDay[s.date] = byDay[s.date] || []).push(s); });
+
+  // Build week rows (arrays of {day|null})
+  const weeks = [];
+  let cursor = [];
+  for (let i = 0; i < firstDow; i++) cursor.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cursor.push(d);
+    if (cursor.length === 7) { weeks.push(cursor); cursor = []; }
+  }
+  if (cursor.length) { while (cursor.length < 7) cursor.push(null); weeks.push(cursor); }
+
+  const todayKey = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`; })();
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 22 }}>
+      {weeks.map((week, wi) => {
+        const visibleDays = week.filter(Boolean);
+        const first = visibleDays[0];
+        const last = visibleDays[visibleDays.length - 1];
+        return (
+          <div key={wi}>
+            {/* Week label */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: 0.5 }}>Week {wi + 1}</span>
+              <span style={{ fontSize: 11.5, color: TEXT_SEC }}>{monthName} {first}{last !== first ? `–${last}` : ""}</span>
+              <div style={{ flex: 1, height: 1, background: BORDER }} />
+            </div>
+
+            {/* 7-day row */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isMobile ? 4 : 8,
+            }}>
+              {week.map((day, di) => {
+                const isToday = day && keyFor(day) === todayKey;
+                const dayKey = day ? keyFor(day) : null;
+                const sess = day ? (byDay[dayKey] || []).slice().sort((a, b) => a.time.localeCompare(b.time)) : [];
+                return (
+                  <div key={di} style={{
+                    background: day ? WHITE : "transparent",
+                    border: day ? `1px solid ${isToday ? TEAL : BORDER}` : "1px dashed transparent",
+                    borderRadius: 10, padding: isMobile ? 5 : 8, minHeight: isMobile ? 96 : 150,
+                    display: "flex", flexDirection: "column", gap: 6,
+                  }}>
+                    {day && (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase" }}>{dayLabels[di][0]}{!isMobile ? dayLabels[di].slice(1) : ""}</span>
+                            <span style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: isToday ? TEAL : TEXT, marginTop: 2 }}>{day}</span>
+                          </div>
+                          <button onClick={() => onAdd(dayKey)} title="Add class" style={{
+                            width: 18, height: 18, borderRadius: 5, border: `1px solid ${BORDER}`, background: WHITE,
+                            cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0,
+                          }}>
+                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                          </button>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                          {sess.length === 0 && (
+                            <span style={{ fontSize: 9.5, color: "#c2cecb", fontStyle: "italic" }}>{isMobile ? "" : "No classes"}</span>
+                          )}
+                          {sess.map(s => {
+                            const coach = getCoach(s.coachId);
+                            const ct = getClassType(s.classType);
+                            const st = PROGRAM_STATUS[s.status];
+                            return (
+                              <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                                display: "flex", flexDirection: "column", gap: 2, padding: isMobile ? "4px 5px" : "6px 7px",
+                                borderRadius: 7, border: "none", cursor: "pointer", textAlign: "left", width: "100%",
+                                background: `${coach.color}12`, borderLeft: `3px solid ${coach.color}`,
+                              }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                                  <span style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: TEXT, whiteSpace: "nowrap" }}>{s.time.replace(":00 ", "")}</span>
+                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: st.color, flexShrink: 0 }} title={st.label} />
+                                </div>
+                                {!isMobile && (
+                                  <span style={{ fontSize: 10, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.label}</span>
+                                )}
+                                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ width: 14, height: 14, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{coach.initials}</span>
+                                  {!isMobile && <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 600 }}>{s.booked}/{s.capacity}</span>}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Add class modal
+function AddClassModal({ date, onCancel, onAdd }) {
+  const [kind, setKind] = useState("group");
+  const [time, setTime] = useState(CLASS_TIME_SLOTS[0]);
+  const [classType, setClassType] = useState("strength");
+  const [coachId, setCoachId] = useState(COACHES[0].id);
+  const [capacity, setCapacity] = useState(12);
+  const niceDate = new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const field = (label, children) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>{label}</label>
+      {children}
+    </div>
+  );
+  const selStyle = { padding: "10px 12px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, background: WHITE, width: "100%" };
+
+  return (
+    <div onClick={onCancel} style={{
+      position: "absolute", inset: 0, background: "rgba(26,46,42,0.45)", zIndex: 60,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: WHITE, borderRadius: 16, width: "100%", maxWidth: 420, padding: 22,
+        boxShadow: "0 16px 48px rgba(0,0,0,0.22)", animation: "fadeUp 0.2s ease",
+      }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>Add class</div>
+        <div style={{ fontSize: 12.5, color: TEXT_SEC, marginBottom: 18 }}>{niceDate}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {field("Type", (
+            <div style={{ display: "flex", gap: 8 }}>
+              {[{ id: "group", label: "Group Class", cap: 12 }, { id: "semi", label: "Semi-Private", cap: 4 }].map(o => (
+                <button key={o.id} onClick={() => { setKind(o.id); setCapacity(o.cap); }} style={{
+                  flex: 1, padding: "10px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+                  border: `1px solid ${kind === o.id ? TEAL : BORDER}`,
+                  background: kind === o.id ? TEAL_LIGHT : WHITE, color: kind === o.id ? TEAL : TEXT_SEC,
+                }}>{o.label}</button>
+              ))}
+            </div>
+          ))}
+          {field("Time", (
+            <select value={time} onChange={e => setTime(e.target.value)} style={selStyle}>
+              {CLASS_TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          ))}
+          {field("Focus", (
+            <select value={classType} onChange={e => setClassType(e.target.value)} style={selStyle}>
+              {GROUP_CLASS_TYPES.map(c => <option key={c.id} value={c.id}>{c.label} — {c.focus}</option>)}
+            </select>
+          ))}
+          {field("Coach owner", (
+            <select value={coachId} onChange={e => setCoachId(e.target.value)} style={selStyle}>
+              {COACHES.map(c => <option key={c.id} value={c.id}>{c.name} ({c.specialty})</option>)}
+            </select>
+          ))}
+          {field("Capacity", (
+            <input type="number" min={1} max={30} value={capacity} onChange={e => setCapacity(Number(e.target.value))} style={selStyle} />
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button onClick={onCancel} style={{ flex: 1, padding: "11px", borderRadius: 9, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={() => onAdd({ date, kind, time, classType, coachId, capacity })} style={{ flex: 1, padding: "11px", borderRadius: 9, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Add class</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Session detail drawer: program, attendance, per-client weights / notes
+function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, onRemove, onFlash }) {
+  const [editingCoach, setEditingCoach] = useState(false);
+  const coach = getCoach(session.coachId);
+  const ct = getClassType(session.classType);
+  const st = PROGRAM_STATUS[session.status];
+
+  const reassignCoach = (id) => {
+    setEditingCoach(false);
+    if (id === session.coachId) return;
+    onUpdate({ coachId: id });
+    onFlash(`Reassigned to ${getCoach(id).name}`);
+  };
+  const niceDate = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const [editingCell, setEditingCell] = useState(null); // { idx, field }
+
+  const generate = () => {
+    onUpdate({ status: "generated", program: PROGRAM_TEMPLATES[session.classType].map(e => ({ ...e })) });
+    onFlash("Programming generated");
+  };
+
+  const editExercise = (idx, field, value) => {
+    const next = session.program.map((ex, i) => i === idx ? { ...ex, [field]: value } : ex);
+    onUpdate({ program: next });
+  };
+  const deleteExercise = (idx) => {
+    onUpdate({ program: session.program.filter((_, i) => i !== idx) });
+    setEditingCell(null);
+  };
+  const addExercise = () => {
+    const next = [...(session.program || []), { name: "New exercise", scheme: "3 x 10", pct: "—", target: "" }];
+    onUpdate({ program: next });
+    setEditingCell({ idx: next.length - 1, field: "name" });
+  };
+  const moveExercise = (idx, dir) => {
+    const target = idx + dir;
+    if (target < 0 || target >= session.program.length) return;
+    const next = [...session.program];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onUpdate({ program: next });
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,46,42,0.4)", zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: isMobile ? "100%" : 440, height: "100%", background: "#fafcfb", overflowY: "auto",
+        boxShadow: "-8px 0 32px rgba(0,0,0,0.18)", animation: "fadeSlideIn 0.22s ease",
+        display: "flex", flexDirection: "column",
+      }}>
+        {/* Drawer header */}
+        <div style={{ padding: 18, background: WHITE, borderBottom: `1px solid ${BORDER}`, borderTop: `4px solid ${coach.color}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>{ct.label}{session.kind === "semi" ? " · Semi-Private" : " · Group"}</div>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{niceDate} · {session.time}</div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setEditingCoach(v => !v)} style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 20,
+                border: `1px solid ${editingCoach ? coach.color : BORDER}`, background: WHITE, cursor: "pointer",
+              }}>
+                <span style={{ width: 24, height: 24, borderRadius: "50%", background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{coach.name}</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+              </button>
+              {editingCoach && (
+                <>
+                  <div onClick={() => setEditingCoach(false)} style={{ position: "fixed", inset: 0, zIndex: 70 }} />
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 71, width: 230,
+                    background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`, boxShadow: "0 10px 32px rgba(0,0,0,0.16)",
+                    padding: 6, display: "flex", flexDirection: "column", gap: 2,
+                  }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4, padding: "6px 8px 4px" }}>Assign coach</div>
+                    {COACHES.map(c => {
+                      const active = c.id === session.coachId;
+                      return (
+                        <button key={c.id} onClick={() => reassignCoach(c.id)} style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "8px", borderRadius: 8, border: "none",
+                          cursor: "pointer", textAlign: "left", width: "100%",
+                          background: active ? `${c.color}14` : "transparent",
+                        }}>
+                          <span style={{ width: 26, height: 26, borderRadius: "50%", background: c.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{c.initials}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: TEXT }}>{c.name}</div>
+                            <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{c.specialty}</div>
+                          </div>
+                          {active && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: st.color, background: st.bg, padding: "3px 9px", borderRadius: 20 }}>{st.label}</span>
+            <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{session.booked}/{session.capacity} booked</span>
+          </div>
+        </div>
+
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 18 }}>
+          {/* Programming block */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Programming</span>
+              {!session.program && (
+                <button onClick={generate} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>Generate</button>
+              )}
+            </div>
+            {session.program ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {session.program.map((ex, i) => {
+                  const isEditing = (field) => editingCell?.idx === i && editingCell?.field === field;
+                  const cellInput = (field, val, style) => (
+                    <input
+                      autoFocus
+                      value={val}
+                      onChange={(e) => editExercise(i, field, e.target.value)}
+                      onBlur={() => setEditingCell(null)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingCell(null); }}
+                      style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: 0, ...style }}
+                    />
+                  );
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+                      {/* reorder + index */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        <button onClick={() => moveExercise(i, -1)} disabled={i === 0} style={{ width: 16, height: 13, border: "none", background: "transparent", cursor: i === 0 ? "default" : "pointer", color: TEXT_SEC, padding: 0, opacity: i === 0 ? 0.3 : 1 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="6,15 12,9 18,15"/></svg>
+                        </button>
+                        <button onClick={() => moveExercise(i, 1)} disabled={i === session.program.length - 1} style={{ width: 16, height: 13, border: "none", background: "transparent", cursor: i === session.program.length - 1 ? "default" : "pointer", color: TEXT_SEC, padding: 0, opacity: i === session.program.length - 1 ? 0.3 : 1 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+                        </button>
+                      </div>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: TEAL, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+
+                      {/* name */}
+                      <div onClick={() => setEditingCell({ idx: i, field: "name" })} style={{ flex: 1, minWidth: 0, cursor: "text" }}>
+                        {isEditing("name")
+                          ? cellInput("name", ex.name, { fontSize: 13, fontWeight: 600, color: TEXT })
+                          : <span style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{ex.name}</span>}
+                      </div>
+
+                      {/* % of max */}
+                      <div onClick={() => setEditingCell({ idx: i, field: "pct" })} style={{ width: 52, flexShrink: 0, textAlign: "center", cursor: "text" }}>
+                        <div style={{ fontSize: 8.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.3 }}>% max</div>
+                        {isEditing("pct")
+                          ? cellInput("pct", ex.pct || "", { fontSize: 12.5, fontWeight: 700, color: "#ef6c3e", textAlign: "center" })
+                          : <span style={{ fontSize: 12.5, fontWeight: 700, color: (ex.pct && ex.pct !== "—") ? "#ef6c3e" : "#c2cecb" }}>{ex.pct || "—"}</span>}
+                      </div>
+
+                      {/* scheme + target */}
+                      <div style={{ textAlign: "right", minWidth: 90 }}>
+                        <div onClick={() => setEditingCell({ idx: i, field: "scheme" })} style={{ cursor: "text" }}>
+                          {isEditing("scheme")
+                            ? cellInput("scheme", ex.scheme, { fontSize: 12.5, fontWeight: 700, color: TEAL, textAlign: "right" })
+                            : <span style={{ fontSize: 12.5, fontWeight: 700, color: TEAL }}>{ex.scheme}</span>}
+                        </div>
+                        <div onClick={() => setEditingCell({ idx: i, field: "target" })} style={{ cursor: "text" }}>
+                          {isEditing("target")
+                            ? cellInput("target", ex.target, { fontSize: 10.5, color: TEXT_SEC, textAlign: "right" })
+                            : <span style={{ fontSize: 10.5, color: TEXT_SEC }}>{ex.target || "Add cue"}</span>}
+                        </div>
+                      </div>
+
+                      {/* delete */}
+                      <button onClick={() => deleteExercise(i)} style={{ width: 24, height: 24, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: TEXT_SEC, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.color = "#c0432a"}
+                        onMouseLeave={e => e.currentTarget.style.color = TEXT_SEC}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  );
+                })}
+                <button onClick={addExercise} style={{
+                  padding: "10px", borderRadius: 10, border: `2px dashed ${BORDER}`, background: "transparent",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  color: TEXT_SEC, fontSize: 12.5, fontWeight: 600,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add exercise
+                </button>
+              </div>
+            ) : (
+              <div style={{ padding: 20, textAlign: "center", background: "#fff7ed", borderRadius: 10, border: "1px dashed #fbcb96", fontSize: 12.5, color: "#92400e" }}>
+                No programming yet. Generate to draft this class.
+              </div>
+            )}
+          </div>
+
+          <button onClick={onRemove} style={{ alignSelf: "flex-start", padding: "8px 14px", borderRadius: 9, border: `1px solid #f0c9c0`, background: "#fdf2ef", color: "#c0432a", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Remove class</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [showWelcomeVideo, setShowWelcomeVideo] = useState(true);
@@ -18011,6 +19442,7 @@ export default function MiltonDashboard() {
   // Session state for Semi-Private and PT sessions
   const [sessions, setSessions] = useState([...initialSessions]);
   const [activeSessionId, setActiveSessionId] = useState(null); // When set, shows SessionCanvas
+  const [coachVersion, setCoachVersion] = useState(0); // bump to re-render after coach add/delete
   
   // Playbook state (the gym's operating system)
   const [playbook, setPlaybook] = useState({
@@ -18832,14 +20264,20 @@ export default function MiltonDashboard() {
             <CanvasTemplates 
               isMobile={isMobile}
               onSelect={(templateType) => {
-                if (templateType === "mealPlan") {
+                if (templateType === "settings") {
+                  setCanvasType("settings");
+                  setCanvasData({});
+                } else if (templateType === "programming") {
+                  setCanvasType("programming");
+                  setCanvasData({});
+                } else if (templateType === "mealPlan") {
                   setCanvasType("mealPlan");
                   setCanvasData({
                     client: "New Client",
                     goals: "General health and fitness",
                     weeklyTargets: { calories: 2000, protein: 150 }
                   });
-} else if (templateType === "workout") {
+  } else if (templateType === "workout") {
   setCanvasType("workout");
   setCanvasData({
   clientName: "New Client",
@@ -18848,6 +20286,9 @@ export default function MiltonDashboard() {
   });
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
+  setCanvasData({});
+  } else if (templateType === "groupClass") {
+  setCanvasType("groupClass");
   setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
@@ -18954,6 +20395,31 @@ export default function MiltonDashboard() {
   }}
   />
   )}
+  {canvasType === "groupClass" && (
+  <GroupClassList
+  sessions={sessions}
+  clients={clients}
+  isMobile={isMobile}
+  onClose={() => setCanvasType("templates")}
+  onHome={() => setCanvasType("templates")}
+  onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+  />
+  )}
+  {canvasType === "groupClassSession" && canvasData?.sessionId && (
+  <GroupClassSession
+  session={sessions.find(s => s.id === canvasData.sessionId)}
+  clients={clients}
+  isMobile={isMobile}
+  onBack={() => setCanvasType("groupClass")}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => {
+    setCanvasMode(false);
+    setCanvasData(null);
+    setCanvasType(null);
+    setSelectedClient(clientId);
+  }}
+  />
+  )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
   isMobile={isMobile}
@@ -18962,6 +20428,30 @@ export default function MiltonDashboard() {
   sessions={sessions}
   clients={clients}
   onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
+  />
+  )}
+  {canvasType === "programming" && (
+  <ProgrammingCanvas
+  isMobile={isMobile}
+  clients={clients}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  />
+  )}
+  {canvasType === "settings" && (
+  <SettingsCanvas
+  key={coachVersion}
+  isMobile={isMobile}
+  sessions={sessions}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  onCoachesChanged={() => {
+    // Reassign any sessions whose coach was removed to the first remaining coach.
+    const validIds = new Set(COACHES.map(c => c.id));
+    const fallback = COACHES[0]?.id;
+    setSessions(prev => prev.map(s => (s.coachId && !validIds.has(s.coachId)) ? { ...s, coachId: fallback } : s));
+    setCoachVersion(v => v + 1);
+  }}
   />
   )}
   </div>
@@ -19000,7 +20490,6 @@ export default function MiltonDashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
-                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
@@ -19335,81 +20824,6 @@ export default function MiltonDashboard() {
 
         </div>
 
-        {/* Coaching Queue */}
-        <div style={{
-          background: WHITE, borderRadius: 16, padding: isMobile ? "16px" : "20px 24px",
-          border: `1px solid ${BORDER}`, boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
-        }}>
-          <div style={{ marginBottom: 14 }}>
-            <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: TEXT }}>Today's Coaching Queue</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 8 : 10 }}>
-            {[
-              {
-                count: clients.filter(c => c.alertType === "red").length, label: "Clients Attention", filterType: "red",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" fill="#fee2e2"/>
-                    <circle cx="12" cy="12" r="6" fill="#fca5a5"/>
-                    <circle cx="12" cy="12" r="2.5" fill="#ef4444"/>
-                  </svg>
-                )
-              },
-              {
-                count: clients.filter(c => c.alertType === "blue").length, label: "Reports Ready", filterType: "blue",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <rect x="4" y="3" width="16" height="18" rx="3" fill="#dbeafe"/>
-                    <rect x="7" y="7" width="6" height="1.5" rx="0.75" fill="#60a5fa"/>
-                    <rect x="7" y="10.5" width="10" height="1.5" rx="0.75" fill="#93c5fd"/>
-                    <rect x="7" y="14" width="8" height="1.5" rx="0.75" fill="#93c5fd"/>
-                    <circle cx="17" cy="17" r="5" fill="#34d399"/>
-                    <polyline points="14.5,17 16.2,18.7 19.5,15.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  </svg>
-                )
-              },
-              {
-                count: clients.filter(c => c.alertType === "green").length, label: "Client Milestone", filterType: "green",
-                icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="9" r="5" fill="#e9d5ff"/>
-                    <path d="M12 4l1.5 3 3.5.5-2.5 2.4.6 3.5L12 12l-3.1 1.4.6-3.5L7 7.5l3.5-.5z" fill="#a78bfa"/>
-                    <path d="M6 18c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#c4b5fd" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                  </svg>
-                )
-              },
-            ].map((q, i) => {
-              const isActive = clientFilter === q.filterType;
-              return (
-              <div key={i} onClick={() => setClientFilter(isActive ? null : q.filterType)} style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: isMobile ? "10px 14px" : "10px 16px",
-                borderRadius: 28,
-                background: isActive ? TEAL : "#f8faf9",
-                border: isActive ? `1px solid ${TEAL}` : `1px solid ${BORDER}`,
-                cursor: "pointer",
-                boxShadow: isActive ? "0 2px 10px rgba(43,122,120,0.3)" : "0 1px 3px rgba(0,0,0,0.03)",
-                transition: "all 0.2s ease", whiteSpace: "nowrap",
-                transform: isActive ? "scale(1.03)" : "scale(1)"
-              }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"; e.currentTarget.style.transform = "translateY(-1px)"; }}}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)"; e.currentTarget.style.transform = "scale(1)"; }}}
-              >
-                {q.icon}
-                <span style={{ fontSize: 13, fontWeight: 600, color: isActive ? "#fff" : TEXT }}>
-                  {q.count} {q.label}
-                </span>
-                {isActive && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                )}
-              </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Service Type Tab Bar */}
         {(() => {
           // Filter clients based on service type tab and dropdown
@@ -19453,34 +20867,6 @@ export default function MiltonDashboard() {
           
           return (
             <>
-              {/* Tab Bar */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 0,
-                marginBottom: 12, borderBottom: `1px solid ${BORDER}`,
-                overflow: "auto", flexShrink: 0
-              }}>
-                {["All", "PT", "Semi", "Online", "Hybrid"].map((tab) => {
-                  const isActive = serviceTypeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setServiceTypeTab(tab)}
-                      style={{
-                        padding: "12px 16px", fontSize: 14, fontWeight: isActive ? 500 : 400,
-                        color: isActive ? "#1a2e2a" : TEXT_SEC,
-                        background: "none", border: "none", cursor: "pointer",
-                        borderBottom: isActive ? `2px solid ${TEAL}` : "2px solid transparent",
-                        marginBottom: -1, whiteSpace: "nowrap", transition: "all 0.15s",
-                        display: "flex", alignItems: "center", gap: 4
-                      }}
-                    >
-                      {tab}
-                      <span style={{ color: "#8aa3a0", fontSize: 13 }}>({counts[tab]})</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Alert Type Filter Banner */}
               {clientFilter && (
                 <div style={{
