@@ -366,7 +366,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═��═════════════════════════════���������═══════════════════════════════
+// ═���═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -525,6 +525,56 @@ const initialSessions = [
         ]
       }
     }
+  },
+  // ── GROUP CLASSES ─────────────────────────────────────────────
+  // One shared workout board; each member checks in and logs their own weights.
+  {
+    id: "sess_g01",
+    time: "6:00 AM",
+    duration: "45 min",
+    sessionKind: "group",
+    classType: "strength",
+    coachId: "miguel",
+    capacity: 12,
+    clientIds: [12, 13, 4, 5, 14, 15, 6],
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    attendance: {},            // clientId -> true when checked in
+    memberWeights: {},         // clientId -> { exId: "185" }
+    sharedWorkout: {
+      title: "Strength · Lower Body",
+      exercises: [
+        { id: "g1a", name: "Back Squat", scheme: "5 x 5", pct: "75%", target: "RPE 7-8" },
+        { id: "g1b", name: "Romanian Deadlift", scheme: "4 x 8", pct: "65%", target: "Controlled" },
+        { id: "g1c", name: "Walking Lunge", scheme: "3 x 10/leg", pct: "—", target: "Goblet load" },
+        { id: "g1d", name: "Plank Hold", scheme: "3 x 45s", pct: "—", target: "Brace hard" },
+      ],
+    },
+  },
+  {
+    id: "sess_g02",
+    time: "5:30 PM",
+    duration: "45 min",
+    sessionKind: "group",
+    classType: "conditioning",
+    coachId: "jordan",
+    capacity: 14,
+    clientIds: [12, 4, 14, 15],
+    status: "scheduled",
+    startedAt: null,
+    completedAt: null,
+    attendance: {},
+    memberWeights: {},
+    sharedWorkout: {
+      title: "Conditioning · Engine Builder",
+      exercises: [
+        { id: "g2a", name: "Row Intervals", scheme: "6 x 250m", pct: "—", target: "90s rest" },
+        { id: "g2b", name: "KB Swing", scheme: "5 x 15", pct: "—", target: "Hip drive" },
+        { id: "g2c", name: "Air Bike Sprint", scheme: "8 x 20s", pct: "—", target: "All out" },
+        { id: "g2d", name: "Farmer Carry", scheme: "4 x 40m", pct: "—", target: "Heavy" },
+      ],
+    },
   },
 ];
 
@@ -1743,7 +1793,7 @@ function SessionCanvas({
 
 // ═══════════════════════════════════════════════════════════════
 // CLIENT CONTEXT DRAWER - Quick reference pane during sessions
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════���════════════════════════════════
 function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
   if (!isOpen || !client) return null;
   
@@ -2272,6 +2322,279 @@ function SemiPrivateList({
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
+// ═══════════════════════════════════════════════════════════════
+function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, isMobile }) {
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const ORANGE = "#c2410c";
+  const ORANGE_BG = "#fff1ea";
+
+  const groupSessions = sessions.filter(s => s.sessionKind === "group");
+  const upcomingCount = groupSessions.filter(s => s.status === "scheduled").length;
+  const inProgressCount = groupSessions.filter(s => s.status === "in_progress").length;
+  const completedCount = groupSessions.filter(s => s.status === "completed").length;
+
+  const filtered = groupSessions.filter(s => {
+    if (activeTab === "upcoming") return s.status === "scheduled";
+    if (activeTab === "inProgress") return s.status === "in_progress";
+    if (activeTab === "completedToday") return s.status === "completed";
+    return true;
+  });
+
+  const tabs = [
+    { id: "upcoming", label: "Upcoming", count: upcomingCount },
+    { id: "inProgress", label: "In progress", count: inProgressCount },
+    { id: "completedToday", label: "Completed today", count: completedCount },
+    { id: "all", label: "All", count: groupSessions.length },
+  ];
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "scheduled": return { bg: "#f5f7f6", color: TEXT_SEC, label: "Not started" };
+      case "in_progress": return { bg: ORANGE_BG, color: ORANGE, label: "In progress" };
+      case "completed": return { bg: "#dcfce7", color: "#16a34a", label: "Completed" };
+      default: return { bg: "#f5f7f6", color: TEXT_SEC, label: status };
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafcfb", position: "relative" }}>
+      {/* Header */}
+      <div style={{ padding: isMobile ? "16px" : "24px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+              </button>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ORANGE_BG, padding: "5px 10px", borderRadius: 16 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span style={{ fontSize: 12, fontWeight: 600, color: ORANGE }}>Group Class</span>
+              </div>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Group Classes</h1>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Run a class off one shared board and check in each member&apos;s personalized weights. Click a class to open the control panel.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8 }}>
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: "10px 16px", fontSize: 13, fontWeight: 500, background: "transparent", border: "none", cursor: "pointer", color: activeTab === tab.id ? ORANGE : TEXT_SEC, borderBottom: activeTab === tab.id ? `2px solid ${ORANGE}` : "2px solid transparent", marginBottom: -1 }}>
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        {filtered.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: ORANGE_BG, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: ORANGE }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes in this view</h3>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 280 }}>Group classes scheduled in Programming will appear here.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 760 }}>
+            {filtered.map(session => {
+              const sessionClients = session.clientIds.map(id => clients[id]).filter(Boolean);
+              const statusStyle = getStatusStyle(session.status);
+              const coach = getCoach(session.coachId);
+              const ct = getClassType(session.classType);
+              const checkedIn = Object.values(session.attendance || {}).filter(Boolean).length;
+              return (
+                <div key={session.id} onClick={() => onSessionClick?.(session.id)} style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 12, background: WHITE, border: `1px solid ${BORDER}`, cursor: "pointer", borderLeft: `4px solid ${coach.color}` }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = ORANGE; e.currentTarget.style.borderLeftColor = coach.color; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.borderLeftColor = coach.color; }}>
+                  <div style={{ minWidth: 76 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>{session.time}</div>
+                    <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.duration}</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{ct.label} · {session.sharedWorkout?.title || "Class"}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", marginLeft: 4 }}>
+                        {sessionClients.slice(0, 5).map((c, i) => (
+                          <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", background: `${coach.color}22`, border: `2px solid ${WHITE}`, marginLeft: i > 0 ? -10 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: coach.color, position: "relative", zIndex: 5 - i }}>
+                            {c?.name?.split(" ").map(n => n[0]).join("")}
+                          </div>
+                        ))}
+                        {sessionClients.length > 5 && (
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#f0f4f3", border: `2px solid ${WHITE}`, marginLeft: -10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: TEXT_SEC }}>+{sessionClients.length - 5}</div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                        {sessionClients.length}/{session.capacity} booked{checkedIn > 0 ? ` · ${checkedIn} in` : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                    <div style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: statusStyle.bg, color: statusStyle.color }}>{statusStyle.label}</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="2" strokeLinecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROUP CLASS SESSION - Live control panel: shared board + check-in roster
+// ═══════════════════════════════════════════════════════════════
+function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const ORANGE = "#c2410c";
+  const ORANGE_BG = "#fff1ea";
+
+  useEffect(() => {
+    if (session?.status !== "in_progress") return;
+    const startTime = session.startedAt ? new Date(session.startedAt).getTime() : Date.now();
+    const tick = () => setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [session?.status, session?.startedAt]);
+
+  if (!session) return null;
+
+  const coach = getCoach(session.coachId);
+  const ct = getClassType(session.classType);
+  const exercises = session.sharedWorkout?.exercises || [];
+  const sessionClients = session.clientIds.map(id => ({ id, ...clients[id] })).filter(c => c.name);
+  const elapsedMin = Math.floor(elapsedSeconds / 60);
+  const checkedIn = Object.values(session.attendance || {}).filter(Boolean).length;
+
+  const startSession = () => onUpdateSession?.({ ...session, status: "in_progress", startedAt: new Date().toISOString() });
+  const endSession = () => onUpdateSession?.({ ...session, status: "completed", completedAt: new Date().toISOString() });
+
+  const toggleAttendance = (clientId) => {
+    const att = { ...(session.attendance || {}) };
+    att[clientId] = !att[clientId];
+    onUpdateSession?.({ ...session, attendance: att });
+  };
+  const setMemberWeight = (clientId, exId, value) => {
+    const mw = { ...(session.memberWeights || {}) };
+    mw[clientId] = { ...(mw[clientId] || {}), [exId]: value };
+    onUpdateSession?.({ ...session, memberWeights: mw });
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#fafcfb", zIndex: 100, display: "flex", flexDirection: "column" }}>
+      {/* Header */}
+      <div style={{ minHeight: 64, padding: isMobile ? "12px 16px" : "0 24px", background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+          <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.label} · {session.sharedWorkout?.title}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.time} · {coach.name} · {checkedIn}/{sessionClients.length} checked in{session.status === "in_progress" ? ` · ${elapsedMin} min` : ""}</div>
+          </div>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          {session.status === "scheduled" && (
+            <button onClick={startSession} style={{ padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600, background: ORANGE, color: WHITE, border: "none", cursor: "pointer", boxShadow: `0 2px 8px ${ORANGE}40` }}>Start Class</button>
+          )}
+          {session.status === "in_progress" && (
+            <button onClick={endSession} style={{ padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 600, background: "transparent", color: ORANGE, border: `2px solid ${ORANGE}`, cursor: "pointer" }}>End Class</button>
+          )}
+          {session.status === "completed" && (
+            <span style={{ padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "#dcfce7", color: "#16a34a" }}>Completed</span>
+          )}
+        </div>
+      </div>
+
+      {/* Body: shared board (left) + roster (right) */}
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        <div style={{ display: isMobile ? "flex" : "grid", flexDirection: "column", gridTemplateColumns: "minmax(0, 340px) 1fr", gap: 20, maxWidth: 1100, margin: "0 auto", alignItems: "start" }}>
+          {/* Shared workout board */}
+          <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: "hidden", position: isMobile ? "static" : "sticky", top: 0 }}>
+            <div style={{ padding: "14px 16px", background: `${coach.color}0c`, borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: coach.color, textTransform: "uppercase", letterSpacing: 0.5 }}>Today&apos;s Board</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginTop: 2 }}>{session.sharedWorkout?.title}</div>
+            </div>
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {exercises.map((ex, i) => (
+                <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 6px", borderBottom: i < exercises.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 6, background: coach.color, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{ex.name}</div>
+                    {ex.target && <div style={{ fontSize: 11, color: TEXT_SEC }}>{ex.target}</div>}
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: coach.color }}>{ex.scheme}</div>
+                    {ex.pct && ex.pct !== "—" && <div style={{ fontSize: 10.5, fontWeight: 700, color: "#ef6c3e" }}>{ex.pct} max</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Check-in roster with per-member weights */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Roster & Check-in</h2>
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{checkedIn}/{sessionClients.length} checked in</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {sessionClients.map(client => {
+                const present = !!(session.attendance || {})[client.id];
+                const weights = (session.memberWeights || {})[client.id] || {};
+                return (
+                  <div key={client.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${present ? coach.color : BORDER}`, overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}>
+                      <button onClick={() => onOpenFullProfile?.(client.id)} style={{ width: 38, height: 38, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                        {client.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{client.name}</div>
+                        <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{client.program || "Member"}</div>
+                      </div>
+                      <button onClick={() => toggleAttendance(client.id)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${present ? coach.color : BORDER}`, background: present ? `${coach.color}14` : WHITE, color: present ? coach.color : TEXT_SEC, flexShrink: 0 }}>
+                        {present ? "Checked in" : "Check in"}
+                      </button>
+                    </div>
+                    {present && (
+                      <div style={{ borderTop: `1px solid ${BORDER}`, padding: "10px 14px", background: "#fbfdfc" }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Personalized weights</div>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 8 }}>
+                          {exercises.map(ex => (
+                            <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ flex: 1, fontSize: 12, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.name}</span>
+                              <input
+                                value={weights[ex.id] || ""}
+                                onChange={(e) => setMemberWeight(client.id, ex.id, e.target.value)}
+                                placeholder={ex.pct && ex.pct !== "—" ? ex.pct : "lbs"}
+                                style={{ width: 64, padding: "6px 8px", borderRadius: 7, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT, textAlign: "center", flexShrink: 0 }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4681,6 +5004,9 @@ clientName: "New Client",
   });
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
+  setCanvasData({});
+  } else if (templateType === "groupClass") {
+  setCanvasType("groupClass");
   setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
@@ -14188,6 +14514,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       available: true,
       number: 2
     },
+    {
+      id: "groupClass",
+      icon: "users",
+      title: "Group Class",
+      desc: "Run a class for up to 12 members off one shared board, checking in each member's personalized weights",
+      color: "#c2410c",
+      bgColor: "#fff1ea",
+      available: true,
+      number: 3
+    },
     { 
       id: "mealPlan",
       icon: "calendar", 
@@ -19636,6 +19972,9 @@ export default function MiltonDashboard() {
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
   setCanvasData({});
+  } else if (templateType === "groupClass") {
+  setCanvasType("groupClass");
+  setCanvasData({});
   } else if (templateType === "workflows") {
   setCanvasType("workflows");
   setCanvasData({});
@@ -19732,6 +20071,31 @@ export default function MiltonDashboard() {
   clients={clients}
   isMobile={isMobile}
   onBack={() => setCanvasType("semiPrivate")}
+  onUpdateSession={handleUpdateSession}
+  onOpenFullProfile={(clientId) => {
+    setCanvasMode(false);
+    setCanvasData(null);
+    setCanvasType(null);
+    setSelectedClient(clientId);
+  }}
+  />
+  )}
+  {canvasType === "groupClass" && (
+  <GroupClassList
+  sessions={sessions}
+  clients={clients}
+  isMobile={isMobile}
+  onClose={() => setCanvasType("templates")}
+  onHome={() => setCanvasType("templates")}
+  onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+  />
+  )}
+  {canvasType === "groupClassSession" && canvasData?.sessionId && (
+  <GroupClassSession
+  session={sessions.find(s => s.id === canvasData.sessionId)}
+  clients={clients}
+  isMobile={isMobile}
+  onBack={() => setCanvasType("groupClass")}
   onUpdateSession={handleUpdateSession}
   onOpenFullProfile={(clientId) => {
     setCanvasMode(false);
