@@ -5514,7 +5514,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ──��� ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──���� ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -18581,21 +18581,10 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
   };
   const niceDate = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-  // Build a roster of booked members (mock: first N clients)
-  const roster = clients.slice(0, Math.min(session.booked || 0, clients.length)).map((c, i) => ({ idx: i, ...c }));
-
-  const toggleAttendance = (idx) => {
-    const att = { ...(session.attendance || {}) };
-    att[idx] = !att[idx];
-    onUpdate({ attendance: att });
-  };
-
   const generate = () => {
     onUpdate({ status: "generated", program: PROGRAM_TEMPLATES[session.classType].map(e => ({ ...e })) });
     onFlash("Programming generated");
   };
-
-  const presentCount = Object.values(session.attendance || {}).filter(Boolean).length;
 
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,46,42,0.4)", zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
@@ -18687,69 +18676,6 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
               </div>
             )}
           </div>
-
-          {/* Attendance + member weights/notes */}
-          {session.status === "published" && (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Roster & Attendance</span>
-                <span style={{ fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>{presentCount}/{roster.length} present</span>
-              </div>
-              {roster.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: TEXT_SEC, padding: 12 }}>No members booked yet.</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {roster.map(m => {
-                    const present = !!(session.attendance || {})[m.idx];
-                    return (
-                      <div key={m.idx} style={{ background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`, padding: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ width: 28, height: 28, borderRadius: "50%", background: TEAL_LIGHT, color: TEAL, fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              {m.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                            </span>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{m.name}</div>
-                              <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{m.program || "Member"}</div>
-                            </div>
-                          </div>
-                          <button onClick={() => toggleAttendance(m.idx)} style={{
-                            padding: "5px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                            border: `1px solid ${present ? "#1f7a3e" : BORDER}`,
-                            background: present ? "#e6f9ec" : WHITE, color: present ? "#1f7a3e" : TEXT_SEC,
-                          }}>{present ? "Present" : "Mark in"}</button>
-                        </div>
-                        {present && (
-                          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                            <input
-                              placeholder="Top set (e.g. 185x5)"
-                              defaultValue={(session.notes && session.notes[m.idx]?.weight) || ""}
-                              onBlur={e => {
-                                const notes = { ...(session.notes || {}) };
-                                notes[m.idx] = { ...(notes[m.idx] || {}), weight: e.target.value };
-                                onUpdate({ notes });
-                              }}
-                              style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT }}
-                            />
-                            <input
-                              placeholder="Coach note"
-                              defaultValue={(session.notes && session.notes[m.idx]?.note) || ""}
-                              onBlur={e => {
-                                const notes = { ...(session.notes || {}) };
-                                notes[m.idx] = { ...(notes[m.idx] || {}), note: e.target.value };
-                                onUpdate({ notes });
-                              }}
-                              style={{ flex: 1.4, padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 12, color: TEXT }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
 
           <button onClick={onRemove} style={{ alignSelf: "flex-start", padding: "8px 14px", borderRadius: 9, border: `1px solid #f0c9c0`, background: "#fdf2ef", color: "#c0432a", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Remove class</button>
         </div>
