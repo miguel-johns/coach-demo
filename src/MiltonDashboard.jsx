@@ -20867,34 +20867,6 @@ export default function MiltonDashboard() {
           
           return (
             <>
-              {/* Tab Bar */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 0,
-                marginBottom: 12, borderBottom: `1px solid ${BORDER}`,
-                overflow: "auto", flexShrink: 0
-              }}>
-                {["All", "PT", "Semi", "Online", "Hybrid"].map((tab) => {
-                  const isActive = serviceTypeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setServiceTypeTab(tab)}
-                      style={{
-                        padding: "12px 16px", fontSize: 14, fontWeight: isActive ? 500 : 400,
-                        color: isActive ? "#1a2e2a" : TEXT_SEC,
-                        background: "none", border: "none", cursor: "pointer",
-                        borderBottom: isActive ? `2px solid ${TEAL}` : "2px solid transparent",
-                        marginBottom: -1, whiteSpace: "nowrap", transition: "all 0.15s",
-                        display: "flex", alignItems: "center", gap: 4
-                      }}
-                    >
-                      {tab}
-                      <span style={{ color: "#8aa3a0", fontSize: 13 }}>({counts[tab]})</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Alert Type Filter Banner */}
               {clientFilter && (
                 <div style={{
