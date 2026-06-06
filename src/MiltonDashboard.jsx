@@ -20490,7 +20490,6 @@ export default function MiltonDashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
-                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
