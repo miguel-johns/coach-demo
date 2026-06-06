@@ -339,28 +339,28 @@ const PROGRAM_STATUS = {
 // Templated exercise blocks used by the mock generator
 const PROGRAM_TEMPLATES = {
   strength: [
-    { name: "Back Squat", scheme: "5 x 5", target: "RPE 7-8" },
-    { name: "Romanian Deadlift", scheme: "4 x 8", target: "Controlled tempo" },
-    { name: "Walking Lunge", scheme: "3 x 10/leg", target: "Goblet load" },
-    { name: "Plank Hold", scheme: "3 x 45s", target: "Brace hard" },
+    { name: "Back Squat", scheme: "5 x 5", pct: "75%", target: "RPE 7-8" },
+    { name: "Romanian Deadlift", scheme: "4 x 8", pct: "65%", target: "Controlled tempo" },
+    { name: "Walking Lunge", scheme: "3 x 10/leg", pct: "—", target: "Goblet load" },
+    { name: "Plank Hold", scheme: "3 x 45s", pct: "—", target: "Brace hard" },
   ],
   conditioning: [
-    { name: "Row Intervals", scheme: "6 x 250m", target: "90s rest" },
-    { name: "KB Swing", scheme: "5 x 15", target: "Hip drive" },
-    { name: "Air Bike Sprint", scheme: "8 x 20s", target: "All out" },
-    { name: "Farmer Carry", scheme: "4 x 40m", target: "Heavy" },
+    { name: "Row Intervals", scheme: "6 x 250m", pct: "—", target: "90s rest" },
+    { name: "KB Swing", scheme: "5 x 15", pct: "—", target: "Hip drive" },
+    { name: "Air Bike Sprint", scheme: "8 x 20s", pct: "—", target: "All out" },
+    { name: "Farmer Carry", scheme: "4 x 40m", pct: "—", target: "Heavy" },
   ],
   hiit: [
-    { name: "Burpee", scheme: "4 x 12", target: "Steady pace" },
-    { name: "Box Jump", scheme: "4 x 10", target: "Soft landing" },
-    { name: "Wall Ball", scheme: "4 x 15", target: "20/14 lb" },
-    { name: "Mountain Climber", scheme: "4 x 30s", target: "Tight core" },
+    { name: "Burpee", scheme: "4 x 12", pct: "—", target: "Steady pace" },
+    { name: "Box Jump", scheme: "4 x 10", pct: "—", target: "Soft landing" },
+    { name: "Wall Ball", scheme: "4 x 15", pct: "—", target: "20/14 lb" },
+    { name: "Mountain Climber", scheme: "4 x 30s", pct: "—", target: "Tight core" },
   ],
   mobility: [
-    { name: "World's Greatest Stretch", scheme: "2 x 6/side", target: "Slow" },
-    { name: "Dead Bug", scheme: "3 x 10", target: "Low back flat" },
-    { name: "Hip 90/90", scheme: "3 x 8/side", target: "Full range" },
-    { name: "Bird Dog", scheme: "3 x 10/side", target: "Anti-rotation" },
+    { name: "World's Greatest Stretch", scheme: "2 x 6/side", pct: "—", target: "Slow" },
+    { name: "Dead Bug", scheme: "3 x 10", pct: "—", target: "Low back flat" },
+    { name: "Hip 90/90", scheme: "3 x 8/side", pct: "—", target: "Full range" },
+    { name: "Bird Dog", scheme: "3 x 10/side", pct: "—", target: "Anti-rotation" },
   ],
 };
 
@@ -5514,7 +5514,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ──����� ACHIEVEMENTS & STREAKS ─── */}
+      {/* ──������ ACHIEVEMENTS & STREAKS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f9f7f3, #f5f3ef, #faf8f5)` }}>
         <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Achievements & Streaks</div>
         <div style={{ fontSize: 13, color: TEXT_SEC, marginBottom: 18 }}>Milestones and consistency rewards</div>
@@ -18597,7 +18597,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
     setEditingCell(null);
   };
   const addExercise = () => {
-    const next = [...(session.program || []), { name: "New exercise", scheme: "3 x 10", target: "" }];
+    const next = [...(session.program || []), { name: "New exercise", scheme: "3 x 10", pct: "—", target: "" }];
     onUpdate({ program: next });
     setEditingCell({ idx: next.length - 1, field: "name" });
   };
@@ -18713,6 +18713,14 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
                         {isEditing("name")
                           ? cellInput("name", ex.name, { fontSize: 13, fontWeight: 600, color: TEXT })
                           : <span style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{ex.name}</span>}
+                      </div>
+
+                      {/* % of max */}
+                      <div onClick={() => setEditingCell({ idx: i, field: "pct" })} style={{ width: 52, flexShrink: 0, textAlign: "center", cursor: "text" }}>
+                        <div style={{ fontSize: 8.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.3 }}>% max</div>
+                        {isEditing("pct")
+                          ? cellInput("pct", ex.pct || "", { fontSize: 12.5, fontWeight: 700, color: "#ef6c3e", textAlign: "center" })
+                          : <span style={{ fontSize: 12.5, fontWeight: 700, color: (ex.pct && ex.pct !== "—") ? "#ef6c3e" : "#c2cecb" }}>{ex.pct || "—"}</span>}
                       </div>
 
                       {/* scheme + target */}
