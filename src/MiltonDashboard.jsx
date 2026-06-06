@@ -312,19 +312,19 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 // COACH ROSTER - owners of group / semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 const COACHES = [
-  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength" },
-  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning" },
-  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility" },
-  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid" },
+  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength", email: "miguel@coachhub.com", phone: "(555) 201-4480" },
+  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning", email: "jordan@coachhub.com", phone: "(555) 201-3392" },
+  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility", email: "alana@coachhub.com", phone: "(555) 201-7715" },
+  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid", email: "devon@coachhub.com", phone: "(555) 201-6628" },
 ];
 const getCoach = (id) => COACHES.find(c => c.id === id) || COACHES[0];
 
 const COACH_COLORS = ["#2B7A78", "#6366f1", "#ef6c3e", "#9333ea", "#d97706", "#0891b2", "#be123c", "#15803d"];
 const makeInitials = (name) => name.trim().split(/\s+/).map(n => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 // Mutate the shared roster in place so module-level getCoach() stays in sync everywhere.
-const addCoach = ({ name, specialty, color }) => {
+const addCoach = ({ name, specialty, color, email, phone }) => {
   const id = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
-  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General" });
+  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General", email: email?.trim() || "", phone: phone?.trim() || "" });
   return id;
 };
 const removeCoach = (id) => {
@@ -2467,7 +2467,7 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════���════════
 // GROUP CLASS SESSION - Live control panel: shared board + check-in roster
 // ═══════════════════════════════════════════════════════════════
 function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
@@ -2710,6 +2710,8 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [color, setColor] = useState(COACH_COLORS[0]);
   const [confirmDelete, setConfirmDelete] = useState(null); // coach id
 
@@ -2717,8 +2719,8 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
 
   const handleAdd = () => {
     if (!name.trim()) return;
-    addCoach({ name, specialty, color });
-    setName(""); setSpecialty(""); setColor(COACH_COLORS[0]);
+    addCoach({ name, specialty, color, email, phone });
+    setName(""); setSpecialty(""); setEmail(""); setPhone(""); setColor(COACH_COLORS[0]);
     onCoachesChanged?.();
   };
   const handleDelete = (id) => {
@@ -2769,6 +2771,16 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                 <input value={specialty} onChange={e => setSpecialty(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. Olympic lifting" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
               </label>
             </div>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "stretch" : "flex-end", marginTop: 12 }}>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Email</span>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. riley@coachhub.com" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+              <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Phone</span>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAdd(); }} placeholder="e.g. (555) 201-0000" style={{ padding: "9px 11px", borderRadius: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT }} />
+              </label>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Color</span>
               {COACH_COLORS.map(c => (
@@ -2792,13 +2804,29 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                 const count = sessionCountFor(coach.id);
                 const isConfirming = confirmDelete === coach.id;
                 return (
-                  <div key={coach.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${isConfirming ? "#f0c9c0" : BORDER}`, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, borderLeft: `4px solid ${coach.color}` }}>
+                  <div key={coach.id} style={{ background: WHITE, borderRadius: 12, border: `1px solid ${isConfirming ? "#f0c9c0" : BORDER}`, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12, borderLeft: `4px solid ${coach.color}` }}>
                     <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${coach.color}1c`, color: coach.color, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {coach.initials}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{coach.name}</div>
                       <div style={{ fontSize: 11.5, color: TEXT_SEC }}>{coach.specialty} · {count} {count === 1 ? "session" : "sessions"}</div>
+                      {(coach.email || coach.phone) && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 14px", marginTop: 5 }}>
+                          {coach.email && (
+                            <a href={`mailto:${coach.email}`} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: coach.color, textDecoration: "none", maxWidth: "100%", minWidth: 0 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{coach.email}</span>
+                            </a>
+                          )}
+                          {coach.phone && (
+                            <a href={`tel:${coach.phone.replace(/[^0-9+]/g, "")}`} onClick={e => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: TEXT_SEC, textDecoration: "none" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                              <span>{coach.phone}</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {isConfirming ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
