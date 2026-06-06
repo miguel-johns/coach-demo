@@ -5119,6 +5119,7 @@ function MobileCanvasSheet({
 }) {
   const [sheetHeight, setSheetHeight] = useState(96);
   const [localChatInput, setLocalChatInput] = useState("");
+  const [coachVersion, setCoachVersion] = useState(0);
   const startY = useRef(0);
   const startH = useRef(96);
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
@@ -5251,7 +5252,13 @@ function MobileCanvasSheet({
             <CanvasTemplates 
               isMobile={true}
               onSelect={(templateType) => {
-                if (templateType === "mealPlan") {
+                if (templateType === "settings") {
+                  setCanvasType("settings");
+                  setCanvasData({});
+                } else if (templateType === "programming") {
+                  setCanvasType("programming");
+                  setCanvasData({});
+                } else if (templateType === "mealPlan") {
                   setCanvasType("mealPlan");
                   setCanvasData({
                     client: "New Client",
@@ -5309,6 +5316,24 @@ isMobile={true}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+            />
+          )}
+          {canvasType === "programming" && (
+            <ProgrammingCanvas
+              isMobile={true}
+              clients={clients}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "settings" && (
+            <SettingsCanvas
+              key={coachVersion}
+              isMobile={true}
+              sessions={sessions}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+              onCoachesChanged={() => setCoachVersion(v => v + 1)}
             />
           )}
           {canvasType === "mealPlan" && (
@@ -14758,6 +14783,26 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
   const templates = [
+    {
+      id: "settings",
+      icon: "users",
+      title: "Coaches",
+      desc: "Manage your coaching team — add or remove coaches and keep their contact details up to date",
+      color: "#2B7A78",
+      bgColor: "#e8f5f3",
+      available: true,
+      number: 1
+    },
+    {
+      id: "programming",
+      icon: "program",
+      title: "Master Programming",
+      desc: "Build and maintain the master training calendar that every client program draws from",
+      color: "#45818e",
+      bgColor: "#e9f2f4",
+      available: true,
+      number: 2
+    },
     { 
       id: "workout",
       icon: "chart", 
@@ -20219,14 +20264,20 @@ export default function MiltonDashboard() {
             <CanvasTemplates 
               isMobile={isMobile}
               onSelect={(templateType) => {
-                if (templateType === "mealPlan") {
+                if (templateType === "settings") {
+                  setCanvasType("settings");
+                  setCanvasData({});
+                } else if (templateType === "programming") {
+                  setCanvasType("programming");
+                  setCanvasData({});
+                } else if (templateType === "mealPlan") {
                   setCanvasType("mealPlan");
                   setCanvasData({
                     client: "New Client",
                     goals: "General health and fitness",
                     weeklyTargets: { calories: 2000, protein: 150 }
                   });
-} else if (templateType === "workout") {
+  } else if (templateType === "workout") {
   setCanvasType("workout");
   setCanvasData({
   clientName: "New Client",
@@ -20440,10 +20491,8 @@ export default function MiltonDashboard() {
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {[
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "program", label: "Programming", action: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "users", label: "Settings", action: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } }
+                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
                     key={item.icon}
