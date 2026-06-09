@@ -256,6 +256,12 @@ function UploadStep({ onContinue }) {
               <span key={t} style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, background: WHITE, border: `1px solid ${BORDER}`, padding: "6px 12px", borderRadius: 9 }}>{t}</span>
             ))}
           </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); setFiles(SEED); }}
+            style={{ marginTop: 18, border: "none", background: "transparent", color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}
+          >
+            Load sample files
+          </button>
         </div>
 
         {/* Right column — file list / status */}
