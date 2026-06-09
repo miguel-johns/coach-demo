@@ -67,18 +67,24 @@ const INITIAL_MOVEMENTS = [
   { id: "m28", name: "Rowing Intervals", category: "Conditioning" },
   { id: "m29", name: "Sled Push", category: "Conditioning" },
   { id: "m30", name: "Wall Ball", category: "Conditioning" },
+  { id: "m31", name: "Farmer Carry", category: "Other" },
+  { id: "m32", name: "Turkish Get-up", category: "Other" },
+  { id: "m33", name: "Band Pull-apart", category: "Other" },
 ];
 
-const MOVEMENT_CATEGORIES = ["Squat", "Hinge", "Upper Push", "Upper Pull", "Unilateral", "Core", "Conditioning"];
+const MOVEMENT_CATEGORIES = ["Squat", "Hinge", "Upper Push", "Upper Pull", "Unilateral", "Core", "Conditioning", "Other"];
 
-// ── Periodization detail per template type ──
-const TEMPLATE_DETAIL = {
-  group: {
-    name: "Group Strength + Conditioning",
-    cadence: "5 days / week",
+// ── Programming styles (templates) — independent of class type ──
+// These are complete periodization templates. The gym assigns them to
+// Group / Semi-Private / 1-on-1 sessions later, at the generate step.
+const PROGRAM_STYLES = [
+  {
+    id: "linear",
+    name: "Linear Progression",
+    color: "#2B7A78", bg: "#e8f5f3",
     blockLength: "4-week block",
-    periodization: "Linear progression",
-    summary: "One shared board for up to 12 members. Loads scale per member, structure stays constant.",
+    periodization: "Linear",
+    summary: "Steady week-over-week load increases off a constant structure. Reliable for general strength.",
     phases: [
       { week: 1, label: "Intro", focus: "Volume base", intensity: "65–70%", reps: "3 × 8" },
       { week: 2, label: "Build", focus: "Add load", intensity: "70–75%", reps: "4 × 6" },
@@ -88,12 +94,13 @@ const TEMPLATE_DETAIL = {
     progressions: ["Add 2.5–5kg when all reps complete", "Tempo eccentric on week 2", "AMRAP final set week 3"],
     regressions: ["Goblet variation", "Reduce range of motion", "Drop to bodyweight + band"],
   },
-  semi: {
-    name: "Semi-Private Progressions",
-    cadence: "3 days / week",
+  {
+    id: "dup",
+    name: "Undulating (DUP)",
+    color: "#1f7a3e", bg: "#e6f9ec",
     blockLength: "4-week block",
-    periodization: "Undulating (DUP)",
-    summary: "2–6 clients training together, each on their own progression off a shared template.",
+    periodization: "Daily undulating",
+    summary: "Hypertrophy, strength and power rotate within the block. Great for varied client goals.",
     phases: [
       { week: 1, label: "Hypertrophy", focus: "Volume", intensity: "70%", reps: "4 × 10" },
       { week: 2, label: "Strength", focus: "Load", intensity: "80%", reps: "5 × 5" },
@@ -103,12 +110,13 @@ const TEMPLATE_DETAIL = {
     progressions: ["Auto-regulate via RPE 7–8", "Cluster sets week 3", "Add accessory volume"],
     regressions: ["Machine substitution", "Reduce sets by one", "Longer rest periods"],
   },
-  pt: {
-    name: "1-on-1 Personalized Build",
-    cadence: "2–3 days / week",
+  {
+    id: "block",
+    name: "Block (Assessment-Driven)",
+    color: "#c2410c", bg: "#fff1ea",
     blockLength: "4-week block",
-    periodization: "Block (assessment-driven)",
-    summary: "Fully individualized off intake + assessment. Each block targets the client's priority.",
+    periodization: "Block",
+    summary: "Each block targets one quality, sequenced off an assessment. Ideal for individualized work.",
     phases: [
       { week: 1, label: "Assess", focus: "Movement quality", intensity: "Light", reps: "3 × 12" },
       { week: 2, label: "Accumulate", focus: "Volume", intensity: "70%", reps: "4 × 8" },
@@ -118,7 +126,15 @@ const TEMPLATE_DETAIL = {
     progressions: ["Progress per session notes", "Unilateral loading", "Add complexity weekly"],
     regressions: ["Supported variations", "Tempo control", "Isometric holds"],
   },
-};
+];
+
+const STYLE_BY_ID = Object.fromEntries(PROGRAM_STYLES.map((s) => [s.id, s]));
+
+// Default style applied to each class type when generating (gym can change it)
+const DEFAULT_STYLE_FOR_TYPE = { group: "linear", semi: "dup", pt: "block" };
+
+// Cadence belongs to the class type, not the style
+const TYPE_CADENCE = { group: "5 days / week", semi: "3 days / week", pt: "2–3 days / week" };
 
 // ── Weekly day patterns per template type ──
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -135,9 +151,9 @@ const DAY_FOCUS = {
   pt: { Tue: "Priority Block A", Thu: "Priority Block B" },
 };
 
-// Build a workout (list of exercise prescriptions) for a given type + focus + week
-function buildWorkout(typeId, focus, week) {
-  const phase = TEMPLATE_DETAIL[typeId].phases[week - 1];
+// Build a workout (list of exercise prescriptions) for a given style + focus + week
+function buildWorkout(styleId, focus, week) {
+  const phase = STYLE_BY_ID[styleId].phases[week - 1];
   const pick = (cat, n = 1) => INITIAL_MOVEMENTS.filter((m) => m.category === cat).slice(0, n);
   let mains = [];
   if (/Squat/.test(focus)) mains = [...pick("Squat", 1), ...pick("Unilateral", 1), ...pick("Core", 1)];
@@ -156,8 +172,8 @@ function buildWorkout(typeId, focus, week) {
   }));
 }
 
-// Build full program (all weeks) for one template type
-function buildProgram(typeId) {
+// Build full program (all weeks) for one class type using a chosen programming style
+function buildProgram(typeId, styleId) {
   const days = TYPE_DAYS[typeId];
   const sessions = [];
   for (let week = 1; week <= 4; week++) {
@@ -166,11 +182,12 @@ function buildProgram(typeId) {
       sessions.push({
         id: `${typeId}-w${week}-${day}`,
         typeId,
+        styleId,
         week,
         day,
         focus,
         coachId: null,
-        exercises: buildWorkout(typeId, focus, week),
+        exercises: buildWorkout(styleId, focus, week),
       });
     });
   }
@@ -543,12 +560,10 @@ const iconBtn = {
   display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
 };
 
-// ════════════════════════ STEP 3: TEMPLATES (periodization calendar) ════════════════════════
+// ════════════════════════ STEP 3: TEMPLATES (programming styles) ════════════════════════
 function TemplatesStep({ approved, setApproved, onContinue }) {
-  const [activeTab, setActiveTab] = useState("group");
-  const allApproved = TEMPLATE_TYPES.every((t) => approved[t.id]);
-  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
-  const detail = TEMPLATE_DETAIL[activeTab];
+  const allApproved = PROGRAM_STYLES.every((s) => approved[s.id]);
+  const approvedCount = PROGRAM_STYLES.filter((s) => approved[s.id]).length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -556,129 +571,129 @@ function TemplatesStep({ approved, setApproved, onContinue }) {
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Your programming templates.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
-          I read the periodization out of your sheets — how blocks progress week to week, plus your progressions and regressions. Review each one as a block, then approve.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 660, lineHeight: 1.5 }}>
+          I read the periodization out of your sheets — how blocks progress week to week, plus your progressions and regressions. These are complete programming styles. You&apos;ll assign them to your group, semi-private and 1-on-1 sessions next.
         </p>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {TEMPLATE_TYPES.map((t) => {
-          const on = activeTab === t.id;
-          const isApproved = approved[t.id];
-          return (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-              display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
-              fontSize: 14, fontWeight: 700, cursor: "pointer",
-              border: `1.5px solid ${on ? t.color : BORDER}`,
-              background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
-            }}>
-              {t.type}
-              {isApproved && <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} />}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Active template — block calendar */}
-      <div style={{ background: WHITE, border: `1.5px solid ${active.color}`, borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 19, fontWeight: 800, color: TEXT }}>{detail.name}</div>
-            <div style={{ fontSize: 13.5, color: TEXT_SEC, marginTop: 4 }}>{detail.summary}</div>
-          </div>
-          {approved[active.id] && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#1f7a3e", background: "#e6f9ec", padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap" }}>
-              <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} /> Approved
-            </span>
-          )}
-        </div>
-
-        {/* Meta chips */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {[
-            { label: "Periodization", value: detail.periodization },
-            { label: "Cadence", value: detail.cadence },
-            { label: "Block length", value: detail.blockLength },
-          ].map((m) => (
-            <div key={m.label} style={{ background: active.bg, borderRadius: 10, padding: "8px 14px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: active.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT, marginTop: 2 }}>{m.value}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Block calendar — the 4-week progression */}
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>4-week block progression</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            {detail.phases.map((ph) => (
-              <div key={ph.week} style={{ border: `1px solid ${active.color}33`, background: BG, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WEEK {ph.week}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: active.color }}>{ph.label}</div>
-                <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{ph.focus}</div>
-                <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
-                  <div style={{ fontSize: 12, color: TEXT }}><strong>{ph.reps}</strong></div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{ph.intensity}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Progressions / regressions */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          {[
-            { title: "Progressions", items: detail.progressions, dot: "#1f7a3e" },
-            { title: "Regressions", items: detail.regressions, dot: "#c2410c" },
-          ].map((col) => (
-            <div key={col.title} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>{col.title}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {col.items.map((it, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: TEXT, lineHeight: 1.4 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: col.dot, flexShrink: 0, marginTop: 6 }} />
-                    {it}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setApproved((prev) => ({ ...prev, [active.id]: !prev[active.id] }))}
-          style={{
-            padding: "12px 16px", borderRadius: 11, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer",
-            border: `1.5px solid ${approved[active.id] ? "#1f7a3e" : active.color}`,
-            background: approved[active.id] ? "#e6f9ec" : WHITE, color: approved[active.id] ? "#1f7a3e" : active.color,
-            transition: "all 0.15s ease",
-          }}
-        >
-          {approved[active.id] ? "Approved — tap to undo" : `Approve ${active.type} template`}
-        </button>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        {PROGRAM_STYLES.map((style) => (
+          <StyleTemplateCard
+            key={style.id}
+            style={style}
+            approved={!!approved[style.id]}
+            onToggle={() => setApproved((prev) => ({ ...prev, [style.id]: !prev[style.id] }))}
+          />
+        ))}
       </div>
 
       <PrimaryButton onClick={onContinue} disabled={!allApproved}>
-        {allApproved ? "Generate my first programs" : `Approve all three to continue (${Object.values(approved).filter(Boolean).length}/3)`} <Icon name="arrow" size={18} color={WHITE} />
+        {allApproved ? "Generate my first programs" : `Approve all templates to continue (${approvedCount}/${PROGRAM_STYLES.length})`} <Icon name="arrow" size={18} color={WHITE} />
       </PrimaryButton>
     </div>
   );
 }
 
+// ── Single programming-style template card ──
+function StyleTemplateCard({ style, approved, onToggle }) {
+  return (
+    <div style={{ background: WHITE, border: `1.5px solid ${approved ? "#1f7a3e" : style.color}`, borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: 19, fontWeight: 800, color: TEXT }}>{style.name}</div>
+          <div style={{ fontSize: 13.5, color: TEXT_SEC, marginTop: 4, maxWidth: 560 }}>{style.summary}</div>
+        </div>
+        {approved && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#1f7a3e", background: "#e6f9ec", padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap" }}>
+            <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} /> Approved
+          </span>
+        )}
+      </div>
+
+      {/* Meta chips */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {[
+          { label: "Periodization", value: style.periodization },
+          { label: "Block length", value: style.blockLength },
+        ].map((m) => (
+          <div key={m.label} style={{ background: style.bg, borderRadius: 10, padding: "8px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: style.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT, marginTop: 2 }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Block calendar — the 4-week progression */}
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>4-week block progression</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+          {style.phases.map((ph) => (
+            <div key={ph.week} style={{ border: `1px solid ${style.color}33`, background: BG, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WEEK {ph.week}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: style.color }}>{ph.label}</div>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{ph.focus}</div>
+              <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                <div style={{ fontSize: 12, color: TEXT }}><strong>{ph.reps}</strong></div>
+                <div style={{ fontSize: 12, color: TEXT_SEC }}>{ph.intensity}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Progressions / regressions */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {[
+          { title: "Progressions", items: style.progressions, dot: "#1f7a3e" },
+          { title: "Regressions", items: style.regressions, dot: "#c2410c" },
+        ].map((col) => (
+          <div key={col.title} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>{col.title}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {col.items.map((it, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: TEXT, lineHeight: 1.4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: col.dot, flexShrink: 0, marginTop: 6 }} />
+                  {it}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={onToggle}
+        style={{
+          padding: "12px 16px", borderRadius: 11, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer",
+          border: `1.5px solid ${approved ? "#1f7a3e" : style.color}`,
+          background: approved ? "#e6f9ec" : WHITE, color: approved ? "#1f7a3e" : style.color,
+          transition: "all 0.15s ease",
+        }}
+      >
+        {approved ? "Approved — tap to undo" : `Approve ${style.name} template`}
+      </button>
+    </div>
+  );
+}
+
+
 // ════════════════════════ STEP 4: GENERATE PROGRAMS ════════════════════════
-function GenerateStep({ programs, setPrograms, onContinue }) {
+function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) {
   const [selected, setSelected] = useState({ group: true, semi: true, pt: true });
+  const [styleFor, setStyleFor] = useState({ ...DEFAULT_STYLE_FOR_TYPE });
   const [generating, setGenerating] = useState(false);
   const generated = Object.keys(programs).length > 0;
   const [activeTab, setActiveTab] = useState("group");
   const [openSession, setOpenSession] = useState(null);
 
+  // Only styles the gym approved are assignable
+  const approvedStyles = PROGRAM_STYLES.filter((s) => approvedTemplates[s.id]);
+
   const runGenerate = () => {
     setGenerating(true);
     setTimeout(() => {
       const built = {};
-      TEMPLATE_TYPES.forEach((t) => { if (selected[t.id]) built[t.id] = buildProgram(t.id); });
+      TEMPLATE_TYPES.forEach((t) => { if (selected[t.id]) built[t.id] = buildProgram(t.id, styleFor[t.id]); });
       setPrograms(built);
       const firstTab = TEMPLATE_TYPES.find((t) => selected[t.id])?.id || "group";
       setActiveTab(firstTab);
@@ -703,35 +718,60 @@ function GenerateStep({ programs, setPrograms, onContinue }) {
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Generate your first month.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
-          Pick the templates to build from. I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar for each type</strong> with your movements. Click any session to view and edit the workout. We start one month at a time — later you&apos;ll extend up to 12.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 660, lineHeight: 1.5 }}>
+          Assign a programming template to each type of session you run. I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar for each</strong> with your movements. Click any session to view and edit the workout. We start one month at a time — later you&apos;ll extend up to 12.
         </p>
       </div>
 
       {!generated ? (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {TEMPLATE_TYPES.map((t) => {
               const on = selected[t.id];
-              const detail = TEMPLATE_DETAIL[t.id];
               return (
-                <button key={t.id} onClick={() => setSelected((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{
-                  textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                <div key={t.id} style={{
                   background: on ? t.bg : WHITE, borderRadius: 14, padding: 18,
                   border: `1.5px solid ${on ? t.color : BORDER}`, transition: "all 0.15s ease",
-                  display: "flex", flexDirection: "column", gap: 8,
+                  display: "flex", flexDirection: "column", gap: 14,
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: t.color }}>{t.type}</span>
+                  <button
+                    onClick={() => setSelected((p) => ({ ...p, [t.id]: !p[t.id] }))}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textAlign: "left" }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>{t.type}</div>
+                      <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{TYPE_CADENCE[t.id]}</div>
+                    </div>
                     <span style={{
-                      width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                      width: 22, height: 22, borderRadius: 7, flexShrink: 0,
                       border: `1.5px solid ${on ? t.color : "#c8d6d2"}`, background: on ? t.color : WHITE,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>{on && <Icon name="check" size={13} color={WHITE} strokeWidth={3} />}</span>
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{detail.name}</div>
-                  <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{detail.cadence} · {detail.periodization}</div>
-                </button>
+                    }}>{on && <Icon name="check" size={14} color={WHITE} strokeWidth={3} />}</span>
+                  </button>
+
+                  {on && (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>Programming template</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {approvedStyles.map((s) => {
+                          const picked = styleFor[t.id] === s.id;
+                          return (
+                            <button key={s.id} onClick={() => setStyleFor((p) => ({ ...p, [t.id]: s.id }))} style={{
+                              display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 10, fontFamily: "inherit",
+                              fontSize: 13, fontWeight: 700, cursor: "pointer",
+                              border: `1.5px solid ${picked ? s.color : BORDER}`,
+                              background: picked ? WHITE : WHITE, color: picked ? s.color : TEXT_SEC, transition: "all 0.15s ease",
+                            }}>
+                              <span style={{ width: 9, height: 9, borderRadius: "50%", background: s.color }} />
+                              {s.name}
+                              {picked && <Icon name="check" size={13} color={s.color} strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -758,6 +798,14 @@ function GenerateStep({ programs, setPrograms, onContinue }) {
               );
             })}
           </div>
+
+          {/* Applied template note for the active calendar */}
+          {programs[active.id]?.[0]?.styleId && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, color: TEXT_SEC }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: STYLE_BY_ID[programs[active.id][0].styleId].color }} />
+              Template applied: <strong style={{ color: TEXT }}>{STYLE_BY_ID[programs[active.id][0].styleId].name}</strong>
+            </div>
+          )}
 
           <ProgramCalendar
             type={active}
@@ -1260,7 +1308,7 @@ export default function GymOnboardingCanvas({ onClose, onHome, isMobile }) {
             <TemplatesStep approved={approvedTemplates} setApproved={setApprovedTemplates} onContinue={() => setStep("generate")} />
           )}
           {step === "generate" && (
-            <GenerateStep programs={programs} setPrograms={setPrograms} onContinue={() => setStep("coaches")} />
+            <GenerateStep programs={programs} setPrograms={setPrograms} approvedTemplates={approvedTemplates} onContinue={() => setStep("coaches")} />
           )}
           {step === "coaches" && (
             <CoachesStep programs={programs} setPrograms={setPrograms} onContinue={() => setStep("review")} />
