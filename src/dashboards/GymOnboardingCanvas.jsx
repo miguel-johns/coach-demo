@@ -1015,7 +1015,10 @@ function WorkoutEditor({ session, movements, onClose, onSave }) {
           </div>
           {exercises.map((ex) => (
             <div key={ex.id} style={{ display: "grid", gridTemplateColumns: "1fr 52px 52px 88px 28px", gap: 8, alignItems: "center" }}>
-              <input value={ex.name} onChange={(e) => update(ex.id, "name", e.target.value)} style={cell} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 7, background: type.color, color: WHITE, fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{(ex.name || "?").charAt(0).toUpperCase()}</span>
+                <input value={ex.name} onChange={(e) => update(ex.id, "name", e.target.value)} style={{ ...cell, flex: 1, minWidth: 0 }} />
+              </div>
               <input value={ex.sets} onChange={(e) => update(ex.id, "sets", e.target.value)} style={{ ...cell, textAlign: "center" }} />
               <input value={ex.reps} onChange={(e) => update(ex.id, "reps", e.target.value)} style={{ ...cell, textAlign: "center" }} />
               <input value={ex.load} onChange={(e) => update(ex.id, "load", e.target.value)} style={{ ...cell, textAlign: "center" }} />
@@ -1046,9 +1049,14 @@ function WorkoutEditor({ session, movements, onClose, onSave }) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: "14px 22px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 10, position: "sticky", bottom: 0, background: WHITE, borderRadius: "0 0 18px 18px" }}>
-          <button onClick={onClose} style={{ padding: "11px 18px", borderRadius: 11, border: `1.5px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Cancel</button>
-          <button onClick={save} style={{ padding: "11px 20px", borderRadius: 11, border: "none", background: MINT, color: WHITE, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Save workout</button>
+        <div style={{ padding: "14px 22px", borderTop: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, position: "sticky", bottom: 0, background: WHITE, borderRadius: "0 0 18px 18px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12.5, color: TEXT_SEC }}>
+            <strong style={{ color: TEXT }}>{exercises.length}</strong> exercises · <strong style={{ color: TEXT }}>{exercises.reduce((n, e) => n + (parseInt(e.sets, 10) || 0), 0)}</strong> total sets
+          </span>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={onClose} style={{ padding: "11px 18px", borderRadius: 11, border: `1.5px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Cancel</button>
+            <button onClick={save} style={{ padding: "11px 20px", borderRadius: 11, border: "none", background: MINT, color: WHITE, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Save workout</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1086,7 +1094,7 @@ function CoachesStep({ programs, setPrograms, onContinue }) {
           Tag your coaches.
         </h1>
         <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
-          Assign a coach to each session across all three calendars — group, semi-private, and 1-on-1. Click any session, or bulk-assign a whole calendar below.
+          Assign a coach to each session across your class calendars — group and semi-private. Click any session, or bulk-assign a whole calendar below.
         </p>
       </div>
 
