@@ -7,6 +7,7 @@ import RecipeDashboard from "./dashboards/RecipeDashboard";
 import MorningDashboard from "./dashboards/MorningDashboard";
 import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
+import GymOnboardingCanvas from "./dashboards/GymOnboardingCanvas";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
 
 const TEAL = "#2B7A78";
@@ -5322,7 +5323,10 @@ function MobileCanvasSheet({
             <CanvasTemplates 
               isMobile={true}
               onSelect={(templateType) => {
-                if (templateType === "settings") {
+                if (templateType === "gymOnboarding") {
+                  setCanvasType("gymOnboarding");
+                  setCanvasData({});
+                } else if (templateType === "settings") {
                   setCanvasType("settings");
                   setCanvasData({});
                 } else if (templateType === "programming") {
@@ -5392,6 +5396,13 @@ isMobile={true}
             <ProgrammingCanvas
               isMobile={true}
               clients={clients}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "gymOnboarding" && (
+            <GymOnboardingCanvas
+              isMobile={true}
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
             />
@@ -14854,6 +14865,16 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   
   const templates = [
     {
+      id: "gymOnboarding",
+      icon: "layers",
+      title: "Gym Onboarding",
+      desc: "Upload your existing programs and let Milton extract your movements, build templates, and generate your first month of programming",
+      color: "#1f7a3e",
+      bgColor: "#e6f9ec",
+      available: true,
+      number: 1
+    },
+    {
       id: "settings",
       icon: "users",
       title: "Coaches",
@@ -20334,7 +20355,10 @@ export default function MiltonDashboard() {
             <CanvasTemplates 
               isMobile={isMobile}
               onSelect={(templateType) => {
-                if (templateType === "settings") {
+                if (templateType === "gymOnboarding") {
+                  setCanvasType("gymOnboarding");
+                  setCanvasData({});
+                } else if (templateType === "settings") {
                   setCanvasType("settings");
                   setCanvasData({});
                 } else if (templateType === "programming") {
@@ -20504,6 +20528,13 @@ export default function MiltonDashboard() {
   <ProgrammingCanvas
   isMobile={isMobile}
   clients={clients}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  />
+  )}
+  {canvasType === "gymOnboarding" && (
+  <GymOnboardingCanvas
+  isMobile={isMobile}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   />
