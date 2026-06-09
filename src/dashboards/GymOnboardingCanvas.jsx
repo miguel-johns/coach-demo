@@ -10,8 +10,6 @@ const WHITE = "#ffffff";
 const TEXT = "#1a2e2a";
 const TEXT_SEC = "#5f7a76";
 const BORDER = "#e0ebe8";
-const AMBER = "#92400e";
-const AMBER_BG = "#fef3c7";
 
 // ── Step sequence ──
 const STEPS = [
@@ -30,88 +28,149 @@ const ONBOARDING_COACHES = [
   { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility" },
 ];
 
-// ── Mock "extracted" data ──
-const EXTRACTED_EXERCISES = [
-  { name: "Back Squat", category: "Lower — Squat", source: "extracted" },
-  { name: "Front Squat", category: "Lower — Squat", source: "extracted" },
-  { name: "Romanian Deadlift", category: "Lower — Hinge", source: "extracted" },
-  { name: "Conventional Deadlift", category: "Lower — Hinge", source: "extracted" },
-  { name: "Bench Press", category: "Upper — Push", source: "extracted" },
-  { name: "Strict Press", category: "Upper — Push", source: "extracted" },
-  { name: "Pull-up", category: "Upper — Pull", source: "extracted" },
-  { name: "Barbell Row", category: "Upper — Pull", source: "extracted" },
-  { name: "KB Swing", category: "Conditioning", source: "extracted" },
-  { name: "Assault Bike", category: "Conditioning", source: "extracted" },
-  { name: "Walking Lunge", category: "Lower — Unilateral", source: "extracted" },
-  { name: "Plank", category: "Core", source: "extracted" },
-  // Milton library fills the gaps
-  { name: "Bulgarian Split Squat", category: "Lower — Unilateral", source: "milton" },
-  { name: "Hip Thrust", category: "Lower — Hinge", source: "milton" },
-  { name: "Incline DB Press", category: "Upper — Push", source: "milton" },
-  { name: "Face Pull", category: "Upper — Pull", source: "milton" },
-  { name: "Dead Bug", category: "Core", source: "milton" },
-  { name: "Row Intervals", category: "Conditioning", source: "milton" },
+// ── Template types (Group / Semi-Private / 1-on-1) ──
+const TEMPLATE_TYPES = [
+  { id: "group", type: "Group", color: "#c2410c", bg: "#fff1ea" },
+  { id: "semi", type: "Semi-Private", color: "#1f7a3e", bg: "#e6f9ec" },
+  { id: "pt", type: "1-on-1", color: "#3aafa9", bg: "#e8f5f3" },
 ];
 
-const EXTRACTED_TEMPLATES = [
-  {
-    id: "group",
-    type: "Group",
-    color: "#c2410c",
-    bg: "#fff1ea",
+// ── Mock "extracted" movements (a real gym would have many more) ──
+const INITIAL_MOVEMENTS = [
+  { id: "m1", name: "Back Squat", category: "Squat" },
+  { id: "m2", name: "Front Squat", category: "Squat" },
+  { id: "m3", name: "Goblet Squat", category: "Squat" },
+  { id: "m4", name: "Box Squat", category: "Squat" },
+  { id: "m5", name: "Romanian Deadlift", category: "Hinge" },
+  { id: "m6", name: "Conventional Deadlift", category: "Hinge" },
+  { id: "m7", name: "Trap Bar Deadlift", category: "Hinge" },
+  { id: "m8", name: "Hip Thrust", category: "Hinge" },
+  { id: "m9", name: "Kettlebell Swing", category: "Hinge" },
+  { id: "m10", name: "Bench Press", category: "Upper Push" },
+  { id: "m11", name: "Incline DB Press", category: "Upper Push" },
+  { id: "m12", name: "Strict Press", category: "Upper Push" },
+  { id: "m13", name: "Push-up", category: "Upper Push" },
+  { id: "m14", name: "Pull-up", category: "Upper Pull" },
+  { id: "m15", name: "Chin-up", category: "Upper Pull" },
+  { id: "m16", name: "Barbell Row", category: "Upper Pull" },
+  { id: "m17", name: "Single-Arm DB Row", category: "Upper Pull" },
+  { id: "m18", name: "Lat Pulldown", category: "Upper Pull" },
+  { id: "m19", name: "Walking Lunge", category: "Unilateral" },
+  { id: "m20", name: "Bulgarian Split Squat", category: "Unilateral" },
+  { id: "m21", name: "Step-up", category: "Unilateral" },
+  { id: "m22", name: "Reverse Lunge", category: "Unilateral" },
+  { id: "m23", name: "Plank", category: "Core" },
+  { id: "m24", name: "Dead Bug", category: "Core" },
+  { id: "m25", name: "Pallof Press", category: "Core" },
+  { id: "m26", name: "Hanging Knee Raise", category: "Core" },
+  { id: "m27", name: "Assault Bike", category: "Conditioning" },
+  { id: "m28", name: "Rowing Intervals", category: "Conditioning" },
+  { id: "m29", name: "Sled Push", category: "Conditioning" },
+  { id: "m30", name: "Wall Ball", category: "Conditioning" },
+];
+
+const MOVEMENT_CATEGORIES = ["Squat", "Hinge", "Upper Push", "Upper Pull", "Unilateral", "Core", "Conditioning"];
+
+// ── Periodization detail per template type ──
+const TEMPLATE_DETAIL = {
+  group: {
     name: "Group Strength + Conditioning",
     cadence: "5 days / week",
-    sessionLen: "60 min",
-    blocks: ["Warm-up flow", "Primary strength lift", "Conditioning piece", "Accessory / core", "Cool-down"],
-    notes: "Up to 12 members off one shared board, scaled loads per member.",
+    blockLength: "4-week block",
+    periodization: "Linear progression",
+    summary: "One shared board for up to 12 members. Loads scale per member, structure stays constant.",
+    phases: [
+      { week: 1, label: "Intro", focus: "Volume base", intensity: "65–70%", reps: "3 × 8" },
+      { week: 2, label: "Build", focus: "Add load", intensity: "70–75%", reps: "4 × 6" },
+      { week: 3, label: "Peak", focus: "Heavy", intensity: "80–85%", reps: "5 × 4" },
+      { week: 4, label: "Deload", focus: "Recover", intensity: "60%", reps: "3 × 6" },
+    ],
+    progressions: ["Add 2.5–5kg when all reps complete", "Tempo eccentric on week 2", "AMRAP final set week 3"],
+    regressions: ["Goblet variation", "Reduce range of motion", "Drop to bodyweight + band"],
   },
-  {
-    id: "semi",
-    type: "Semi-Private",
-    color: "#1f7a3e",
-    bg: "#e6f9ec",
+  semi: {
     name: "Semi-Private Progressions",
     cadence: "3 days / week",
-    sessionLen: "60 min",
-    blocks: ["Individual warm-up", "Strength block (per client)", "Shared finisher", "Mobility"],
-    notes: "2–6 clients training together, each on their own progression.",
+    blockLength: "4-week block",
+    periodization: "Undulating (DUP)",
+    summary: "2–6 clients training together, each on their own progression off a shared template.",
+    phases: [
+      { week: 1, label: "Hypertrophy", focus: "Volume", intensity: "70%", reps: "4 × 10" },
+      { week: 2, label: "Strength", focus: "Load", intensity: "80%", reps: "5 × 5" },
+      { week: 3, label: "Power", focus: "Speed", intensity: "75%", reps: "6 × 3" },
+      { week: 4, label: "Deload", focus: "Recover", intensity: "60%", reps: "3 × 8" },
+    ],
+    progressions: ["Auto-regulate via RPE 7–8", "Cluster sets week 3", "Add accessory volume"],
+    regressions: ["Machine substitution", "Reduce sets by one", "Longer rest periods"],
   },
-  {
-    id: "pt",
-    type: "1-on-1",
-    color: "#3aafa9",
-    bg: "#e8f5f3",
+  pt: {
     name: "1-on-1 Personalized Build",
     cadence: "2–3 days / week",
-    sessionLen: "45–60 min",
-    blocks: ["Movement prep", "Primary lift", "Secondary lift", "Accessory circuit", "Conditioning finisher"],
-    notes: "Fully individualized programming driven by intake + assessment.",
+    blockLength: "4-week block",
+    periodization: "Block (assessment-driven)",
+    summary: "Fully individualized off intake + assessment. Each block targets the client's priority.",
+    phases: [
+      { week: 1, label: "Assess", focus: "Movement quality", intensity: "Light", reps: "3 × 12" },
+      { week: 2, label: "Accumulate", focus: "Volume", intensity: "70%", reps: "4 × 8" },
+      { week: 3, label: "Intensify", focus: "Load", intensity: "82%", reps: "5 × 4" },
+      { week: 4, label: "Deload", focus: "Recover", intensity: "55%", reps: "2 × 8" },
+    ],
+    progressions: ["Progress per session notes", "Unilateral loading", "Add complexity weekly"],
+    regressions: ["Supported variations", "Tempo control", "Isometric holds"],
   },
-];
-
-// Calendar generation — one month, 4 weeks
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const TEMPLATE_FOR_DAY = {
-  // distribute the three template types across the week
-  Mon: "group", Tue: "semi", Wed: "group", Thu: "pt", Fri: "group",
 };
 
-function buildMonthSessions() {
+// ── Weekly day patterns per template type ──
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const TYPE_DAYS = {
+  group: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  semi: ["Mon", "Wed", "Fri"],
+  pt: ["Tue", "Thu"],
+};
+
+// Day focus labels rotate to feel like real programming
+const DAY_FOCUS = {
+  group: { Mon: "Lower — Squat", Tue: "Upper — Push", Wed: "Conditioning", Thu: "Lower — Hinge", Fri: "Upper — Pull" },
+  semi: { Mon: "Full Body A", Wed: "Full Body B", Fri: "Full Body C" },
+  pt: { Tue: "Priority Block A", Thu: "Priority Block B" },
+};
+
+// Build a workout (list of exercise prescriptions) for a given type + focus + week
+function buildWorkout(typeId, focus, week) {
+  const phase = TEMPLATE_DETAIL[typeId].phases[week - 1];
+  const pick = (cat, n = 1) => INITIAL_MOVEMENTS.filter((m) => m.category === cat).slice(0, n);
+  let mains = [];
+  if (/Squat/.test(focus)) mains = [...pick("Squat", 1), ...pick("Unilateral", 1), ...pick("Core", 1)];
+  else if (/Hinge/.test(focus)) mains = [...pick("Hinge", 1), ...pick("Unilateral", 1), ...pick("Core", 1)];
+  else if (/Push/.test(focus)) mains = [...pick("Upper Push", 2), ...pick("Core", 1)];
+  else if (/Pull/.test(focus)) mains = [...pick("Upper Pull", 2), ...pick("Core", 1)];
+  else if (/Conditioning/.test(focus)) mains = [...pick("Conditioning", 2), ...pick("Core", 1)];
+  else mains = [...pick("Squat", 1), ...pick("Upper Push", 1), ...pick("Upper Pull", 1), ...pick("Core", 1)];
+  return mains.map((m, i) => ({
+    id: `${m.id}-${i}`,
+    movementId: m.id,
+    name: m.name,
+    sets: i === 0 ? phase.reps.split(" × ")[0] : "3",
+    reps: i === 0 ? phase.reps.split(" × ")[1] : "10",
+    load: i === 0 ? phase.intensity : "RPE 7",
+  }));
+}
+
+// Build full program (all weeks) for one template type
+function buildProgram(typeId) {
+  const days = TYPE_DAYS[typeId];
   const sessions = [];
-  for (let week = 0; week < 4; week++) {
-    WEEKDAYS.forEach((day) => {
-      const tplId = TEMPLATE_FOR_DAY[day];
-      const tpl = EXTRACTED_TEMPLATES.find((t) => t.id === tplId);
+  for (let week = 1; week <= 4; week++) {
+    days.forEach((day) => {
+      const focus = DAY_FOCUS[typeId][day];
       sessions.push({
-        id: `w${week + 1}-${day}`,
-        week: week + 1,
+        id: `${typeId}-w${week}-${day}`,
+        typeId,
+        week,
         day,
-        templateId: tplId,
-        type: tpl.type,
-        color: tpl.color,
-        bg: tpl.bg,
-        name: tpl.name,
+        focus,
         coachId: null,
+        exercises: buildWorkout(typeId, focus, week),
       });
     });
   }
@@ -134,6 +193,10 @@ function Icon({ name, size = 20, color = "currentColor", strokeWidth = 1.8 }) {
     case "users": return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
     case "send": return <svg {...p}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>;
     case "calendar": return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+    case "plus": return <svg {...p}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
+    case "edit": return <svg {...p}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" /></svg>;
+    case "trash": return <svg {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>;
+    case "info": return <svg {...p}><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>;
     default: return null;
   }
 }
@@ -365,52 +428,104 @@ function ProcessingStep({ onDone }) {
   );
 }
 
-// ════════════════════════ STEP 2: EXERCISES ════════════════════════
-function ExercisesStep({ onContinue }) {
-  const categories = [...new Set(EXTRACTED_EXERCISES.map((e) => e.category))];
-  const extractedCount = EXTRACTED_EXERCISES.filter((e) => e.source === "extracted").length;
-  const miltonCount = EXTRACTED_EXERCISES.filter((e) => e.source === "milton").length;
+// ════════════════════════ STEP 2: MOVEMENTS (editable) ════════════════════════
+function ExercisesStep({ movements, setMovements, onContinue }) {
+  const [adding, setAdding] = useState(null); // category being added to
+  const [draftName, setDraftName] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+
+  const commitAdd = (category) => {
+    const name = draftName.trim();
+    if (name) {
+      setMovements((prev) => [...prev, { id: `m${Date.now()}`, name, category }]);
+    }
+    setDraftName("");
+    setAdding(null);
+  };
+
+  const commitEdit = (id) => {
+    const name = editName.trim();
+    if (name) setMovements((prev) => prev.map((m) => m.id === id ? { ...m, name } : m));
+    setEditingId(null);
+    setEditName("");
+  };
+
+  const removeMovement = (id) => setMovements((prev) => prev.filter((m) => m.id !== id));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Here are your movements.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
-          I pulled <strong style={{ color: TEXT }}>{extractedCount} exercises</strong> straight from your uploads. The
-          {" "}<strong style={{ color: TEAL }}>Milton library filled {miltonCount} gaps</strong> with movements your programming references.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
+          I pulled <strong style={{ color: TEXT }}>{movements.length} movements</strong> out of your uploads, grouped by pattern. Add, rename, or remove anything — it&apos;s your library.
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: 16 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: TEXT_SEC }}>
-          <span style={{ width: 12, height: 12, borderRadius: 4, background: TEAL }} /> From your files
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: TEXT_SEC }}>
-          <span style={{ width: 12, height: 12, borderRadius: 4, background: MINT }} /> Milton library
-        </span>
+      {/* Reassurance banner */}
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: TEAL_LIGHT, borderRadius: 14, padding: "14px 16px" }}>
+        <div style={{ flexShrink: 0, marginTop: 1 }}><Icon name="info" size={18} color={TEAL} /></div>
+        <p style={{ fontSize: 13.5, color: TEXT, margin: 0, lineHeight: 1.5 }}>
+          You don&apos;t have to have every movement here. Whatever a program needs and isn&apos;t in your library yet, I&apos;ll supply from the Milton library automatically when we build your calendars.
+        </p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
-        {categories.map((cat) => {
-          const items = EXTRACTED_EXERCISES.filter((e) => e.category === cat);
+        {MOVEMENT_CATEGORIES.map((cat) => {
+          const items = movements.filter((e) => e.category === cat);
           return (
-            <div key={cat} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 12 }}>{cat}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div key={cat} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em" }}>{cat}</div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: TEAL, background: TEAL_LIGHT, borderRadius: 8, padding: "2px 8px" }}>{items.length}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {items.map((ex) => (
-                  <div key={ex.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <span style={{ fontSize: 14, color: TEXT, fontWeight: 500 }}>{ex.name}</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em",
-                      padding: "3px 8px", borderRadius: 7,
-                      background: ex.source === "milton" ? "#e7fbef" : TEAL_LIGHT,
-                      color: ex.source === "milton" ? "#1f7a3e" : TEAL,
-                    }}>{ex.source === "milton" ? "Milton" : "Yours"}</span>
+                  <div key={ex.id} className="gymMoveRow" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", borderRadius: 8 }}>
+                    {editingId === ex.id ? (
+                      <>
+                        <input
+                          autoFocus value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") commitEdit(ex.id); if (e.key === "Escape") { setEditingId(null); setEditName(""); } }}
+                          onBlur={() => commitEdit(ex.id)}
+                          style={{ flex: 1, fontSize: 14, fontFamily: "inherit", color: TEXT, border: `1px solid ${TEAL}`, borderRadius: 7, padding: "4px 8px", outline: "none" }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ flex: 1, fontSize: 14, color: TEXT, fontWeight: 500 }}>{ex.name}</span>
+                        <button onClick={() => { setEditingId(ex.id); setEditName(ex.name); }} title="Rename" style={iconBtn}>
+                          <Icon name="edit" size={14} color={TEXT_SEC} />
+                        </button>
+                        <button onClick={() => removeMovement(ex.id)} title="Remove" style={iconBtn}>
+                          <Icon name="x" size={15} color={TEXT_SEC} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {adding === cat ? (
+                <input
+                  autoFocus value={draftName}
+                  placeholder="Movement name"
+                  onChange={(e) => setDraftName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") commitAdd(cat); if (e.key === "Escape") { setAdding(null); setDraftName(""); } }}
+                  onBlur={() => commitAdd(cat)}
+                  style={{ marginTop: 8, fontSize: 14, fontFamily: "inherit", color: TEXT, border: `1px solid ${TEAL}`, borderRadius: 8, padding: "7px 10px", outline: "none" }}
+                />
+              ) : (
+                <button onClick={() => { setAdding(cat); setDraftName(""); }} style={{
+                  marginTop: 8, display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit",
+                  fontSize: 13, fontWeight: 600, color: TEAL, background: "transparent", border: "none", cursor: "pointer", padding: "4px 0",
+                }}>
+                  <Icon name="plus" size={15} color={TEAL} /> Add movement
+                </button>
+              )}
             </div>
           );
         })}
@@ -423,251 +538,463 @@ function ExercisesStep({ onContinue }) {
   );
 }
 
-// ════════════════════════ STEP 3: TEMPLATES ════════════════════════
+const iconBtn = {
+  border: "none", background: "transparent", cursor: "pointer", padding: 3,
+  display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
+};
+
+// ════════════════════════ STEP 3: TEMPLATES (periodization calendar) ════════════════════════
 function TemplatesStep({ approved, setApproved, onContinue }) {
-  const allApproved = EXTRACTED_TEMPLATES.every((t) => approved[t.id]);
+  const [activeTab, setActiveTab] = useState("group");
+  const allApproved = TEMPLATE_TYPES.every((t) => approved[t.id]);
+  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
+  const detail = TEMPLATE_DETAIL[activeTab];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Your programming templates.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
-          I found three structures in your work — one for each way you train clients. Approve each one and we&apos;ll use them to generate your programs.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
+          I read the periodization out of your sheets — how blocks progress week to week, plus your progressions and regressions. Review each one as a block, then approve.
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
-        {EXTRACTED_TEMPLATES.map((tpl) => {
-          const isApproved = approved[tpl.id];
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {TEMPLATE_TYPES.map((t) => {
+          const on = activeTab === t.id;
+          const isApproved = approved[t.id];
           return (
-            <div key={tpl.id} style={{
-              background: WHITE, borderRadius: 16, padding: 22,
-              border: `1.5px solid ${isApproved ? tpl.color : BORDER}`,
-              boxShadow: isApproved ? `0 6px 18px ${tpl.color}22` : "0 2px 8px rgba(0,0,0,0.04)",
-              transition: "all 0.2s ease", display: "flex", flexDirection: "column", gap: 14,
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+              border: `1.5px solid ${on ? t.color : BORDER}`,
+              background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
             }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: tpl.color, background: tpl.bg, padding: "5px 12px", borderRadius: 20 }}>{tpl.type}</span>
-                {isApproved && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#1f7a3e" }}>
-                    <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} /> Approved
-                  </span>
-                )}
-              </div>
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: TEXT }}>{tpl.name}</div>
-                <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 4 }}>{tpl.cadence} · {tpl.sessionLen}</div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {tpl.blocks.map((b, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: TEXT }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: tpl.color, flexShrink: 0 }} />
-                    {b}
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontSize: 12.5, color: TEXT_SEC, margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>{tpl.notes}</p>
-              <button
-                onClick={() => setApproved((prev) => ({ ...prev, [tpl.id]: !prev[tpl.id] }))}
-                style={{
-                  marginTop: "auto", padding: "11px 16px", borderRadius: 11, fontFamily: "inherit",
-                  fontSize: 14, fontWeight: 700, cursor: "pointer",
-                  border: `1.5px solid ${isApproved ? "#1f7a3e" : tpl.color}`,
-                  background: isApproved ? "#e6f9ec" : WHITE,
-                  color: isApproved ? "#1f7a3e" : tpl.color,
-                  transition: "all 0.15s ease",
-                }}
-              >
-                {isApproved ? "Approved" : "Approve template"}
-              </button>
-            </div>
+              {t.type}
+              {isApproved && <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} />}
+            </button>
           );
         })}
       </div>
 
+      {/* Active template — block calendar */}
+      <div style={{ background: WHITE, border: `1.5px solid ${active.color}`, borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 800, color: TEXT }}>{detail.name}</div>
+            <div style={{ fontSize: 13.5, color: TEXT_SEC, marginTop: 4 }}>{detail.summary}</div>
+          </div>
+          {approved[active.id] && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#1f7a3e", background: "#e6f9ec", padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap" }}>
+              <Icon name="check" size={14} color="#1f7a3e" strokeWidth={2.5} /> Approved
+            </span>
+          )}
+        </div>
+
+        {/* Meta chips */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {[
+            { label: "Periodization", value: detail.periodization },
+            { label: "Cadence", value: detail.cadence },
+            { label: "Block length", value: detail.blockLength },
+          ].map((m) => (
+            <div key={m.label} style={{ background: active.bg, borderRadius: 10, padding: "8px 14px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: active.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT, marginTop: 2 }}>{m.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Block calendar — the 4-week progression */}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>4-week block progression</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            {detail.phases.map((ph) => (
+              <div key={ph.week} style={{ border: `1px solid ${active.color}33`, background: BG, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WEEK {ph.week}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: active.color }}>{ph.label}</div>
+                <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{ph.focus}</div>
+                <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <div style={{ fontSize: 12, color: TEXT }}><strong>{ph.reps}</strong></div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>{ph.intensity}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progressions / regressions */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {[
+            { title: "Progressions", items: detail.progressions, dot: "#1f7a3e" },
+            { title: "Regressions", items: detail.regressions, dot: "#c2410c" },
+          ].map((col) => (
+            <div key={col.title} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>{col.title}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {col.items.map((it, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: TEXT, lineHeight: 1.4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: col.dot, flexShrink: 0, marginTop: 6 }} />
+                    {it}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setApproved((prev) => ({ ...prev, [active.id]: !prev[active.id] }))}
+          style={{
+            padding: "12px 16px", borderRadius: 11, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer",
+            border: `1.5px solid ${approved[active.id] ? "#1f7a3e" : active.color}`,
+            background: approved[active.id] ? "#e6f9ec" : WHITE, color: approved[active.id] ? "#1f7a3e" : active.color,
+            transition: "all 0.15s ease",
+          }}
+        >
+          {approved[active.id] ? "Approved — tap to undo" : `Approve ${active.type} template`}
+        </button>
+      </div>
+
       <PrimaryButton onClick={onContinue} disabled={!allApproved}>
-        {allApproved ? "Generate my first programs" : "Approve all three to continue"} <Icon name="arrow" size={18} color={WHITE} />
+        {allApproved ? "Generate my first programs" : `Approve all three to continue (${Object.values(approved).filter(Boolean).length}/3)`} <Icon name="arrow" size={18} color={WHITE} />
       </PrimaryButton>
     </div>
   );
 }
 
-// ════════════════════════ STEP 4: GENERATE ════════════════════════
-function GenerateStep({ sessions, setSessions, generated, setGenerated, onContinue }) {
+// ════════════════════════ STEP 4: GENERATE PROGRAMS ════════════════════════
+function GenerateStep({ programs, setPrograms, onContinue }) {
   const [selected, setSelected] = useState({ group: true, semi: true, pt: true });
   const [generating, setGenerating] = useState(false);
+  const generated = Object.keys(programs).length > 0;
+  const [activeTab, setActiveTab] = useState("group");
+  const [openSession, setOpenSession] = useState(null);
 
   const runGenerate = () => {
     setGenerating(true);
     setTimeout(() => {
-      const built = buildMonthSessions().filter((s) => selected[s.templateId]);
-      setSessions(built);
-      setGenerated(true);
+      const built = {};
+      TEMPLATE_TYPES.forEach((t) => { if (selected[t.id]) built[t.id] = buildProgram(t.id); });
+      setPrograms(built);
+      const firstTab = TEMPLATE_TYPES.find((t) => selected[t.id])?.id || "group";
+      setActiveTab(firstTab);
       setGenerating(false);
     }, 1400);
   };
 
-  const countByType = (id) => sessions.filter((s) => s.templateId === id).length;
+  const updateSession = (updated) => {
+    setPrograms((prev) => ({
+      ...prev,
+      [updated.typeId]: prev[updated.typeId].map((s) => s.id === updated.id ? updated : s),
+    }));
+    setOpenSession(updated);
+  };
+
+  const availableTabs = TEMPLATE_TYPES.filter((t) => programs[t.id]);
+  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Generate your first month.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
-          Pick the templates to build from. I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar</strong> with your movements. We start one month at a time — later you&apos;ll extend up to 12.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
+          Pick the templates to build from. I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar for each type</strong> with your movements. Click any session to view and edit the workout. We start one month at a time — later you&apos;ll extend up to 12.
         </p>
       </div>
 
       {!generated ? (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-            {EXTRACTED_TEMPLATES.map((tpl) => {
-              const on = selected[tpl.id];
+            {TEMPLATE_TYPES.map((t) => {
+              const on = selected[t.id];
+              const detail = TEMPLATE_DETAIL[t.id];
               return (
-                <button key={tpl.id} onClick={() => setSelected((p) => ({ ...p, [tpl.id]: !p[tpl.id] }))} style={{
+                <button key={t.id} onClick={() => setSelected((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{
                   textAlign: "left", cursor: "pointer", fontFamily: "inherit",
-                  background: on ? tpl.bg : WHITE, borderRadius: 14, padding: 18,
-                  border: `1.5px solid ${on ? tpl.color : BORDER}`, transition: "all 0.15s ease",
+                  background: on ? t.bg : WHITE, borderRadius: 14, padding: 18,
+                  border: `1.5px solid ${on ? t.color : BORDER}`, transition: "all 0.15s ease",
                   display: "flex", flexDirection: "column", gap: 8,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: tpl.color }}>{tpl.type}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: t.color }}>{t.type}</span>
                     <span style={{
                       width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                      border: `1.5px solid ${on ? tpl.color : "#c8d6d2"}`, background: on ? tpl.color : WHITE,
+                      border: `1.5px solid ${on ? t.color : "#c8d6d2"}`, background: on ? t.color : WHITE,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>{on && <Icon name="check" size={13} color={WHITE} strokeWidth={3} />}</span>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{tpl.name}</div>
-                  <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{tpl.cadence}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{detail.name}</div>
+                  <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{detail.cadence} · {detail.periodization}</div>
                 </button>
               );
             })}
           </div>
           <PrimaryButton onClick={runGenerate} disabled={generating || !Object.values(selected).some(Boolean)}>
-            {generating ? "Building your calendar…" : "Auto-populate 4-week calendar"} {!generating && <Icon name="sparkle" size={18} color={WHITE} />}
+            {generating ? "Building your calendars…" : "Auto-populate calendars"} {!generating && <Icon name="sparkle" size={18} color={WHITE} />}
           </PrimaryButton>
         </>
       ) : (
         <>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {EXTRACTED_TEMPLATES.filter((t) => countByType(t.id) > 0).map((t) => (
-              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, background: t.bg, borderRadius: 10, padding: "8px 14px" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: t.color }}>{t.type}</span>
-                <span style={{ fontSize: 13, color: TEXT_SEC }}>{countByType(t.id)} sessions</span>
-              </div>
-            ))}
+          {/* Calendar type tabs */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {availableTabs.map((t) => {
+              const on = activeTab === t.id;
+              return (
+                <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
+                  fontSize: 14, fontWeight: 700, cursor: "pointer",
+                  border: `1.5px solid ${on ? t.color : BORDER}`,
+                  background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
+                }}>
+                  {t.type}
+                  <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.85 }}>{programs[t.id].length}</span>
+                </button>
+              );
+            })}
           </div>
-          <CalendarGrid sessions={sessions} />
+
+          <ProgramCalendar
+            type={active}
+            sessions={programs[active.id]}
+            onSessionClick={setOpenSession}
+          />
+
           <PrimaryButton onClick={onContinue}>
             Tag coaches to sessions <Icon name="arrow" size={18} color={WHITE} />
           </PrimaryButton>
         </>
       )}
+
+      {openSession && (
+        <WorkoutEditor
+          session={openSession}
+          movements={INITIAL_MOVEMENTS}
+          onClose={() => setOpenSession(null)}
+          onSave={updateSession}
+        />
+      )}
     </div>
   );
 }
 
-// ── Shared calendar grid ──
-function CalendarGrid({ sessions, onSessionClick, coachAssign }) {
+// ── Per-type program calendar (4 weeks × that type's training days) ──
+function ProgramCalendar({ type, sessions, onSessionClick, coachAssign }) {
+  const days = TYPE_DAYS[type.id];
   const weeks = [1, 2, 3, 4];
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {weeks.map((wk) => (
-        <div key={wk}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Week {wk}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-            {WEEKDAYS.map((day) => {
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, overflowX: "auto" }}>
+      <div style={{ minWidth: days.length * 130 }}>
+        {/* Header row */}
+        <div style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+          <div />
+          {days.map((d) => (
+            <div key={d} style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", textAlign: "center" }}>{d}</div>
+          ))}
+        </div>
+        {weeks.map((wk) => (
+          <div key={wk} style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WK {wk}</div>
+            {days.map((day) => {
               const sess = sessions.find((s) => s.week === wk && s.day === day);
-              if (!sess) return <div key={day} style={{ background: "#f1f5f4", borderRadius: 10, minHeight: 78 }} />;
+              if (!sess) return <div key={day} style={{ background: "#f1f5f4", borderRadius: 10, minHeight: 86 }} />;
               const coach = coachAssign ? ONBOARDING_COACHES.find((c) => c.id === sess.coachId) : null;
               return (
-                <div key={day}
-                  onClick={() => onSessionClick && onSessionClick(sess)}
-                  style={{
-                    background: sess.bg, borderRadius: 10, padding: 11, minHeight: 78,
-                    border: `1px solid ${sess.color}33`, cursor: onSessionClick ? "pointer" : "default",
-                    display: "flex", flexDirection: "column", gap: 6, transition: "all 0.15s ease",
-                  }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>{day}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: sess.color }}>{sess.type}</div>
-                  {coachAssign && (
+                <button key={day} onClick={() => onSessionClick && onSessionClick(sess)} style={{
+                  textAlign: "left", fontFamily: "inherit", cursor: onSessionClick ? "pointer" : "default",
+                  background: type.bg, borderRadius: 10, padding: 10, minHeight: 86,
+                  border: `1px solid ${type.color}33`, display: "flex", flexDirection: "column", gap: 5, transition: "all 0.15s ease",
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: type.color, lineHeight: 1.25 }}>{sess.focus}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>{sess.exercises.length} exercises</div>
+                  {coachAssign ? (
                     coach ? (
                       <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 5 }}>
                         <span style={{ width: 18, height: 18, borderRadius: "50%", background: coach.color, color: WHITE, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
                         <span style={{ fontSize: 10, color: TEXT_SEC, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coach.name.split(" ")[0]}</span>
                       </div>
                     ) : (
-                      <div style={{ marginTop: "auto", fontSize: 10, fontWeight: 600, color: "#b08900", background: "#fff7e0", borderRadius: 6, padding: "2px 6px", display: "inline-block", width: "fit-content" }}>Tag coach</div>
+                      <div style={{ marginTop: "auto", fontSize: 10, fontWeight: 600, color: "#b08900", background: "#fff7e0", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>Tag coach</div>
                     )
+                  ) : (
+                    <div style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: type.color }}>
+                      <Icon name="edit" size={11} color={type.color} /> Edit
+                    </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Workout editor modal ──
+function WorkoutEditor({ session, movements, onClose, onSave }) {
+  const type = TEMPLATE_TYPES.find((t) => t.id === session.typeId);
+  const [exercises, setExercises] = useState(session.exercises.map((e) => ({ ...e })));
+  const [adding, setAdding] = useState(false);
+  const [pickId, setPickId] = useState(movements[0]?.id || "");
+
+  const update = (id, field, value) => setExercises((prev) => prev.map((e) => e.id === id ? { ...e, [field]: value } : e));
+  const remove = (id) => setExercises((prev) => prev.filter((e) => e.id !== id));
+  const addExercise = () => {
+    const m = movements.find((mm) => mm.id === pickId);
+    if (!m) return;
+    setExercises((prev) => [...prev, { id: `${m.id}-${Date.now()}`, movementId: m.id, name: m.name, sets: "3", reps: "10", load: "RPE 7" }]);
+    setAdding(false);
+  };
+
+  const save = () => { onSave({ ...session, exercises }); onClose(); };
+
+  const cell = { fontSize: 13, fontFamily: "inherit", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "6px 8px", outline: "none", width: "100%", background: WHITE };
+
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(20,40,38,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: WHITE, borderRadius: 18, width: "min(560px, 100%)", maxHeight: "88%", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
+        {/* Header */}
+        <div style={{ padding: "20px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, position: "sticky", top: 0, background: WHITE, borderRadius: "18px 18px 0 0" }}>
+          <div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: type.color, background: type.bg, padding: "4px 10px", borderRadius: 20 }}>{type.type}</span>
+            <div style={{ fontSize: 18, fontWeight: 800, color: TEXT, marginTop: 8 }}>{session.focus}</div>
+            <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>Week {session.week} · {session.day}</div>
+          </div>
+          <button onClick={onClose} style={{ ...iconBtn, border: `1px solid ${BORDER}`, padding: 7 }}><Icon name="x" size={16} color={TEXT_SEC} /></button>
         </div>
-      ))}
+
+        {/* Exercise table */}
+        <div style={{ padding: "16px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 52px 52px 88px 28px", gap: 8, fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", padding: "0 2px" }}>
+            <span>Movement</span><span>Sets</span><span>Reps</span><span>Load</span><span />
+          </div>
+          {exercises.map((ex) => (
+            <div key={ex.id} style={{ display: "grid", gridTemplateColumns: "1fr 52px 52px 88px 28px", gap: 8, alignItems: "center" }}>
+              <input value={ex.name} onChange={(e) => update(ex.id, "name", e.target.value)} style={cell} />
+              <input value={ex.sets} onChange={(e) => update(ex.id, "sets", e.target.value)} style={{ ...cell, textAlign: "center" }} />
+              <input value={ex.reps} onChange={(e) => update(ex.id, "reps", e.target.value)} style={{ ...cell, textAlign: "center" }} />
+              <input value={ex.load} onChange={(e) => update(ex.id, "load", e.target.value)} style={{ ...cell, textAlign: "center" }} />
+              <button onClick={() => remove(ex.id)} style={iconBtn}><Icon name="trash" size={15} color={TEXT_SEC} /></button>
+            </div>
+          ))}
+
+          {adding ? (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+              <select value={pickId} onChange={(e) => setPickId(e.target.value)} style={{ ...cell, flex: 1, cursor: "pointer" }}>
+                {MOVEMENT_CATEGORIES.map((cat) => (
+                  <optgroup key={cat} label={cat}>
+                    {movements.filter((m) => m.category === cat).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+              <button onClick={addExercise} style={{ padding: "8px 14px", borderRadius: 9, border: "none", background: type.color, color: WHITE, fontSize: 13, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Add</button>
+              <button onClick={() => setAdding(false)} style={{ ...iconBtn, border: `1px solid ${BORDER}`, padding: 7 }}><Icon name="x" size={15} color={TEXT_SEC} /></button>
+            </div>
+          ) : (
+            <button onClick={() => setAdding(true)} style={{
+              marginTop: 4, display: "flex", alignItems: "center", gap: 6, alignSelf: "flex-start", fontFamily: "inherit",
+              fontSize: 13, fontWeight: 600, color: type.color, background: "transparent", border: "none", cursor: "pointer", padding: "4px 0",
+            }}>
+              <Icon name="plus" size={15} color={type.color} /> Add exercise
+            </button>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "14px 22px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 10, position: "sticky", bottom: 0, background: WHITE, borderRadius: "0 0 18px 18px" }}>
+          <button onClick={onClose} style={{ padding: "11px 18px", borderRadius: 11, border: `1.5px solid ${BORDER}`, background: WHITE, color: TEXT, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Cancel</button>
+          <button onClick={save} style={{ padding: "11px 20px", borderRadius: 11, border: "none", background: MINT, color: WHITE, fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}>Save workout</button>
+        </div>
+      </div>
     </div>
   );
 }
 
 // ════════════════════════ STEP 5: COACHES ════════════════════════
-function CoachesStep({ sessions, setSessions, onContinue, isMobile }) {
+function CoachesStep({ programs, setPrograms, onContinue }) {
+  const [activeTab, setActiveTab] = useState(TEMPLATE_TYPES.find((t) => programs[t.id])?.id || "group");
   const [activeSession, setActiveSession] = useState(null);
-  const taggedCount = sessions.filter((s) => s.coachId).length;
-  const allTagged = taggedCount === sessions.length;
+
+  const allSessions = Object.values(programs).flat();
+  const taggedCount = allSessions.filter((s) => s.coachId).length;
+  const allTagged = taggedCount === allSessions.length && allSessions.length > 0;
 
   const assignCoach = (coachId) => {
-    setSessions((prev) => prev.map((s) => s.id === activeSession.id ? { ...s, coachId } : s));
+    setPrograms((prev) => ({
+      ...prev,
+      [activeSession.typeId]: prev[activeSession.typeId].map((s) => s.id === activeSession.id ? { ...s, coachId } : s),
+    }));
     setActiveSession(null);
   };
 
-  const bulkAssign = (templateId, coachId) => {
-    setSessions((prev) => prev.map((s) => s.templateId === templateId ? { ...s, coachId } : s));
+  const bulkAssign = (typeId, coachId) => {
+    setPrograms((prev) => ({ ...prev, [typeId]: prev[typeId].map((s) => ({ ...s, coachId })) }));
   };
 
+  const availableTabs = TEMPLATE_TYPES.filter((t) => programs[t.id]);
+  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Tag your coaches.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
-          Assign a coach to each session across all three types — 1-on-1, semi-private, and group. Click any session in the calendar, or bulk-assign a whole template below.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
+          Assign a coach to each session across all three calendars — group, semi-private, and 1-on-1. Click any session, or bulk-assign a whole calendar below.
         </p>
       </div>
 
-      {/* Bulk assign row */}
+      {/* Quick assign for the active calendar */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "#f1f7f5", borderRadius: 14, padding: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Quick assign by template</div>
-        {EXTRACTED_TEMPLATES.filter((t) => sessions.some((s) => s.templateId === t.id)).map((t) => (
-          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: t.color, minWidth: 92 }}>{t.type}</span>
-            {ONBOARDING_COACHES.map((c) => (
-              <button key={c.id} onClick={() => bulkAssign(t.id, c.id)} style={{
-                display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20,
-                border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, color: TEXT,
-              }}>
-                <span style={{ width: 18, height: 18, borderRadius: "50%", background: c.color, color: WHITE, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{c.initials}</span>
-                {c.name.split(" ")[0]}
-              </button>
-            ))}
-          </div>
-        ))}
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Quick assign all {active.type} sessions to</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {ONBOARDING_COACHES.map((c) => (
+            <button key={c.id} onClick={() => bulkAssign(active.id, c.id)} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 20,
+              border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, color: TEXT,
+            }}>
+              <span style={{ width: 18, height: 18, borderRadius: "50%", background: c.color, color: WHITE, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{c.initials}</span>
+              {c.name.split(" ")[0]}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Progress */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ flex: 1, height: 8, borderRadius: 8, background: "#e6efec", overflow: "hidden" }}>
-          <div style={{ width: `${(taggedCount / sessions.length) * 100}%`, height: "100%", background: MINT, transition: "width 0.3s ease" }} />
+          <div style={{ width: `${allSessions.length ? (taggedCount / allSessions.length) * 100 : 0}%`, height: "100%", background: MINT, transition: "width 0.3s ease" }} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 700, color: allTagged ? "#1f7a3e" : TEXT_SEC }}>{taggedCount} / {sessions.length} tagged</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: allTagged ? "#1f7a3e" : TEXT_SEC }}>{taggedCount} / {allSessions.length} tagged</span>
       </div>
 
-      <CalendarGrid sessions={sessions} coachAssign onSessionClick={setActiveSession} />
+      {/* Calendar tabs */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {availableTabs.map((t) => {
+          const on = activeTab === t.id;
+          const tagged = programs[t.id].filter((s) => s.coachId).length;
+          return (
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+              border: `1.5px solid ${on ? t.color : BORDER}`,
+              background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
+            }}>
+              {t.type}
+              <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.85 }}>{tagged}/{programs[t.id].length}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <ProgramCalendar type={active} sessions={programs[active.id]} coachAssign onSessionClick={setActiveSession} />
 
       <PrimaryButton onClick={onContinue} disabled={!allTagged}>
         {allTagged ? "Send to coaches for review" : "Tag every session to continue"} <Icon name="send" size={17} color={WHITE} />
@@ -677,8 +1004,9 @@ function CoachesStep({ sessions, setSessions, onContinue, isMobile }) {
       {activeSession && (
         <div onClick={() => setActiveSession(null)} style={{ position: "absolute", inset: 0, background: "rgba(20,40,38,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: WHITE, borderRadius: 18, padding: 24, width: "min(380px, 100%)", boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: activeSession.color }}>{activeSession.type} · Week {activeSession.week} · {activeSession.day}</div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, margin: "4px 0 18px" }}>Assign a coach</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: active.color }}>{active.type} · Week {activeSession.week} · {activeSession.day}</div>
+            <div style={{ fontSize: 15, color: TEXT_SEC, margin: "2px 0 0" }}>{activeSession.focus}</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, margin: "12px 0 16px" }}>Assign a coach</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {ONBOARDING_COACHES.map((c) => (
                 <button key={c.id} onClick={() => assignCoach(c.id)} style={{
@@ -703,9 +1031,10 @@ function CoachesStep({ sessions, setSessions, onContinue, isMobile }) {
 }
 
 // ════════════════════════ STEP 6: REVIEW / DONE ════════════════════════
-function ReviewStep({ sessions, files, onReturning, onFinish }) {
-  const byType = EXTRACTED_TEMPLATES.map((t) => ({ ...t, count: sessions.filter((s) => s.templateId === t.id).length })).filter((t) => t.count > 0);
-  const coaches = [...new Set(sessions.map((s) => s.coachId))].map((id) => ONBOARDING_COACHES.find((c) => c.id === id)).filter(Boolean);
+function ReviewStep({ programs, files, onReturning, onFinish }) {
+  const allSessions = Object.values(programs).flat();
+  const byType = TEMPLATE_TYPES.filter((t) => programs[t.id]).map((t) => ({ ...t, count: programs[t.id].length }));
+  const coaches = [...new Set(allSessions.map((s) => s.coachId))].map((id) => ONBOARDING_COACHES.find((c) => c.id === id)).filter(Boolean);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, alignItems: "center", textAlign: "center", paddingTop: 12 }}>
@@ -715,14 +1044,14 @@ function ReviewStep({ sessions, files, onReturning, onFinish }) {
       <div>
         <h1 style={{ fontSize: 30, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Sent for review.</h1>
         <p style={{ fontSize: 16, color: TEXT_SEC, margin: "12px 0 0", maxWidth: 520, lineHeight: 1.5 }}>
-          Your first month is built and on its way to your coaches. They&apos;ll get a notification to review their tagged sessions before anything goes live.
+          Your first month is built across all three calendars and on its way to your coaches. They&apos;ll get a notification to review their tagged sessions before anything goes live.
         </p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, width: "100%", maxWidth: 620 }}>
         {[
           { label: "Files learned", value: files?.length || 3 },
-          { label: "Sessions built", value: sessions.length },
+          { label: "Sessions built", value: allSessions.length },
           { label: "Weeks programmed", value: 4 },
           { label: "Coaches tagged", value: coaches.length },
         ].map((stat) => (
@@ -763,107 +1092,142 @@ function ReviewStep({ sessions, files, onReturning, onFinish }) {
 }
 
 // ════════════════════════ RETURNING FLOW ════════════════════════
-function ReturningStep({ baseSessions, onFinish }) {
-  // Existing 4 weeks already programmed; building the NEXT block (weeks 5-8)
-  const [nextSessions, setNextSessions] = useState([]);
-  const [built, setBuilt] = useState(false);
+function ReturningStep({ programs, onFinish }) {
+  const [nextPrograms, setNextPrograms] = useState({});
+  const [activeTab, setActiveTab] = useState(TEMPLATE_TYPES.find((t) => programs[t.id])?.id || "group");
+  const [openSession, setOpenSession] = useState(null);
+  const built = Object.keys(nextPrograms).length > 0;
+
+  const baseCount = Object.values(programs).flat().length;
 
   const buildNext = () => {
-    const next = baseSessions.map((s) => ({
-      ...s,
-      id: `next-${s.id}`,
-      week: s.week + 4,
-    }));
-    setNextSessions(next);
-    setBuilt(true);
+    const next = {};
+    Object.entries(programs).forEach(([typeId, sessions]) => {
+      next[typeId] = sessions.map((s) => ({ ...s, id: `next-${s.id}`, week: s.week + 4, exercises: s.exercises.map((e) => ({ ...e })) }));
+    });
+    setNextPrograms(next);
   };
 
+  const updateSession = (updated) => {
+    setNextPrograms((prev) => ({ ...prev, [updated.typeId]: prev[updated.typeId].map((s) => s.id === updated.id ? updated : s) }));
+    setOpenSession(updated);
+  };
+
+  const availableTabs = TEMPLATE_TYPES.filter((t) => nextPrograms[t.id]);
+  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           Pick up where you left off.
         </h1>
-        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
-          Your first month is live. Now we build the next four weeks straight off your existing calendar — same templates, same coaches, progressed loads. No uploads needed.
+        <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
+          Your first month is live. Now we build the next four weeks straight off your existing calendars — same templates, same coaches, progressed loads. Click any session to fine-tune it. No uploads needed.
         </p>
       </div>
 
-      {/* Existing month summary */}
       <div style={{ background: "#f1f7f5", borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: WHITE, display: "flex", alignItems: "center", justifyContent: "center", color: "#1f7a3e" }}>
           <Icon name="check" size={20} color="#1f7a3e" strokeWidth={2.5} />
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>Weeks 1–4 · Published</div>
-          <div style={{ fontSize: 13, color: TEXT_SEC }}>{baseSessions.length} sessions running, coaches assigned</div>
+          <div style={{ fontSize: 13, color: TEXT_SEC }}>{baseCount} sessions running across all calendars, coaches assigned</div>
         </div>
       </div>
 
       {!built ? (
         <PrimaryButton onClick={buildNext}>
-          Build weeks 5–8 from this calendar <Icon name="sparkle" size={18} color={WHITE} />
+          Build weeks 5–8 from these calendars <Icon name="sparkle" size={18} color={WHITE} />
         </PrimaryButton>
       ) : (
         <>
           <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em" }}>Next block — weeks 5–8</div>
-          <CalendarGridContinued sessions={nextSessions} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {availableTabs.map((t) => {
+              const on = activeTab === t.id;
+              return (
+                <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
+                  fontSize: 14, fontWeight: 700, cursor: "pointer",
+                  border: `1.5px solid ${on ? t.color : BORDER}`,
+                  background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
+                }}>
+                  {t.type}<span style={{ fontSize: 11, fontWeight: 700, opacity: 0.85 }}>{nextPrograms[t.id].length}</span>
+                </button>
+              );
+            })}
+          </div>
+          <ProgramCalendarWeeks type={active} sessions={nextPrograms[active.id]} onSessionClick={setOpenSession} />
           <PrimaryButton onClick={onFinish}>
             Send block to coaches <Icon name="send" size={17} color={WHITE} />
           </PrimaryButton>
         </>
       )}
+
+      {openSession && (
+        <WorkoutEditor session={openSession} movements={INITIAL_MOVEMENTS} onClose={() => setOpenSession(null)} onSave={updateSession} />
+      )}
     </div>
   );
 }
 
-// Calendar grid variant that labels weeks 5-8
-function CalendarGridContinued({ sessions }) {
+// Calendar variant for arbitrary week numbers (weeks 5-8)
+function ProgramCalendarWeeks({ type, sessions, onSessionClick }) {
+  const days = TYPE_DAYS[type.id];
   const weeks = [...new Set(sessions.map((s) => s.week))].sort((a, b) => a - b);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {weeks.map((wk) => (
-        <div key={wk}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Week {wk}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-            {WEEKDAYS.map((day) => {
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, overflowX: "auto" }}>
+      <div style={{ minWidth: days.length * 130 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+          <div />
+          {days.map((d) => <div key={d} style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", textAlign: "center" }}>{d}</div>)}
+        </div>
+        {weeks.map((wk) => (
+          <div key={wk} style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WK {wk}</div>
+            {days.map((day) => {
               const sess = sessions.find((s) => s.week === wk && s.day === day);
-              if (!sess) return <div key={day} style={{ background: "#f1f5f4", borderRadius: 10, minHeight: 70 }} />;
+              if (!sess) return <div key={day} style={{ background: "#f1f5f4", borderRadius: 10, minHeight: 86 }} />;
               const coach = ONBOARDING_COACHES.find((c) => c.id === sess.coachId);
               return (
-                <div key={day} style={{ background: sess.bg, borderRadius: 10, padding: 11, minHeight: 70, border: `1px solid ${sess.color}33`, display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>{day}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: sess.color }}>{sess.type}</div>
+                <button key={day} onClick={() => onSessionClick(sess)} style={{
+                  textAlign: "left", fontFamily: "inherit", cursor: "pointer",
+                  background: type.bg, borderRadius: 10, padding: 10, minHeight: 86,
+                  border: `1px solid ${type.color}33`, display: "flex", flexDirection: "column", gap: 5,
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: type.color, lineHeight: 1.25 }}>{sess.focus}</div>
+                  <div style={{ fontSize: 11, color: TEXT_SEC }}>{sess.exercises.length} exercises</div>
                   {coach && (
                     <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 5 }}>
                       <span style={{ width: 18, height: 18, borderRadius: "50%", background: coach.color, color: WHITE, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
                       <span style={{ fontSize: 10, color: TEXT_SEC }}>{coach.name.split(" ")[0]}</span>
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
 // ════════════════════════ MAIN CANVAS ════════════════════════
 export default function GymOnboardingCanvas({ onClose, onHome, isMobile }) {
-  const [step, setStep] = useState("upload"); // upload | processing | exercises | templates | generate | coaches | review | returning
+  const [step, setStep] = useState("upload");
   const [files, setFiles] = useState([]);
+  const [movements, setMovements] = useState(INITIAL_MOVEMENTS);
   const [approvedTemplates, setApprovedTemplates] = useState({});
-  const [sessions, setSessions] = useState([]);
-  const [generated, setGenerated] = useState(false);
+  const [programs, setPrograms] = useState({}); // { group: [...], semi: [...], pt: [...] }
 
-  // Map step -> rail index (processing & returning don't get their own dot)
   const railIndex = { upload: 0, processing: 0, exercises: 1, templates: 2, generate: 3, coaches: 4, review: 5, returning: 5 }[step];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: BG, fontFamily: "inherit" }}>
-      <style>{`@keyframes gymDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }`}</style>
+      <style>{`@keyframes gymDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } } .gymMoveRow:hover { background: ${BG}; }`}</style>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, padding: isMobile ? "14px 16px" : "16px 28px", borderBottom: `1px solid ${BORDER}`, background: WHITE, flexShrink: 0 }}>
@@ -882,7 +1246,7 @@ export default function GymOnboardingCanvas({ onClose, onHome, isMobile }) {
 
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "20px 16px 40px" : "36px 40px 48px" }}>
-        <div style={{ maxWidth: 920, margin: "0 auto" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
           {step === "upload" && (
             <UploadStep onContinue={(f) => { setFiles(f); setStep("processing"); }} />
           )}
@@ -890,22 +1254,22 @@ export default function GymOnboardingCanvas({ onClose, onHome, isMobile }) {
             <ProcessingStep onDone={() => setStep("exercises")} />
           )}
           {step === "exercises" && (
-            <ExercisesStep onContinue={() => setStep("templates")} />
+            <ExercisesStep movements={movements} setMovements={setMovements} onContinue={() => setStep("templates")} />
           )}
           {step === "templates" && (
             <TemplatesStep approved={approvedTemplates} setApproved={setApprovedTemplates} onContinue={() => setStep("generate")} />
           )}
           {step === "generate" && (
-            <GenerateStep sessions={sessions} setSessions={setSessions} generated={generated} setGenerated={setGenerated} onContinue={() => setStep("coaches")} />
+            <GenerateStep programs={programs} setPrograms={setPrograms} onContinue={() => setStep("coaches")} />
           )}
           {step === "coaches" && (
-            <CoachesStep sessions={sessions} setSessions={setSessions} onContinue={() => setStep("review")} isMobile={isMobile} />
+            <CoachesStep programs={programs} setPrograms={setPrograms} onContinue={() => setStep("review")} />
           )}
           {step === "review" && (
-            <ReviewStep sessions={sessions} files={files} onReturning={() => setStep("returning")} onFinish={onClose} />
+            <ReviewStep programs={programs} files={files} onReturning={() => setStep("returning")} onFinish={onClose} />
           )}
           {step === "returning" && (
-            <ReturningStep baseSessions={sessions} onFinish={onClose} />
+            <ReturningStep programs={programs} onFinish={onClose} />
           )}
         </div>
       </div>
