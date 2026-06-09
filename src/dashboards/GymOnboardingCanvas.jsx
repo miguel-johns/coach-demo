@@ -678,12 +678,16 @@ function StyleTemplateCard({ style, approved, onToggle }) {
 
 
 // ════════════════════════ STEP 4: GENERATE PROGRAMS ════════════════════════
+// Class calendars (Group + Semi-Private). 1-on-1s are programmed separately.
+const CLASS_TYPES = TEMPLATE_TYPES.filter((t) => t.id !== "pt");
+
 function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) {
-  const [selected, setSelected] = useState({ group: true, semi: true, pt: true });
-  const [styleFor, setStyleFor] = useState({ ...DEFAULT_STYLE_FOR_TYPE });
+  const [selected, setSelected] = useState({ group: true, semi: true });
+  const [styleFor, setStyleFor] = useState({ group: DEFAULT_STYLE_FOR_TYPE.group, semi: DEFAULT_STYLE_FOR_TYPE.semi });
   const [generating, setGenerating] = useState(false);
   const generated = Object.keys(programs).length > 0;
   const [activeTab, setActiveTab] = useState("group");
+  const [classDropOpen, setClassDropOpen] = useState(false);
   const [openSession, setOpenSession] = useState(null);
 
   // Only styles the gym approved are assignable
@@ -693,9 +697,9 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
     setGenerating(true);
     setTimeout(() => {
       const built = {};
-      TEMPLATE_TYPES.forEach((t) => { if (selected[t.id]) built[t.id] = buildProgram(t.id, styleFor[t.id]); });
+      CLASS_TYPES.forEach((t) => { if (selected[t.id]) built[t.id] = buildProgram(t.id, styleFor[t.id]); });
       setPrograms(built);
-      const firstTab = TEMPLATE_TYPES.find((t) => selected[t.id])?.id || "group";
+      const firstTab = CLASS_TYPES.find((t) => selected[t.id])?.id || "group";
       setActiveTab(firstTab);
       setGenerating(false);
     }, 1400);
@@ -709,8 +713,9 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
     setOpenSession(updated);
   };
 
-  const availableTabs = TEMPLATE_TYPES.filter((t) => programs[t.id]);
-  const active = TEMPLATE_TYPES.find((t) => t.id === activeTab);
+  const availableTabs = CLASS_TYPES.filter((t) => programs[t.id]);
+  const active = CLASS_TYPES.find((t) => t.id === activeTab) || availableTabs[0];
+  const activeStyle = programs[active?.id]?.[0]?.styleId ? STYLE_BY_ID[programs[active.id][0].styleId] : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -719,14 +724,14 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
           Generate your first month.
         </h1>
         <p style={{ fontSize: 15, color: TEXT_SEC, margin: "10px 0 0", maxWidth: 660, lineHeight: 1.5 }}>
-          Assign a programming template to each type of session you run. I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar for each</strong> with your movements. Click any session to view and edit the workout. We start one month at a time — later you&apos;ll extend up to 12.
+          Assign a programming template to each class you run, and I&apos;ll auto-populate a full <strong style={{ color: TEXT }}>4-week calendar</strong> with your movements — laid out just like your live programming view. Click any session to view and edit. 1-on-1 sessions are programmed separately.
         </p>
       </div>
 
       {!generated ? (
         <>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {TEMPLATE_TYPES.map((t) => {
+            {CLASS_TYPES.map((t) => {
               const on = selected[t.id];
               return (
                 <div key={t.id} style={{
@@ -760,7 +765,7 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
                               display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 10, fontFamily: "inherit",
                               fontSize: 13, fontWeight: 700, cursor: "pointer",
                               border: `1.5px solid ${picked ? s.color : BORDER}`,
-                              background: picked ? WHITE : WHITE, color: picked ? s.color : TEXT_SEC, transition: "all 0.15s ease",
+                              background: WHITE, color: picked ? s.color : TEXT_SEC, transition: "all 0.15s ease",
                             }}>
                               <span style={{ width: 9, height: 9, borderRadius: "50%", background: s.color }} />
                               {s.name}
@@ -774,6 +779,14 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
                 </div>
               );
             })}
+
+            {/* 1-on-1 note */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f1f7f5", borderRadius: 12, padding: "12px 16px" }}>
+              <Icon name="info" size={16} color={TEXT_SEC} />
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, lineHeight: 1.45 }}>
+                <strong style={{ color: TEXT }}>1-on-1 sessions</strong> are programmed separately, per client, after onboarding.
+              </span>
+            </div>
           </div>
           <PrimaryButton onClick={runGenerate} disabled={generating || !Object.values(selected).some(Boolean)}>
             {generating ? "Building your calendars…" : "Auto-populate calendars"} {!generating && <Icon name="sparkle" size={18} color={WHITE} />}
@@ -781,36 +794,80 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
         </>
       ) : (
         <>
-          {/* Calendar type tabs */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {availableTabs.map((t) => {
-              const on = activeTab === t.id;
-              return (
-                <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-                  display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 11, fontFamily: "inherit",
-                  fontSize: 14, fontWeight: 700, cursor: "pointer",
-                  border: `1.5px solid ${on ? t.color : BORDER}`,
-                  background: on ? t.bg : WHITE, color: on ? t.color : TEXT_SEC, transition: "all 0.15s ease",
-                }}>
-                  {t.type}
-                  <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.85 }}>{programs[t.id].length}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Applied template note for the active calendar */}
-          {programs[active.id]?.[0]?.styleId && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, color: TEXT_SEC }}>
-              <span style={{ width: 9, height: 9, borderRadius: "50%", background: STYLE_BY_ID[programs[active.id][0].styleId].color }} />
-              Template applied: <strong style={{ color: TEXT }}>{STYLE_BY_ID[programs[active.id][0].styleId].name}</strong>
+          {/* Calendar header — styled like the live programming view */}
+          <div style={{
+            background: WHITE, border: `1px solid ${BORDER}`, borderRadius: "16px 16px 0 0",
+            borderBottom: "none", padding: "16px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: active.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="calendar" size={20} color={active.color} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: TEXT, lineHeight: 1.2 }}>{active.type} Programming</div>
+                {activeStyle && (
+                  <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: activeStyle.color }} />
+                    {activeStyle.name} · 4-week block
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+
+            {/* Class dropdown (Group / Semi-Private) — replaces client dropdown */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setClassDropOpen((v) => !v)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 9,
+                  background: active.bg, border: `1px solid ${active.color}`, cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 13.5, fontWeight: 700, color: active.color, transition: "all 0.15s ease",
+                }}
+              >
+                <Icon name="users" size={16} color={active.color} />
+                <span>{active.type}</span>
+                <span style={{ transform: classDropOpen ? "rotate(-90deg)" : "rotate(90deg)", display: "inline-flex", transition: "transform 0.15s ease" }}>
+                  <Icon name="back" size={13} color={active.color} strokeWidth={2.4} />
+                </span>
+              </button>
+              {classDropOpen && (
+                <div style={{
+                  position: "absolute", top: "100%", right: 0, marginTop: 6, zIndex: 50,
+                  background: WHITE, borderRadius: 10, border: `1px solid ${BORDER}`,
+                  boxShadow: "0 12px 30px rgba(0,0,0,0.14)", minWidth: 220, overflow: "hidden",
+                }}>
+                  {availableTabs.map((t, i) => {
+                    const sel = t.id === active.id;
+                    const st = programs[t.id]?.[0]?.styleId ? STYLE_BY_ID[programs[t.id][0].styleId] : null;
+                    return (
+                      <button key={t.id} onClick={() => { setActiveTab(t.id); setClassDropOpen(false); }} style={{
+                        width: "100%", textAlign: "left", fontFamily: "inherit", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+                        background: sel ? t.bg : WHITE, border: "none",
+                        borderBottom: i < availableTabs.length - 1 ? `1px solid ${BORDER}` : "none",
+                      }}>
+                        <span style={{ width: 28, height: 28, borderRadius: 8, background: t.bg, color: t.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Icon name="users" size={15} color={t.color} />
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: TEXT }}>{t.type}</span>
+                          <span style={{ display: "block", fontSize: 11, color: TEXT_SEC }}>{st ? st.name : `${programs[t.id].length} sessions`}</span>
+                        </span>
+                        {sel && <Icon name="check" size={15} color={t.color} strokeWidth={2.5} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
 
           <ProgramCalendar
             type={active}
             sessions={programs[active.id]}
             onSessionClick={setOpenSession}
+            attached
           />
 
           <PrimaryButton onClick={onContinue}>
@@ -832,53 +889,87 @@ function GenerateStep({ programs, setPrograms, approvedTemplates, onContinue }) 
 }
 
 // ── Per-type program calendar (4 weeks × that type's training days) ──
-function ProgramCalendar({ type, sessions, onSessionClick, coachAssign }) {
+// Styled to match the live programming view: colored category header band per
+// day cell, exercise list with "Nx" prefix and "reps · load" subtext.
+function ProgramCalendar({ type, sessions, onSessionClick, coachAssign, attached }) {
   const days = TYPE_DAYS[type.id];
   const weeks = [1, 2, 3, 4];
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, overflowX: "auto" }}>
-      <div style={{ minWidth: days.length * 130 }}>
-        {/* Header row */}
-        <div style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
-          <div />
-          {days.map((d) => (
-            <div key={d} style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.04em", textAlign: "center" }}>{d}</div>
+    <div style={{
+      background: WHITE, border: `1px solid ${BORDER}`,
+      borderRadius: attached ? "0 0 16px 16px" : 16, borderTop: attached ? "none" : `1px solid ${BORDER}`,
+      overflow: "hidden",
+    }}>
+      <div style={{ padding: 14, overflowX: "auto" }}>
+        <div style={{ minWidth: days.length * 150 }}>
+          {/* Day-of-week header row */}
+          <div style={{ display: "grid", gridTemplateColumns: `48px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+            <div />
+            {days.map((d) => (
+              <div key={d} style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left", paddingLeft: 4 }}>{d}</div>
+            ))}
+          </div>
+          {weeks.map((wk) => (
+            <div key={wk} style={{ display: "grid", gridTemplateColumns: `48px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: TEXT_SEC }}>WK{wk}</div>
+              {days.map((day) => {
+                const sess = sessions.find((s) => s.week === wk && s.day === day);
+                if (!sess) return <div key={day} style={{ background: "#f6f8f7", borderRadius: 10, minHeight: 150, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: "#b7c5c1", fontSize: 11, fontStyle: "italic" }}>Rest</div>;
+                const coach = coachAssign ? ONBOARDING_COACHES.find((c) => c.id === sess.coachId) : null;
+                const cat = /Conditioning/.test(sess.focus) ? "CONDITIONING" : "STRENGTH";
+                return (
+                  <button key={day} onClick={() => onSessionClick && onSessionClick(sess)} style={{
+                    textAlign: "left", fontFamily: "inherit", cursor: onSessionClick ? "pointer" : "default", padding: 0,
+                    background: WHITE, borderRadius: 10, minHeight: 150, overflow: "hidden",
+                    border: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "all 0.15s ease",
+                  }}
+                    onMouseEnter={(e) => { if (onSessionClick) { e.currentTarget.style.borderColor = type.color; e.currentTarget.style.boxShadow = `0 4px 12px ${type.color}22`; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    {/* Category header band */}
+                    <div style={{ padding: "7px 10px", background: type.bg, borderBottom: `1px solid ${type.color}22`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: type.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{cat}</span>
+                      {coach && (
+                        <span style={{ width: 17, height: 17, borderRadius: "50%", background: coach.color, color: WHITE, fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{coach.initials}</span>
+                      )}
+                    </div>
+                    {/* Exercise list */}
+                    <div style={{ flex: 1, padding: "4px 0" }}>
+                      {sess.exercises.slice(0, 3).map((ex, i) => (
+                        <div key={ex.id} style={{ padding: "5px 10px", display: "flex", alignItems: "flex-start", gap: 7, borderBottom: i < Math.min(sess.exercises.length, 3) - 1 ? `1px solid #f0f4f3` : "none" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: type.color, minWidth: 18 }}>{ex.sets}x</span>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.name}</span>
+                            <span style={{ display: "block", fontSize: 9.5, color: TEXT_SEC, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.reps} reps · {ex.load}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Footer cue */}
+                    <div style={{ padding: "5px 10px", borderTop: `1px solid #f0f4f3` }}>
+                      {coachAssign ? (
+                        coach ? (
+                          <span style={{ fontSize: 9.5, color: TEXT_SEC, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coach.name.split(" ")[0]}</span>
+                        ) : (
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: "#b08900", background: "#fff7e0", borderRadius: 5, padding: "2px 6px" }}>Tag coach</span>
+                        )
+                      ) : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9.5, fontWeight: 600, color: type.color }}>
+                          <Icon name="edit" size={10} color={type.color} /> {sess.exercises.length} exercises
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </div>
-        {weeks.map((wk) => (
-          <div key={wk} style={{ display: "grid", gridTemplateColumns: `64px repeat(${days.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: TEXT_SEC }}>WK {wk}</div>
-            {days.map((day) => {
-              const sess = sessions.find((s) => s.week === wk && s.day === day);
-              if (!sess) return <div key={day} style={{ background: "#f1f5f4", borderRadius: 10, minHeight: 86 }} />;
-              const coach = coachAssign ? ONBOARDING_COACHES.find((c) => c.id === sess.coachId) : null;
-              return (
-                <button key={day} onClick={() => onSessionClick && onSessionClick(sess)} style={{
-                  textAlign: "left", fontFamily: "inherit", cursor: onSessionClick ? "pointer" : "default",
-                  background: type.bg, borderRadius: 10, padding: 10, minHeight: 86,
-                  border: `1px solid ${type.color}33`, display: "flex", flexDirection: "column", gap: 5, transition: "all 0.15s ease",
-                }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: type.color, lineHeight: 1.25 }}>{sess.focus}</div>
-                  <div style={{ fontSize: 11, color: TEXT_SEC }}>{sess.exercises.length} exercises</div>
-                  {coachAssign ? (
-                    coach ? (
-                      <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 5 }}>
-                        <span style={{ width: 18, height: 18, borderRadius: "50%", background: coach.color, color: WHITE, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{coach.initials}</span>
-                        <span style={{ fontSize: 10, color: TEXT_SEC, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coach.name.split(" ")[0]}</span>
-                      </div>
-                    ) : (
-                      <div style={{ marginTop: "auto", fontSize: 10, fontWeight: 600, color: "#b08900", background: "#fff7e0", borderRadius: 6, padding: "2px 6px", width: "fit-content" }}>Tag coach</div>
-                    )
-                  ) : (
-                    <div style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: type.color }}>
-                      <Icon name="edit" size={11} color={type.color} /> Edit
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+      </div>
+      {/* Footer hint — mirrors the live view */}
+      <div style={{ padding: "11px 16px", borderTop: `1px solid ${BORDER}`, background: "#f8faf9", display: "flex", alignItems: "center", gap: 8 }}>
+        <Icon name="info" size={14} color={type.color} />
+        <span style={{ fontSize: 12, color: TEXT_SEC }}>Click any session to view or edit exercises</span>
       </div>
     </div>
   );
