@@ -10277,7 +10277,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "empty") {
         setChatMessages([{
           type: "ai",
-          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
+          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding ��� I'd start with New PT Sign Up. Want me to walk you through it?",
           suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
         }]);
       } else if (screen === "create") {
@@ -16242,7 +16242,6 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       <polyline points="6,9 12,15 18,9"/>
                     </svg>
                   </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC }}>Workout Calendar</div>
                 </div>
               </button>
 
