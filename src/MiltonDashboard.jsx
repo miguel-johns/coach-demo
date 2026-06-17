@@ -3168,32 +3168,9 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
   const [weeks, setWeeks] = useState(4);
   const [times, setTimes] = useState(["5:00 PM"]);
   const [duration, setDuration] = useState("60");
-  const [selectedClientIds, setSelectedClientIds] = useState([]);
-  const [stationAssignments, setStationAssignments] = useState({});
+  const [capacity, setCapacity] = useState("6");
   const [sessionFocus, setSessionFocus] = useState("");
-  const [showAllClients, setShowAllClients] = useState(false);
-  
-  // Filter clients to Semi/Hybrid by default
-  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
-    if (showAllClients) return true;
-    return client.clientTypes?.some(t => t === "Semi" || t === "Hybrid");
-  });
-  
-  const toggleClient = (clientId) => {
-    const id = parseInt(clientId);
-    if (selectedClientIds.includes(id)) {
-      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
-      const newAssignments = { ...stationAssignments };
-      delete newAssignments[id];
-      setStationAssignments(newAssignments);
-    } else if (selectedClientIds.length < 6) {
-      setSelectedClientIds(prev => [...prev, id]);
-      setStationAssignments(prev => ({ ...prev, [id]: `Rack ${selectedClientIds.length + 1}` }));
-    }
-  };
-  
-  const stations = ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8", "Open floor"];
-  
+
   const handleCreate = () => {
     const occurrences = expandRecurrence({ startDate, repeat, weekdays, weeks, times });
     const newSessions = occurrences.map((occ, idx) => ({
@@ -3203,15 +3180,14 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
       time: occ.time,
       duration: `${duration} min`,
       sessionKind: "semi",
-      clientIds: selectedClientIds,
-      stationAssignments,
+      capacity: parseInt(capacity) || 6,
+      sessionFocus,
+      clientIds: [], // Clients book themselves into the scheduled class
+      stationAssignments: {},
       status: "scheduled",
       startedAt: null,
       completedAt: null,
-      workouts: selectedClientIds.reduce((acc, cid) => {
-        acc[cid] = { exercises: [] }; // Empty - coach will build or Milton will generate
-        return acc;
-      }, {})
+      workouts: {}
     }));
     if (newSessions.length === 0) return;
     onCreateSession(newSessions);
@@ -3288,89 +3264,25 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
             </select>
           </div>
           
-          {/* Clients */}
+          {/* Capacity */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
-                Clients ({selectedClientIds.length}/6)
-              </label>
-              <button
-                onClick={() => setShowAllClients(!showAllClients)}
-                style={{
-                  fontSize: 12, color: TEAL, background: "transparent", border: "none",
-                  cursor: "pointer", fontWeight: 500
-                }}
-              >
-                {showAllClients ? "Show Semi/Hybrid only" : "Show all clients"}
-              </button>
-            </div>
-            <div style={{
-              border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto"
-            }}>
-              {eligibleClients.map(([id, client]) => {
-                const isSelected = selectedClientIds.includes(parseInt(id));
-                return (
-                  <div
-                    key={id}
-                    onClick={() => toggleClient(id)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
-                      cursor: "pointer", borderBottom: `1px solid ${BORDER}`,
-                      background: isSelected ? `${TEAL}08` : "transparent",
-                      transition: "background 0.1s"
-                    }}
-                  >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      border: `2px solid ${isSelected ? TEAL : BORDER}`,
-                      background: isSelected ? TEAL : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {isSelected && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
-                    </div>
-                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
-                  </div>
-                );
-              })}
-            </div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Capacity
+            </label>
+            <select
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            >
+              {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} clients</option>)}
+            </select>
+            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "8px 0 0" }}>
+              Clients book themselves into the class up to this limit.
+            </p>
           </div>
-          
-          {/* Station Assignments (show only if clients selected) */}
-          {selectedClientIds.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 8 }}>
-                Station Assignments (optional)
-              </label>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {selectedClientIds.map(cid => {
-                  const client = clients[cid];
-                  return (
-                    <div key={cid} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ fontSize: 13, color: TEXT, minWidth: 120 }}>{client?.name}</span>
-                      <select
-                        value={stationAssignments[cid] || ""}
-                        onChange={(e) => setStationAssignments(prev => ({ ...prev, [cid]: e.target.value }))}
-                        style={{
-                          flex: 1, padding: "8px 10px", borderRadius: 6, fontSize: 13,
-                          border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                        }}
-                      >
-                        <option value="">Select station...</option>
-                        {stations.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
           
           {/* Session Focus */}
           <div>
@@ -3406,12 +3318,12 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
           </button>
           <button
             onClick={handleCreate}
-            disabled={selectedClientIds.length < 2 || times.length === 0}
+            disabled={times.length === 0}
             style={{
               padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
-              background: (selectedClientIds.length >= 2 && times.length > 0) ? TEAL : "#e0e0e0",
-              color: (selectedClientIds.length >= 2 && times.length > 0) ? WHITE : TEXT_SEC,
-              border: "none", cursor: (selectedClientIds.length >= 2 && times.length > 0) ? "pointer" : "not-allowed"
+              background: times.length > 0 ? TEAL : "#e0e0e0",
+              color: times.length > 0 ? WHITE : TEXT_SEC,
+              border: "none", cursor: times.length > 0 ? "pointer" : "not-allowed"
             }}
           >
             Create session
@@ -3433,23 +3345,8 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
   const [classType, setClassType] = useState("strength");
   const [coachId, setCoachId] = useState(COACHES[0]?.id || "");
   const [capacity, setCapacity] = useState("12");
-  const [selectedClientIds, setSelectedClientIds] = useState([]);
-  const [showAllClients, setShowAllClients] = useState(false);
-
-  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
-    if (showAllClients) return true;
-    return client.clientTypes?.some(t => t === "Group" || t === "Semi" || t === "Hybrid");
-  });
 
   const cap = parseInt(capacity) || 12;
-  const toggleClient = (clientId) => {
-    const id = parseInt(clientId);
-    if (selectedClientIds.includes(id)) {
-      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
-    } else if (selectedClientIds.length < cap) {
-      setSelectedClientIds(prev => [...prev, id]);
-    }
-  };
 
   const handleCreate = () => {
     const ct = getClassType(classType);
@@ -3465,7 +3362,7 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
       classType,
       coachId,
       capacity: cap,
-      clientIds: selectedClientIds,
+      clientIds: [], // Members book themselves into the scheduled class
       status: "scheduled",
       startedAt: null,
       completedAt: null,
@@ -3551,39 +3448,14 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
           </div>
 
           {/* Coach */}
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 8 }}>
             <label style={labelStyle}>Coach</label>
             <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={inputStyle}>
               {COACHES.map(c => <option key={c.id} value={c.id}>{c.name} · {c.specialty}</option>)}
             </select>
-          </div>
-
-          {/* Members */}
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Members ({selectedClientIds.length}/{cap})</label>
-              <button onClick={() => setShowAllClients(!showAllClients)} style={{ fontSize: 12, color: ORANGE, background: "transparent", border: "none", cursor: "pointer", fontWeight: 500 }}>
-                {showAllClients ? "Show Group/Semi only" : "Show all clients"}
-              </button>
-            </div>
-            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto" }}>
-              {eligibleClients.map(([id, client]) => {
-                const isSelected = selectedClientIds.includes(parseInt(id));
-                return (
-                  <div key={id} onClick={() => toggleClient(id)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, background: isSelected ? `${ORANGE}08` : "transparent" }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? ORANGE : BORDER}`, background: isSelected ? ORANGE : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {isSelected && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
-                    </div>
-                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
-                  </div>
-                );
-              })}
-            </div>
+            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "8px 0 0" }}>
+              Members book themselves into the class up to the capacity above.
+            </p>
           </div>
         </div>
 
