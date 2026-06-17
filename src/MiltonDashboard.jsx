@@ -1987,6 +1987,39 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CLASS TYPE TOGGLE - Segmented control to switch Semi-Private / Group
+// ═══════════════════════════════════════════════════════════════
+function ClassTypeToggle({ active, onChange }) {
+  const options = [
+    { id: "semi", label: "Semi-Private", color: "#1f7a3e" },
+    { id: "group", label: "Group", color: "#c2410c" },
+  ];
+  return (
+    <div style={{ display: "inline-flex", gap: 4, marginTop: 16, padding: 4, background: "#f5f7f6", borderRadius: 10 }}>
+      {options.map(opt => {
+        const isActive = active === opt.id;
+        return (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            style={{
+              padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              border: "none", cursor: "pointer",
+              background: isActive ? WHITE : "transparent",
+              color: isActive ? opt.color : TEXT_SEC,
+              boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              transition: "all 0.15s"
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -1996,6 +2029,7 @@ function SemiPrivateList({
   onHome,
   onSessionClick,
   onCreateSession,
+  typeToggle,
   isMobile 
 }) {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -2140,6 +2174,7 @@ function SemiPrivateList({
           </div>
         </div>
         
+        {typeToggle}
         {/* Tabs */}
         <div style={{ 
           display: "flex", gap: 4, marginTop: 20,
@@ -2342,8 +2377,9 @@ function SemiPrivateList({
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
 // ═══════════════════════════════════════════════════════════════
-function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, isMobile }) {
+function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const ORANGE = "#c2410c";
   const ORANGE_BG = "#fff1ea";
 
@@ -2395,10 +2431,27 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
               Run a class off one shared board and check in each member&apos;s personalized weights. Click a class to open the control panel.
             </p>
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: ORANGE, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                boxShadow: `0 2px 8px ${ORANGE}40`
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
+        {typeToggle}
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8 }}>
           {tabs.map(tab => (
@@ -2417,7 +2470,20 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes in this view</h3>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 280 }}>Group classes scheduled in Programming will appear here.</p>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "0 0 20px", maxWidth: 280 }}>Create a class or schedule one in Programming and it will appear here.</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: ORANGE, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 760 }}>
@@ -2463,12 +2529,21 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
           </div>
         )}
       </div>
+
+      {/* Create Group Class Modal */}
+      {showCreateModal && (
+        <CreateGroupClassModal
+          clients={clients}
+          onClose={() => setShowCreateModal(false)}
+          onCreateSession={(newSession) => {
+            onCreateSession?.(newSession);
+            setShowCreateModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-
-// ══════════════════════════════════════════════════════���════════
-// GROUP CLASS SESSION - Live control panel: shared board + check-in roster
 // ═══════════════════════════════════════════════════════════════
 function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -3206,6 +3281,176 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
           >
             Create session
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
+  const ORANGE = "#c2410c";
+  const [date, setDate] = useState("2026-04-22");
+  const [time, setTime] = useState("6:00 AM");
+  const [duration, setDuration] = useState("45");
+  const [classType, setClassType] = useState("strength");
+  const [coachId, setCoachId] = useState(COACHES[0]?.id || "");
+  const [capacity, setCapacity] = useState("12");
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [showAllClients, setShowAllClients] = useState(false);
+
+  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
+    if (showAllClients) return true;
+    return client.clientTypes?.some(t => t === "Group" || t === "Semi" || t === "Hybrid");
+  });
+
+  const cap = parseInt(capacity) || 12;
+  const toggleClient = (clientId) => {
+    const id = parseInt(clientId);
+    if (selectedClientIds.includes(id)) {
+      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
+    } else if (selectedClientIds.length < cap) {
+      setSelectedClientIds(prev => [...prev, id]);
+    }
+  };
+
+  const handleCreate = () => {
+    const ct = getClassType(classType);
+    const template = PROGRAM_TEMPLATES[classType] || PROGRAM_TEMPLATES.strength;
+    const newSession = {
+      id: `sess_g${Date.now()}`,
+      time,
+      duration: `${duration} min`,
+      sessionKind: "group",
+      classType,
+      coachId,
+      capacity: cap,
+      clientIds: selectedClientIds,
+      status: "scheduled",
+      startedAt: null,
+      completedAt: null,
+      attendance: {},
+      memberWeights: {},
+      sharedWorkout: {
+        title: ct.label,
+        exercises: template.map((ex, i) => ({ id: `g_${Date.now()}_${i}`, ...ex })),
+      },
+    };
+    onCreateSession(newSession);
+  };
+
+  const labelStyle = { fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 };
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT };
+
+  return (
+    <div
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: WHITE, borderRadius: 16, width: "min(480px, 100%)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>New Group Class</h2>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          {/* Date & Time */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Date</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Time</label>
+              <select value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle}>
+                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "5:30 PM", "6:00 PM", "7:00 PM", "8:00 PM"].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Duration & Capacity */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Duration</label>
+              <select value={duration} onChange={(e) => setDuration(e.target.value)} style={inputStyle}>
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+                <option value="75">75 minutes</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Capacity</label>
+              <select value={capacity} onChange={(e) => setCapacity(e.target.value)} style={inputStyle}>
+                {[8, 10, 12, 14, 16, 20].map(n => <option key={n} value={n}>{n} members</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Class Type */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Class Type</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {GROUP_CLASS_TYPES.map(ct => {
+                const active = classType === ct.id;
+                return (
+                  <button key={ct.id} onClick={() => setClassType(ct.id)} style={{ padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${active ? ct.color : BORDER}`, background: active ? `${ct.color}12` : WHITE, color: active ? ct.color : TEXT_SEC }}>
+                    {ct.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coach */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Coach</label>
+            <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={inputStyle}>
+              {COACHES.map(c => <option key={c.id} value={c.id}>{c.name} · {c.specialty}</option>)}
+            </select>
+          </div>
+
+          {/* Members */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Members ({selectedClientIds.length}/{cap})</label>
+              <button onClick={() => setShowAllClients(!showAllClients)} style={{ fontSize: 12, color: ORANGE, background: "transparent", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                {showAllClients ? "Show Group/Semi only" : "Show all clients"}
+              </button>
+            </div>
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto" }}>
+              {eligibleClients.map(([id, client]) => {
+                const isSelected = selectedClientIds.includes(parseInt(id));
+                return (
+                  <div key={id} onClick={() => toggleClient(id)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, background: isSelected ? `${ORANGE}08` : "transparent" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? ORANGE : BORDER}`, background: isSelected ? ORANGE : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {isSelected && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
+                    </div>
+                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 12, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer" }}>Cancel</button>
+          <button onClick={handleCreate} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: ORANGE, color: WHITE, border: "none", cursor: "pointer" }}>Create class</button>
         </div>
       </div>
     </div>
@@ -5342,6 +5587,9 @@ clientName: "New Client",
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "classes") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
   setCanvasData({});
@@ -5462,6 +5710,7 @@ isMobile={true}
               onHome={() => setCanvasType("templates")}
               onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
               onCreateSession={onCreateSession}
+              typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
             />
           )}
           {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
@@ -5470,6 +5719,31 @@ isMobile={true}
               clients={clients}
               isMobile={true}
               onBack={() => setCanvasType("semiPrivate")}
+              onUpdateSession={onUpdateSession}
+              onOpenFullProfile={(clientId) => {
+                onClose();
+                onOpenFullProfile?.(clientId);
+              }}
+            />
+          )}
+          {canvasType === "groupClass" && (
+            <GroupClassList
+              sessions={sessions}
+              clients={clients}
+              isMobile={true}
+              onClose={() => setCanvasType("templates")}
+              onHome={() => setCanvasType("templates")}
+              onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+              onCreateSession={onCreateSession}
+              typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
+            />
+          )}
+          {canvasType === "groupClassSession" && canvasData?.sessionId && (
+            <GroupClassSession
+              session={sessions.find(s => s.id === canvasData.sessionId)}
+              clients={clients}
+              isMobile={true}
+              onBack={() => setCanvasType("groupClass")}
               onUpdateSession={onUpdateSession}
               onOpenFullProfile={(clientId) => {
                 onClose();
@@ -5800,7 +6074,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ��─��� BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
+      {/* ���─��� BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
       {(() => {
         const bodyCompMetrics = [
           { label: "Bodyweight", start: bodyweightStart, current: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
@@ -14862,25 +15136,15 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       available: true,
       number: 1
     },
-    { 
-      id: "semiPrivate",
-      icon: "users", 
-      title: "Semi-Private", 
-      desc: "Manage sessions where 2-6 clients train together, each with their own program",
+    {
+      id: "classes",
+      icon: "users",
+      title: "Classes",
+      desc: "Manage Semi-Private and Group sessions in one place — switch between both and create new sessions of either type",
       color: "#1f7a3e",
       bgColor: "#e6f9ec",
       available: true,
       number: 2
-    },
-    {
-      id: "groupClass",
-      icon: "users",
-      title: "Group Class",
-      desc: "Run a class for up to 12 members off one shared board, checking in each member's personalized weights",
-      color: "#c2410c",
-      bgColor: "#fff1ea",
-      available: true,
-      number: 3
     },
     { 
       id: "mealPlan",
@@ -20518,6 +20782,9 @@ export default function MiltonDashboard() {
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "classes") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
   setCanvasData({});
@@ -20612,6 +20879,7 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
   onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
   {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
@@ -20637,6 +20905,8 @@ export default function MiltonDashboard() {
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
   {canvasType === "groupClassSession" && canvasData?.sessionId && (
