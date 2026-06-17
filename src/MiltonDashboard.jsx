@@ -5800,7 +5800,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ��── BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
+      {/* ��─��� BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
       {(() => {
         const bodyCompMetrics = [
           { label: "Bodyweight", start: bodyweightStart, current: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
@@ -10277,7 +10277,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "empty") {
         setChatMessages([{
           type: "ai",
-          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding ��� I'd start with New PT Sign Up. Want me to walk you through it?",
+          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding ����� I'd start with New PT Sign Up. Want me to walk you through it?",
           suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
         }]);
       } else if (screen === "create") {
@@ -17098,13 +17098,18 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     background: isWorkoutCompleted(expandedDay.date) ? "#16a34a" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
-                    {isWorkoutCompleted(expandedDay.date) && (
+                    {isClassMode ? (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isWorkoutCompleted(expandedDay.date) ? WHITE : TEXT_SEC} strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                    ) : isWorkoutCompleted(expandedDay.date) && (
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     )}
                   </div>
-                  {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
+                  {isClassMode ? "Assign Coach" : (isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete")}
                 </button>
               )}
             </div>
@@ -17265,7 +17270,15 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     transition: "all 0.2s ease"
                   }}
                 >
-                  {isWorkoutCompleted(expandedDay.date) ? (
+                  {isClassMode ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      Assign Coach
+                    </>
+                  ) : isWorkoutCompleted(expandedDay.date) ? (
                     <>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="20 6 9 17 4 12"/>
