@@ -449,9 +449,11 @@ const initialSessions = [
   },
   {
     id: "sess_004",
+    date: "2026-06-16",
     time: "5:00 PM",
     duration: "60 min",
     sessionKind: "semi",
+    sessionFocus: "Strength Training",
     clientIds: [12, 13, 4, 5], // Jake Morrison, Olivia Chen, Rachel Kim, Aaron Smith (all Semi-tagged)
     stationAssignments: { 12: "Rack 1", 13: "Rack 2", 4: "Rack 3", 5: "Rack 4" },
     status: "scheduled",
@@ -500,9 +502,11 @@ const initialSessions = [
   },
   {
     id: "sess_005",
+    date: "2026-06-18",
     time: "6:00 PM",
     duration: "60 min",
     sessionKind: "semi",
+    sessionFocus: "Strength Training",
     clientIds: [14, 15, 6], // Chris Taylor, Mia Patel, Lisa Martinez (Semi-tagged)
     stationAssignments: { 14: "Rack 1", 15: "Rack 2", 6: "Rack 3" },
     status: "scheduled",
@@ -543,6 +547,7 @@ const initialSessions = [
   // One shared workout board; each member checks in and logs their own weights.
   {
     id: "sess_g01",
+    date: "2026-06-15",
     time: "6:00 AM",
     duration: "45 min",
     sessionKind: "group",
@@ -567,6 +572,7 @@ const initialSessions = [
   },
   {
     id: "sess_g02",
+    date: "2026-06-17",
     time: "5:30 PM",
     duration: "45 min",
     sessionKind: "group",
@@ -2029,10 +2035,11 @@ function SemiPrivateList({
   onHome,
   onSessionClick,
   onCreateSession,
+  onViewProgramming,
   typeToggle,
   isMobile 
 }) {
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeTab, setActiveTab] = useState("schedule");
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   // Filter sessions to only semi-private
@@ -2079,8 +2086,8 @@ function SemiPrivateList({
   };
   
   const tabs = [
+    { id: "schedule", label: "Schedule" },
     { id: "upcoming", label: "Upcoming", count: upcomingCount },
-    { id: "inProgress", label: "In progress", count: inProgressCount },
     { id: "completedToday", label: "Completed today", count: completedTodayCount },
     { id: "all", label: "All", count: semiSessions.length }
   ];
@@ -2192,7 +2199,7 @@ function SemiPrivateList({
                 marginBottom: -1, transition: "all 0.15s"
               }}
             >
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
@@ -2200,7 +2207,14 @@ function SemiPrivateList({
       
       {/* Session List */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
-        {filteredSessions.length === 0 ? (
+        {activeTab === "schedule" ? (
+          <ClassScheduleView
+            sessions={semiSessions}
+            accent={TEAL}
+            isMobile={isMobile}
+            onViewProgramming={onViewProgramming}
+          />
+        ) : filteredSessions.length === 0 ? (
           /* Empty State */
           <div style={{ 
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -3159,6 +3173,193 @@ function RecurrenceScheduler({ accent, startDate, setStartDate, repeat, setRepea
               {weekdays.map(id => WEEKDAYS.find(d => d.id === id)?.label).join(", ")} · {sortedSelectedTimes.join(", ")} · {weeks} week{weeks > 1 ? "s" : ""}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLASS SCHEDULE VIEW - Weekly overview of recurring classes
+// ═══════════════════════════════════════════════════════════════
+const timeRank = (t) => {
+  const i = TIME_OPTIONS.indexOf(t);
+  return i === -1 ? 999 : i;
+};
+
+const sessionWeekday = (s) => {
+  if (!s.date) return null;
+  const d = new Date(`${s.date}T00:00:00`);
+  return isNaN(d.getTime()) ? null : d.getDay();
+};
+
+const sessionTitle = (s) =>
+  s.sessionFocus || (s.classType ? getClassType(s.classType).label : "Session");
+
+// Collapse sessions into recurring "series" keyed by title + coach.
+function buildClassSeries(sessions) {
+  const map = new Map();
+  sessions.forEach(s => {
+    const title = sessionTitle(s);
+    const coachId = s.coachId || null;
+    const key = `${title}__${coachId || ""}`;
+    if (!map.has(key)) {
+      map.set(key, { title, coachId, weekdays: new Set(), times: new Set(), count: 0 });
+    }
+    const entry = map.get(key);
+    const wd = sessionWeekday(s);
+    if (wd !== null) entry.weekdays.add(wd);
+    if (s.time) entry.times.add(s.time);
+    entry.count++;
+  });
+  return [...map.values()].map(e => ({
+    ...e,
+    weekdays: [...e.weekdays].sort((a, b) => a - b),
+    times: [...e.times].sort((a, b) => timeRank(a) - timeRank(b)),
+  }));
+}
+
+function ClassScheduleView({ sessions, accent = TEAL, isMobile, onViewProgramming }) {
+  const series = buildClassSeries(sessions);
+  const byDay = WEEKDAYS.map(d => ({
+    ...d,
+    sessions: sessions
+      .filter(s => sessionWeekday(s) === d.id)
+      .sort((a, b) => timeRank(a.time) - timeRank(b.time)),
+  }));
+  const activeDays = byDay.filter(d => d.sessions.length > 0);
+
+  if (sessions.length === 0) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        padding: "80px 20px", textAlign: "center"
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%", background: `${accent}14`,
+          display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: accent
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes scheduled</h3>
+        <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 300 }}>
+          Create a session and set it to repeat weekly to build out your schedule.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Series summary */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.04em", marginBottom: 10 }}>
+          RECURRING CLASSES
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+          {series.map((s, i) => {
+            const coach = s.coachId ? getCoach(s.coachId) : null;
+            const dayLabel = s.weekdays.length
+              ? s.weekdays.map(id => WEEKDAYS.find(d => d.id === id)?.short).join(" · ")
+              : "Unscheduled";
+            return (
+              <div key={i} style={{
+                border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, background: WHITE,
+                borderLeft: `3px solid ${accent}`,
+              }}>
+                <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{s.title}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                  {s.weekdays.map(id => (
+                    <span key={id} style={{
+                      fontSize: 11, fontWeight: 700, color: accent, background: `${accent}14`,
+                      padding: "2px 7px", borderRadius: 6,
+                    }}>{WEEKDAYS.find(d => d.id === id)?.short}</span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5 }}>
+                  {s.times.join(", ") || "No times set"}
+                </div>
+                {coach && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 10 }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", background: coach.color,
+                      color: WHITE, fontSize: 9.5, fontWeight: 700, display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                    }}>{coach.name.split(" ").map(n => n[0]).join("").slice(0, 2)}</div>
+                    <span style={{ fontSize: 12, color: TEXT_SEC }}>{coach.name}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Week strip */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.04em", marginBottom: 10 }}>
+        THIS WEEK
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {activeDays.map(day => (
+          <div key={day.id} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div style={{
+              flexShrink: 0, width: isMobile ? 44 : 56, paddingTop: 10, textAlign: "center",
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{day.short}</div>
+              <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{day.sessions.length}</div>
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              {day.sessions.map(s => {
+                const coach = s.coachId ? getCoach(s.coachId) : null;
+                const booked = (s.clientIds || []).length;
+                return (
+                  <div key={s.id} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                    borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE,
+                  }}>
+                    <div style={{
+                      flexShrink: 0, fontSize: 12.5, fontWeight: 700, color: accent,
+                      width: 68,
+                    }}>{s.time}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {sessionTitle(s)}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 2 }}>
+                        {s.duration || ""}{coach ? ` · ${coach.name}` : ""}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: TEXT_SEC,
+                      background: "#f5f7f6", padding: "4px 9px", borderRadius: 14,
+                    }}>
+                      {s.capacity ? `${booked}/${s.capacity}` : `${booked} client${booked !== 1 ? "s" : ""}`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {onViewProgramming && (
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={onViewProgramming}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px",
+              borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              background: WHITE, color: accent, border: `1.5px solid ${accent}`,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            View programming
+          </button>
         </div>
       )}
     </div>
@@ -20986,7 +21187,7 @@ export default function MiltonDashboard() {
   
   
   
-  {/* ═══ MAIN CONTENT ═══ */}
+  {/* ══��� MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
