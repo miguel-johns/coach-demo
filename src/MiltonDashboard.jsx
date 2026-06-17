@@ -3008,11 +3008,165 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
 }
 
 // ═══════════════════════════════════════════════════════════════
+// RECURRENCE - Shared scheduler for repeating classes (days/weeks/times)
+// ═══════════════════════════════════════════════════════════════
+const WEEKDAYS = [
+  { id: 0, short: "Su", label: "Sunday" },
+  { id: 1, short: "Mo", label: "Monday" },
+  { id: 2, short: "Tu", label: "Tuesday" },
+  { id: 3, short: "We", label: "Wednesday" },
+  { id: 4, short: "Th", label: "Thursday" },
+  { id: 5, short: "Fr", label: "Friday" },
+  { id: 6, short: "Sa", label: "Saturday" },
+];
+
+const TIME_OPTIONS = [
+  "5:00 AM", "5:30 AM", "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
+  "9:00 AM", "9:30 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
+  "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "8:00 PM",
+];
+
+// Expand a recurrence config into individual { date, dateLabel, time } occurrences.
+function expandRecurrence({ startDate, repeat, weekdays, weeks, times }) {
+  const result = [];
+  const sortedTimes = [...times];
+  const base = new Date(`${startDate}T00:00:00`);
+  if (isNaN(base.getTime()) || sortedTimes.length === 0) return result;
+
+  if (!repeat) {
+    const dateLabel = base.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    sortedTimes.forEach(time => result.push({ date: startDate, dateLabel, time }));
+    return result;
+  }
+
+  const activeDays = weekdays.length ? weekdays : [base.getDay()];
+  const totalWeeks = Math.max(1, weeks);
+  for (let w = 0; w < totalWeeks; w++) {
+    for (let d = 0; d < 7; d++) {
+      const cur = new Date(base);
+      cur.setDate(base.getDate() + w * 7 + d);
+      if (cur < base) continue;
+      if (!activeDays.includes(cur.getDay())) continue;
+      const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
+      const dateLabel = cur.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+      sortedTimes.forEach(time => result.push({ date: iso, dateLabel, time }));
+    }
+  }
+  return result;
+}
+
+// Reusable recurrence UI block. Accepts and mutates state via props.
+function RecurrenceScheduler({ accent, startDate, setStartDate, repeat, setRepeat, weekdays, setWeekdays, weeks, setWeeks, times, setTimes }) {
+  const labelStyle = { fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 };
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT };
+
+  const toggleWeekday = (id) => {
+    setWeekdays(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id].sort((a, b) => a - b));
+  };
+  const toggleTime = (t) => {
+    setTimes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  };
+  const sortIndex = (t) => TIME_OPTIONS.indexOf(t);
+  const sortedSelectedTimes = [...times].sort((a, b) => sortIndex(a) - sortIndex(b));
+
+  const occurrenceCount = expandRecurrence({ startDate, repeat, weekdays, weeks, times }).length;
+
+  return (
+    <div>
+      {/* Start date */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>{repeat ? "Start date" : "Date"}</label>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
+      </div>
+
+      {/* Times (multi-select) */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Times {sortedSelectedTimes.length > 0 && `(${sortedSelectedTimes.length} selected)`}</label>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {TIME_OPTIONS.map(t => {
+            const active = times.includes(t);
+            return (
+              <button key={t} type="button" onClick={() => toggleTime(t)} style={{
+                padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: `1.5px solid ${active ? accent : BORDER}`,
+                background: active ? `${accent}12` : WHITE,
+                color: active ? accent : TEXT_SEC,
+              }}>{t}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Repeat toggle */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 10, background: "#f5f7f6", marginBottom: repeat ? 16 : 4 }}>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT }}>Repeat weekly</div>
+          <div style={{ fontSize: 11.5, color: TEXT_SEC }}>Schedule this class on multiple days and weeks</div>
+        </div>
+        <button type="button" onClick={() => setRepeat(!repeat)} style={{
+          width: 44, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+          background: repeat ? accent : "#cbd5d1", transition: "background 0.15s", flexShrink: 0,
+        }}>
+          <span style={{ position: "absolute", top: 3, left: repeat ? 21 : 3, width: 20, height: 20, borderRadius: "50%", background: WHITE, transition: "left 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+        </button>
+      </div>
+
+      {repeat && (
+        <>
+          {/* Repeat days */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Repeat on</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {WEEKDAYS.map(day => {
+                const active = weekdays.includes(day.id);
+                return (
+                  <button key={day.id} type="button" onClick={() => toggleWeekday(day.id)} style={{
+                    flex: 1, padding: "10px 0", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                    border: `1.5px solid ${active ? accent : BORDER}`,
+                    background: active ? accent : WHITE,
+                    color: active ? WHITE : TEXT_SEC,
+                  }}>{day.short}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Number of weeks */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Repeat for</label>
+            <select value={weeks} onChange={(e) => setWeeks(parseInt(e.target.value))} style={inputStyle}>
+              {[1, 2, 3, 4, 6, 8, 12].map(n => <option key={n} value={n}>{n} week{n > 1 ? "s" : ""}</option>)}
+            </select>
+          </div>
+        </>
+      )}
+
+      {/* Summary */}
+      {times.length > 0 && (
+        <div style={{ padding: "10px 14px", borderRadius: 10, background: `${accent}0d`, border: `1px solid ${accent}33`, marginBottom: 4 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: accent }}>
+            {occurrenceCount} session{occurrenceCount !== 1 ? "s" : ""} will be created
+          </div>
+          {repeat && weekdays.length > 0 && (
+            <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 2 }}>
+              {weekdays.map(id => WEEKDAYS.find(d => d.id === id)?.label).join(", ")} · {sortedSelectedTimes.join(", ")} · {weeks} week{weeks > 1 ? "s" : ""}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CREATE SEMI-PRIVATE MODAL - Form for creating new sessions
 // ═══════════════════════════════════════════════════════════════
 function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
-  const [date, setDate] = useState("2026-04-22");
-  const [time, setTime] = useState("5:00 PM");
+  const [startDate, setStartDate] = useState("2026-04-22");
+  const [repeat, setRepeat] = useState(false);
+  const [weekdays, setWeekdays] = useState([2, 4]); // Tue, Thu default
+  const [weeks, setWeeks] = useState(4);
+  const [times, setTimes] = useState(["5:00 PM"]);
   const [duration, setDuration] = useState("60");
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [stationAssignments, setStationAssignments] = useState({});
@@ -3041,9 +3195,12 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
   const stations = ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8", "Open floor"];
   
   const handleCreate = () => {
-    const newSession = {
-      id: `sess_${Date.now()}`,
-      time,
+    const occurrences = expandRecurrence({ startDate, repeat, weekdays, weeks, times });
+    const newSessions = occurrences.map((occ, idx) => ({
+      id: `sess_${Date.now()}_${idx}`,
+      date: occ.date,
+      dateLabel: occ.dateLabel,
+      time: occ.time,
       duration: `${duration} min`,
       sessionKind: "semi",
       clientIds: selectedClientIds,
@@ -3055,8 +3212,9 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
         acc[cid] = { exercises: [] }; // Empty - coach will build or Milton will generate
         return acc;
       }, {})
-    };
-    onCreateSession(newSession);
+    }));
+    if (newSessions.length === 0) return;
+    onCreateSession(newSessions);
   };
   
   return (
@@ -3097,39 +3255,16 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
         
         {/* Form */}
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-          {/* Date & Time Row */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
-                Date
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
-                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
-                Time
-              </label>
-              <select
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
-                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                }}
-              >
-                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
-                  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"
-                ].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
+          {/* Schedule (date / times / repeat) */}
+          <div style={{ marginBottom: 20 }}>
+            <RecurrenceScheduler
+              accent={TEAL}
+              startDate={startDate} setStartDate={setStartDate}
+              repeat={repeat} setRepeat={setRepeat}
+              weekdays={weekdays} setWeekdays={setWeekdays}
+              weeks={weeks} setWeeks={setWeeks}
+              times={times} setTimes={setTimes}
+            />
           </div>
           
           {/* Duration */}
@@ -3271,12 +3406,12 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
           </button>
           <button
             onClick={handleCreate}
-            disabled={selectedClientIds.length < 2}
+            disabled={selectedClientIds.length < 2 || times.length === 0}
             style={{
               padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
-              background: selectedClientIds.length >= 2 ? TEAL : "#e0e0e0",
-              color: selectedClientIds.length >= 2 ? WHITE : TEXT_SEC,
-              border: "none", cursor: selectedClientIds.length >= 2 ? "pointer" : "not-allowed"
+              background: (selectedClientIds.length >= 2 && times.length > 0) ? TEAL : "#e0e0e0",
+              color: (selectedClientIds.length >= 2 && times.length > 0) ? WHITE : TEXT_SEC,
+              border: "none", cursor: (selectedClientIds.length >= 2 && times.length > 0) ? "pointer" : "not-allowed"
             }}
           >
             Create session
@@ -3289,8 +3424,11 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
 
 function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
   const ORANGE = "#c2410c";
-  const [date, setDate] = useState("2026-04-22");
-  const [time, setTime] = useState("6:00 AM");
+  const [startDate, setStartDate] = useState("2026-04-22");
+  const [repeat, setRepeat] = useState(false);
+  const [weekdays, setWeekdays] = useState([2, 4]); // Tue, Thu default
+  const [weeks, setWeeks] = useState(4);
+  const [times, setTimes] = useState(["6:00 AM"]);
   const [duration, setDuration] = useState("45");
   const [classType, setClassType] = useState("strength");
   const [coachId, setCoachId] = useState(COACHES[0]?.id || "");
@@ -3316,9 +3454,12 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
   const handleCreate = () => {
     const ct = getClassType(classType);
     const template = PROGRAM_TEMPLATES[classType] || PROGRAM_TEMPLATES.strength;
-    const newSession = {
-      id: `sess_g${Date.now()}`,
-      time,
+    const occurrences = expandRecurrence({ startDate, repeat, weekdays, weeks, times });
+    const newSessions = occurrences.map((occ, idx) => ({
+      id: `sess_g${Date.now()}_${idx}`,
+      date: occ.date,
+      dateLabel: occ.dateLabel,
+      time: occ.time,
       duration: `${duration} min`,
       sessionKind: "group",
       classType,
@@ -3332,10 +3473,11 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
       memberWeights: {},
       sharedWorkout: {
         title: ct.label,
-        exercises: template.map((ex, i) => ({ id: `g_${Date.now()}_${i}`, ...ex })),
+        exercises: template.map((ex, i) => ({ id: `g_${Date.now()}_${idx}_${i}`, ...ex })),
       },
-    };
-    onCreateSession(newSession);
+    }));
+    if (newSessions.length === 0) return;
+    onCreateSession(newSessions);
   };
 
   const labelStyle = { fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 };
@@ -3362,18 +3504,16 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
 
         {/* Form */}
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-          {/* Date & Time */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Date</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Time</label>
-              <select value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle}>
-                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "5:30 PM", "6:00 PM", "7:00 PM", "8:00 PM"].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
+          {/* Schedule (date / times / repeat) */}
+          <div style={{ marginBottom: 20 }}>
+            <RecurrenceScheduler
+              accent={ORANGE}
+              startDate={startDate} setStartDate={setStartDate}
+              repeat={repeat} setRepeat={setRepeat}
+              weekdays={weekdays} setWeekdays={setWeekdays}
+              weeks={weeks} setWeeks={setWeeks}
+              times={times} setTimes={setTimes}
+            />
           </div>
 
           {/* Duration & Capacity */}
@@ -3450,7 +3590,7 @@ function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
         {/* Footer */}
         <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 12, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer" }}>Cancel</button>
-          <button onClick={handleCreate} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: ORANGE, color: WHITE, border: "none", cursor: "pointer" }}>Create class</button>
+          <button onClick={handleCreate} disabled={times.length === 0} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: times.length > 0 ? ORANGE : "#e0e0e0", color: times.length > 0 ? WHITE : TEXT_SEC, border: "none", cursor: times.length > 0 ? "pointer" : "not-allowed" }}>Create class</button>
         </div>
       </div>
     </div>
@@ -20878,7 +21018,7 @@ export default function MiltonDashboard() {
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
-  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
   typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
@@ -20905,7 +21045,7 @@ export default function MiltonDashboard() {
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
-  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
   typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
@@ -21565,7 +21705,7 @@ export default function MiltonDashboard() {
   onDashboardEditProcessed={handleDashboardEditResult}
   sessions={sessions}
   onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
-  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
   onUpdateSession={handleUpdateSession}
   onOpenFullProfile={(clientId) => { setCanvasMode(false); setSelectedClient(clientId); }}
   />
