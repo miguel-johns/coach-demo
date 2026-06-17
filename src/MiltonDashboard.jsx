@@ -14853,26 +14853,6 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
   const templates = [
-    {
-      id: "settings",
-      icon: "users",
-      title: "Coaches",
-      desc: "Manage your coaching team — add or remove coaches and keep their contact details up to date",
-      color: "#2B7A78",
-      bgColor: "#e8f5f3",
-      available: true,
-      number: 1
-    },
-    {
-      id: "programming",
-      icon: "program",
-      title: "Master Programming",
-      desc: "Build and maintain the master training calendar that every client program draws from",
-      color: "#45818e",
-      bgColor: "#e9f2f4",
-      available: true,
-      number: 2
-    },
     { 
       id: "workout",
       icon: "chart", 
