@@ -14856,7 +14856,7 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
     { 
       id: "workout",
       icon: "chart", 
-      title: "1-on-1 Training", 
+      title: "Programming", 
       desc: "Design structured training programs for individual clients with exercises and progressions",
       color: "#3aafa9",
       available: true,
