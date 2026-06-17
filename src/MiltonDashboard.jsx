@@ -2391,7 +2391,7 @@ function SemiPrivateList({
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
 // ═════════════════════════════════════��═════════════════════════
-function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, typeToggle, isMobile }) {
+function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const ORANGE = "#c2410c";
