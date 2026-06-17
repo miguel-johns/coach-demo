@@ -15642,9 +15642,9 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [isSessionTypeOpen, setIsSessionTypeOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState("");
   const SESSION_TYPE_OPTIONS = [
-    { id: "personal", label: "Personal Training" },
-    { id: "semiPrivate", label: "Semi-Private" },
-    { id: "group", label: "Group" },
+    { id: "personal", label: "Personal Training", color: "#2B7A78", light: "#e8f5f3" },
+    { id: "semiPrivate", label: "Semi-Private", color: "#C2410C", light: "#fdeee6" },
+    { id: "group", label: "Group", color: "#4338CA", light: "#ebeafd" },
   ];
   const CLASS_OPTIONS = [
     { name: "Morning HIIT", detail: "6:00 AM · 12 spots" },
@@ -15653,7 +15653,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
     { name: "Evening Bootcamp", detail: "6:00 PM · 14 spots" },
   ];
   const isClassMode = sessionType !== "personal";
-  const currentSessionLabel = SESSION_TYPE_OPTIONS.find(s => s.id === sessionType)?.label || "Personal Training";
+  const activeSession = SESSION_TYPE_OPTIONS.find(s => s.id === sessionType) || SESSION_TYPE_OPTIONS[0];
+  const currentSessionLabel = activeSession.label;
+  const ACCENT = activeSession.color;
+  const ACCENT_LIGHT = activeSession.light;
   const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
   const [linkCopied, setLinkCopied] = useState(false);
   
@@ -16072,10 +16075,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                   style={{
                     width: 36, height: 36, borderRadius: 8,
-                    background: (isClassMode ? selectedClass : selectedClient) ? TEAL_LIGHT : "#f0f4f3",
-                    border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? TEAL : BORDER}`,
+                    background: ACCENT_LIGHT,
+                    border: `1px solid ${ACCENT}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: (isClassMode ? selectedClass : selectedClient) ? TEAL : TEXT_SEC
+                    cursor: "pointer", color: ACCENT
                   }}
                 >
                   {isClassMode ? (
@@ -16115,8 +16118,8 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                           style={{
                             flex: 1, padding: "5px 4px", borderRadius: 6, border: "none", cursor: "pointer",
                             fontSize: 10, fontWeight: 600,
-                            background: sessionType === opt.id ? TEAL : "#f0f4f3",
-                            color: sessionType === opt.id ? WHITE : TEXT_SEC
+                            background: sessionType === opt.id ? opt.color : opt.light,
+                            color: sessionType === opt.id ? WHITE : opt.color
                           }}
                         >{opt.id === "personal" ? "PT" : opt.id === "semiPrivate" ? "Semi" : "Group"}</button>
                       ))}
@@ -16128,10 +16131,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                           onClick={() => { setSelectedClass(cls.name); setIsClientDropdownOpen(false); }}
                           style={{
                             padding: "10px 14px", cursor: "pointer",
-                            background: selectedClass === cls.name ? TEAL_LIGHT : "transparent",
+                            background: selectedClass === cls.name ? ACCENT_LIGHT : "transparent",
                             borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
                             fontSize: 13, fontWeight: selectedClass === cls.name ? 600 : 500,
-                            color: selectedClass === cls.name ? TEAL : TEXT
+                            color: selectedClass === cls.name ? ACCENT : TEXT
                           }}
                         >
                           {cls.name}
@@ -16144,10 +16147,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
                         style={{
                           padding: "10px 14px", cursor: "pointer",
-                          background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                          background: selectedClient === client.name ? ACCENT_LIGHT : "transparent",
                           borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                           fontSize: 13, fontWeight: selectedClient === client.name ? 600 : 500,
-                          color: selectedClient === client.name ? TEAL : TEXT
+                          color: selectedClient === client.name ? ACCENT : TEXT
                         }}
                       >
                         {client.name}
@@ -16225,17 +16228,18 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "6px 12px", borderRadius: 10,
-                  background: WHITE, border: `1px solid ${BORDER}`,
+                  background: ACCENT_LIGHT, border: `1px solid ${ACCENT}`,
                   cursor: "pointer", transition: "all 0.15s ease",
                   textAlign: "left"
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; }}
+                onMouseEnter={e => { e.currentTarget.style.filter = "brightness(0.97)"; }}
+                onMouseLeave={e => { e.currentTarget.style.filter = "none"; }}
               >
+                <div style={{ width: 8, height: 32, borderRadius: 4, background: ACCENT, flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: ACCENT, display: "flex", alignItems: "center", gap: 6 }}>
                     {currentSessionLabel}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: TEXT_SEC, transform: isSessionTypeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: ACCENT, transform: isSessionTypeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
                       <polyline points="6,9 12,15 18,9"/>
                     </svg>
                   </div>
@@ -16263,19 +16267,20 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       }}
                       style={{
                         padding: "10px 14px", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        background: sessionType === opt.id ? TEAL_LIGHT : "transparent",
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: sessionType === opt.id ? opt.light : "transparent",
                         borderBottom: idx < SESSION_TYPE_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
                         fontSize: 13, fontWeight: sessionType === opt.id ? 600 : 500,
-                        color: sessionType === opt.id ? TEAL : TEXT,
+                        color: sessionType === opt.id ? opt.color : TEXT,
                         transition: "background 0.15s ease"
                       }}
                       onMouseEnter={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "#f5f7f6"; }}
                       onMouseLeave={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "transparent"; }}
                     >
-                      {opt.label}
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: opt.color, flexShrink: 0 }} />
+                      <span style={{ flex: 1 }}>{opt.label}</span>
                       {sessionType === opt.id && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={opt.color} strokeWidth="2.5" strokeLinecap="round">
                           <polyline points="20,6 9,17 4,12"/>
                         </svg>
                       )}
@@ -16338,10 +16343,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "8px 14px", borderRadius: 8,
-                  background: (isClassMode ? selectedClass : selectedClient) ? TEAL_LIGHT : "#f0f4f3",
-                  border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? TEAL : BORDER}`,
+                  background: (isClassMode ? selectedClass : selectedClient) ? ACCENT_LIGHT : "#f0f4f3",
+                  border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? ACCENT : BORDER}`,
                   cursor: "pointer", fontSize: 13, fontWeight: 500,
-                  color: (isClassMode ? selectedClass : selectedClient) ? TEAL : TEXT_SEC,
+                  color: (isClassMode ? selectedClass : selectedClient) ? ACCENT : TEXT_SEC,
                   transition: "all 0.15s ease"
                 }}
               >
@@ -16382,7 +16387,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       style={{
                         padding: "10px 12px", cursor: "pointer",
                         display: "flex", alignItems: "center", gap: 10,
-                        background: selectedClass === cls.name ? TEAL_LIGHT : "transparent",
+                        background: selectedClass === cls.name ? ACCENT_LIGHT : "transparent",
                         borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
                         transition: "background 0.15s ease"
                       }}
@@ -16391,7 +16396,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     >
                       <div style={{
                         width: 28, height: 28, borderRadius: 8,
-                        background: TEAL_LIGHT, color: TEAL,
+                        background: ACCENT_LIGHT, color: ACCENT,
                         display: "flex", alignItems: "center", justifyContent: "center"
                       }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -16406,7 +16411,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                         <div style={{ fontSize: 10, color: TEXT_SEC }}>{cls.detail}</div>
                       </div>
                       {selectedClass === cls.name && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
                           <polyline points="20,6 9,17 4,12"/>
                         </svg>
                       )}
@@ -16419,7 +16424,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     style={{
                       padding: "10px 12px", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: 10,
-                      background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                      background: selectedClient === client.name ? ACCENT_LIGHT : "transparent",
                       borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                       transition: "background 0.15s ease"
                     }}
@@ -16428,7 +16433,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   >
                     <div style={{
                       width: 28, height: 28, borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                      background: `linear-gradient(135deg, ${ACCENT}, ${SAGE})`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       color: WHITE, fontSize: 11, fontWeight: 600
                     }}>
@@ -16439,7 +16444,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       <div style={{ fontSize: 10, color: TEXT_SEC }}>{client.program || "No program"}</div>
                     </div>
                     {selectedClient === client.name && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
                         <polyline points="20,6 9,17 4,12"/>
                       </svg>
                     )}
