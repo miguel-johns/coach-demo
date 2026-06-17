@@ -15637,6 +15637,23 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
   const [selectedClient, setSelectedClient] = useState(data?.client || "");
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  // Session type: "personal" | "semiPrivate" | "group"
+  const [sessionType, setSessionType] = useState("personal");
+  const [isSessionTypeOpen, setIsSessionTypeOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState("");
+  const SESSION_TYPE_OPTIONS = [
+    { id: "personal", label: "Personal Training" },
+    { id: "semiPrivate", label: "Semi-Private" },
+    { id: "group", label: "Group" },
+  ];
+  const CLASS_OPTIONS = [
+    { name: "Morning HIIT", detail: "6:00 AM · 12 spots" },
+    { name: "Strength & Conditioning", detail: "9:00 AM · 8 spots" },
+    { name: "Mobility & Core", detail: "12:00 PM · 10 spots" },
+    { name: "Evening Bootcamp", detail: "6:00 PM · 14 spots" },
+  ];
+  const isClassMode = sessionType !== "personal";
+  const currentSessionLabel = SESSION_TYPE_OPTIONS.find(s => s.id === sessionType)?.label || "Personal Training";
   const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
   const [linkCopied, setLinkCopied] = useState(false);
   
@@ -16049,25 +16066,34 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 </svg>
               </button>
               
-              {/* Client icon button */}
+              {/* Client / Class icon button */}
               <div style={{ position: "relative", zIndex: 9999 }}>
                 <div 
                   onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                   style={{
                     width: 36, height: 36, borderRadius: 8,
-                    background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
-                    border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                    background: (isClassMode ? selectedClass : selectedClient) ? TEAL_LIGHT : "#f0f4f3",
+                    border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? TEAL : BORDER}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: selectedClient ? TEAL : TEXT_SEC
+                    cursor: "pointer", color: (isClassMode ? selectedClass : selectedClient) ? TEAL : TEXT_SEC
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  {isClassMode ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  )}
                 </div>
                 
-                {/* Mobile Client Dropdown */}
+                {/* Mobile Client/Class Dropdown */}
                 {isClientDropdownOpen && (
                   <div style={{
                     position: "absolute", top: "100%", right: 0, marginTop: 4,
@@ -16077,7 +16103,42 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     zIndex: 9999,
                     animation: "fadeUp 0.15s ease-out"
                   }}>
-                    {clients.length > 0 ? clients.map((client, idx) => (
+                    {/* Session type switcher */}
+                    <div style={{ padding: "6px", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 4 }}>
+                      {SESSION_TYPE_OPTIONS.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => {
+                            setSessionType(opt.id);
+                            if (opt.id === "personal") setSelectedClass(""); else setSelectedClient("");
+                          }}
+                          style={{
+                            flex: 1, padding: "5px 4px", borderRadius: 6, border: "none", cursor: "pointer",
+                            fontSize: 10, fontWeight: 600,
+                            background: sessionType === opt.id ? TEAL : "#f0f4f3",
+                            color: sessionType === opt.id ? WHITE : TEXT_SEC
+                          }}
+                        >{opt.id === "personal" ? "PT" : opt.id === "semiPrivate" ? "Semi" : "Group"}</button>
+                      ))}
+                    </div>
+                    {isClassMode ? (
+                      CLASS_OPTIONS.map((cls, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => { setSelectedClass(cls.name); setIsClientDropdownOpen(false); }}
+                          style={{
+                            padding: "10px 14px", cursor: "pointer",
+                            background: selectedClass === cls.name ? TEAL_LIGHT : "transparent",
+                            borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                            fontSize: 13, fontWeight: selectedClass === cls.name ? 600 : 500,
+                            color: selectedClass === cls.name ? TEAL : TEXT
+                          }}
+                        >
+                          {cls.name}
+                          <div style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 400 }}>{cls.detail}</div>
+                        </div>
+                      ))
+                    ) : clients.length > 0 ? clients.map((client, idx) => (
                       <div
                         key={idx}
                         onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
@@ -16157,9 +16218,71 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 <polyline points="15,18 9,12 15,6"/>
               </svg>
             </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.programName || "Training Program"}</div>
+            {/* Session Type Selector */}
+            <div style={{ position: "relative", zIndex: 9998 }}>
+              <button
+                onClick={() => { setIsSessionTypeOpen(!isSessionTypeOpen); setIsClientDropdownOpen(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "6px 12px", borderRadius: 10,
+                  background: WHITE, border: `1px solid ${BORDER}`,
+                  cursor: "pointer", transition: "all 0.15s ease",
+                  textAlign: "left"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; }}
+              >
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, display: "flex", alignItems: "center", gap: 6 }}>
+                    {currentSessionLabel}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: TEXT_SEC, transform: isSessionTypeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
+                      <polyline points="6,9 12,15 18,9"/>
+                    </svg>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC }}>Workout Calendar</div>
+                </div>
+              </button>
+
+              {isSessionTypeOpen && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, marginTop: 4,
+                  background: WHITE, borderRadius: 8, border: `1px solid ${BORDER}`,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                  minWidth: 200, zIndex: 9998,
+                  animation: "fadeUp 0.15s ease-out"
+                }}>
+                  {SESSION_TYPE_OPTIONS.map((opt, idx) => (
+                    <div
+                      key={opt.id}
+                      onClick={() => {
+                        setSessionType(opt.id);
+                        setIsSessionTypeOpen(false);
+                        // Reset selections when switching modes
+                        if (opt.id === "personal") { setSelectedClass(""); }
+                        else { setSelectedClient(""); }
+                      }}
+                      style={{
+                        padding: "10px 14px", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        background: sessionType === opt.id ? TEAL_LIGHT : "transparent",
+                        borderBottom: idx < SESSION_TYPE_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                        fontSize: 13, fontWeight: sessionType === opt.id ? 600 : 500,
+                        color: sessionType === opt.id ? TEAL : TEXT,
+                        transition: "background 0.15s ease"
+                      }}
+                      onMouseEnter={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "#f5f7f6"; }}
+                      onMouseLeave={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      {opt.label}
+                      {sessionType === opt.id && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           
@@ -16208,25 +16331,34 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           </div>
           
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Client Dropdown */}
+            {/* Client / Class Dropdown */}
             <div style={{ position: "relative", zIndex: 9999 }}>
               <button
                 onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "8px 14px", borderRadius: 8,
-                  background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
-                  border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                  background: (isClassMode ? selectedClass : selectedClient) ? TEAL_LIGHT : "#f0f4f3",
+                  border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? TEAL : BORDER}`,
                   cursor: "pointer", fontSize: 13, fontWeight: 500,
-                  color: selectedClient ? TEAL : TEXT_SEC,
+                  color: (isClassMode ? selectedClass : selectedClient) ? TEAL : TEXT_SEC,
                   transition: "all 0.15s ease"
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span>{selectedClient || "Select Client"}</span>
+                {isClassMode ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                )}
+                <span>{isClassMode ? (selectedClass || "Select Class") : (selectedClient || "Select Client")}</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: isClientDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
                   <polyline points="6,9 12,15 18,9"/>
                 </svg>
@@ -16242,7 +16374,45 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 zIndex: 9999,
                 animation: "fadeUp 0.15s ease-out"
               }}>
-                {clients.length > 0 ? clients.map((client, idx) => (
+                {isClassMode ? (
+                  CLASS_OPTIONS.map((cls, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => { setSelectedClass(cls.name); setIsClientDropdownOpen(false); }}
+                      style={{
+                        padding: "10px 12px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: selectedClass === cls.name ? TEAL_LIGHT : "transparent",
+                        borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                        transition: "background 0.15s ease"
+                      }}
+                      onMouseEnter={e => { if (selectedClass !== cls.name) e.currentTarget.style.background = "#f5f7f6"; }}
+                      onMouseLeave={e => { if (selectedClass !== cls.name) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: TEAL_LIGHT, color: TEAL,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{cls.name}</div>
+                        <div style={{ fontSize: 10, color: TEXT_SEC }}>{cls.detail}</div>
+                      </div>
+                      {selectedClass === cls.name && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                  ))
+                ) : clients.length > 0 ? clients.map((client, idx) => (
                   <div
                     key={idx}
                     onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
