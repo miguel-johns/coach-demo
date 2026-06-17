@@ -5800,7 +5800,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ─── BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
+      {/* ��── BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
       {(() => {
         const bodyCompMetrics = [
           { label: "Bodyweight", start: bodyweightStart, current: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
@@ -16235,7 +16235,6 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 onMouseEnter={e => { e.currentTarget.style.filter = "brightness(0.97)"; }}
                 onMouseLeave={e => { e.currentTarget.style.filter = "none"; }}
               >
-                <div style={{ width: 8, height: 32, borderRadius: 4, background: ACCENT, flexShrink: 0 }} />
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: ACCENT, display: "flex", alignItems: "center", gap: 6 }}>
                     {currentSessionLabel}
