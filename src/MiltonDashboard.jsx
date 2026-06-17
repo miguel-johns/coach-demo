@@ -2376,7 +2376,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════��═════════════════════════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -2396,8 +2396,8 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, on
   });
 
   const tabs = [
+    { id: "schedule", label: "Schedule" },
     { id: "upcoming", label: "Upcoming", count: upcomingCount },
-    { id: "inProgress", label: "In progress", count: inProgressCount },
     { id: "completedToday", label: "Completed today", count: completedCount },
     { id: "all", label: "All", count: groupSessions.length },
   ];
@@ -2456,7 +2456,7 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, on
         <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8 }}>
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: "10px 16px", fontSize: 13, fontWeight: 500, background: "transparent", border: "none", cursor: "pointer", color: activeTab === tab.id ? ORANGE : TEXT_SEC, borderBottom: activeTab === tab.id ? `2px solid ${ORANGE}` : "2px solid transparent", marginBottom: -1 }}>
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
@@ -2464,7 +2464,14 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, on
 
       {/* List */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
-        {filtered.length === 0 ? (
+        {activeTab === "schedule" ? (
+          <ClassScheduleView
+            sessions={groupSessions}
+            accent={ORANGE}
+            isMobile={isMobile}
+            onViewProgramming={onViewProgramming}
+          />
+        ) : filtered.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center" }}>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: ORANGE_BG, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: ORANGE }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -5187,7 +5194,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   );
 }
 
-/* ─── Mobile Glass Chat Bar + Expandable Sheet ─── */
+/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ─── */
 function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
@@ -5722,6 +5729,7 @@ isMobile={true}
               onHome={() => setCanvasType("templates")}
               onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
               onCreateSession={onCreateSession}
+              onViewProgramming={() => setCanvasType("programming")}
               typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
             />
           )}
@@ -5747,6 +5755,7 @@ isMobile={true}
               onHome={() => setCanvasType("templates")}
               onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
               onCreateSession={onCreateSession}
+              onViewProgramming={() => setCanvasType("programming")}
               typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
             />
           )}
@@ -20891,6 +20900,7 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
   onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
+  onViewProgramming={() => setCanvasType("programming")}
   typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
@@ -20918,6 +20928,7 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
   onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
+  onViewProgramming={() => setCanvasType("programming")}
   typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
