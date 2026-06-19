@@ -449,9 +449,11 @@ const initialSessions = [
   },
   {
     id: "sess_004",
+    date: "2026-06-16",
     time: "5:00 PM",
     duration: "60 min",
     sessionKind: "semi",
+    sessionFocus: "Strength Training",
     clientIds: [12, 13, 4, 5], // Jake Morrison, Olivia Chen, Rachel Kim, Aaron Smith (all Semi-tagged)
     stationAssignments: { 12: "Rack 1", 13: "Rack 2", 4: "Rack 3", 5: "Rack 4" },
     status: "scheduled",
@@ -500,9 +502,11 @@ const initialSessions = [
   },
   {
     id: "sess_005",
+    date: "2026-06-18",
     time: "6:00 PM",
     duration: "60 min",
     sessionKind: "semi",
+    sessionFocus: "Strength Training",
     clientIds: [14, 15, 6], // Chris Taylor, Mia Patel, Lisa Martinez (Semi-tagged)
     stationAssignments: { 14: "Rack 1", 15: "Rack 2", 6: "Rack 3" },
     status: "scheduled",
@@ -543,6 +547,7 @@ const initialSessions = [
   // One shared workout board; each member checks in and logs their own weights.
   {
     id: "sess_g01",
+    date: "2026-06-15",
     time: "6:00 AM",
     duration: "45 min",
     sessionKind: "group",
@@ -567,6 +572,7 @@ const initialSessions = [
   },
   {
     id: "sess_g02",
+    date: "2026-06-17",
     time: "5:30 PM",
     duration: "45 min",
     sessionKind: "group",
@@ -1987,6 +1993,39 @@ function ClientContextDrawer({ isOpen, onClose, client, onOpenFullProfile }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CLASS TYPE TOGGLE - Segmented control to switch Semi-Private / Group
+// ═══════════════════════════════════════════════════════════════
+function ClassTypeToggle({ active, onChange }) {
+  const options = [
+    { id: "semi", label: "Semi-Private", color: "#1f7a3e" },
+    { id: "group", label: "Group", color: "#c2410c" },
+  ];
+  return (
+    <div style={{ display: "inline-flex", gap: 4, marginTop: 16, padding: 4, background: "#f5f7f6", borderRadius: 10 }}>
+      {options.map(opt => {
+        const isActive = active === opt.id;
+        return (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            style={{
+              padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              border: "none", cursor: "pointer",
+              background: isActive ? WHITE : "transparent",
+              color: isActive ? opt.color : TEXT_SEC,
+              boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              transition: "all 0.15s"
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ═══════════════════════════════════════════════════════════════
 function SemiPrivateList({ 
@@ -1996,9 +2035,11 @@ function SemiPrivateList({
   onHome,
   onSessionClick,
   onCreateSession,
+  onViewProgramming,
+  typeToggle,
   isMobile 
 }) {
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeTab, setActiveTab] = useState("schedule");
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   // Filter sessions to only semi-private
@@ -2045,8 +2086,8 @@ function SemiPrivateList({
   };
   
   const tabs = [
+    { id: "schedule", label: "Schedule" },
     { id: "upcoming", label: "Upcoming", count: upcomingCount },
-    { id: "inProgress", label: "In progress", count: inProgressCount },
     { id: "completedToday", label: "Completed today", count: completedTodayCount },
     { id: "all", label: "All", count: semiSessions.length }
   ];
@@ -2140,6 +2181,7 @@ function SemiPrivateList({
           </div>
         </div>
         
+        {typeToggle}
         {/* Tabs */}
         <div style={{ 
           display: "flex", gap: 4, marginTop: 20,
@@ -2157,7 +2199,7 @@ function SemiPrivateList({
                 marginBottom: -1, transition: "all 0.15s"
               }}
             >
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
@@ -2165,7 +2207,14 @@ function SemiPrivateList({
       
       {/* Session List */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
-        {filteredSessions.length === 0 ? (
+        {activeTab === "schedule" ? (
+          <ClassScheduleView
+            sessions={semiSessions}
+            accent={TEAL}
+            isMobile={isMobile}
+            onViewProgramming={onViewProgramming}
+          />
+        ) : filteredSessions.length === 0 ? (
           /* Empty State */
           <div style={{ 
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -2341,9 +2390,10 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═══════════════════════════════════════════════════════════════
-function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, isMobile }) {
+// ═════════════════════════════════════��═════════════════════════
+function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const ORANGE = "#c2410c";
   const ORANGE_BG = "#fff1ea";
 
@@ -2360,8 +2410,8 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
   });
 
   const tabs = [
+    { id: "schedule", label: "Schedule" },
     { id: "upcoming", label: "Upcoming", count: upcomingCount },
-    { id: "inProgress", label: "In progress", count: inProgressCount },
     { id: "completedToday", label: "Completed today", count: completedCount },
     { id: "all", label: "All", count: groupSessions.length },
   ];
@@ -2395,15 +2445,32 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
               Run a class off one shared board and check in each member&apos;s personalized weights. Click a class to open the control panel.
             </p>
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: ORANGE, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                boxShadow: `0 2px 8px ${ORANGE}40`
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
+        {typeToggle}
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: `1px solid ${BORDER}`, marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8 }}>
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: "10px 16px", fontSize: 13, fontWeight: 500, background: "transparent", border: "none", cursor: "pointer", color: activeTab === tab.id ? ORANGE : TEXT_SEC, borderBottom: activeTab === tab.id ? `2px solid ${ORANGE}` : "2px solid transparent", marginBottom: -1 }}>
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
@@ -2411,13 +2478,33 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
 
       {/* List */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
-        {filtered.length === 0 ? (
+        {activeTab === "schedule" ? (
+          <ClassScheduleView
+            sessions={groupSessions}
+            accent={ORANGE}
+            isMobile={isMobile}
+            onViewProgramming={onViewProgramming}
+          />
+        ) : filtered.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center" }}>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: ORANGE_BG, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: ORANGE }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes in this view</h3>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 280 }}>Group classes scheduled in Programming will appear here.</p>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "0 0 20px", maxWidth: 280 }}>Create a class or schedule one in Programming and it will appear here.</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                background: ORANGE, color: WHITE, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New session
+            </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 760 }}>
@@ -2463,12 +2550,21 @@ function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, is
           </div>
         )}
       </div>
+
+      {/* Create Group Class Modal */}
+      {showCreateModal && (
+        <CreateGroupClassModal
+          clients={clients}
+          onClose={() => setShowCreateModal(false)}
+          onCreateSession={(newSession) => {
+            onCreateSession?.(newSession);
+            setShowCreateModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-
-// ══════════════════════════════════════════════════════���════════
-// GROUP CLASS SESSION - Live control panel: shared board + check-in roster
 // ═══════════════════════════════════════════════════════════════
 function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFullProfile, isMobile }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -2933,55 +3029,376 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
 }
 
 // ═══════════════════════════════════════════════════════════════
+// RECURRENCE - Shared scheduler for repeating classes (days/weeks/times)
+// ═══════════════════════════════════════════════════════════════
+const WEEKDAYS = [
+  { id: 0, short: "Su", label: "Sunday" },
+  { id: 1, short: "Mo", label: "Monday" },
+  { id: 2, short: "Tu", label: "Tuesday" },
+  { id: 3, short: "We", label: "Wednesday" },
+  { id: 4, short: "Th", label: "Thursday" },
+  { id: 5, short: "Fr", label: "Friday" },
+  { id: 6, short: "Sa", label: "Saturday" },
+];
+
+const TIME_OPTIONS = [
+  "5:00 AM", "5:30 AM", "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
+  "9:00 AM", "9:30 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
+  "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "8:00 PM",
+];
+
+// Expand a recurrence config into individual { date, dateLabel, time } occurrences.
+function expandRecurrence({ startDate, repeat, weekdays, weeks, times }) {
+  const result = [];
+  const sortedTimes = [...times];
+  const base = new Date(`${startDate}T00:00:00`);
+  if (isNaN(base.getTime()) || sortedTimes.length === 0) return result;
+
+  if (!repeat) {
+    const dateLabel = base.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    sortedTimes.forEach(time => result.push({ date: startDate, dateLabel, time }));
+    return result;
+  }
+
+  const activeDays = weekdays.length ? weekdays : [base.getDay()];
+  const totalWeeks = Math.max(1, weeks);
+  for (let w = 0; w < totalWeeks; w++) {
+    for (let d = 0; d < 7; d++) {
+      const cur = new Date(base);
+      cur.setDate(base.getDate() + w * 7 + d);
+      if (cur < base) continue;
+      if (!activeDays.includes(cur.getDay())) continue;
+      const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
+      const dateLabel = cur.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+      sortedTimes.forEach(time => result.push({ date: iso, dateLabel, time }));
+    }
+  }
+  return result;
+}
+
+// Reusable recurrence UI block. Accepts and mutates state via props.
+function RecurrenceScheduler({ accent, startDate, setStartDate, repeat, setRepeat, weekdays, setWeekdays, weeks, setWeeks, times, setTimes }) {
+  const labelStyle = { fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 };
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT };
+
+  const toggleWeekday = (id) => {
+    setWeekdays(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id].sort((a, b) => a - b));
+  };
+  const toggleTime = (t) => {
+    setTimes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  };
+  const sortIndex = (t) => TIME_OPTIONS.indexOf(t);
+  const sortedSelectedTimes = [...times].sort((a, b) => sortIndex(a) - sortIndex(b));
+
+  const occurrenceCount = expandRecurrence({ startDate, repeat, weekdays, weeks, times }).length;
+
+  return (
+    <div>
+      {/* Start date */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>{repeat ? "Start date" : "Date"}</label>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
+      </div>
+
+      {/* Times (multi-select) */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Times {sortedSelectedTimes.length > 0 && `(${sortedSelectedTimes.length} selected)`}</label>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {TIME_OPTIONS.map(t => {
+            const active = times.includes(t);
+            return (
+              <button key={t} type="button" onClick={() => toggleTime(t)} style={{
+                padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: `1.5px solid ${active ? accent : BORDER}`,
+                background: active ? `${accent}12` : WHITE,
+                color: active ? accent : TEXT_SEC,
+              }}>{t}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Repeat toggle */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 10, background: "#f5f7f6", marginBottom: repeat ? 16 : 4 }}>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT }}>Repeat weekly</div>
+          <div style={{ fontSize: 11.5, color: TEXT_SEC }}>Schedule this class on multiple days and weeks</div>
+        </div>
+        <button type="button" onClick={() => setRepeat(!repeat)} style={{
+          width: 44, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+          background: repeat ? accent : "#cbd5d1", transition: "background 0.15s", flexShrink: 0,
+        }}>
+          <span style={{ position: "absolute", top: 3, left: repeat ? 21 : 3, width: 20, height: 20, borderRadius: "50%", background: WHITE, transition: "left 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+        </button>
+      </div>
+
+      {repeat && (
+        <>
+          {/* Repeat days */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Repeat on</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {WEEKDAYS.map(day => {
+                const active = weekdays.includes(day.id);
+                return (
+                  <button key={day.id} type="button" onClick={() => toggleWeekday(day.id)} style={{
+                    flex: 1, padding: "10px 0", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                    border: `1.5px solid ${active ? accent : BORDER}`,
+                    background: active ? accent : WHITE,
+                    color: active ? WHITE : TEXT_SEC,
+                  }}>{day.short}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Number of weeks */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Repeat for</label>
+            <select value={weeks} onChange={(e) => setWeeks(parseInt(e.target.value))} style={inputStyle}>
+              {[1, 2, 3, 4, 6, 8, 12].map(n => <option key={n} value={n}>{n} week{n > 1 ? "s" : ""}</option>)}
+            </select>
+          </div>
+        </>
+      )}
+
+      {/* Summary */}
+      {times.length > 0 && (
+        <div style={{ padding: "10px 14px", borderRadius: 10, background: `${accent}0d`, border: `1px solid ${accent}33`, marginBottom: 4 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: accent }}>
+            {occurrenceCount} session{occurrenceCount !== 1 ? "s" : ""} will be created
+          </div>
+          {repeat && weekdays.length > 0 && (
+            <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 2 }}>
+              {weekdays.map(id => WEEKDAYS.find(d => d.id === id)?.label).join(", ")} · {sortedSelectedTimes.join(", ")} · {weeks} week{weeks > 1 ? "s" : ""}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLASS SCHEDULE VIEW - Weekly overview of recurring classes
+// ═══════════════════════════════════════════════════════════════
+const timeRank = (t) => {
+  const i = TIME_OPTIONS.indexOf(t);
+  return i === -1 ? 999 : i;
+};
+
+const sessionWeekday = (s) => {
+  if (!s.date) return null;
+  const d = new Date(`${s.date}T00:00:00`);
+  return isNaN(d.getTime()) ? null : d.getDay();
+};
+
+const sessionTitle = (s) =>
+  s.sessionFocus || (s.classType ? getClassType(s.classType).label : "Session");
+
+// Collapse sessions into recurring "series" keyed by title + coach.
+function buildClassSeries(sessions) {
+  const map = new Map();
+  sessions.forEach(s => {
+    const title = sessionTitle(s);
+    const coachId = s.coachId || null;
+    const key = `${title}__${coachId || ""}`;
+    if (!map.has(key)) {
+      map.set(key, { title, coachId, weekdays: new Set(), times: new Set(), count: 0 });
+    }
+    const entry = map.get(key);
+    const wd = sessionWeekday(s);
+    if (wd !== null) entry.weekdays.add(wd);
+    if (s.time) entry.times.add(s.time);
+    entry.count++;
+  });
+  return [...map.values()].map(e => ({
+    ...e,
+    weekdays: [...e.weekdays].sort((a, b) => a - b),
+    times: [...e.times].sort((a, b) => timeRank(a) - timeRank(b)),
+  }));
+}
+
+function ClassScheduleView({ sessions, accent = TEAL, isMobile, onViewProgramming }) {
+  const series = buildClassSeries(sessions);
+  const byDay = WEEKDAYS.map(d => ({
+    ...d,
+    sessions: sessions
+      .filter(s => sessionWeekday(s) === d.id)
+      .sort((a, b) => timeRank(a.time) - timeRank(b.time)),
+  }));
+  const activeDays = byDay.filter(d => d.sessions.length > 0);
+
+  if (sessions.length === 0) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        padding: "80px 20px", textAlign: "center"
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%", background: `${accent}14`,
+          display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: accent
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>No classes scheduled</h3>
+        <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 300 }}>
+          Create a session and set it to repeat weekly to build out your schedule.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Series summary */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.04em", marginBottom: 10 }}>
+          RECURRING CLASSES
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+          {series.map((s, i) => {
+            const coach = s.coachId ? getCoach(s.coachId) : null;
+            const dayLabel = s.weekdays.length
+              ? s.weekdays.map(id => WEEKDAYS.find(d => d.id === id)?.short).join(" · ")
+              : "Unscheduled";
+            return (
+              <div key={i} style={{
+                border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, background: WHITE,
+                borderLeft: `3px solid ${accent}`,
+              }}>
+                <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{s.title}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                  {s.weekdays.map(id => (
+                    <span key={id} style={{
+                      fontSize: 11, fontWeight: 700, color: accent, background: `${accent}14`,
+                      padding: "2px 7px", borderRadius: 6,
+                    }}>{WEEKDAYS.find(d => d.id === id)?.short}</span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.5 }}>
+                  {s.times.join(", ") || "No times set"}
+                </div>
+                {coach && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 10 }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", background: coach.color,
+                      color: WHITE, fontSize: 9.5, fontWeight: 700, display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                    }}>{coach.name.split(" ").map(n => n[0]).join("").slice(0, 2)}</div>
+                    <span style={{ fontSize: 12, color: TEXT_SEC }}>{coach.name}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Week strip */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, letterSpacing: "0.04em", marginBottom: 10 }}>
+        THIS WEEK
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {activeDays.map(day => (
+          <div key={day.id} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div style={{
+              flexShrink: 0, width: isMobile ? 44 : 56, paddingTop: 10, textAlign: "center",
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{day.short}</div>
+              <div style={{ fontSize: 10.5, color: TEXT_SEC }}>{day.sessions.length}</div>
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              {day.sessions.map(s => {
+                const coach = s.coachId ? getCoach(s.coachId) : null;
+                const booked = (s.clientIds || []).length;
+                return (
+                  <div key={s.id} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                    borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE,
+                  }}>
+                    <div style={{
+                      flexShrink: 0, fontSize: 12.5, fontWeight: 700, color: accent,
+                      width: 68,
+                    }}>{s.time}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {sessionTitle(s)}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 2 }}>
+                        {s.duration || ""}{coach ? ` · ${coach.name}` : ""}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: TEXT_SEC,
+                      background: "#f5f7f6", padding: "4px 9px", borderRadius: 14,
+                    }}>
+                      {s.capacity ? `${booked}/${s.capacity}` : `${booked} client${booked !== 1 ? "s" : ""}`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {onViewProgramming && (
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={onViewProgramming}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px",
+              borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              background: WHITE, color: accent, border: `1.5px solid ${accent}`,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            View programming
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CREATE SEMI-PRIVATE MODAL - Form for creating new sessions
 // ═══════════════════════════════════════════════════════════════
 function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
-  const [date, setDate] = useState("2026-04-22");
-  const [time, setTime] = useState("5:00 PM");
+  const [startDate, setStartDate] = useState("2026-04-22");
+  const [repeat, setRepeat] = useState(false);
+  const [weekdays, setWeekdays] = useState([2, 4]); // Tue, Thu default
+  const [weeks, setWeeks] = useState(4);
+  const [times, setTimes] = useState(["5:00 PM"]);
   const [duration, setDuration] = useState("60");
-  const [selectedClientIds, setSelectedClientIds] = useState([]);
-  const [stationAssignments, setStationAssignments] = useState({});
+  const [capacity, setCapacity] = useState("6");
   const [sessionFocus, setSessionFocus] = useState("");
-  const [showAllClients, setShowAllClients] = useState(false);
-  
-  // Filter clients to Semi/Hybrid by default
-  const eligibleClients = Object.entries(clients).filter(([id, client]) => {
-    if (showAllClients) return true;
-    return client.clientTypes?.some(t => t === "Semi" || t === "Hybrid");
-  });
-  
-  const toggleClient = (clientId) => {
-    const id = parseInt(clientId);
-    if (selectedClientIds.includes(id)) {
-      setSelectedClientIds(prev => prev.filter(cid => cid !== id));
-      const newAssignments = { ...stationAssignments };
-      delete newAssignments[id];
-      setStationAssignments(newAssignments);
-    } else if (selectedClientIds.length < 6) {
-      setSelectedClientIds(prev => [...prev, id]);
-      setStationAssignments(prev => ({ ...prev, [id]: `Rack ${selectedClientIds.length + 1}` }));
-    }
-  };
-  
-  const stations = ["Rack 1", "Rack 2", "Rack 3", "Rack 4", "Rack 5", "Rack 6", "Rack 7", "Rack 8", "Open floor"];
-  
+
   const handleCreate = () => {
-    const newSession = {
-      id: `sess_${Date.now()}`,
-      time,
+    const occurrences = expandRecurrence({ startDate, repeat, weekdays, weeks, times });
+    const newSessions = occurrences.map((occ, idx) => ({
+      id: `sess_${Date.now()}_${idx}`,
+      date: occ.date,
+      dateLabel: occ.dateLabel,
+      time: occ.time,
       duration: `${duration} min`,
       sessionKind: "semi",
-      clientIds: selectedClientIds,
-      stationAssignments,
+      capacity: parseInt(capacity) || 6,
+      sessionFocus,
+      clientIds: [], // Clients book themselves into the scheduled class
+      stationAssignments: {},
       status: "scheduled",
       startedAt: null,
       completedAt: null,
-      workouts: selectedClientIds.reduce((acc, cid) => {
-        acc[cid] = { exercises: [] }; // Empty - coach will build or Milton will generate
-        return acc;
-      }, {})
-    };
-    onCreateSession(newSession);
+      workouts: {}
+    }));
+    if (newSessions.length === 0) return;
+    onCreateSession(newSessions);
   };
   
   return (
@@ -3022,39 +3439,16 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
         
         {/* Form */}
         <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-          {/* Date & Time Row */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
-                Date
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
-                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
-                Time
-              </label>
-              <select
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
-                  border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                }}
-              >
-                {["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
-                  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"
-                ].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
+          {/* Schedule (date / times / repeat) */}
+          <div style={{ marginBottom: 20 }}>
+            <RecurrenceScheduler
+              accent={TEAL}
+              startDate={startDate} setStartDate={setStartDate}
+              repeat={repeat} setRepeat={setRepeat}
+              weekdays={weekdays} setWeekdays={setWeekdays}
+              weeks={weeks} setWeeks={setWeeks}
+              times={times} setTimes={setTimes}
+            />
           </div>
           
           {/* Duration */}
@@ -3078,89 +3472,25 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
             </select>
           </div>
           
-          {/* Clients */}
+          {/* Capacity */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>
-                Clients ({selectedClientIds.length}/6)
-              </label>
-              <button
-                onClick={() => setShowAllClients(!showAllClients)}
-                style={{
-                  fontSize: 12, color: TEAL, background: "transparent", border: "none",
-                  cursor: "pointer", fontWeight: 500
-                }}
-              >
-                {showAllClients ? "Show Semi/Hybrid only" : "Show all clients"}
-              </button>
-            </div>
-            <div style={{
-              border: `1px solid ${BORDER}`, borderRadius: 10, maxHeight: 200, overflowY: "auto"
-            }}>
-              {eligibleClients.map(([id, client]) => {
-                const isSelected = selectedClientIds.includes(parseInt(id));
-                return (
-                  <div
-                    key={id}
-                    onClick={() => toggleClient(id)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
-                      cursor: "pointer", borderBottom: `1px solid ${BORDER}`,
-                      background: isSelected ? `${TEAL}08` : "transparent",
-                      transition: "background 0.1s"
-                    }}
-                  >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      border: `2px solid ${isSelected ? TEAL : BORDER}`,
-                      background: isSelected ? TEAL : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {isSelected && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="3" strokeLinecap="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{client.name}</div>
-                    </div>
-                    <ClientTypePills types={client.clientTypes} size="sm" maxDisplay={2} />
-                  </div>
-                );
-              })}
-            </div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 }}>
+              Capacity
+            </label>
+            <select
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14,
+                border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
+              }}
+            >
+              {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} clients</option>)}
+            </select>
+            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "8px 0 0" }}>
+              Clients book themselves into the class up to this limit.
+            </p>
           </div>
-          
-          {/* Station Assignments (show only if clients selected) */}
-          {selectedClientIds.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 8 }}>
-                Station Assignments (optional)
-              </label>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {selectedClientIds.map(cid => {
-                  const client = clients[cid];
-                  return (
-                    <div key={cid} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ fontSize: 13, color: TEXT, minWidth: 120 }}>{client?.name}</span>
-                      <select
-                        value={stationAssignments[cid] || ""}
-                        onChange={(e) => setStationAssignments(prev => ({ ...prev, [cid]: e.target.value }))}
-                        style={{
-                          flex: 1, padding: "8px 10px", borderRadius: 6, fontSize: 13,
-                          border: `1px solid ${BORDER}`, background: WHITE, color: TEXT
-                        }}
-                      >
-                        <option value="">Select station...</option>
-                        {stations.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
           
           {/* Session Focus */}
           <div>
@@ -3196,16 +3526,151 @@ function CreateSemiPrivateModal({ clients, onClose, onCreateSession }) {
           </button>
           <button
             onClick={handleCreate}
-            disabled={selectedClientIds.length < 2}
+            disabled={times.length === 0}
             style={{
               padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
-              background: selectedClientIds.length >= 2 ? TEAL : "#e0e0e0",
-              color: selectedClientIds.length >= 2 ? WHITE : TEXT_SEC,
-              border: "none", cursor: selectedClientIds.length >= 2 ? "pointer" : "not-allowed"
+              background: times.length > 0 ? TEAL : "#e0e0e0",
+              color: times.length > 0 ? WHITE : TEXT_SEC,
+              border: "none", cursor: times.length > 0 ? "pointer" : "not-allowed"
             }}
           >
             Create session
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateGroupClassModal({ clients, onClose, onCreateSession }) {
+  const ORANGE = "#c2410c";
+  const [startDate, setStartDate] = useState("2026-04-22");
+  const [repeat, setRepeat] = useState(false);
+  const [weekdays, setWeekdays] = useState([2, 4]); // Tue, Thu default
+  const [weeks, setWeeks] = useState(4);
+  const [times, setTimes] = useState(["6:00 AM"]);
+  const [duration, setDuration] = useState("45");
+  const [classType, setClassType] = useState("strength");
+  const [coachId, setCoachId] = useState(COACHES[0]?.id || "");
+  const [capacity, setCapacity] = useState("12");
+
+  const cap = parseInt(capacity) || 12;
+
+  const handleCreate = () => {
+    const ct = getClassType(classType);
+    const template = PROGRAM_TEMPLATES[classType] || PROGRAM_TEMPLATES.strength;
+    const occurrences = expandRecurrence({ startDate, repeat, weekdays, weeks, times });
+    const newSessions = occurrences.map((occ, idx) => ({
+      id: `sess_g${Date.now()}_${idx}`,
+      date: occ.date,
+      dateLabel: occ.dateLabel,
+      time: occ.time,
+      duration: `${duration} min`,
+      sessionKind: "group",
+      classType,
+      coachId,
+      capacity: cap,
+      clientIds: [], // Members book themselves into the scheduled class
+      status: "scheduled",
+      startedAt: null,
+      completedAt: null,
+      attendance: {},
+      memberWeights: {},
+      sharedWorkout: {
+        title: ct.label,
+        exercises: template.map((ex, i) => ({ id: `g_${Date.now()}_${idx}_${i}`, ...ex })),
+      },
+    }));
+    if (newSessions.length === 0) return;
+    onCreateSession(newSessions);
+  };
+
+  const labelStyle = { fontSize: 12, fontWeight: 600, color: TEXT_SEC, display: "block", marginBottom: 6 };
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 14, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT };
+
+  return (
+    <div
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: WHITE, borderRadius: 16, width: "min(480px, 100%)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>New Group Class</h2>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          {/* Schedule (date / times / repeat) */}
+          <div style={{ marginBottom: 20 }}>
+            <RecurrenceScheduler
+              accent={ORANGE}
+              startDate={startDate} setStartDate={setStartDate}
+              repeat={repeat} setRepeat={setRepeat}
+              weekdays={weekdays} setWeekdays={setWeekdays}
+              weeks={weeks} setWeeks={setWeeks}
+              times={times} setTimes={setTimes}
+            />
+          </div>
+
+          {/* Duration & Capacity */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Duration</label>
+              <select value={duration} onChange={(e) => setDuration(e.target.value)} style={inputStyle}>
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+                <option value="75">75 minutes</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Capacity</label>
+              <select value={capacity} onChange={(e) => setCapacity(e.target.value)} style={inputStyle}>
+                {[8, 10, 12, 14, 16, 20].map(n => <option key={n} value={n}>{n} members</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Class Type */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Class Type</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {GROUP_CLASS_TYPES.map(ct => {
+                const active = classType === ct.id;
+                return (
+                  <button key={ct.id} onClick={() => setClassType(ct.id)} style={{ padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${active ? ct.color : BORDER}`, background: active ? `${ct.color}12` : WHITE, color: active ? ct.color : TEXT_SEC }}>
+                    {ct.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coach */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={labelStyle}>Coach</label>
+            <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={inputStyle}>
+              {COACHES.map(c => <option key={c.id} value={c.id}>{c.name} · {c.specialty}</option>)}
+            </select>
+            <p style={{ fontSize: 12, color: TEXT_SEC, margin: "8px 0 0" }}>
+              Members book themselves into the class up to the capacity above.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "16px 24px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 12, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: "#f0f4f3", color: TEXT, border: "none", cursor: "pointer" }}>Cancel</button>
+          <button onClick={handleCreate} disabled={times.length === 0} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: times.length > 0 ? ORANGE : "#e0e0e0", color: times.length > 0 ? WHITE : TEXT_SEC, border: "none", cursor: times.length > 0 ? "pointer" : "not-allowed" }}>Create class</button>
         </div>
       </div>
     </div>
@@ -4930,7 +5395,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   );
 }
 
-/* ─── Mobile Glass Chat Bar + Expandable Sheet ─── */
+/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ─── */
 function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
@@ -5342,6 +5807,9 @@ clientName: "New Client",
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "classes") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
   setCanvasData({});
@@ -5462,6 +5930,8 @@ isMobile={true}
               onHome={() => setCanvasType("templates")}
               onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
               onCreateSession={onCreateSession}
+              onViewProgramming={() => setCanvasType("programming")}
+              typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
             />
           )}
           {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
@@ -5470,6 +5940,32 @@ isMobile={true}
               clients={clients}
               isMobile={true}
               onBack={() => setCanvasType("semiPrivate")}
+              onUpdateSession={onUpdateSession}
+              onOpenFullProfile={(clientId) => {
+                onClose();
+                onOpenFullProfile?.(clientId);
+              }}
+            />
+          )}
+          {canvasType === "groupClass" && (
+            <GroupClassList
+              sessions={sessions}
+              clients={clients}
+              isMobile={true}
+              onClose={() => setCanvasType("templates")}
+              onHome={() => setCanvasType("templates")}
+              onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+              onCreateSession={onCreateSession}
+              onViewProgramming={() => setCanvasType("programming")}
+              typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
+            />
+          )}
+          {canvasType === "groupClassSession" && canvasData?.sessionId && (
+            <GroupClassSession
+              session={sessions.find(s => s.id === canvasData.sessionId)}
+              clients={clients}
+              isMobile={true}
+              onBack={() => setCanvasType("groupClass")}
               onUpdateSession={onUpdateSession}
               onOpenFullProfile={(clientId) => {
                 onClose();
@@ -5800,7 +6296,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ─── BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
+      {/* ���─��� BODY COMPOSITION: INDIVIDUAL CHARTS ─── */}
       {(() => {
         const bodyCompMetrics = [
           { label: "Bodyweight", start: bodyweightStart, current: bodyweightCurrent, goal: goalWeight, unit: "lbs", color: TEAL, goodDir: "down", eta: "Week 10-12" },
@@ -10277,7 +10773,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       } else if (screen === "empty") {
         setChatMessages([{
           type: "ai",
-          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding — I'd start with New PT Sign Up. Want me to walk you through it?",
+          text: "Welcome, Miguel. Let's build your first workflow.\nBased on your business — personal training, $4,800/year, 6-week onboarding ����� I'd start with New PT Sign Up. Want me to walk you through it?",
           suggestions: ["Walk me through New PT Sign Up", "Which template should I start with?", "I have a specific client in mind", "Tell me how workflows work first"]
         }]);
       } else if (screen === "create") {
@@ -14853,54 +15349,24 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   
   const templates = [
-    {
-      id: "settings",
-      icon: "users",
-      title: "Coaches",
-      desc: "Manage your coaching team — add or remove coaches and keep their contact details up to date",
-      color: "#2B7A78",
-      bgColor: "#e8f5f3",
-      available: true,
-      number: 1
-    },
-    {
-      id: "programming",
-      icon: "program",
-      title: "Master Programming",
-      desc: "Build and maintain the master training calendar that every client program draws from",
-      color: "#45818e",
-      bgColor: "#e9f2f4",
-      available: true,
-      number: 2
-    },
     { 
       id: "workout",
       icon: "chart", 
-      title: "1-on-1 Training", 
+      title: "Programming", 
       desc: "Design structured training programs for individual clients with exercises and progressions",
       color: "#3aafa9",
       available: true,
       number: 1
     },
-    { 
-      id: "semiPrivate",
-      icon: "users", 
-      title: "Semi-Private", 
-      desc: "Manage sessions where 2-6 clients train together, each with their own program",
+    {
+      id: "classes",
+      icon: "users",
+      title: "Classes",
+      desc: "Manage Semi-Private and Group sessions in one place — switch between both and create new sessions of either type",
       color: "#1f7a3e",
       bgColor: "#e6f9ec",
       available: true,
       number: 2
-    },
-    {
-      id: "groupClass",
-      icon: "users",
-      title: "Group Class",
-      desc: "Run a class for up to 12 members off one shared board, checking in each member's personalized weights",
-      color: "#c2410c",
-      bgColor: "#fff1ea",
-      available: true,
-      number: 3
     },
     { 
       id: "mealPlan",
@@ -15637,6 +16103,27 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved'
   const [selectedClient, setSelectedClient] = useState(data?.client || "");
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  // Session type: "personal" | "semiPrivate" | "group"
+  const [sessionType, setSessionType] = useState("personal");
+  const [isSessionTypeOpen, setIsSessionTypeOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [assignedCoach, setAssignedCoach] = useState("");
+  const SESSION_TYPE_OPTIONS = [
+    { id: "personal", label: "Personal Training", color: "#2B7A78", light: "#e8f5f3" },
+    { id: "semiPrivate", label: "Semi-Private", color: "#C2410C", light: "#fdeee6" },
+    { id: "group", label: "Group", color: "#4338CA", light: "#ebeafd" },
+  ];
+  const CLASS_OPTIONS = [
+    { name: "Morning HIIT", detail: "6:00 AM · 12 spots" },
+    { name: "Strength & Conditioning", detail: "9:00 AM · 8 spots" },
+    { name: "Mobility & Core", detail: "12:00 PM · 10 spots" },
+    { name: "Evening Bootcamp", detail: "6:00 PM · 14 spots" },
+  ];
+  const isClassMode = sessionType !== "personal";
+  const activeSession = SESSION_TYPE_OPTIONS.find(s => s.id === sessionType) || SESSION_TYPE_OPTIONS[0];
+  const currentSessionLabel = activeSession.label;
+  const ACCENT = activeSession.color;
+  const ACCENT_LIGHT = activeSession.light;
   const [shareModal, setShareModal] = useState(null); // { link, workoutName, clientName }
   const [linkCopied, setLinkCopied] = useState(false);
   
@@ -16049,25 +16536,34 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 </svg>
               </button>
               
-              {/* Client icon button */}
+              {/* Client / Class icon button */}
               <div style={{ position: "relative", zIndex: 9999 }}>
                 <div 
                   onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                   style={{
                     width: 36, height: 36, borderRadius: 8,
-                    background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
-                    border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                    background: ACCENT_LIGHT,
+                    border: `1px solid ${ACCENT}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", color: selectedClient ? TEAL : TEXT_SEC
+                    cursor: "pointer", color: ACCENT
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  {isClassMode ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  )}
                 </div>
                 
-                {/* Mobile Client Dropdown */}
+                {/* Mobile Client/Class Dropdown */}
                 {isClientDropdownOpen && (
                   <div style={{
                     position: "absolute", top: "100%", right: 0, marginTop: 4,
@@ -16077,16 +16573,51 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     zIndex: 9999,
                     animation: "fadeUp 0.15s ease-out"
                   }}>
-                    {clients.length > 0 ? clients.map((client, idx) => (
+                    {/* Session type switcher */}
+                    <div style={{ padding: "6px", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 4 }}>
+                      {SESSION_TYPE_OPTIONS.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => {
+                            setSessionType(opt.id);
+                            if (opt.id === "personal") setSelectedClass(""); else setSelectedClient("");
+                          }}
+                          style={{
+                            flex: 1, padding: "5px 4px", borderRadius: 6, border: "none", cursor: "pointer",
+                            fontSize: 10, fontWeight: 600,
+                            background: sessionType === opt.id ? opt.color : opt.light,
+                            color: sessionType === opt.id ? WHITE : opt.color
+                          }}
+                        >{opt.id === "personal" ? "PT" : opt.id === "semiPrivate" ? "Semi" : "Group"}</button>
+                      ))}
+                    </div>
+                    {isClassMode ? (
+                      CLASS_OPTIONS.map((cls, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => { setSelectedClass(cls.name); setIsClientDropdownOpen(false); }}
+                          style={{
+                            padding: "10px 14px", cursor: "pointer",
+                            background: selectedClass === cls.name ? ACCENT_LIGHT : "transparent",
+                            borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                            fontSize: 13, fontWeight: selectedClass === cls.name ? 600 : 500,
+                            color: selectedClass === cls.name ? ACCENT : TEXT
+                          }}
+                        >
+                          {cls.name}
+                          <div style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 400 }}>{cls.detail}</div>
+                        </div>
+                      ))
+                    ) : clients.length > 0 ? clients.map((client, idx) => (
                       <div
                         key={idx}
                         onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
                         style={{
                           padding: "10px 14px", cursor: "pointer",
-                          background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                          background: selectedClient === client.name ? ACCENT_LIGHT : "transparent",
                           borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                           fontSize: 13, fontWeight: selectedClient === client.name ? 600 : 500,
-                          color: selectedClient === client.name ? TEAL : TEXT
+                          color: selectedClient === client.name ? ACCENT : TEXT
                         }}
                       >
                         {client.name}
@@ -16157,9 +16688,71 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 <polyline points="15,18 9,12 15,6"/>
               </svg>
             </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Workout Calendar</div>
-              <div style={{ fontSize: 12, color: TEXT_SEC }}>{data.programName || "Training Program"}</div>
+            {/* Session Type Selector */}
+            <div style={{ position: "relative", zIndex: 9998 }}>
+              <button
+                onClick={() => { setIsSessionTypeOpen(!isSessionTypeOpen); setIsClientDropdownOpen(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "6px 12px", borderRadius: 10,
+                  background: ACCENT_LIGHT, border: `1px solid ${ACCENT}`,
+                  cursor: "pointer", transition: "all 0.15s ease",
+                  textAlign: "left"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.filter = "brightness(0.97)"; }}
+                onMouseLeave={e => { e.currentTarget.style.filter = "none"; }}
+              >
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: ACCENT, display: "flex", alignItems: "center", gap: 6 }}>
+                    {currentSessionLabel}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: ACCENT, transform: isSessionTypeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
+                      <polyline points="6,9 12,15 18,9"/>
+                    </svg>
+                  </div>
+                </div>
+              </button>
+
+              {isSessionTypeOpen && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, marginTop: 4,
+                  background: WHITE, borderRadius: 8, border: `1px solid ${BORDER}`,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                  minWidth: 200, zIndex: 9998,
+                  animation: "fadeUp 0.15s ease-out"
+                }}>
+                  {SESSION_TYPE_OPTIONS.map((opt, idx) => (
+                    <div
+                      key={opt.id}
+                      onClick={() => {
+                        setSessionType(opt.id);
+                        setIsSessionTypeOpen(false);
+                        // Reset selections when switching modes
+                        if (opt.id === "personal") { setSelectedClass(""); }
+                        else { setSelectedClient(""); }
+                      }}
+                      style={{
+                        padding: "10px 14px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: sessionType === opt.id ? opt.light : "transparent",
+                        borderBottom: idx < SESSION_TYPE_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                        fontSize: 13, fontWeight: sessionType === opt.id ? 600 : 500,
+                        color: sessionType === opt.id ? opt.color : TEXT,
+                        transition: "background 0.15s ease"
+                      }}
+                      onMouseEnter={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "#f5f7f6"; }}
+                      onMouseLeave={e => { if (sessionType !== opt.id) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: opt.color, flexShrink: 0 }} />
+                      <span style={{ flex: 1 }}>{opt.label}</span>
+                      {sessionType === opt.id && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={opt.color} strokeWidth="2.5" strokeLinecap="round">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           
@@ -16208,25 +16801,34 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
           </div>
           
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Client Dropdown */}
+            {/* Client / Class Dropdown */}
             <div style={{ position: "relative", zIndex: 9999 }}>
               <button
                 onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "8px 14px", borderRadius: 8,
-                  background: selectedClient ? TEAL_LIGHT : "#f0f4f3",
-                  border: `1px solid ${selectedClient ? TEAL : BORDER}`,
+                  background: (isClassMode ? selectedClass : selectedClient) ? ACCENT_LIGHT : "#f0f4f3",
+                  border: `1px solid ${(isClassMode ? selectedClass : selectedClient) ? ACCENT : BORDER}`,
                   cursor: "pointer", fontSize: 13, fontWeight: 500,
-                  color: selectedClient ? TEAL : TEXT_SEC,
+                  color: (isClassMode ? selectedClass : selectedClient) ? ACCENT : TEXT_SEC,
                   transition: "all 0.15s ease"
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span>{selectedClient || "Select Client"}</span>
+                {isClassMode ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                )}
+                <span>{isClassMode ? (selectedClass || "Select Class") : (selectedClient || "Select Client")}</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: isClientDropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}>
                   <polyline points="6,9 12,15 18,9"/>
                 </svg>
@@ -16242,14 +16844,52 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 zIndex: 9999,
                 animation: "fadeUp 0.15s ease-out"
               }}>
-                {clients.length > 0 ? clients.map((client, idx) => (
+                {isClassMode ? (
+                  CLASS_OPTIONS.map((cls, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => { setSelectedClass(cls.name); setIsClientDropdownOpen(false); }}
+                      style={{
+                        padding: "10px 12px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: selectedClass === cls.name ? ACCENT_LIGHT : "transparent",
+                        borderBottom: idx < CLASS_OPTIONS.length - 1 ? `1px solid ${BORDER}` : "none",
+                        transition: "background 0.15s ease"
+                      }}
+                      onMouseEnter={e => { if (selectedClass !== cls.name) e.currentTarget.style.background = "#f5f7f6"; }}
+                      onMouseLeave={e => { if (selectedClass !== cls.name) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: ACCENT_LIGHT, color: ACCENT,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: TEXT }}>{cls.name}</div>
+                        <div style={{ fontSize: 10, color: TEXT_SEC }}>{cls.detail}</div>
+                      </div>
+                      {selectedClass === cls.name && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                    </div>
+                  ))
+                ) : clients.length > 0 ? clients.map((client, idx) => (
                   <div
                     key={idx}
                     onClick={() => { setSelectedClient(client.name); setIsClientDropdownOpen(false); }}
                     style={{
                       padding: "10px 12px", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: 10,
-                      background: selectedClient === client.name ? TEAL_LIGHT : "transparent",
+                      background: selectedClient === client.name ? ACCENT_LIGHT : "transparent",
                       borderBottom: idx < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                       transition: "background 0.15s ease"
                     }}
@@ -16258,7 +16898,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   >
                     <div style={{
                       width: 28, height: 28, borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${TEAL}, ${SAGE})`,
+                      background: `linear-gradient(135deg, ${ACCENT}, ${SAGE})`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       color: WHITE, fontSize: 11, fontWeight: 600
                     }}>
@@ -16269,7 +16909,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                       <div style={{ fontSize: 10, color: TEXT_SEC }}>{client.program || "No program"}</div>
                     </div>
                     {selectedClient === client.name && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
                         <polyline points="20,6 9,17 4,12"/>
                       </svg>
                     )}
@@ -16907,6 +17547,9 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   );
                 })()
               ) : expandedDay.date && (
+                isClassMode ? (
+                  <CoachAssignSelect value={assignedCoach} onChange={setAssignedCoach} />
+                ) : (
                 <button
                   onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
                   style={{
@@ -16933,6 +17576,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                   </div>
                   {isWorkoutCompleted(expandedDay.date) ? "Completed" : "Mark Complete"}
                 </button>
+                )
               )}
             </div>
             
@@ -17077,8 +17721,13 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                 </div>
               </div>
               
-              {/* Mobile Mark Complete Button - hidden for view-only */}
+              {/* Mobile Mark Complete / Assign Coach - hidden for view-only */}
               {expandedDay.date && !expandedDay.viewOnly && (
+                isClassMode ? (
+                  <div style={{ marginTop: 12 }}>
+                    <CoachAssignSelect value={assignedCoach} onChange={setAssignedCoach} />
+                  </div>
+                ) : (
                 <button
                   onClick={(e) => toggleWorkoutComplete(expandedDay.date, e)}
                   style={{
@@ -17109,6 +17758,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
                     </>
                   )}
                 </button>
+                )
               )}
             </div>
           ) : (
@@ -18751,7 +19401,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═════════════════════════════════════════════
+/* ═════════════════════════���═══════════════════
    MAIN DASHBOARD COMPONENT
    ══════════════════════════���═════��════════════ */
 // ═══════════════════════════════════════════════════════════════
@@ -20354,6 +21004,9 @@ export default function MiltonDashboard() {
   programName: "Custom Program",
   weeks: 4
   });
+  } else if (templateType === "classes") {
+  setCanvasType("semiPrivate");
+  setCanvasData({});
   } else if (templateType === "semiPrivate") {
   setCanvasType("semiPrivate");
   setCanvasData({});
@@ -20447,7 +21100,9 @@ export default function MiltonDashboard() {
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
-  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
+  onViewProgramming={() => setCanvasType("programming")}
+  typeToggle={<ClassTypeToggle active="semi" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
   {canvasType === "semiPrivateSession" && canvasData?.sessionId && (
@@ -20473,6 +21128,9 @@ export default function MiltonDashboard() {
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
+  onViewProgramming={() => setCanvasType("programming")}
+  typeToggle={<ClassTypeToggle active="group" onChange={(t) => setCanvasType(t === "group" ? "groupClass" : "semiPrivate")} />}
   />
   )}
   {canvasType === "groupClassSession" && canvasData?.sessionId && (
@@ -20529,7 +21187,7 @@ export default function MiltonDashboard() {
   
   
   
-  {/* ═══ MAIN CONTENT ═══ */}
+  {/* ══��� MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
         <main style={{ flex: 1, overflowY: "auto" }}>
           <ClientProfile
@@ -21131,7 +21789,7 @@ export default function MiltonDashboard() {
   onDashboardEditProcessed={handleDashboardEditResult}
   sessions={sessions}
   onSessionClick={(sessId) => { setCanvasMode(false); setActiveSessionId(sessId); }}
-  onCreateSession={(newSession) => setSessions(prev => [...prev, newSession])}
+  onCreateSession={(newSession) => setSessions(prev => [...prev, ...(Array.isArray(newSession) ? newSession : [newSession])])}
   onUpdateSession={handleUpdateSession}
   onOpenFullProfile={(clientId) => { setCanvasMode(false); setSelectedClient(clientId); }}
   />
