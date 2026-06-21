@@ -21224,6 +21224,8 @@ export default function MiltonDashboard() {
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "program", label: "Programs", action: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "users", label: "Classes", action: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "aiWorkflow", label: "AI Workflows", action: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "aiDashboard", label: "AI Dashboards", action: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
