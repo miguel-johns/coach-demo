@@ -265,7 +265,8 @@ function NavIcon({ icon, size = 20 }) {
   layout: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><rect x="11" y="11" width="8" height="4" rx="1"/><rect x="11" y="17" width="5" height="2" rx="0.5"/></svg>,
   program: <svg {...s} viewBox="0 0 24 24"><path d="M9 2h6a1 1 0 011 1v1h1a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1z"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>,
   aiWorkflow: <svg {...s} viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="5.5" height="5.5" rx="1.5"/><rect x="2.5" y="15" width="5.5" height="5.5" rx="1.5"/><rect x="14.5" y="9.25" width="5.5" height="5.5" rx="1.5"/><path d="M8 6.25h2.5a2 2 0 012 2V12"/><path d="M8 17.75h2.5a2 2 0 002-2V12"/><line x1="12.5" y1="12" x2="14.5" y2="12"/><path d="M19.5 2.2l.55 1.45L21.5 4.2l-1.45.55L19.5 6.2l-.55-1.45L17.5 4.2l1.45-.55z"/></svg>,
-  aiDashboard: <svg {...s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="9" x2="12" y2="21"/><path d="M5.5 18l1.4-1.9 1.2 1 1.5-2.2"/><path d="M16.8 12.4l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z"/></svg>,
+  aiDashboard: <svg {...s} viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><line x1="10.25" y1="5" x2="13.75" y2="5"/><line x1="10.5" y1="18.75" x2="13.5" y2="18.75"/></svg>,
+  playbook: <svg {...s} viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 015.5 3H19a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 00-2 2z"/><path d="M4 19V4.5"/><line x1="8" y1="7.5" x2="16" y2="7.5"/><line x1="8" y1="11" x2="13" y2="11"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -2029,7 +2030,7 @@ function ClassTypeToggle({ active, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SEMI-PRIVATE LIST - List view of semi-private sessions
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
   sessions, 
   clients, 
@@ -21226,7 +21227,7 @@ export default function MiltonDashboard() {
                   { icon: "users", label: "Classes", action: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "aiWorkflow", label: "AI Workflows", action: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "aiDashboard", label: "AI Dashboards", action: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
+                  { icon: "playbook", label: "Playbook", action: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
                   <div
                     key={item.icon}
