@@ -10628,7 +10628,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       tag: "Welcome", tagColor: C.teal700, tagBg: C.teal50,
       channel: "SMS",
       desc: "Fires immediately after signup. Sets expectations, links to intake form, confirms first session time.",
-      sample: "Welcome to the work. Your first session is Thursday at 6am. Fill out your intake here before then: [link]. Bring water and something you can squat in. �� Miguel",
+      sample: "Welcome to the work. Your first session is Thursday at 6am. Fill out your intake here before then: [link]. Bring water and something you can squat in. ��� Miguel",
       meta: "Trigger: on signup · Uses your direct-tone rule"
     },
     { 
@@ -13600,7 +13600,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��══════════════��═══════════════════════════════════════════════
+// ��═════════════����═══════════════════════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -21220,7 +21220,7 @@ export default function MiltonDashboard() {
                 {[
                   { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "program", label: "Programs", action: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
+                  { icon: "program", label: "Programs", action: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "users", label: "Classes", action: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                   { icon: "canvas", label: "Canvas", action: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } }
                 ].map(item => (
