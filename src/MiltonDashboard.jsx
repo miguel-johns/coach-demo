@@ -12649,7 +12649,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═══════════════════════════════════════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════════������═══════════════════════════════════════════════
+// ��════════════������════════════════��══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -13255,7 +13255,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ═══════════════════════════════════════════��═══════════════════
+// ═════════════════════════════��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -19578,7 +19578,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
 
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
-  const [showWelcomeVideo, setShowWelcomeVideo] = useState(true);
+  const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
