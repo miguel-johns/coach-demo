@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════���══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════════������════════════════��══════════════════════════════
+// ��════════════������═══════════════����══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -13255,7 +13255,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ═════════════════════════════��═════════════��═══════════════════
+// ═══════════════════════════��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -19586,6 +19586,7 @@ export default function MiltonDashboard() {
   const [hoveredClient, setHoveredClient] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [homeView, setHomeView] = useState("cards"); // "cards" | "clients" | "analytics"
   const [clientFilter, setClientFilter] = useState(null);
   const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
   const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
@@ -20659,37 +20660,27 @@ export default function MiltonDashboard() {
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {[
-                  { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "program", label: "Programs", action: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "users", label: "Classes", action: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "aiWorkflow", label: "AI Workflows", action: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "aiDashboard", label: "AI Dashboards", action: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "playbook", label: "Playbook", action: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } }
-                ].map(item => (
-                  <div
-                    key={item.icon}
-                    onClick={item.action}
-                    style={{
-                      width: isMobile ? 32 : 36, 
-                      height: isMobile ? 32 : 36, 
-                      borderRadius: 10,
-                      background: "#f0f4f3", border: `1px solid ${BORDER}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: item.action ? "pointer" : "default", color: TEXT_SEC,
-                      opacity: item.action ? 1 : 0.5,
-                      transition: "all 0.15s ease"
-                    }}
-                    title={item.label}
-                    onMouseEnter={e => { if (item.action && !isMobile) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
-                    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; } }}
-                  >
-                    <NavIcon icon={item.icon} size={isMobile ? 16 : 18} />
-                  </div>
-                ))}
-              </div>
+              {homeView === "cards" ? (
+                <div>
+                  <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>Home</div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your coaching command center</div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => setHomeView("cards")}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+                    padding: "8px 14px", borderRadius: 10, background: "#f0f4f3",
+                    border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontWeight: 600,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
+                  onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = BORDER; } }}
+                >
+                  <NavIcon icon="chevron-left" size={18} />
+                  {homeView === "clients" ? "Clients" : "Analytics"}
+                </div>
+              )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {!isMobile && (<>
@@ -20801,6 +20792,110 @@ export default function MiltonDashboard() {
           </div>
         </div>
 
+        {/* ═══ HOME CARDS VIEW ═══ */}
+        {homeView === "cards" && (
+          <>
+            {/* Feature data card: Active Clients & Growth */}
+            <div
+              onClick={() => setHomeView("analytics")}
+              style={{
+                background: WHITE, borderRadius: 18, border: `1px solid ${BORDER}`,
+                boxShadow: "0 2px 10px rgba(0,0,0,0.05)", padding: isMobile ? "18px" : "22px 26px",
+                cursor: "pointer", transition: "all 0.18s ease",
+                display: "flex", flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between",
+                gap: isMobile ? 16 : 24
+              }}
+              onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 6px 20px rgba(43,122,120,0.14)"; e.currentTarget.style.borderColor = TEAL; } }}
+              onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = BORDER; } }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Active Clients & Growth</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: isMobile ? 38 : 48, fontWeight: 700, color: TEXT, letterSpacing: "-0.03em", lineHeight: 1 }}>12</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: ALERT_GREEN, background: "#e8f5e9", padding: "3px 9px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={ALERT_GREEN} strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
+                    +3 this month
+                  </span>
+                </div>
+                <div style={{ fontSize: 13, color: TEXT_SEC, fontWeight: 500 }}>
+                  Up from <span style={{ fontWeight: 700, color: TEXT }}>9</span> clients in January. Tap to view full analytics.
+                </div>
+              </div>
+              {/* Growth mini bars */}
+              {(() => {
+                const months = [
+                  { label: "Sep", value: 3 }, { label: "Oct", value: 5 }, { label: "Nov", value: 7 },
+                  { label: "Dec", value: 8 }, { label: "Jan", value: 10 }, { label: "Feb", value: 12 },
+                ];
+                const maxVal = 12;
+                const barH = isMobile ? 50 : 64;
+                return (
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 9, flexShrink: 0 }}>
+                    {months.map((m, j) => {
+                      const h = Math.max(4, (m.value / maxVal) * barH);
+                      const isLast = j === months.length - 1;
+                      const intensity = 0.18 + (j / (months.length - 1)) * 0.82;
+                      return (
+                        <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <div style={{
+                            width: isMobile ? 14 : 18, height: h, borderRadius: 5,
+                            background: isLast ? `linear-gradient(180deg, ${TEAL}, ${SAGE})` : `rgba(43,122,120,${intensity})`
+                          }} />
+                          <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 500 }}>{m.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Action cards */}
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
+              {[
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", onClick: () => setHomeView("clients") },
+                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
+                { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Programming", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("programming"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "users", label: "Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "aiWorkflow", label: "Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+              ].map(card => (
+                <div
+                  key={card.label}
+                  onClick={card.onClick}
+                  style={{
+                    background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "16px" : "20px",
+                    cursor: "pointer", transition: "all 0.18s ease",
+                    display: "flex", flexDirection: "column", gap: isMobile ? 10 : 12, minWidth: 0
+                  }}
+                  onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.10)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = card.color; } }}
+                  onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = BORDER; } }}
+                >
+                  <div style={{
+                    width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: 12,
+                    background: `${card.color}1a`, color: card.color,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <NavIcon icon={card.icon} size={isMobile ? 22 : 24} />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>{card.label}</div>
+                    <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2, lineHeight: 1.4 }}>{card.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ═══ ANALYTICS VIEW ═══ */}
+        {homeView === "analytics" && (<>
+        <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", marginBottom: 2 }}>Analytics</div>
         {/* KPI Cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
 
@@ -20999,7 +21094,10 @@ export default function MiltonDashboard() {
           </div>
 
         </div>
+        </>)}
 
+        {/* ═══ CLIENTS VIEW ═══ */}
+        {homeView === "clients" && (<>
         {/* Service Type Tab Bar */}
         {(() => {
           // Filter clients based on service type tab and dropdown
@@ -21197,6 +21295,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
         )}
+        </>)}
       </main>
       ) : null}
 
