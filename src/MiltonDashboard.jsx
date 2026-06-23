@@ -6222,7 +6222,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         Back to {client.name}
       </div>}
 
-      {/* ─── HERO: ATTENDANCE RATE ─── */}
+      {/* ─── HERO: ATTENDANCE RATE ──��� */}
       <SectionCard style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         textAlign: "center", padding: isMobile ? "28px 20px" : "36px 32px",
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════���═══��������═��═════��═════��═����══════════════════════════════
+// ���════════���═══��������═��═════��═════��═����══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -20796,11 +20796,23 @@ export default function MiltonDashboard() {
         {homeView === "cards" && (
           <>
             {/* Action cards */}
+            <style>{`
+              .v0-card { position: relative; background: ${WHITE}; border: 1px solid ${BORDER}; border-radius: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; overflow: hidden; transition: transform .22s cubic-bezier(.34,1.4,.64,1), box-shadow .22s ease, border-color .22s ease; }
+              .v0-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 14px 32px color-mix(in srgb, var(--accent) 24%, transparent); }
+              .v0-card:active { transform: translateY(-1px); }
+              .v0-iconwrap { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+              .v0-card:hover .v0-iconwrap { transform: scale(1.08) rotate(-3deg); }
+              .v0-arrow { opacity: 0; transform: translateX(-4px); transition: opacity .2s ease, transform .2s ease; color: var(--accent); }
+              .v0-card:hover .v0-arrow { opacity: 1; transform: translateX(2px); }
+              .v0-glow { position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; border-radius: 50%; background: var(--accent); opacity: .06; pointer-events: none; transition: opacity .22s ease, transform .3s ease; }
+              .v0-card:hover .v0-glow { opacity: .13; transform: scale(1.2); }
+              @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
+            `}</style>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
-                { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Meal Plans", desc: "Nutrition & meal plans", color: "#6aa84f", onClick: () => { setCanvasType("mealPlan"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
@@ -20812,105 +20824,51 @@ export default function MiltonDashboard() {
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
-                card.featured ? (
-                  <div
-                    key={card.label}
-                    onClick={card.onClick}
-                    style={{
-                      gridColumn: "1 / -1",
-                      background: `linear-gradient(135deg, ${card.color} 0%, #3aafa9 100%)`,
-                      borderRadius: 18, border: "none",
-                      boxShadow: "0 6px 20px rgba(43,122,120,0.28)", padding: isMobile ? "18px" : "22px 26px",
-                      cursor: "pointer", transition: "all 0.18s ease",
-                      display: "flex", flexDirection: isMobile ? "column" : "row",
-                      alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between",
-                      gap: isMobile ? 16 : 24
-                    }}
-                    onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 10px 28px rgba(43,122,120,0.40)"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
-                    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 6px 20px rgba(43,122,120,0.28)"; e.currentTarget.style.transform = "translateY(0)"; } }}
-                  >
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                        <div style={{
-                          width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: 12,
-                          background: "rgba(255,255,255,0.18)", color: "#fff",
-                          display: "flex", alignItems: "center", justifyContent: "center"
-                        }}>
-                          <NavIcon icon={card.icon} size={isMobile ? 22 : 24} />
-                        </div>
-                        <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{card.label}</div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: isMobile ? 38 : 48, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{card.count}</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", background: "rgba(255,255,255,0.22)", padding: "3px 9px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
-                          +3 this month
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{card.desc}</div>
-                    </div>
-                    {/* Growth mini bars */}
-                    {(() => {
-                      const months = [
-                        { label: "Sep", value: 3 }, { label: "Oct", value: 5 }, { label: "Nov", value: 7 },
-                        { label: "Dec", value: 8 }, { label: "Jan", value: 10 }, { label: "Feb", value: 12 },
-                      ];
-                      const maxVal = 12;
-                      const barH = isMobile ? 50 : 64;
-                      return (
-                        <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 9, flexShrink: 0 }}>
-                          {months.map((m, j) => {
-                            const h = Math.max(4, (m.value / maxVal) * barH);
-                            const isLast = j === months.length - 1;
-                            const intensity = 0.35 + (j / (months.length - 1)) * 0.55;
-                            return (
-                              <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                                <div style={{
-                                  width: isMobile ? 14 : 18, height: h, borderRadius: 5,
-                                  background: isLast ? "#fff" : `rgba(255,255,255,${intensity})`
-                                }} />
-                                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{m.label}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                ) : (
                 <div
                   key={card.label}
+                  className="v0-card"
                   onClick={card.onClick}
-                  style={{
-                    background: WHITE, borderRadius: 16, border: `1px solid ${BORDER}`,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)", padding: isMobile ? "16px" : "20px",
-                    cursor: "pointer", transition: "all 0.18s ease",
-                    display: "flex", flexDirection: "column", gap: isMobile ? 10 : 12, minWidth: 0
-                  }}
-                  onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.10)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = card.color; } }}
-                  onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = BORDER; } }}
+                  style={{ "--accent": card.color, padding: isMobile ? "16px" : "20px" }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{
-                      width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: 12,
-                      background: `${card.color}1a`, color: card.color,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <NavIcon icon={card.icon} size={isMobile ? 22 : 24} />
+                  <div className="v0-glow" aria-hidden="true" />
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" }}>
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <div className="v0-iconwrap" style={{
+                        width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, borderRadius: 14,
+                        background: `linear-gradient(135deg, ${card.color}29, ${card.color}0d)`, color: card.color,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <NavIcon icon={card.icon} size={isMobile ? 22 : 25} />
+                      </div>
+                      {card.badge > 0 && (
+                        <span style={{
+                          position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
+                          borderRadius: 999, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
+                          boxShadow: "0 2px 6px rgba(239,68,68,0.45)", animation: "v0-badge-pulse 2.2s ease-in-out infinite"
+                        }}>{card.badge}</span>
+                      )}
                     </div>
-                    {card.count != null && (
-                      <span style={{
-                        fontSize: isMobile ? 22 : 26, fontWeight: 700, color: card.color,
-                        letterSpacing: "-0.02em", lineHeight: 1
-                      }}>{card.count}</span>
+                    {card.count != null ? (
+                      <span style={{ fontSize: isMobile ? 24 : 28, fontWeight: 700, color: card.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{card.count}</span>
+                    ) : (
+                      <span className="v0-arrow" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      </span>
                     )}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>{card.label}</div>
-                    <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2, lineHeight: 1.4 }}>{card.desc}</div>
+                  <div style={{ minWidth: 0, marginTop: isMobile ? 12 : 16, position: "relative" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>{card.label}</span>
+                      {card.badge > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "#fef2f2", padding: "2px 8px", borderRadius: 999 }}>
+                          {card.badge} {card.badgeLabel}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>{card.desc}</div>
                   </div>
                 </div>
-                )
               ))}
             </div>
           </>
