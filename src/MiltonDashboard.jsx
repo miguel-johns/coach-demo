@@ -381,7 +381,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ════════════════════════════��══════════════════════════════════
+// ═══════════����════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
@@ -803,7 +803,7 @@ function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CLIENT TILE - Individual client card within SessionCanvas
-// ═══════════════════════════════════════════════════���═══════════
+// ═══════════════════════════���������════════════════════���═══════════
 function SessionClientTile({ 
   client, 
   clientId,
@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════��������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -3183,7 +3183,7 @@ function RecurrenceScheduler({ accent, startDate, setStartDate, repeat, setRepea
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════���══════════
 // CLASS SCHEDULE VIEW - Weekly overview of recurring classes
 // ═══════════════════════════════════════════════════════════════
 const timeRank = (t) => {
@@ -6222,7 +6222,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         Back to {client.name}
       </div>}
 
-      {/* ─── HERO: ATTENDANCE RATE ─── */}
+      {/* ─── HERO: ATTENDANCE RATE ──��� */}
       <SectionCard style={{
         background: `linear-gradient(135deg, #f7faf9, #eef6f3, #f0f8f5)`,
         textAlign: "center", padding: isMobile ? "28px 20px" : "36px 32px",
@@ -6274,7 +6274,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ─── GOAL PROGRESS ─── */}
+      {/* ──��� GOAL PROGRESS ─── */}
       <SectionCard style={{ background: `linear-gradient(160deg, #f7fcfb, #eef8f5, #f5faf8)` }}>
         <div style={{ marginBottom: 6 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.1em" }}>Progress Toward Goal</div>
@@ -12589,7 +12589,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   if (setChatMessages) {
                     setChatMessages([{
                       type: "ai",
-                      text: "Let's build a custom workflow. Who's this for — an audience, a specific client, or an event?",
+                      text: "Let's build a custom workflow. Who's this for �� an audience, a specific client, or an event?",
                       suggestions: ["For an audience (like all new PT clients)", "For a specific client", "For an event or date"]
                     }]);
                   }
@@ -12649,9 +12649,9 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════��═══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
   const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -12737,7 +12737,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
       icon: "handshake",
       color: "#db2777",
       bgColor: "#fef2f6",
-      description: "How we sell — discovery, pricing, offers, and objection handling.",
+      description: "How we sell ��� discovery, pricing, offers, and objection handling.",
       defaultRules: [
         { title: "Discovery first", description: "Every prospect gets a discovery call before any pricing conversation." },
         { title: "CLOSER framework", description: "Use the CLOSER framework on discovery calls." },
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════════������═══════════════════════════════════════════════
+// ���════════���═══��������═��═════��═════��═����══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -13255,7 +13255,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ═══════════════════════════════════════════��═══════════════════
+// ═══��══════��══��═══��═��═══����══��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -19578,7 +19578,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
 
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
-  const [showWelcomeVideo, setShowWelcomeVideo] = useState(true);
+  const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
   const [clients, setClients] = useState([...initialClients]);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
@@ -19586,6 +19586,7 @@ export default function MiltonDashboard() {
   const [hoveredClient, setHoveredClient] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [homeView, setHomeView] = useState("cards"); // "cards" | "clients" | "analytics"
   const [clientFilter, setClientFilter] = useState(null);
   const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
   const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
@@ -20659,37 +20660,27 @@ export default function MiltonDashboard() {
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {[
-                  { icon: "inbox", label: "Inbox", action: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "calendar", label: "Schedule", action: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "program", label: "Programs", action: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "users", label: "Classes", action: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "aiWorkflow", label: "AI Workflows", action: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "aiDashboard", label: "AI Dashboards", action: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
-                  { icon: "playbook", label: "Playbook", action: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } }
-                ].map(item => (
-                  <div
-                    key={item.icon}
-                    onClick={item.action}
-                    style={{
-                      width: isMobile ? 32 : 36, 
-                      height: isMobile ? 32 : 36, 
-                      borderRadius: 10,
-                      background: "#f0f4f3", border: `1px solid ${BORDER}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: item.action ? "pointer" : "default", color: TEXT_SEC,
-                      opacity: item.action ? 1 : 0.5,
-                      transition: "all 0.15s ease"
-                    }}
-                    title={item.label}
-                    onMouseEnter={e => { if (item.action && !isMobile) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
-                    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT_SEC; e.currentTarget.style.borderColor = BORDER; } }}
-                  >
-                    <NavIcon icon={item.icon} size={isMobile ? 16 : 18} />
-                  </div>
-                ))}
-              </div>
+              {homeView === "cards" ? (
+                <div>
+                  <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>Home</div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your coaching command center</div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => setHomeView("cards")}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+                    padding: "8px 14px", borderRadius: 10, background: "#f0f4f3",
+                    border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontWeight: 600,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.background = TEAL_LIGHT; e.currentTarget.style.color = TEAL; e.currentTarget.style.borderColor = TEAL; } }}
+                  onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.background = "#f0f4f3"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = BORDER; } }}
+                >
+                  <NavIcon icon="chevron-left" size={18} />
+                  {homeView === "clients" ? "Clients" : "Analytics"}
+                </div>
+              )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {!isMobile && (<>
@@ -20801,6 +20792,91 @@ export default function MiltonDashboard() {
           </div>
         </div>
 
+        {/* ═══ HOME CARDS VIEW ═══ */}
+        {homeView === "cards" && (
+          <>
+            {/* Action cards */}
+            <style>{`
+              .v0-card { position: relative; background: ${WHITE}; border: 1px solid ${BORDER}; border-radius: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; overflow: hidden; transition: transform .22s cubic-bezier(.34,1.4,.64,1), box-shadow .22s ease, border-color .22s ease; }
+              .v0-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 14px 32px color-mix(in srgb, var(--accent) 24%, transparent); }
+              .v0-card:active { transform: translateY(-1px); }
+              .v0-iconwrap { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+              .v0-card:hover .v0-iconwrap { transform: scale(1.08) rotate(-3deg); }
+              .v0-arrow { opacity: 0; transform: translateX(-4px); transition: opacity .2s ease, transform .2s ease; color: var(--accent); }
+              .v0-card:hover .v0-arrow { opacity: 1; transform: translateX(2px); }
+              .v0-glow { position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; border-radius: 50%; background: var(--accent); opacity: .06; pointer-events: none; transition: opacity .22s ease, transform .3s ease; }
+              .v0-card:hover .v0-glow { opacity: .13; transform: scale(1.2); }
+              @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
+            `}</style>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
+              {[
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
+                { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Meal Plans", desc: "Nutrition & meal plans", color: "#6aa84f", onClick: () => { setCanvasType("mealPlan"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
+                { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+              ].map(card => (
+                <div
+                  key={card.label}
+                  className="v0-card"
+                  onClick={card.onClick}
+                  style={{ "--accent": card.color, padding: isMobile ? "16px" : "20px" }}
+                >
+                  <div className="v0-glow" aria-hidden="true" />
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" }}>
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <div className="v0-iconwrap" style={{
+                        width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, borderRadius: 14,
+                        background: `linear-gradient(135deg, ${card.color}29, ${card.color}0d)`, color: card.color,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <NavIcon icon={card.icon} size={isMobile ? 22 : 25} />
+                      </div>
+                      {card.badge > 0 && (
+                        <span style={{
+                          position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
+                          borderRadius: 999, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
+                          boxShadow: "0 2px 6px rgba(239,68,68,0.45)", animation: "v0-badge-pulse 2.2s ease-in-out infinite"
+                        }}>{card.badge}</span>
+                      )}
+                    </div>
+                    {card.count != null ? (
+                      <span style={{ fontSize: isMobile ? 24 : 28, fontWeight: 700, color: card.color, letterSpacing: "-0.02em", lineHeight: 1 }}>{card.count}</span>
+                    ) : (
+                      <span className="v0-arrow" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0, marginTop: isMobile ? 12 : 16, position: "relative" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>{card.label}</span>
+                      {card.badge > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "#fef2f2", padding: "2px 8px", borderRadius: 999 }}>
+                          {card.badge} {card.badgeLabel}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>{card.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ═══ ANALYTICS VIEW ═══ */}
+        {homeView === "analytics" && (<>
+        <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", marginBottom: 2 }}>Analytics</div>
         {/* KPI Cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
 
@@ -20999,7 +21075,10 @@ export default function MiltonDashboard() {
           </div>
 
         </div>
+        </>)}
 
+        {/* ═══ CLIENTS VIEW ═══ */}
+        {homeView === "clients" && (<>
         {/* Service Type Tab Bar */}
         {(() => {
           // Filter clients based on service type tab and dropdown
@@ -21197,6 +21276,7 @@ export default function MiltonDashboard() {
             </div>
           </div>
         )}
+        </>)}
       </main>
       ) : null}
 
