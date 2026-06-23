@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════�����������������═══���═�����══
+// ══════════════════════════════════════════════════�������������������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═════════════════════════════════════════════���══���═════���══════���═
+// ═══════════════════════════════════════════���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -20820,8 +20820,8 @@ export default function MiltonDashboard() {
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
