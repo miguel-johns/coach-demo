@@ -12649,7 +12649,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-// ══════════════════════��═══════════════════════��═══════��════════
+// ═════════════��════════��═══════════════════════��═══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
@@ -20813,7 +20813,6 @@ export default function MiltonDashboard() {
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Meal Plans", desc: "Nutrition & meal plans", color: "#6aa84f", onClick: () => { setCanvasType("mealPlan"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
@@ -20824,6 +20823,7 @@ export default function MiltonDashboard() {
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
