@@ -803,7 +803,7 @@ function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CLIENT TILE - Individual client card within SessionCanvas
-// ═══════════════════════════��������════════════════════���═══════════
+// ═══════════════════════════���������════════════════════���═══════════
 function SessionClientTile({ 
   client, 
   clientId,
@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════════�����═══���═�����══
+// ═════════════════════════════════════════════════════��������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═════════════════════════════════════════════════════════════���═
+// ══════════════════════════════════════════════════════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -12737,7 +12737,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
       icon: "handshake",
       color: "#db2777",
       bgColor: "#fef2f6",
-      description: "How we sell — discovery, pricing, offers, and objection handling.",
+      description: "How we sell ��� discovery, pricing, offers, and objection handling.",
       defaultRules: [
         { title: "Discovery first", description: "Every prospect gets a discovery call before any pricing conversation." },
         { title: "CLOSER framework", description: "Use the CLOSER framework on discovery calls." },
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════════��������═��═════��═════��═����══════════════════════════════
+// ��════════���═══��������═��═════��═════��═����══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -20798,11 +20798,11 @@ export default function MiltonDashboard() {
             {/* Action cards */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
               {[
-                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, featured: true, onClick: () => setHomeView("clients") },
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "aiWorkflow", label: "Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Programming", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "aiWorkflow", label: "Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
