@@ -381,7 +381,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════����════════════════��══════════════════════════════════
+// ═══════════�����════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ═════════════════════════════════════════════════════��������═══���═�����══
+// ════════════════════════════════════════════════════�����������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -12649,7 +12649,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════════════════════════ */
-// ══════════════════════════════════════════════��═══════��════════
+// ══════════════════════��═══════════════════════��═══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
@@ -20810,7 +20810,7 @@ export default function MiltonDashboard() {
             `}</style>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
               {[
-                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
@@ -20843,9 +20843,10 @@ export default function MiltonDashboard() {
                       {card.badge > 0 && (
                         <span style={{
                           position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
-                          borderRadius: 999, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
+                          borderRadius: 999, background: card.badgeColor || "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
                           display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
-                          boxShadow: "0 2px 6px rgba(239,68,68,0.45)", animation: "v0-badge-pulse 2.2s ease-in-out infinite"
+                          boxShadow: `0 2px 6px ${card.badgeColor || "#ef4444"}73`,
+                          animation: card.badgeColor ? "none" : "v0-badge-pulse 2.2s ease-in-out infinite"
                         }}>{card.badge}</span>
                       )}
                     </div>
@@ -20861,7 +20862,7 @@ export default function MiltonDashboard() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>{card.label}</span>
                       {card.badge > 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "#fef2f2", padding: "2px 8px", borderRadius: 999 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: card.badgeColor || "#ef4444", background: `${card.badgeColor || "#ef4444"}14`, padding: "2px 8px", borderRadius: 999 }}>
                           {card.badge} {card.badgeLabel}
                         </span>
                       )}
