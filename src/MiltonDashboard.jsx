@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════���═�����══
+// ══════════════════════════════════════════════════════���═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -13043,7 +13043,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ��════════════������═��═════��═════��═����══════════════════════════════
+// ��════════════��������═��═════��═════��═����══════════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -13255,7 +13255,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ══════════��══��═══��═��═══����══��═��═════════════��═══════════════════
+// ═══��══════��══��═══��═��═══����══��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -19587,7 +19587,6 @@ export default function MiltonDashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [homeView, setHomeView] = useState("cards"); // "cards" | "clients" | "analytics"
-  const [focusPanel, setFocusPanel] = useState("tasks"); // "tasks" | "clients" | "schedule"
   const [clientFilter, setClientFilter] = useState(null);
   const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
   const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
@@ -20796,134 +20795,10 @@ export default function MiltonDashboard() {
         {/* ═══ HOME CARDS VIEW ═══ */}
         {homeView === "cards" && (
           <>
-            {/* ── Focus strip: animated expanding accordion ── */}
-            {(() => {
-              const urgent = clients.filter(c => c.alertType === "red");
-              const followUps = clients.filter(c => c.alertType === "blue");
-              const taskList = [...urgent, ...followUps].slice(0, 4);
-              const taskCount = urgent.length + followUps.length;
-              const months = [
-                { label: "Sep", value: 3 }, { label: "Oct", value: 5 }, { label: "Nov", value: 7 },
-                { label: "Dec", value: 8 }, { label: "Jan", value: 10 }, { label: "Feb", value: clients.length },
-              ];
-              const maxVal = Math.max(...months.map(m => m.value), 1);
-              const todaysSessions = clients.slice(0, 5);
-
-              const panels = [
-                {
-                  id: "tasks", icon: "inbox", accent: ALERT_RED,
-                  kicker: "Needs your attention", title: `${taskCount} ${taskCount === 1 ? "task" : "tasks"} to handle today`,
-                  cta: "Review tasks", onCta: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); },
-                },
-                {
-                  id: "clients", icon: "users", accent: TEAL,
-                  kicker: "Your roster", title: `${clients.length} active clients`,
-                  cta: "View clients", onCta: () => setHomeView("clients"),
-                },
-                {
-                  id: "schedule", icon: "calendar", accent: SAGE,
-                  kicker: "Today", title: `${todaysSessions.length} sessions scheduled`,
-                  cta: "Open schedule", onCta: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); },
-                },
-              ];
-
-              return (
-                <div style={{ display: "flex", gap: isMobile ? 8 : 12, height: isMobile ? 230 : 200 }}>
-                  {panels.map(p => {
-                    const open = focusPanel === p.id;
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => { if (!open) setFocusPanel(p.id); }}
-                        style={{
-                          flexGrow: open ? 1 : 0, flexShrink: 0,
-                          flexBasis: open ? "auto" : (isMobile ? 60 : 92),
-                          minWidth: open ? 0 : (isMobile ? 60 : 92),
-                          borderRadius: 20, overflow: "hidden", position: "relative",
-                          cursor: open ? "default" : "pointer",
-                          background: open ? WHITE : `${p.accent}14`,
-                          border: `1px solid ${open ? BORDER : "transparent"}`,
-                          boxShadow: open ? "0 4px 18px rgba(0,0,0,0.07)" : "none",
-                          transition: "flex-grow 0.45s cubic-bezier(0.4,0,0.2,1), flex-basis 0.45s cubic-bezier(0.4,0,0.2,1), min-width 0.45s cubic-bezier(0.4,0,0.2,1), background 0.35s ease, box-shadow 0.35s ease",
-                        }}
-                      >
-                        {open ? (
-                          <div style={{ height: "100%", padding: isMobile ? "18px" : "22px 26px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "stretch", justifyContent: "space-between", gap: isMobile ? 14 : 24, animation: "fadeIn 0.5s ease" }}>
-                            <div style={{ minWidth: 0, display: "flex", flexDirection: "column", height: "100%" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                                <span style={{ color: p.accent }}><NavIcon icon={p.icon} size={18} /></span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: p.accent, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p.kicker}</span>
-                              </div>
-                              <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", marginBottom: 12, textWrap: "balance" }}>{p.title}</div>
-
-                              {p.id === "tasks" && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 14 }}>
-                                  {taskList.length > 0 ? taskList.map((c, i) => (
-                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: TEXT }}>
-                                      <span style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: c.alertType === "red" ? ALERT_RED : SAGE }} />
-                                      <span style={{ fontWeight: 600 }}>{c.name}</span>
-                                      <span style={{ color: TEXT_SEC }}>· {c.alert}</span>
-                                    </div>
-                                  )) : <div style={{ fontSize: 13, color: TEXT_SEC }}>You&apos;re all caught up.</div>}
-                                </div>
-                              )}
-
-                              {p.id === "schedule" && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 14 }}>
-                                  {todaysSessions.map((c, i) => (
-                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: TEXT }}>
-                                      <span style={{ fontSize: 11, fontWeight: 600, color: SAGE, minWidth: 52 }}>{["7:00a","8:00a","9:30a","12:00p","4:00p"][i]}</span>
-                                      <span style={{ fontWeight: 600 }}>{c.name}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-
-                              <button
-                                onClick={(e) => { e.stopPropagation(); p.onCta(); }}
-                                style={{
-                                  marginTop: "auto", alignSelf: "flex-start", border: "none", cursor: "pointer",
-                                  background: p.accent, color: "#fff", fontSize: 13, fontWeight: 600,
-                                  padding: "9px 18px", borderRadius: 999, fontFamily: "inherit"
-                                }}
-                              >{p.cta}</button>
-                            </div>
-
-                            {p.id === "clients" && (
-                              <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 9, flexShrink: 0, paddingBottom: 4 }}>
-                                {months.map((m, j) => {
-                                  const h = Math.max(6, (m.value / maxVal) * (isMobile ? 60 : 90));
-                                  const isLast = j === months.length - 1;
-                                  const intensity = 0.2 + (j / (months.length - 1)) * 0.8;
-                                  return (
-                                    <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                                      <div style={{ width: isMobile ? 14 : 18, height: h, borderRadius: 5, background: isLast ? `linear-gradient(180deg, ${TEAL}, ${SAGE})` : `rgba(43,122,120,${intensity})` }} />
-                                      <span style={{ fontSize: 9, color: TEXT_SEC, fontWeight: 500 }}>{m.label}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ height: "100%", padding: "16px 8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 12 }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#fff", color: p.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                              <NavIcon icon={p.icon} size={20} />
-                            </div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, writingMode: "vertical-rl", transform: "rotate(180deg)", letterSpacing: "0.01em", whiteSpace: "nowrap" }}>{p.kicker}</div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-
             {/* Action cards */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
               {[
-                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, featured: true, onClick: () => setHomeView("clients") },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
