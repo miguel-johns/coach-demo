@@ -803,7 +803,7 @@ function ServiceTypeEditModal({ isOpen, onClose, clientTypes = [], onSave }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CLIENT TILE - Individual client card within SessionCanvas
-// ════════════════════════════������════════════════════���═══════════
+// ═══════════════════════════��������════════════════════���═══════════
 function SessionClientTile({ 
   client, 
   clientId,
@@ -2029,7 +2029,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════════���═══���═�����══
+// ══════════════════════════════════════════════════════�����═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -20801,10 +20801,10 @@ export default function MiltonDashboard() {
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, featured: true, onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Programming", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
