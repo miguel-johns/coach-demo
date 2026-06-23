@@ -12589,7 +12589,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   if (setChatMessages) {
                     setChatMessages([{
                       type: "ai",
-                      text: "Let's build a custom workflow. Who's this for — an audience, a specific client, or an event?",
+                      text: "Let's build a custom workflow. Who's this for �� an audience, a specific client, or an event?",
                       suggestions: ["For an audience (like all new PT clients)", "For a specific client", "For an event or date"]
                     }]);
                   }
@@ -20801,11 +20801,12 @@ export default function MiltonDashboard() {
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Programming", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "aiWorkflow", label: "Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "users", label: "Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Meal Plans", desc: "Nutrition & meal plans", color: "#6aa84f", onClick: () => { setCanvasType("mealPlan"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
