@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -12651,7 +12651,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   ═════════════════════════════════════════════ */
 // ══════════════════════════════════════════════��═══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
   const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -13255,7 +13255,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ═════════════════��═��═══����══��═��═════════════��═══════════════════
+// ═════════════��═══��═��═══����══��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -20798,7 +20798,7 @@ export default function MiltonDashboard() {
             {/* Action cards */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 14 }}>
               {[
-                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, onClick: () => setHomeView("clients") },
+                { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", count: clients.length, featured: true, onClick: () => setHomeView("clients") },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Playbook", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Member Experience", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
@@ -20811,6 +20811,72 @@ export default function MiltonDashboard() {
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
+                card.featured ? (
+                  <div
+                    key={card.label}
+                    onClick={card.onClick}
+                    style={{
+                      gridColumn: "1 / -1",
+                      background: `linear-gradient(135deg, ${card.color} 0%, #3aafa9 100%)`,
+                      borderRadius: 18, border: "none",
+                      boxShadow: "0 6px 20px rgba(43,122,120,0.28)", padding: isMobile ? "18px" : "22px 26px",
+                      cursor: "pointer", transition: "all 0.18s ease",
+                      display: "flex", flexDirection: isMobile ? "column" : "row",
+                      alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between",
+                      gap: isMobile ? 16 : 24
+                    }}
+                    onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 10px 28px rgba(43,122,120,0.40)"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
+                    onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = "0 6px 20px rgba(43,122,120,0.28)"; e.currentTarget.style.transform = "translateY(0)"; } }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{
+                          width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: 12,
+                          background: "rgba(255,255,255,0.18)", color: "#fff",
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <NavIcon icon={card.icon} size={isMobile ? 22 : 24} />
+                        </div>
+                        <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{card.label}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: isMobile ? 38 : 48, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{card.count}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", background: "rgba(255,255,255,0.22)", padding: "3px 9px", borderRadius: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="1,8 6,3 11,8" /></svg>
+                          +3 this month
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{card.desc}</div>
+                    </div>
+                    {/* Growth mini bars */}
+                    {(() => {
+                      const months = [
+                        { label: "Sep", value: 3 }, { label: "Oct", value: 5 }, { label: "Nov", value: 7 },
+                        { label: "Dec", value: 8 }, { label: "Jan", value: 10 }, { label: "Feb", value: 12 },
+                      ];
+                      const maxVal = 12;
+                      const barH = isMobile ? 50 : 64;
+                      return (
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 9, flexShrink: 0 }}>
+                          {months.map((m, j) => {
+                            const h = Math.max(4, (m.value / maxVal) * barH);
+                            const isLast = j === months.length - 1;
+                            const intensity = 0.35 + (j / (months.length - 1)) * 0.55;
+                            return (
+                              <div key={j} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                                <div style={{
+                                  width: isMobile ? 14 : 18, height: h, borderRadius: 5,
+                                  background: isLast ? "#fff" : `rgba(255,255,255,${intensity})`
+                                }} />
+                                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{m.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
                 <div
                   key={card.label}
                   onClick={card.onClick}
@@ -20843,6 +20909,7 @@ export default function MiltonDashboard() {
                     <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2, lineHeight: 1.4 }}>{card.desc}</div>
                   </div>
                 </div>
+                )
               ))}
             </div>
           </>
