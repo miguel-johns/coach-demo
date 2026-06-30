@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import WorkoutCanvasPro from "./WorkoutCanvasPro";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
 import NutritionDashboard from "./dashboards/NutritionDashboard";
 import ProgressDashboard from "./dashboards/ProgressDashboard";
@@ -381,7 +382,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════������════════════════��══════════════════════════════════
+// ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════���������═══════════════════════════════
 const initialSessions = [
@@ -5886,7 +5887,7 @@ isMobile={true}
             />
           )}
           {canvasType === "workout" && (
-            <WorkoutCanvas 
+            <WorkoutCanvasPro 
               data={canvasData}
               clients={clients}
               onClose={onClose}
@@ -20507,7 +20508,7 @@ export default function MiltonDashboard() {
             />
           )}
           {canvasType === "workout" && (
-            <WorkoutCanvas 
+            <WorkoutCanvasPro 
               data={canvasData}
               clients={clients}
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
