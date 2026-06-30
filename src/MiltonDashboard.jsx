@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������═══════════════════════════════
+// ═���═════════════════════════════���������════════════════��══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2877,7 +2877,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═════════════════════════════════════════���═���═���══���═════���══════���═
+// ══════════════════��══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -12649,7 +12649,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ═════════════════════════════════════════════ */
+  ═══════════════════════════��═════════════════ */
 // ═════════════���════════��═══════════════════════��═══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
@@ -15538,30 +15538,25 @@ function getFallbackMealPlan() {
 function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Back bar */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
-        borderBottom: "1px solid #ECE9E2", background: "#FBFAF7", flexShrink: 0
-      }}>
-        <button
-          onClick={onHome || onClose}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
-            background: "#fff", border: "1px solid rgba(26,46,42,0.10)", borderRadius: 9,
-            padding: "7px 12px", fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-            color: "#243531", boxShadow: "0 1px 2px rgba(26,46,42,0.05)", transition: "all 0.15s ease"
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
-          title="Back to templates"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15,18 9,12 15,6"/>
-          </svg>
-          Back
-        </button>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>Build Workouts</span>
-      </div>
+      <button
+        onClick={onHome || onClose}
+        style={{
+          position: "absolute", top: 14, right: 16, zIndex: 10,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
+          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+        title="Back to home"
+        aria-label="Back to home"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
       <iframe
         title="Library & Programs"
         srcDoc={libraryProgramsHtml}
