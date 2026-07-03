@@ -4636,7 +4636,7 @@ class Component extends DCLogic {
       intro: 'You have 8 sessions scheduled this week across 3 coaches. Here\u2019s what needs your attention:',
       items: [
         { name:'Sarah Chen', body:' — GOAL REACHED. Hit 135 lb squat. Time to set her next target.' },
-        { name:'Marcus Johnson', body:' — assessment due, it\u2019s been 8 weeks since baseline.' },
+        { name:'Marcus Johnson', body:' �� assessment due, it\u2019s been 8 weeks since baseline.' },
         { name:'Emily Rodriguez', body:' — missed last 2 sessions. Consider a check-in.' },
       ],
       closing: 'Want me to pull up anyone\u2019s week?',
@@ -6156,7 +6156,7 @@ class Component extends DCLogic {
 
     const selIds=Object.keys(st.selected);
     const navTabs=[
-      ['library','Library'],['builder','Programs']
+      ['library','Library']
     ].map(([k,l])=>({ label:l, style:this.navStyle(st.screen===k), onClick:()=>this.setScreen(k), badge:null }));
 
     // merge modal vm
