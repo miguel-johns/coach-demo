@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════����══════════════
+// ═���═════════════════════════════���������════════════════�����══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2030,7 +2030,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════�������������������═══���═�����══
+// ═══════════════════════��══════════════════════════�������������������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2877,7 +2877,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═════════════════����══════════════════════���═���═���══���═════���══════���═
+// ═══════════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -5708,6 +5708,7 @@ function MobileCanvasSheet({
       case "templates": return "Canvas";
       case "mealPlan": return "Meal Plan";
       case "workout": return "Workout Program";
+      case "library": return "Library";
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
@@ -5887,6 +5888,14 @@ isMobile={true}
             />
           )}
           {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              clients={clients}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "library" && (
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
@@ -16536,7 +16545,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 /* ═════════════════════════���═══════════════════
    MAIN DASHBOARD COMPONENT
    ══════════════════════════���═════��════════════ */
-// ════════════════════════════════════════════════════════════��══
+// ═══════════════════════════════════════════════════════════����══
 // PROGRAMMING CANVAS - Admin group / semi-private scheduling + generation
 // ═══════════════════════════════════════════════════════════════
 const CLASS_TIME_SLOTS = ["6:00 AM", "7:00 AM", "9:00 AM", "12:00 PM", "4:30 PM", "5:30 PM", "6:30 PM"];
@@ -18254,6 +18263,14 @@ export default function MiltonDashboard() {
               onHome={() => setCanvasType("templates")}
             />
           )}
+          {canvasType === "library" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              clients={clients}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "messageSequence" && (
             <MessageSequenceCanvas 
               data={canvasData}
@@ -18558,6 +18575,7 @@ export default function MiltonDashboard() {
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
