@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════��������══════════════
+// ═���═════════════════════════════���������════════════════���������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -5891,6 +5891,7 @@ isMobile={true}
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="programs"
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
             />
@@ -5899,6 +5900,7 @@ isMobile={true}
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="library"
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
             />
@@ -6047,7 +6049,7 @@ isMobile={true}
 
 /* ═══════════════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
-   ═════════════════════════════════════════════ */
+   ══════════════════════════════════��══════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showShare, setShowShare] = useState(autoOpenShare);
@@ -12619,7 +12621,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ════════════��═════════════════════════���══���══���═
+/* ════════════��═════════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
@@ -15544,7 +15546,8 @@ function getFallbackMealPlan() {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
+function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both" }) {
+  const libraryHtml = libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
       <button
@@ -15568,7 +15571,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
       </button>
       <iframe
         title="Library & Programs"
-        srcDoc={libraryProgramsHtml}
+        srcDoc={libraryHtml}
         style={{ flex: 1, width: "100%", border: "none", background: "#FBFAF7" }}
       />
     </div>
@@ -16542,7 +16545,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═════════════════════════���═══════════════════
+/* ═════════════════════════���═══════════════��═══
    MAIN DASHBOARD COMPONENT
    ════���═════════════════════���═════��════════════ */
 // ═══════════════════════════════════════════════════════════����══
@@ -18254,6 +18257,7 @@ export default function MiltonDashboard() {
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="programs"
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -18262,6 +18266,7 @@ export default function MiltonDashboard() {
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="library"
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />

@@ -4081,7 +4081,7 @@
                 <div style="position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:5; background:#fff; border:1px solid #D8E5E0; border-radius:12px; box-shadow:0 16px 40px rgba(36,53,49,.18); padding:10px; animation:popIn .15s ease;">
                   <div style="position:relative; display:flex; align-items:center; margin-bottom:8px;">
                     <svg style="position:absolute; left:10px; pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
-                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search��" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
+                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search���" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
                   </div>
                   <div style="display:flex; flex-direction:column; gap:2px; max-height:230px; overflow-y:auto;">
                     <sc-for list="{{ itemMatches }}" as="m" hint-placeholder-count="5">
@@ -4278,6 +4278,7 @@
 
 </div>
 </x-dc>
+<script>window.__LIB_MODE__ = "__LIB_MODE__";</script>
 <script type="text/x-dc" data-dc-script="" data-props="{
   &quot;$preview&quot;: { &quot;width&quot;: 1440, &quot;height&quot;: 880 },
   &quot;accent&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#2B7A78&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#2B7A78&quot;, &quot;#2A5B6E&quot;, &quot;#5B6E2A&quot;, &quot;#8A5A44&quot;, &quot;#444B5A&quot;], &quot;section&quot;: &quot;Theme&quot; },
@@ -4731,7 +4732,11 @@ class Component extends DCLogic {
 
   componentDidMount(){
     this.applyAccent();
-    const ds=this.props.defaultScreen; if(ds && ds!=='library') this.setState({ screen:ds });
+    const rm=(typeof window!=='undefined')?window.__LIB_MODE__:null;
+    const libMode=(rm==='programs'||rm==='library')?rm:'both';
+    if(libMode==='programs'){ this.setState({ screen:'builder' }); }
+    else if(libMode==='library'){ this.setState({ screen:'library' }); }
+    else { const ds=this.props.defaultScreen; if(ds && ds!=='library') this.setState({ screen:ds }); }
     if(this.props.autoProgress===false) this.setState({ autoProgress:false });
   }
   componentDidUpdate(prev){ if(prev.accent!==this.props.accent) this.applyAccent(); }
@@ -5483,7 +5488,7 @@ class Component extends DCLogic {
       onClick:()=>this.togglePgDow(dow) }));
     const cq=(st.pgCoachQuery||'').trim().toLowerCase();
     const coachInit=(n)=> n==='You'?'YOU': n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
-    const coachMenu=this.COACHES.filter(c=>!cq||c.toLowerCase().includes(cq)).map(c=>({ v:c, l:c, sub:c==='You'?'Owner · primary':'Coach', init:coachInit(c), selected:d.coachId===c, onClick:()=>this.setPgCoach(c),
+    const coachMenu=this.COACHES.filter(c=>!cq||c.toLowerCase().includes(cq)).map(c=>({ v:c, l:c, sub:c==='You'?'Owner �� primary':'Coach', init:coachInit(c), selected:d.coachId===c, onClick:()=>this.setPgCoach(c),
       style:'cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; background:'+(d.coachId===c?'#F0F5F2':'transparent')+';',
       avStyle:'width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;letter-spacing:.02em;background:'+(d.coachId===c?'var(--accent)':'#EEF2EF')+';color:'+(d.coachId===c?'#fff':'#6B7A73')+';' }));
     const conflicts=this.pgScheduleConflicts(d);
@@ -6186,9 +6191,12 @@ class Component extends DCLogic {
     const sortItems=sortOptions.map(o=>({ l:o.l, selected:o.v===st.sortBy, onClick:()=>this.setSortVal(o.v), style:ddItemStyle(o.v===st.sortBy) }));
 
     const selIds=Object.keys(st.selected);
-const navTabs=[
+const rmTabs=(typeof window!=='undefined')?window.__LIB_MODE__:null;
+    const libModeTabs=(rmTabs==='programs'||rmTabs==='library')?rmTabs:'both';
+    const navTabs=[
   ['library','Library'],['builder','Programs']
-  ].map(([k,l])=>({ label:l, style:this.navStyle(st.screen===k), onClick:()=>this.setScreen(k), badge:null }));
+  ].filter(([k])=> libModeTabs==='both' || (libModeTabs==='programs'&&k==='builder') || (libModeTabs==='library'&&k==='library'))
+   .map(([k,l])=>({ label:l, style:this.navStyle(st.screen===k), onClick:()=>this.setScreen(k), badge:null }));
 
     // merge modal vm
     const mergeItems=selIds.map(id=>{ const e=this.exercises.find(x=>x.id===id); const picked=st.mergeCanonical===id;
