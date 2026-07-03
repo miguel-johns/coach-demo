@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════�������══════════════
+// ═���═════════════════════════════���������════════════════�����������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2030,7 +2030,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ═══════════════════════��══════════════════════════�������������������═══���═�����══
+// ════════════════════���══��══════════════════════════�������������������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2877,7 +2877,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═══════════════���═����══════════════════════���═���═���══���═════���══════���═
+// ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -5891,6 +5891,7 @@ isMobile={true}
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="programs"
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
             />
@@ -5899,6 +5900,7 @@ isMobile={true}
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="library"
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
             />
@@ -6047,7 +6049,7 @@ isMobile={true}
 
 /* ═══════════════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
-   ═════════════════════════════════════════════ */
+   ══════════════════════════════════��══════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showShare, setShowShare] = useState(autoOpenShare);
@@ -6509,7 +6511,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ─������ STRENGTH PROGRESS (BAR CHARTS) ─── */}
+      {/* ��������� STRENGTH PROGRESS (BAR CHARTS) ─── */}
       {(() => {
         // Generate session history for each lift with progressive overload
         const generateLiftHistory = (baseline, liftIdx) => {
@@ -6769,7 +6771,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ─── THIS WEEK'S FOCUS ─── */}
+      {/* ──�� THIS WEEK'S FOCUS ─── */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
           This Week's Focus
@@ -12619,7 +12621,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ════════════��════════════════════════════���══���═
+/* ═════════��═����═════════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
@@ -13053,7 +13055,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ���════════���═══��������═��═════��═════��═����═══���══════════════════════════
+// ���════════���═══��������═��═════��═════��═����═══���═══════��══════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -15544,7 +15546,8 @@ function getFallbackMealPlan() {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
+function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both" }) {
+  const libraryHtml = libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
       <button
@@ -15568,7 +15571,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [] }) {
       </button>
       <iframe
         title="Library & Programs"
-        srcDoc={libraryProgramsHtml}
+        srcDoc={libraryHtml}
         style={{ flex: 1, width: "100%", border: "none", background: "#FBFAF7" }}
       />
     </div>
@@ -16542,7 +16545,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═════════════════════════���═══════════════════
+/* ═════════════════════════���═══════════════��═══
    MAIN DASHBOARD COMPONENT
    ════���═════════════════════���═════��════════════ */
 // ═══════════════════════════════════════════════════════════����══
@@ -18254,6 +18257,7 @@ export default function MiltonDashboard() {
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="programs"
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -18262,6 +18266,7 @@ export default function MiltonDashboard() {
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
+              mode="library"
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -18571,12 +18576,11 @@ export default function MiltonDashboard() {
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Build Workouts", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Build Meal Plans", desc: "Nutrition & meal plans", color: "#6aa84f", onClick: () => { setCanvasType("mealPlan"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Programs", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
