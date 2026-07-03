@@ -2617,7 +2617,8 @@
        <!-- ===== WORKOUT BUILDER ===== -->
        <sc-if value="{{ inBuilderDetail }}" hint-placeholder-val="{{ false }}">
         <div style="height:100%; display:flex; flex-direction:column;">
-         <sc-if value="{{ noFocus }}" hint-placeholder-val="{{ true }}">
+         <iframe title="Program calendar" srcdoc="{{ calendarSrcDoc }}" sandbox="allow-scripts allow-same-origin allow-popups allow-modals allow-downloads allow-forms" style="flex:1; width:100%; border:0; display:block; background:#F4F5F3;"></iframe>
+         <sc-if value="{{ calNever }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex; align-items:center; gap:14px; padding:14px 28px; border-bottom:1px solid #E0EBE8; flex-wrap:wrap;">
             <button onclick="{{ backToPrograms }}" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; border-radius:10px; border:1px solid #D8E5E0; background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:var(--accent);" style-hover="border-color:var(--accent); background:#F0F5F2;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>{{ builderName }}</button>
             <div style="flex:1;"></div>
@@ -4772,7 +4773,12 @@ class Component extends DCLogic {
     else if(libMode==='library'){ this.setState({ screen:'library' }); }
     else { const ds=this.props.defaultScreen; if(ds && ds!=='library') this.setState({ screen:ds }); }
     if(this.props.autoProgress===false) this.setState({ autoProgress:false });
+    this.__calMsg=(e)=>{ const d=e&&e.data; if(!d||typeof d!=='object') return;
+      if(d.v0cal==='back'){ this.backToPrograms(); }
+      else if(d.v0cal==='toast'&&d.msg){ this.toastMsg(d.msg); } };
+    if(typeof window!=='undefined') window.addEventListener('message', this.__calMsg);
   }
+  componentWillUnmount(){ if(typeof window!=='undefined'&&this.__calMsg) window.removeEventListener('message', this.__calMsg); }
   componentDidUpdate(prev){ if(prev.accent!==this.props.accent) this.applyAccent(); }
   applyAccent(){ const a=this.props.accent; if(!a) return; const root=document.body; root.style.setProperty('--accent', a); }
 
@@ -5667,6 +5673,10 @@ class Component extends DCLogic {
   builderScreenVM(){
     const st=this.state; const p=this.curProgram();
     if(!p) return { inBuilder:false };
+    // Cache the self-contained calendar document per program so the iframe is not
+    // reloaded on unrelated re-renders (identical string => React skips the update).
+    if(this.__calDocId!==p.id){ this.__calDoc=this.buildCalendarDoc(p); this.__calDocId=p.id; }
+    const calendarSrcDoc=this.__calDoc;
     const weeks=this.programWeeks(p); const dows=p.daysOfWeek;
     const COLS=this.WEEKDAYS_SHORT;
     const base=new Date(2026,5,1); const todayN=new Date(2026,5,29);
@@ -5726,12 +5736,77 @@ class Component extends DCLogic {
         exMatches: st.builderExPicker? exFiltered.slice(0,8).map(e=>({ id:e.id, name:e.name, meta:(e.equipment||'No equipment'), onPick:()=>this.addBuilderBlock(e.id) })) : [],
         exNoMatch: st.builderExPicker && exFiltered.length===0 };
     }
-    return { inBuilder:true, builderName:p.name, builderMeta:this.pgTypeLabel(p.type)+' · '+p.daysOfWeek.join('/')+' · '+p.startTime+' · '+(p.bounded?p.weeks+'-wk':'ongoing'),
+    return { inBuilder:true, calendarSrcDoc, builderName:p.name, builderMeta:this.pgTypeLabel(p.type)+' · '+p.daysOfWeek.join('/')+' · '+p.startTime+' · '+(p.bounded?p.weeks+'-wk':'ongoing'),
       builderLoading: p.programmingStatus==='programming', builderReady: p.programmingStatus==='ready',
       builderDows:dows.map(d=>({d})), builderGrid:grid, builderColHeaders:this.WEEKDAYS_SHORT.map(d=>({d})), monthLabel:'June 2026', builderClientLabel: p.type==='private'? (p.clientName||'Select client') : ('Capacity '+p.capacity),
       builderFocus:focus, hasFocus:!!focus, noFocus:!f,
       backToPrograms:()=>this.backToPrograms(), addBuilderWeek:()=>this.addBuilderWeek(), closeBuilderFocus:()=>this.closeBuilderFocus(),
       openBuilderExPicker:()=>this.openBuilderExPicker(), closeBuilderExPicker:()=>this.closeBuilderExPicker(), onBuilderExQuery:(e)=>this.onBuilderExQuery(e) };
+  }
+
+  // ===== Program calendar (spreadsheet) — self-contained interactive document =====
+  blkMeas(b){
+    const v=b.values||{}, s=b.supports||{};
+    const num=(x)=> (x===''||x==null)? null : (isNaN(+x)? x : +x);
+    const rest=num(v.rest);
+    if(s.weight){ const m={u:'reps', sets:num(v.sets), reps:num(v.reps)}; const lb=num(v.weight); if(lb!=null&&lb!=='') m.lbs=lb; if(rest!=null)m.rest=rest; return m; }
+    if(s.duration){ const m={u:'time', sets:num(v.sets)||1, sec:num(v.duration)||30}; if(rest!=null)m.rest=rest; return m; }
+    const m={u:'reps', sets:num(v.sets), reps:num(v.reps)}; if(rest!=null)m.rest=rest; return m;
+  }
+  buildCalendarDoc(p){
+    const FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const SHORT=this.WEEKDAYS_SHORT; // MON..SUN aligned with FULL
+    const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const MONF=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const weeks=this.programWeeks(p); const ready=p.readyWeeks||0;
+    const trainSet=new Set(p.daysOfWeek||[]);
+    const SECTIONS=['Primary','Secondary','Accessory','Core / Conditioning'];
+    const start=new Date(2026,6,6); // Mon Jul 6 2026
+    const coach=p.coachName||p.coachId||'';
+    const focus=p.focus||'Training';
+    const days=[];
+    for(let w=0; w<weeks; w++){
+      for(let d=0; d<7; d++){
+        const dow=SHORT[d];
+        const dt=new Date(start.getFullYear(), start.getMonth(), start.getDate()+w*7+d);
+        const rest=!trainSet.has(dow);
+        const day={ weekday:FULL[d], short:dow, dateLabel:MONS[dt.getMonth()]+' '+dt.getDate(),
+          month:dt.getMonth(), monthName:MONF[dt.getMonth()], year:dt.getFullYear(),
+          week:w+1, rest, empty:false, split:'', coach:'', note:'', sec:{} };
+        SECTIONS.forEach(s=>day.sec[s]=[]);
+        if(!rest){
+          const blocks=this.cellBlocks(p,w,dow);
+          if(blocks.length){
+            day.split=focus; day.coach=coach;
+            let usedPrimary=false;
+            blocks.forEach(b=>{
+              const item={ name:b.name, meas:this.blkMeas(b), note:b.notes||'', cat:b.cat||'strength' };
+              let sec;
+              if(item.cat==='strength'){ sec=usedPrimary?'Secondary':'Primary'; usedPrimary=true; }
+              else if(item.cat==='accessory') sec='Accessory';
+              else sec='Core / Conditioning';
+              day.sec[sec].push(item);
+            });
+          } else { day.empty=true; }
+        }
+        days.push(day);
+      }
+    }
+    const MOVES={
+      'Goblet Squat':{pat:'squat',equip:'KB',tier:1},'Front Squat':{pat:'squat',equip:'Barbell',tier:2},'Leg Press':{pat:'squat',equip:'Machine',tier:2},'Barbell Full Squat':{pat:'squat',equip:'Barbell',tier:3},'Back Squat':{pat:'squat',equip:'Barbell',tier:3},
+      'Kettlebell Deadlift':{pat:'hinge',equip:'KB',tier:1},'Romanian Deadlift':{pat:'hinge',equip:'Barbell',tier:2},'Trap Bar Deadlift':{pat:'hinge',equip:'Trap bar',tier:2},'Barbell Deadlift':{pat:'hinge',equip:'Barbell',tier:3},
+      'Push-Up':{pat:'hpush',equip:'Bodyweight',tier:1},'Incline Dumbbell Press':{pat:'hpush',equip:'Dumbbell',tier:2},'Flat DB Press':{pat:'hpush',equip:'Dumbbell',tier:2},'Barbell Bench Press':{pat:'hpush',equip:'Barbell',tier:3},
+      'Seated DB Press':{pat:'vpush',equip:'Dumbbell',tier:1},'Push Press':{pat:'vpush',equip:'Barbell',tier:2},'Barbell Shoulder Press':{pat:'vpush',equip:'Barbell',tier:3},'Overhead Press':{pat:'vpush',equip:'Barbell',tier:3},
+      'Ring Row':{pat:'hpull',equip:'Bodyweight',tier:1},'Chest-Supported Row':{pat:'hpull',equip:'Dumbbell',tier:2},'Seated Cable Row':{pat:'hpull',equip:'Cable',tier:2},'Barbell Row':{pat:'hpull',equip:'Barbell',tier:3},
+      'Lat Pulldown':{pat:'vpull',equip:'Cable',tier:1},'Chin-Up':{pat:'vpull',equip:'Bodyweight',tier:2},'Pull-Up':{pat:'vpull',equip:'Bodyweight',tier:2},
+      'Dumbbell Curl':{pat:'curl',equip:'Dumbbell',tier:1},'Hammer Curl':{pat:'curl',equip:'Dumbbell',tier:1},'Barbell Curl':{pat:'curl',equip:'Barbell',tier:2},
+      'Dumbbell Front Raise':{pat:'raise',equip:'Dumbbell',tier:1},'Lateral Raise':{pat:'raise',equip:'Dumbbell',tier:1},
+      'Box Jump':{pat:'plyo',equip:'Box',tier:2},'Broad Jump':{pat:'plyo',equip:'Bodyweight',tier:1},
+      'Bird Dog':{pat:'core',equip:'Bodyweight',tier:1},'Dead Bug':{pat:'core',equip:'Bodyweight',tier:1},'Plank':{pat:'core',equip:'Bodyweight',tier:1}
+    };
+    const PATLAB={squat:'Squat',hinge:'Hinge',hpush:'Horizontal push',vpush:'Vertical push',hpull:'Horizontal pull',vpull:'Vertical pull',lunge:'Lunge',glute:'Glute',curl:'Elbow flexion',raise:'Shoulder raise',plyo:'Plyometric',core:'Core'};
+    const DATA={ title:p.name, weeks, ready, sections:SECTIONS, days, moves:MOVES, patlab:PATLAB };
+    return this.calendarDocShell(DATA);
   }
 
   sessionSummary(sessId){ const t=this.templates.find(x=>x.id===sessId); if(!t) return ''; return t.wtype+' · '+t.dur+' min · '+t.blocks.length+' exercises'; }
