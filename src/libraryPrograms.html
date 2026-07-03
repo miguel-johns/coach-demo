@@ -4081,7 +4081,7 @@
                 <div style="position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:5; background:#fff; border:1px solid #D8E5E0; border-radius:12px; box-shadow:0 16px 40px rgba(36,53,49,.18); padding:10px; animation:popIn .15s ease;">
                   <div style="position:relative; display:flex; align-items:center; margin-bottom:8px;">
                     <svg style="position:absolute; left:10px; pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
-                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search…" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
+                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search��" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
                   </div>
                   <div style="display:flex; flex-direction:column; gap:2px; max-height:230px; overflow-y:auto;">
                     <sc-for list="{{ itemMatches }}" as="m" hint-placeholder-count="5">
@@ -6186,9 +6186,9 @@ class Component extends DCLogic {
     const sortItems=sortOptions.map(o=>({ l:o.l, selected:o.v===st.sortBy, onClick:()=>this.setSortVal(o.v), style:ddItemStyle(o.v===st.sortBy) }));
 
     const selIds=Object.keys(st.selected);
-    const navTabs=[
-      ['library','Library']
-    ].map(([k,l])=>({ label:l, style:this.navStyle(st.screen===k), onClick:()=>this.setScreen(k), badge:null }));
+const navTabs=[
+  ['library','Library'],['builder','Programs']
+  ].map(([k,l])=>({ label:l, style:this.navStyle(st.screen===k), onClick:()=>this.setScreen(k), badge:null }));
 
     // merge modal vm
     const mergeItems=selIds.map(id=>{ const e=this.exercises.find(x=>x.id===id); const picked=st.mergeCanonical===id;
