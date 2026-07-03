@@ -5517,7 +5517,7 @@ class Component extends DCLogic {
     const programCards=list.map(p=>{
       const cardBase='position:relative; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:16px; padding:16px 16px 14px; box-shadow:'+shadow+'; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s,transform .15s,box-shadow .15s;';
       const cardHover='border-color:'+C.sageLine+'; transform:translateY(-1px); box-shadow:0 2px 4px rgba(21,48,43,.05),0 14px 34px rgba(21,48,43,.09);';
-      const pills=[ pill(p.days+' days/wk'), pill(p.weeks+' weeks'), pill(p.focus) ];
+      const pills=[ pill(p.daysOfWeek.length+' days/wk'), pill(p.weeks+' weeks'), pill(p.focus) ];
       if(p.coachName) pills.push(pill(p.coachName,'coach'));
 
       const c={ id:p.id, name:p.name, pills, cardHover, onOpen:()=>this.pgCardAction('open',p.id),
