@@ -6,7 +6,7 @@
 <title>Milton · Library & Programs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Archivo+Expanded:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -2551,66 +2551,65 @@
       <!-- ===== PROGRAMS ===== -->
       <sc-if value="{{ isBuilder }}" hint-placeholder-val="{{ false }}">
        <sc-if value="{{ pgListVisible }}" hint-placeholder-val="{{ true }}">
-        <div style="height:100%; display:flex; flex-direction:column;">
-          <div style="display:flex; align-items:center; gap:10px; padding:18px 28px 8px; flex-wrap:wrap;">
-            <div style="position:relative; display:flex; align-items:center; flex:none;">
-              <svg style="position:absolute; left:13px; pointer-events:none;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
-              <input value="{{ pgSearch }}" oninput="{{ onPgSearch }}" placeholder="Search programs" style="width:220px; height:40px; border:1px solid #D8E5E0; background:#fff; border-radius:11px; padding:0 14px 0 36px; font-family:inherit; font-size:13.5px; outline:none; color:#243531; box-shadow:0 1px 2px rgba(36,53,49,.04);" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
-            </div>
-            <select value="{{ pgGoalFilter }}" onchange="{{ setPgGoal }}" style="{{ pgSelStyle }}"><sc-for list="{{ pgGoalOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-            <div style="flex:1;"></div>
-            <select value="{{ pgSort }}" onchange="{{ setPgSort }}" style="{{ pgSelStyle }}"><sc-for list="{{ pgSortOptions }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-            <button onclick="{{ openPgCreate }}" style="cursor:pointer; height:40px; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; background:linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #16352d)); color:#fff; border:none; border-radius:11px; padding:0 18px; font-family:inherit; font-size:13.5px; font-weight:700; box-shadow:0 4px 14px rgba(43,122,120,.34), inset 0 1px 0 rgba(255,255,255,.16); transition:all .18s cubic-bezier(.4,0,.2,1);" style-hover="box-shadow:0 8px 22px rgba(43,122,120,.42); transform:translateY(-1px);" style-active="transform:translateY(0);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>New program
-            </button>
-          </div>
-          <div style="display:flex; align-items:center; gap:14px; padding:6px 28px 14px;">
-            <div style="display:inline-flex; gap:3px; background:#E9F0ED; border:1px solid #DCE7E3; border-radius:12px; padding:4px; box-shadow:inset 0 1px 2px rgba(36,53,49,.05);">
+        <div style="height:100%; display:flex; flex-direction:column; background:#F4F5F3;">
+          <div style="display:flex; align-items:center; gap:10px; padding:16px 22px 12px; flex-wrap:wrap; border-bottom:1px solid #EAE8E2;">
+            <h1 style="font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-.01em; color:#15302B;">Programs</h1>
+            <div style="display:inline-flex; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px; margin-left:6px;">
               <sc-for list="{{ pgStatusChips }}" as="s" hint-placeholder-count="4">
                 <button onclick="{{ s.onClick }}" style="{{ s.style }}" style-hover="{{ s.hoverStyle }}">{{ s.label }}<span style="{{ s.countStyle }}">{{ s.count }}</span></button>
               </sc-for>
             </div>
+            <div style="position:relative; display:flex; align-items:center; margin-left:auto;">
+              <svg style="position:absolute; left:13px; pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#79857F" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
+              <input value="{{ pgSearch }}" oninput="{{ onPgSearch }}" placeholder="Search programs, coaches, focus…" aria-label="Search programs" style="width:240px; background:#fff; border:1px solid #EAE8E2; border-radius:999px; padding:8px 14px 8px 34px; font-family:'DM Sans',sans-serif; font-size:12.5px; outline:none; color:#1E2C29;" style-focus="border-color:#D6E5DA; box-shadow:0 0 0 3px rgba(30,77,69,.1);">
+            </div>
+            <select value="{{ pgCoachFilter }}" onchange="{{ setPgCoachFilter }}" aria-label="Filter by coach" style="{{ pgSelStyle }}"><sc-for list="{{ pgCoachOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+            <button onclick="{{ openPgCreate }}" style="cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; background:#1E4D45; color:#fff; border:1px solid #1E4D45; border-radius:999px; padding:9px 15px; font-family:'DM Sans',sans-serif; font-size:12.5px; font-weight:600; transition:background .15s;" style-hover="background:#163A34; border-color:#163A34;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>New program
+            </button>
           </div>
-          <div style="flex:1; overflow-y:auto; padding:4px 28px 28px;">
-            <div style="display:flex; flex-direction:column; gap:14px;">
-              <sc-for list="{{ programCards }}" as="p" hint-placeholder-count="3">
-                <div style="border:1px solid #E0EBE8; border-radius:16px; background:#fff; overflow:hidden; transition:box-shadow .18s, border-color .18s;" style-hover="box-shadow:0 8px 24px rgba(36,53,49,.1); border-color:#CBDDD7;">
-                  <div style="padding:18px 20px 14px;">
-                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px;">
-                      <div onclick="{{ p.onView }}" style="cursor:pointer; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                          <span style="font-size:17px; font-weight:700; color:#243531;">{{ p.name }}</span>
-                          <span style="{{ p.statusStyle }}">{{ p.statusLabel }}</span>
-                          <span style="{{ p.typeStyle }}">{{ p.type }}</span>
-                          <sc-if value="{{ p.progBusy }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:#B5851A;"><span style="width:6px; height:6px; border-radius:50%; background:#E0A93B;"></span>{{ p.progLabel }}</span></sc-if>
-                        </div>
-                        <div style="font-size:12.5px; color:#8A9690; margin-top:4px;">{{ p.meta }} · Coach {{ p.coach }} · {{ p.assigned }}</div>
+          <sc-if value="{{ pgHasAttn }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 22px 0; background:#fff; border:1px solid #EAE8E2; border-left:4px solid #1E4D45; border-radius:14px; padding:11px 16px; box-shadow:0 1px 2px rgba(21,48,43,.04),0 10px 28px rgba(21,48,43,.06);">
+              <span style="width:9px; height:9px; border-radius:50%; background:#1E4D45; flex:0 0 auto;"></span>
+              <span style="font-size:13px; color:#15302B;"><span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:#2E7357; margin-right:6px;">Needs attention</span>{{ pgAttnText }}</span>
+              <button onclick="{{ pgShowAttention }}" style="margin-left:auto; font-family:'DM Sans',sans-serif; font-weight:700; font-size:12px; color:#1E4D45; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:6px 13px; cursor:pointer;" style-hover="background:#E3EDE6;">Show me</button>
+            </div>
+          </sc-if>
+          <div style="flex:1; overflow-y:auto; padding:16px 22px 30px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;">
+              <sc-for list="{{ programCards }}" as="p" hint-placeholder-count="6">
+                <div style="{{ p.cardStyle }}" style-hover="{{ p.cardHover }}">
+                  <div onclick="{{ p.onOpen }}" role="button" tabindex="0" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                      <div style="font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:14.5px; color:#15302B; line-height:1.25; flex:1;">{{ p.name }}</div>
+                      <span style="{{ p.stateStyle }}">{{ p.stateLabel }}</span>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                      <sc-for list="{{ p.pills }}" as="pl" hint-placeholder-count="4"><span style="{{ pl.style }}">{{ pl.text }}</span></sc-for>
+                    </div>
+                    <sc-if value="{{ p.hasLine }}" hint-placeholder-val="{{ true }}">
+                      <div style="font-size:12px; color:#79857F;"><strong style="color:#15302B; font-weight:700;">{{ p.linePre }}</strong>{{ p.linePost }}</div>
+                    </sc-if>
+                    <sc-if value="{{ p.hasProgress }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex; align-items:center; gap:9px;">
+                        <div style="flex:1; height:6px; border-radius:999px; background:#E9F1EB; overflow:hidden;"><i style="{{ p.progFillStyle }}"></i></div>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#137A6C; white-space:nowrap;">{{ p.progLabel }}</span>
                       </div>
-                      <button onclick="{{ p.onOpen }}" style="cursor:pointer; display:flex; align-items:center; gap:8px; background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; flex:none;" style-hover="background:color-mix(in srgb, var(--accent) 88%, black);">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 4v4M16 4v4"></path></svg>
-                        Open builder
-                      </button>
-                    </div>
-                    <div style="display:flex; gap:6px;">
-                      <sc-for list="{{ p.days }}" as="sl" hint-placeholder-count="3">
-                        <div style="{{ sl.style }}">
-                          <div style="{{ sl.dowStyle }}">{{ sl.dow }}</div>
-                          <sc-if value="{{ sl.hasCats }}" hint-placeholder-val="{{ true }}"><div style="font-size:16px; line-height:1;">{{ sl.cats }}</div></sc-if>
-                          <div style="{{ sl.countStyle }}">{{ sl.count }}</div>
-                        </div>
-                      </sc-for>
-                    </div>
+                    </sc-if>
+                    <sc-if value="{{ p.hasFlag }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ p.flagStyle }}"><span style="{{ p.flagDotStyle }}"></span>{{ p.flagText }}</div>
+                    </sc-if>
+                    <sc-if value="{{ p.hasProv }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#79857F;">{{ p.provText }}</div>
+                    </sc-if>
                   </div>
-                  <div style="display:flex; align-items:center; gap:6px; padding:10px 16px; border-top:1px solid #F4F1EA; background:#FCFBF8;">
-                    <span style="flex:1; font-size:11.5px; color:#A7B0AA;">Updated {{ p.updated }}</span>
-                    <button onclick="{{ p.onEdit }}" title="Edit definition" style="cursor:pointer; width:34px; height:34px; border-radius:8px; border:1px solid #D8E5E0; background:#fff; display:flex; align-items:center; justify-content:center; color:#6B7A73;" style-hover="border-color:var(--accent); color:var(--accent);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></button>
-                    <button onclick="{{ p.onDup }}" title="Duplicate" style="cursor:pointer; width:34px; height:34px; border-radius:8px; border:1px solid #D8E5E0; background:#fff; display:flex; align-items:center; justify-content:center; color:#6B7A73;" style-hover="border-color:var(--accent); color:var(--accent);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg></button>
-                    <button onclick="{{ p.onArchive }}" title="Archive" style="cursor:pointer; width:34px; height:34px; border-radius:8px; border:1px solid #D8E5E0; background:#fff; display:flex; align-items:center; justify-content:center; color:#6B7A73;" style-hover="border-color:#C08A2E; color:#C08A2E;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"></path></svg></button>
-                    <button onclick="{{ p.onDelete }}" title="Delete" style="cursor:pointer; width:34px; height:34px; border-radius:8px; border:1px solid #D8E5E0; background:#fff; display:flex; align-items:center; justify-content:center; color:#6B7A73;" style-hover="border-color:#D9534F; color:#D9534F;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"></path></svg></button>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                    <sc-for list="{{ p.actions }}" as="a" hint-placeholder-count="4"><button onclick="{{ a.onClick }}" style="{{ a.style }}" style-hover="{{ a.hoverStyle }}">{{ a.label }}</button></sc-for>
                   </div>
                 </div>
               </sc-for>
             </div>
+            <sc-if value="{{ pgHasNone }}" hint-placeholder-val="{{ false }}"><div style="color:#79857F; font-size:13px; padding:26px 4px;">{{ pgEmptyMsg }}</div></sc-if>
           </div>
         </div>
        </sc-if>
@@ -4081,7 +4080,7 @@
                 <div style="position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:5; background:#fff; border:1px solid #D8E5E0; border-radius:12px; box-shadow:0 16px 40px rgba(36,53,49,.18); padding:10px; animation:popIn .15s ease;">
                   <div style="position:relative; display:flex; align-items:center; margin-bottom:8px;">
                     <svg style="position:absolute; left:10px; pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
-                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search���" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
+                    <input value="{{ calItemQuery }}" oninput="{{ onCalItemQuery }}" placeholder="Search����" autofocus="" style="width:100%; height:38px; border:1px solid #D8E5E0; border-radius:9px; padding:0 12px 0 32px; font-family:inherit; font-size:13px; outline:none; color:#243531; background:#fff;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
                   </div>
                   <div style="display:flex; flex-direction:column; gap:2px; max-height:230px; overflow-y:auto;">
                     <sc-for list="{{ itemMatches }}" as="m" hint-placeholder-count="5">
@@ -4360,9 +4359,10 @@ class Component extends DCLogic {
     exPicker: null,
     exQuery: '',
     customEx: null,
-    pgStatusFilter: 'all',
+    pgStatusFilter: 'active',
     pgSearch: '',
     pgGoalFilter: 'all',
+    pgCoachFilter: '',
     pgSort: 'updated',
     pgEditId: null,
     pgMode: null,
@@ -4604,30 +4604,64 @@ class Component extends DCLogic {
     return content;
   }
 
-  programs = [
-    { id:'p1', tenant:this.TENANT, name:'9am Group Strength', type:'group', daysOfWeek:['MON','WED','FRI'], startTime:'9:00 AM', duration:60,
-      bounded:true, weeks:6, readyWeeks:4, capacity:12, enrollmentMode:'self_enroll', coachId:'You', guidance:'Linear progression, ~5% load/week. Compound-first, then accessories. Keep conditioning short.',
-      status:'active', programmingStatus:'ready', assigned:11, updated:'Jun 21, 2026',
-      content:this.seedContent({
-        MON:[['Barbell Bench Press',4,8,60,'strength'],['Incline Dumbbell Press',3,10,24,'accessory'],['Barbell Shoulder Press',3,8,40,'accessory'],['Box Jump',4,8,'','conditioning']],
-        WED:[['Barbell Deadlift',4,6,100,'strength'],['Seated Cable Row',3,10,55,'accessory'],['Barbell Curl',3,10,30,'accessory']],
-        FRI:[['Barbell Full Squat',4,8,85,'strength'],['Romanian Deadlift',3,10,60,'accessory'],['Leg Press',3,12,120,'accessory'],['Bird Dog',3,10,'','core']],
-      }, 6, 4) },
-    { id:'p2', tenant:this.TENANT, name:'Sarah Chen — Private Strength', type:'private', clientName:'Sarah Chen', daysOfWeek:['TUE','THU'], startTime:'7:00 AM', duration:55,
-      bounded:false, weeks:8, readyWeeks:8, capacity:1, enrollmentMode:'assigned', coachId:'You', guidance:'Squat focus, push toward 140 lb. Conservative on deadlift volume.',
-      status:'active', programmingStatus:'ready', assigned:1, updated:'Jun 24, 2026',
-      content:this.seedContent({
-        TUE:[['Barbell Full Squat',5,5,120,'strength'],['Romanian Deadlift',3,8,70,'accessory'],['Leg Press',3,10,140,'accessory']],
-        THU:[['Barbell Bench Press',5,5,65,'strength'],['Seated Cable Row',3,10,55,'accessory'],['Barbell Curl',3,12,28,'accessory']],
-      }, 8, 8) },
-    { id:'p3', tenant:this.TENANT, name:'Semi-Private Conditioning', type:'semi_private', daysOfWeek:['MON','THU'], startTime:'6:00 PM', duration:45,
-      bounded:true, weeks:4, readyWeeks:2, capacity:4, enrollmentMode:'assigned', coachId:'Mara L.', guidance:'Mixed conditioning + accessory. Scale per attendee.',
-      status:'draft', programmingStatus:'partial', assigned:3, updated:'Jun 26, 2026',
-      content:this.seedContent({
-        MON:[['Box Jump',5,8,'','conditioning'],['Barbell Deadlift',4,10,60,'strength']],
-        THU:[['Leg Press',3,15,90,'accessory'],['Bird Dog',3,12,'','core']],
-      }, 4, 2) },
+  // day-count -> weekday set, used to seed the mockup-derived program library
+  DOWSET={ 2:['TUE','THU'], 3:['MON','WED','FRI'], 4:['MON','TUE','THU','FRI'], 5:['MON','TUE','WED','THU','FRI'] };
+  genContent(dows, weeks, ready){
+    const pool=[
+      ['Barbell Full Squat',4,8,85,'strength'],
+      ['Romanian Deadlift',3,10,60,'accessory'],
+      ['Barbell Bench Press',4,8,60,'strength'],
+      ['Seated Cable Row',3,10,55,'accessory'],
+      ['Box Jump',4,8,'','conditioning'],
+      ['Bird Dog',3,10,'','core'],
+    ];
+    const theme={};
+    dows.forEach((dow,i)=>{ theme[dow]=[ pool[i%pool.length], pool[(i+2)%pool.length], pool[(i+4)%pool.length] ]; });
+    return this.seedContent(theme, weeks, ready);
+  }
+  // build a full program record from a compact mockup-style spec
+  mkProgram(s){
+    const dows=this.DOWSET[s.days]||['MON','WED','FRI'];
+    const bounded = s.state!=='archived';
+    const ready = s.state==='draft' ? Math.max(1, Math.round(s.weeks*(s.pct||0)/100)) : s.weeks;
+    const type = s.type||'group';
+    return {
+      id:s.id, tenant:this.TENANT, name:s.name, type,
+      clientName: type==='private' ? (s.client||'Assigned client') : '',
+      daysOfWeek:dows, startTime:s.startTime||'9:00 AM', duration:s.duration||60,
+      bounded, weeks:s.weeks, readyWeeks:ready, capacity: type==='private'?1:(s.clients||12),
+      enrollmentMode: type==='group'?'self_enroll':'assigned',
+      coachId: s.coach||'You', guidance:s.guidance||'', focus:s.focus||'',
+      status:s.state, programmingStatus: s.state==='draft'?'partial':'ready',
+      assigned: s.clients||0, updated:s.touched||s.finished||'Jun 2026',
+      // library display fields (from mockup)
+      coachName:(s.coach||null), clients:s.clients||0,
+      adherence:s.adherence||null, week:s.week||null, endsSoon:!!s.ends_soon, nextAssigned:!!s.next_assigned,
+      from:s.from||null, pct:s.pct||null, touched:s.touched||null, stalled:!!s.stalled,
+      used:s.used||0, finished:s.finished||null,
+      content:this.genContent(dows, s.weeks, ready),
+    };
+  }
+
+  PROGRAM_LIBRARY_SEED=[
+    { id:'p1', state:'active', name:'30-Day Strength Block', days:5, weeks:4, focus:'Strength', coach:'Johnny O', type:'group', clients:14, week:3, from:'30-Day Strength Block (template)', ends_soon:true, next_assigned:false, adherence:86, startTime:'6:00 AM', guidance:'Linear progression, ~5% load/week. Compound-first.' },
+    { id:'p2', state:'active', name:'Summer Shred · Wave 2', days:4, weeks:6, focus:'Fat loss', coach:'Bethany Langston', type:'group', clients:22, week:2, ends_soon:false, next_assigned:true, adherence:91, startTime:'5:30 PM' },
+    { id:'p3', state:'active', name:'Parkour Foundations', days:3, weeks:8, focus:'Skill · GPP', coach:'Landon Langston', type:'semi_private', clients:9, week:6, ends_soon:false, next_assigned:true, adherence:78, startTime:'4:00 PM' },
+    { id:'p4', state:'active', name:'Postpartum Return · Phase 1', days:3, weeks:6, focus:'Rebuild', coach:'Mara Ellis', type:'private', client:'Rowan Ellis', clients:6, week:6, from:'Return to Training (template)', ends_soon:true, next_assigned:false, adherence:94, startTime:'10:00 AM' },
+    { id:'p5', state:'active', name:'Engine Builder', days:4, weeks:6, focus:'Conditioning', coach:'Dev Kapoor', type:'group', clients:11, week:1, ends_soon:false, next_assigned:true, adherence:88, startTime:'6:30 AM' },
+    { id:'d1', state:'draft', name:'Fall Strength Block', days:5, weeks:4, focus:'Strength', coach:'Johnny O', type:'group', pct:80, touched:'2 days ago', stalled:false },
+    { id:'d2', state:'draft', name:'Kettlebell Only · Travel', days:3, weeks:4, focus:'GPP', coach:'Bethany Langston', type:'semi_private', pct:45, touched:'16 days ago', stalled:true },
+    { id:'d3', state:'draft', name:'Youth Athlete Intro', days:2, weeks:6, focus:'Athletic base', coach:'Landon Langston', type:'semi_private', pct:20, touched:'5 days ago', stalled:false },
+    { id:'t1', state:'template', name:'30-Day Strength Block', days:5, weeks:4, focus:'Strength', coach:null, type:'group', used:6 },
+    { id:'t2', state:'template', name:'Return to Training', days:3, weeks:6, focus:'Rebuild', coach:null, type:'private', used:4 },
+    { id:'t3', state:'template', name:'6-Week Challenge · Nutrition Add-On', days:4, weeks:6, focus:'Fat loss', coach:null, type:'group', used:9 },
+    { id:'t4', state:'template', name:'Engine Builder', days:4, weeks:6, focus:'Conditioning', coach:null, type:'group', used:3 },
+    { id:'a1', state:'archived', name:'Summer Shred · Wave 1', days:4, weeks:6, focus:'Fat loss', coach:'Bethany Langston', type:'group', clients:19, finished:'May 2026', adherence:89 },
+    { id:'a2', state:'archived', name:'Spring Strength Block', days:5, weeks:4, focus:'Strength', coach:'Johnny O', type:'group', clients:12, finished:'Apr 2026', adherence:84 },
+    { id:'a3', state:'archived', name:'New Year Kickstart', days:3, weeks:4, focus:'Habits · GPP', coach:'Mara Ellis', type:'group', clients:31, finished:'Feb 2026', adherence:72 },
+    { id:'a4', state:'archived', name:'Holiday Maintenance', days:2, weeks:3, focus:'Maintenance', coach:'Dev Kapoor', type:'private', client:'Priya M.', clients:16, finished:'Jan 2026', adherence:68 },
   ];
+  programs = this.PROGRAM_LIBRARY_SEED.map(s=>this.mkProgram(s));
 
   AGENTS = {
     library: {
@@ -5015,7 +5049,24 @@ class Component extends DCLogic {
   setPgStatus(f){ this.setState({ pgStatusFilter:f }); }
   onPgSearch(e){ this.setState({ pgSearch:e.target.value }); }
   setPgGoal(e){ this.setState({ pgGoalFilter:e.target.value }); }
+  setPgCoachFilter(e){ this.setState({ pgCoachFilter:e.target.value }); }
   setPgSort(e){ this.setState({ pgSort:e.target.value }); }
+  pgShowAttention(){
+    this.setState({ pgStatusFilter:'active', pgHighlightAttention:true });
+    clearTimeout(this.__attnT); this.__attnT=setTimeout(()=>{ this.setState({ pgHighlightAttention:false }); }, 3400);
+  }
+  saveAsTemplate(id){
+    const p=this.programs.find(x=>x.id===id); if(!p) return;
+    const t=Object.assign(JSON.parse(JSON.stringify(p)), { id:'t'+(300+this.programs.length), status:'template', coachName:null, coachId:'You', used:0, assigned:0, clients:0, adherence:null, week:null, endsSoon:false, from:null, finished:null, updated:'Just now' });
+    this.programs.push(t); this.forceUpdate(); this.toastMsg('Saved as template'); }
+  useTemplate(id){
+    const p=this.programs.find(x=>x.id===id); if(!p) return; p.used=(p.used||0)+1;
+    const d=Object.assign(JSON.parse(JSON.stringify(p)), { id:'d'+(300+this.programs.length), name:p.name+' · New run', status:'draft', programmingStatus:'partial', coachId:'You', coachName:'You', from:p.name+' (template)', pct:0, touched:'just now', stalled:false, used:0, clients:0, assigned:0, adherence:null, finished:null, updated:'Just now' });
+    this.programs.unshift(d); this.setState({ pgStatusFilter:'draft' }); this.forceUpdate(); this.toastMsg('Draft created from template'); }
+  runAgain(id){
+    const p=this.programs.find(x=>x.id===id); if(!p) return;
+    const d=Object.assign(JSON.parse(JSON.stringify(p)), { id:'p'+(300+this.programs.length), name:p.name.replace(/·.*$/,'').trim()+' · New wave', status:'active', programmingStatus:'ready', week:1, endsSoon:false, nextAssigned:true, finished:null, bounded:true, updated:'Just now' });
+    this.programs.unshift(d); this.setState({ pgStatusFilter:'active' }); this.forceUpdate(); this.toastMsg('New wave started from archive'); }
 
   cellKey(w,dow){ return 'w'+w+'_'+dow; }
   programWeeks(p){ return p.bounded? p.weeks : Math.max(p.weeks||8, 8); }
@@ -5131,9 +5182,9 @@ class Component extends DCLogic {
       pp.programmingStatus='ready'; pp.readyWeeks=ready; this.forceUpdate(); this.toastMsg('Pre-programming complete — first '+ready+' weeks ready to review');
     }, 2400);
   }
-  archiveProgram(id){ const p=this.programs.find(x=>x.id===id); p.status='archived'; p.updated='Just now'; this.forceUpdate(); this.toastMsg('"'+p.name+'" archived — existing sessions unchanged'); this.closePg(); }
+  archiveProgram(id){ const p=this.programs.find(x=>x.id===id); p.status='archived'; p.updated='Just now'; p.finished=p.finished||'Jul 2026'; if(p.adherence==null) p.adherence=Math.round(70+Math.random()*25); if(!p.clients) p.clients=p.assigned||0; this.forceUpdate(); this.toastMsg('Archived · kept in your library'); this.closePg(); }
   delProgram(id){ const p=this.programs.find(x=>x.id===id); if(p.assigned>0){ this.toastMsg('This program has active assignments — archive it instead'); return; } this.programs=this.programs.filter(x=>x.id!==id); this.forceUpdate(); this.toastMsg('"'+p.name+'" deleted'); this.closePg(); }
-  dupProgram(id){ const p=this.programs.find(x=>x.id===id); const copy=Object.assign(JSON.parse(JSON.stringify(p)), { id:'p'+(200+this.programs.length), name:p.name+' (Copy)', status:'draft', assigned:0, updated:'Just now' }); const i=this.programs.findIndex(x=>x.id===id); this.programs.splice(i+1,0,copy); this.forceUpdate(); this.toastMsg('Duplicated → "'+copy.name+'"'); }
+  dupProgram(id){ const p=this.programs.find(x=>x.id===id); const copy=Object.assign(JSON.parse(JSON.stringify(p)), { id:'d'+(200+this.programs.length), name:p.name+' · Copy', status:'draft', programmingStatus:'partial', assigned:0, clients:0, updated:'Just now', pct:100, touched:'just now', stalled:false, week:null, endsSoon:false, from:p.name, finished:null }); const i=this.programs.findIndex(x=>x.id===id); this.programs.splice(i+1,0,copy); this.setState({ pgStatusFilter:'draft' }); this.forceUpdate(); this.toastMsg('Duplicated as a draft'); }
   assignFromView(id){ this.closePg(); this.openApply(id); }
 
   // ---- workout builder
@@ -5427,50 +5478,122 @@ class Component extends DCLogic {
   pgTypeLabel(t){ return t==='private'?'Private':t==='semi_private'?'Semi-private':'Group'; }
   builderVM(){
     const st=this.state;
-    const counts={ all:this.programs.length, active:0, draft:0, archived:0 };
-    this.programs.forEach(p=>counts[p.status]=(counts[p.status]||0)+1);
-    const pgStatusChips=[['all','All'],['active','Active'],['draft','Draft'],['archived','Archived']].map(([k,l])=>{ const on=st.pgStatusFilter===k;
+    // ---- pine-green palette (matches the program-library design) ----
+    const C={ pine:'#1E4D45', pineD:'#163A34', head:'#15302B', ink:'#1E2C29', muted:'#79857F',
+      page:'#F4F5F3', surface:'#FFFFFF', line:'#EAE8E2', sage:'#E9F1EB', sageAlt:'#E3EDE6',
+      sageLine:'#D6E5DA', sageInk:'#2E7357', alt:'#F7FAF8', data:'#137A6C', rest:'#F0EFEA',
+      restInk:'#A7A99F', amber:'#946B1C', amberBg:'#F6EEDC' };
+    const shadow='0 1px 2px rgba(21,48,43,.04),0 10px 28px rgba(21,48,43,.06)';
+
+    const counts={ active:0, draft:0, template:0, archived:0 };
+    this.programs.forEach(p=>{ counts[p.status]=(counts[p.status]||0)+1; });
+    const V=st.pgStatusFilter;
+    const pgStatusChips=[['active','Active'],['draft','Drafts'],['template','Templates'],['archived','Archived']].map(([k,l])=>{ const on=V===k;
       return { label:l, count:counts[k]||0,
-        style:'cursor:pointer; display:flex; align-items:center; font-family:inherit; font-size:13px; font-weight:600; padding:8px 16px; border-radius:9px; border:none; white-space:nowrap; transition:all .2s cubic-bezier(.4,0,.2,1); color:'+(on?'#fff':'#6B7A73')+'; background:'+(on?'linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #16352d))':'transparent')+'; box-shadow:'+(on?'0 4px 12px rgba(43,122,120,.32), inset 0 1px 0 rgba(255,255,255,.15)':'none')+';',
-        countStyle:'margin-left:7px; font-size:11px; font-weight:700; padding:1px 7px; border-radius:9px; background:'+(on?'rgba(255,255,255,.22)':'rgba(36,53,49,.06)')+'; color:'+(on?'#fff':'#9AA39C')+';',
-        hoverStyle: on?'':'background:rgba(255,255,255,.6); color:#3A4B45;', onClick:()=>this.setPgStatus(k) };
+        style:'cursor:pointer; display:flex; align-items:center; gap:6px; font-family:"DM Sans",sans-serif; font-weight:600; font-size:12.5px; padding:7px 14px; border-radius:999px; border:0; white-space:nowrap; transition:background .15s,color .15s; color:'+(on?'#fff':C.sageInk)+'; background:'+(on?C.pine:'transparent')+'; box-shadow:'+(on?'0 1px 2px rgba(21,48,43,.15)':'none')+';',
+        countStyle:'font-family:"JetBrains Mono",monospace; font-size:10px; opacity:.75;',
+        hoverStyle: on?'':'color:'+C.pine+';', onClick:()=>this.setPgStatus(k) };
     });
+
     const q=st.pgSearch.trim().toLowerCase();
-    let list=this.programs
-      .filter(p=> st.pgStatusFilter==='all'?true:p.status===st.pgStatusFilter)
-      .filter(p=> st.pgGoalFilter==='all'?true:p.type===st.pgGoalFilter)
-      .filter(p=> !q || p.name.toLowerCase().includes(q));
+    const list=this.programs
+      .filter(p=> p.status===V)
+      .filter(p=> !st.pgCoachFilter || p.coachName===st.pgCoachFilter)
+      .filter(p=> !q || (p.name+' '+(p.coachName||'')+' '+(p.focus||'')).toLowerCase().includes(q));
+
+    const pill=(text,variant)=>{
+      let s='font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:999px; white-space:nowrap; ';
+      if(variant==='coach') s+='background:'+C.surface+'; border:1px solid '+C.line+'; color:'+C.ink+';';
+      else if(variant==='ghost') s+='background:'+C.rest+'; color:'+C.restInk+';';
+      else s+='background:'+C.sage+'; color:'+C.sageInk+';';
+      return { text, style:s };
+    };
+    const stateChip=(label,bg,color)=>'font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:999px; flex:0 0 auto; background:'+bg+'; color:'+color+';';
+    const actBtn=(label,act,id,primary)=>({ label, onClick:()=>this.pgCardAction(act,id),
+      style:'font-family:"DM Sans",sans-serif; font-weight:600; font-size:11.5px; border-radius:999px; padding:6px 12px; cursor:pointer; transition:border-color .12s,background .12s; '+(primary?('background:'+C.pine+'; border:1px solid '+C.pine+'; color:#fff;'):('background:'+C.surface+'; border:1px solid '+C.line+'; color:'+C.ink+';')),
+      hoverStyle: primary?('background:'+C.pineD+';'):('border-color:'+C.sageLine+'; background:'+C.sage+';') });
+
+    const highlightAttn=!!st.pgHighlightAttention;
     const programCards=list.map(p=>{
-      const days=p.daysOfWeek.map(dow=>{
-        const blocks=this.cellBlocks(p,0,dow);
-        const empty=blocks.length===0;
-        const full=this.cellTitle(blocks);
-        const title=full? (full.split(':')[0]) : '';
-        return { dow, title, count: empty?'Rest':(blocks.length+' exercises'), hasTitle:!empty,
-          style:'flex:1; min-width:0; border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:3px; '+(empty?'background:#FAF8F4; border:1px dashed #DCE7E3;':'background:#EEF4F1; border:1px solid #D6E4DC;'),
-          dowStyle:'font-size:10px; font-weight:700; letter-spacing:.07em; '+(empty?'color:#B8BEB7;':'color:#5E8C7D;'),
-          titleStyle:'font-size:12.5px; font-weight:700; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;',
-          countStyle:'font-size:11px; font-weight:600; '+(empty?'color:#C2C8C1;':'color:#7C9A8F;') };
-      });
-      const ps=p.programmingStatus;
-      return { id:p.id, name:p.name, type:this.pgTypeLabel(p.type),
-        meta:(p.bounded? p.weeks+'-wk':'Ongoing')+' · '+p.daysOfWeek.join('/')+' · '+this.pgTimeShort(p),
-        coach:p.coachId, assigned:p.assigned+(p.type==='private'?' client':' enrolled'), updated:p.updated,
-        statusLabel: p.status==='active'?'Active':p.status==='draft'?'Draft':'Archived',
-        statusStyle:'font-size:11px; font-weight:700; padding:3px 10px; border-radius:7px; white-space:nowrap; '+(p.status==='active'?'background:#E6EFE9; color:var(--accent);': p.status==='draft'?'background:#FBF0D8; color:#B5851A;':'background:#EFEDE8; color:#9AA39C;'),
-        typeStyle:'font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:3px 8px; border-radius:6px; background:#EEF2EF; color:#6B7A73;',
-        progBusy: ps!=='ready', progLabel: ps==='programming'?'Pre-programming…':'Pending',
-        days,
-        onOpen:()=>this.openBuilder(p.id), onView:()=>this.openPgView(p.id), onEdit:()=>this.openPgEdit(p.id), onDup:()=>this.dupProgram(p.id), onArchive:()=>this.archiveProgram(p.id), onDelete:()=>this.delProgram(p.id) };
+      const cardBase='position:relative; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:16px; padding:16px 16px 14px; box-shadow:'+shadow+'; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s,transform .15s,box-shadow .15s;';
+      const cardHover='border-color:'+C.sageLine+'; transform:translateY(-1px); box-shadow:0 2px 4px rgba(21,48,43,.05),0 14px 34px rgba(21,48,43,.09);';
+      const pills=[ pill(p.days+' days/wk'), pill(p.weeks+' weeks'), pill(p.focus) ];
+      if(p.coachName) pills.push(pill(p.coachName,'coach'));
+
+      const c={ id:p.id, name:p.name, pills, cardHover, onOpen:()=>this.pgCardAction('open',p.id),
+        hasProgress:false, hasFlag:false, hasProv:false, hasLine:false, actions:[] };
+
+      if(p.status==='active'){
+        const attnFlag=p.endsSoon&&!p.nextAssigned;
+        const ring=(highlightAttn&&attnFlag)?' box-shadow:0 0 0 3px rgba(30,77,69,.35),'+shadow+';':'';
+        c.cardStyle=cardBase+ring;
+        c.stateLabel='Active'; c.stateStyle=stateChip('Active',C.sage,C.sageInk);
+        c.hasLine=true; c.linePre=p.clients+' clients'; c.linePost=' on this block · '+p.adherence+'% adherence';
+        c.hasProgress=true; const pct=Math.round(100*p.week/p.weeks);
+        c.progFillStyle='display:block; height:100%; background:'+C.pine+'; border-radius:999px; width:'+pct+'%;';
+        c.progLabel='Week '+p.week+' of '+p.weeks;
+        if(p.endsSoon){ c.hasFlag=true;
+          if(p.nextAssigned){ c.flagText='Ends this week · next block queued'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.sage+'; color:'+C.sageInk+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.sageInk+';'; }
+          else { c.flagText='Ends this week · no next block assigned'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
+        }
+        if(p.from){ c.hasProv=true; c.provText='Built from '+p.from; }
+        c.actions=[ actBtn('Open','open',p.id,true), actBtn('Duplicate','dup',p.id), actBtn('Save as template','tpl',p.id), actBtn('Archive','arch',p.id) ];
+      } else if(p.status==='draft'){
+        c.cardStyle=cardBase;
+        c.stateLabel='Draft'; c.stateStyle=stateChip('Draft','#EEEDEA','#68716B');
+        c.hasProgress=true;
+        c.progFillStyle='display:block; height:100%; background:'+C.pine+'; border-radius:999px; width:'+p.pct+'%;';
+        c.progLabel=p.pct+'% built';
+        c.hasLine=true; c.linePost='Last touched '+p.touched;
+        if(p.stalled){ c.hasFlag=true; c.flagText='Stalling · untouched for 2+ weeks'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
+        c.actions=[ actBtn('Keep building','open',p.id,true), actBtn('Duplicate','dup',p.id), actBtn('Discard','del',p.id) ];
+      } else if(p.status==='template'){
+        c.cardStyle='position:relative; background:transparent; border:1.5px dashed '+C.sageLine+'; border-radius:16px; padding:16px 16px 14px; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s,background .15s;';
+        c.cardHover='border-color:'+C.pine+'; background:'+C.alt+';';
+        c.stateLabel='Template'; c.stateStyle=stateChip('Template','#EDE7F7','#6B4FA8');
+        c.hasLine=true; c.linePre='Used '+p.used+' times'; c.linePost='';
+        c.actions=[ actBtn('Use template','use',p.id,true), actBtn('Preview','open',p.id) ];
+      } else {
+        c.cardStyle=cardBase+' opacity:.82;';
+        c.stateLabel='Archived'; c.stateStyle=stateChip('Archived',C.rest,C.restInk);
+        c.hasLine=true; c.linePost='Finished '+p.finished+' · '+p.clients+' clients · '+p.adherence+'% adherence';
+        c.actions=[ actBtn('Run it again','run',p.id,true), actBtn('Save as template','tpl',p.id), actBtn('View','open',p.id) ];
+      }
+      return c;
     });
-    const pgSelStyle='cursor:pointer; height:40px; font-family:inherit; font-size:13px; font-weight:600; color:#3A4B45; background:#fff; border:1px solid #D8E5E0; border-radius:11px; padding:0 32px 0 14px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; box-shadow:0 1px 2px rgba(36,53,49,.04); background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239AA39C\' stroke-width=\'2.5\'><path d=\'M6 9l6 6 6-6\'/></svg>"); background-repeat:no-repeat; background-position:right 11px center;';
-    return { programCards, pgStatusChips, pgSearch:st.pgSearch, pgGoalFilter:st.pgGoalFilter, pgSort:st.pgSort, pgSelStyle,
-      pgGoalOptions:[{v:'all',l:'All types'},{v:'private',l:'Private'},{v:'semi_private',l:'Semi-private'},{v:'group',l:'Group'}],
-      pgSortOptions:[{v:'updated',l:'Sort: Updated'},{v:'name',l:'Sort: Name A–Z'}],
-      onPgSearch:(e)=>this.onPgSearch(e), setPgGoal:(e)=>this.setPgGoal(e), setPgSort:(e)=>this.setPgSort(e),
-      openPgCreate:()=>this.openPgCreate(),
+
+    // ---- attention strip ----
+    const ending=this.programs.filter(p=>p.status==='active'&&p.endsSoon&&!p.nextAssigned);
+    const stalled=this.programs.filter(p=>p.status==='draft'&&p.stalled);
+    const attnBits=[];
+    if(ending.length) attnBits.push(ending.length+' program'+(ending.length>1?'s':'')+' end'+(ending.length>1?'':'s')+' this week with no next block assigned');
+    if(stalled.length) attnBits.push(stalled.length+' draft'+(stalled.length>1?'s are':' is')+' stalling');
+    const pgHasAttn=attnBits.length>0;
+
+    // ---- coach filter options ----
+    const coachSet=[...new Set(this.programs.map(p=>p.coachName).filter(Boolean))];
+    const pgCoachOptions=[{v:'',l:'All coaches'}].concat(coachSet.map(c=>({v:c,l:c})));
+    const pgSelStyle='cursor:pointer; font-family:"DM Sans",sans-serif; font-weight:600; font-size:12.5px; color:'+C.ink+'; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:999px; padding:8px 30px 8px 13px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2379857F\' stroke-width=\'2.5\'><path d=\'M6 9l6 6 6-6\'/></svg>"); background-repeat:no-repeat; background-position:right 11px center;';
+
+    const emptyMsg=(q||st.pgCoachFilter)?'Nothing matches that filter.':'Nothing here yet.';
+
+    return { programCards, pgStatusChips, pgSearch:st.pgSearch, pgCoachFilter:st.pgCoachFilter, pgSelStyle,
+      pgCoachOptions, pgHasNone:list.length===0, pgEmptyMsg:emptyMsg,
+      pgHasAttn, pgAttnText:attnBits.join(' · '),
+      onPgSearch:(e)=>this.onPgSearch(e), setPgCoachFilter:(e)=>this.setPgCoachFilter(e),
+      pgShowAttention:()=>this.pgShowAttention(), openPgCreate:()=>this.openPgCreate(),
       inBuilderDetail: !!st.builderProgId, pgListVisible: !st.builderProgId,
       ...this.pgFormVM(), ...this.builderScreenVM() };
+  }
+
+  pgCardAction(act,id){
+    if(act==='open'){ this.openBuilder(id); return; }
+    if(act==='dup'){ this.dupProgram(id); return; }
+    if(act==='arch'){ this.archiveProgram(id); return; }
+    if(act==='del'){ this.delProgram(id); return; }
+    if(act==='tpl'){ this.saveAsTemplate(id); return; }
+    if(act==='use'){ this.useTemplate(id); return; }
+    if(act==='run'){ this.runAgain(id); return; }
   }
 
   pgFormVM(){
