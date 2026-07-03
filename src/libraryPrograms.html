@@ -2338,6 +2338,7 @@
   <main style="flex:1; height:100%; display:flex; flex-direction:column; min-width:0;">
 
     <!-- top nav -->
+    <sc-if value="{{ topNavVisible }}" hint-placeholder-val="{{ true }}">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-bottom:1px solid #E0EBE8; background:#F7FAF9;">
       <div style="display:flex; gap:4px; background:#EEF4F1; border:1px solid #DEEAE6; border-radius:10px; padding:4px;">
         <sc-for list="{{ navTabs }}" as="t" hint-placeholder-count="4">
@@ -2365,6 +2366,7 @@
         </sc-if>
       </div>
     </div>
+    </sc-if>
 
     <!-- screen body -->
     <div style="flex:1; overflow:hidden; position:relative;">
@@ -5589,7 +5591,7 @@ class Component extends DCLogic {
       pgHasAttn, pgAttnText:attnBits.join(' · '),
       onPgSearch:(e)=>this.onPgSearch(e), setPgCoachFilter:(e)=>this.setPgCoachFilter(e),
       pgShowAttention:()=>this.pgShowAttention(), openPgCreate:()=>this.openPgCreate(),
-      inBuilderDetail: !!st.builderProgId, pgListVisible: !st.builderProgId,
+      inBuilderDetail: !!st.builderProgId, pgListVisible: !st.builderProgId, topNavVisible: !st.builderProgId,
       ...this.pgFormVM(), ...this.builderScreenVM() };
   }
 

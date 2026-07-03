@@ -16,8 +16,18 @@
  body{margin:0;background:var(--page);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;font-size:14px;line-height:1.45;display:flex;flex-direction:column;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
  @media print{html,body{height:auto;overflow:visible}}
 
- .bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:18px 22px 14px;background:var(--page);border-bottom:1px solid var(--line)}
- .title{margin-right:auto}
+ .bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding:16px 62px 14px 22px;background:var(--page);border-bottom:1px solid var(--line)}
+ .title{margin-right:auto;min-width:0}
+ .title h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .iconbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .15s,box-shadow .15s,color .15s}
+ .iconbtn:hover{border-color:var(--pine);color:var(--pine);box-shadow:var(--shadow)}
+ .iconbtn.back{color:var(--pine)}
+ .menuwrap{position:relative;flex:none}
+ .actmenu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;min-width:184px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(36,53,49,.18);padding:6px}
+ .actmenu[hidden]{display:none}
+ .actitem{display:block;width:100%;text-align:left;font-family:"DM Sans",sans-serif;font-weight:600;font-size:13px;color:var(--ink);background:none;border:0;border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .12s}
+ .actitem:hover{background:var(--sage)}
+ .actitem:disabled{color:var(--muted);cursor:default;background:none}
  .title h1{font-family:"Archivo Expanded","Archivo",sans-serif;font-weight:800;font-size:22px;margin:0;letter-spacing:-.01em;color:var(--head)}
  .title p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
  .btn{font-family:"DM Sans",sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;border-radius:999px;padding:9px 15px;border:1px solid var(--line);background:var(--surface);color:var(--ink);transition:border-color .15s,box-shadow .15s}
@@ -163,13 +173,18 @@
  @media print{.bar .btn,.hint,.botbar .wknav{display:none}.scroller{overflow:visible;border:none;box-shadow:none;margin:0}body{font-size:10px;background:#fff}.toast{display:none}}
 </style></head><body>
 <div class="bar">
- <button class="btn back" id="backBtn" type="button">&#8249; Back to programs</button>
+ <button class="iconbtn back" id="backBtn" type="button" aria-label="Back to programs" title="Back to programs"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
  <div class="title"><h1 id="progTitle">Program</h1><p id="progSub"></p></div>
- <button class="btn" id="undoBtn" onclick="undo()" disabled>Undo</button>
- <button class="btn" id="copyBtn" onclick="copyTSV()">Copy for Sheets</button>
- <button class="btn" onclick="downloadCSV()">Download CSV</button>
- <button class="btn" onclick="window.print()">Save as PDF</button>
- <button class="btn primary" onclick="publishToMembers()">Publish to members</button>
+ <button class="btn primary" onclick="publishToMembers()">Publish</button>
+ <div class="menuwrap">
+  <button class="iconbtn" id="menuBtn" type="button" aria-label="More actions" aria-haspopup="true" aria-expanded="false" onclick="toggleActMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="19" r="1.9"></circle></svg></button>
+  <div class="actmenu" id="actMenu" hidden role="menu">
+   <button class="actitem" id="undoBtn" role="menuitem" onclick="undo();closeActMenu()" disabled>Undo</button>
+   <button class="actitem" id="copyBtn" role="menuitem" onclick="copyTSV();closeActMenu()">Copy for Sheets</button>
+   <button class="actitem" role="menuitem" onclick="downloadCSV();closeActMenu()">Download CSV</button>
+   <button class="actitem" role="menuitem" onclick="window.print();closeActMenu()">Save as PDF</button>
+  </div>
+ </div>
 </div>
 <div id="ctxmount"></div>
 <div class="scroller" id="scroller"><div id="grid"><div class="loading">Loading program&hellip;</div></div></div>
@@ -307,6 +322,12 @@ function updateWeek(){const s=document.getElementById('scroller');const total=Ma
 function renderTabs(){let h='';for(let i=0;i<MONTHS;i++)h+='<button class="mtab'+(i===cur?' on':'')+'" onclick="setMonth('+i+')">'+esc(MONTHNAMES[i])+'</button>';document.getElementById('mtabs').innerHTML=h;}
 function setMonth(i){cur=i;clearSel();renderTabs();render();}
 document.getElementById('scroller').addEventListener('scroll',()=>{clearTimeout(window.__sw);window.__sw=setTimeout(updateWeek,80);if(menuEl().classList.contains('show'))hideMenu();});
+
+/* ============ actions menu ============ */
+function closeActMenu(){const m=document.getElementById('actMenu'),b=document.getElementById('menuBtn');if(m)m.hidden=true;if(b)b.setAttribute('aria-expanded','false');}
+function toggleActMenu(e){if(e)e.stopPropagation();const m=document.getElementById('actMenu'),b=document.getElementById('menuBtn');if(!m)return;const open=m.hidden;m.hidden=!open;if(b)b.setAttribute('aria-expanded',String(open));}
+document.addEventListener('click',function(e){const m=document.getElementById('actMenu');if(m&&!m.hidden&&!e.target.closest('.menuwrap'))closeActMenu();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeActMenu();});
 
 /* ============ export ============ */
 function flatten(){
