@@ -2378,10 +2378,25 @@
               <svg style="position:absolute; left:13px; pointer-events:none;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
               <input value="{{ search }}" oninput="{{ onSearch }}" placeholder="Search exercises" style="width:230px; height:40px; border:1px solid #D8E5E0; background:#fff; border-radius:11px; padding:0 14px 0 36px; font-family:inherit; font-size:13.5px; outline:none; color:#243531; box-shadow:0 1px 2px rgba(36,53,49,.04); transition:border-color .18s, box-shadow .18s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px rgba(43,122,120,.13);">
             </div>
-            <select value="{{ sourceFilter }}" onchange="{{ setSource }}" style="{{ selStyle }}"><sc-for list="{{ sourceOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-            <select value="{{ movementFilter }}" onchange="{{ setMovementSel }}" style="{{ selStyle }}"><sc-for list="{{ movementFilterOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+            <div style="position:relative; flex:none;">
+              <button onclick="{{ toggleSourceMenu }}" style="{{ ddTrigger }}" style-hover="border-color:var(--accent);"><span style="flex:1; text-align:left; white-space:nowrap;">{{ sourceLabel }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <sc-if value="{{ sourceMenuOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="{{ ddMenu }}"><sc-for list="{{ sourceItems }}" as="o" hint-placeholder-count="3"><div onclick="{{ o.onClick }}" style="{{ o.style }}" style-hover="background:#F0F5F2;"><span style="flex:1;">{{ o.l }}</span><sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if></div></sc-for></div>
+              </sc-if>
+            </div>
+            <div style="position:relative; flex:none;">
+              <button onclick="{{ toggleMovementMenu }}" style="{{ ddTrigger }}" style-hover="border-color:var(--accent);"><span style="flex:1; text-align:left; white-space:nowrap;">{{ movementLabel }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <sc-if value="{{ movementMenuOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="{{ ddMenu }}"><sc-for list="{{ movementItems }}" as="o" hint-placeholder-count="6"><div onclick="{{ o.onClick }}" style="{{ o.style }}" style-hover="background:#F0F5F2;"><span style="flex:1;">{{ o.l }}</span><sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if></div></sc-for></div>
+              </sc-if>
+            </div>
             <div style="flex:1;"></div>
-            <select value="{{ sortBy }}" onchange="{{ setSort }}" style="{{ selStyle }}"><sc-for list="{{ sortOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+            <div style="position:relative; flex:none;">
+              <button onclick="{{ toggleSortMenu }}" style="{{ ddTrigger }}" style-hover="border-color:var(--accent);"><span style="flex:1; text-align:left; white-space:nowrap;">{{ sortLabel }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <sc-if value="{{ sortMenuOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="{{ ddMenuRight }}"><sc-for list="{{ sortItems }}" as="o" hint-placeholder-count="3"><div onclick="{{ o.onClick }}" style="{{ o.style }}" style-hover="background:#F0F5F2;"><span style="flex:1;">{{ o.l }}</span><sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if></div></sc-for></div>
+              </sc-if>
+            </div>
             <button onclick="{{ openIngest }}" style="cursor:pointer; height:40px; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; background:#fff; color:#243531; border:1px solid #D8E5E0; border-radius:11px; padding:0 16px; font-family:inherit; font-size:13.5px; font-weight:600; box-shadow:0 1px 2px rgba(36,53,49,.04); transition:all .18s cubic-bezier(.4,0,.2,1);" style-hover="border-color:var(--accent); color:var(--accent); background:#F4F8F6; box-shadow:0 4px 12px rgba(43,122,120,.14); transform:translateY(-1px);" style-active="transform:translateY(0); box-shadow:0 1px 2px rgba(36,53,49,.06);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M17 8l-5-5-5 5M12 3v12"></path></svg>Ingest
             </button>
@@ -4279,6 +4294,7 @@ class Component extends DCLogic {
     sourceFilter: 'all',
     sortBy: 'updated',
     movementFilter: 'all',
+    libMenu: null,
     collapsedGroups: {},
     search: '',
     selected: {},
@@ -4841,6 +4857,10 @@ class Component extends DCLogic {
   setMuscle(e){ this.setState({ muscleFilter:e.target.value }); }
   setSource(e){ this.setState({ sourceFilter:e.target.value }); }
   setSort(e){ this.setState({ sortBy:e.target.value }); }
+  toggleLibMenu(which){ this.setState({ libMenu: this.state.libMenu===which?null:which }); }
+  setSourceVal(v){ this.setState({ sourceFilter:v, libMenu:null }); }
+  setMovementVal(v){ this.setState({ movementFilter:v, libMenu:null }); }
+  setSortVal(v){ this.setState({ sortBy:v, libMenu:null }); }
 
   // ---- drawer: create / edit / view
   blankDraft(){ return { id:null, name:'', equipment:'', muscles:[], muscleInput:'', instructions:'', video:'', metric:{sets:true,reps:true,weight:true,duration:false,distance:false,calories:false}, status:'needs_review', source:'manual', usedIn:0, movement:null, movementSet:false }; }
@@ -6153,6 +6173,17 @@ class Component extends DCLogic {
     const selStyle='cursor:pointer; height:40px; font-family:inherit; font-size:13px; font-weight:600; color:#3A4B45; background:#fff; border:1px solid #D8E5E0; border-radius:11px; padding:0 32px 0 14px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; box-shadow:0 1px 2px rgba(36,53,49,.04); transition:border-color .18s, box-shadow .18s; background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239AA39C\' stroke-width=\'2.5\'><path d=\'M6 9l6 6 6-6\'/></svg>"); background-repeat:no-repeat; background-position:right 11px center;';
     const sourceOptions=[{v:'all',l:'All sources'},{v:'manual',l:'Manual'},{v:'skill_ingest',l:'Skill import'}];
     const sortOptions=[{v:'updated',l:'Sort: Updated'},{v:'created',l:'Sort: Created'},{v:'name',l:'Sort: Name A–Z'}];
+    // custom dropdowns (native <select> renders blank on iOS Safari)
+    const ddTrigger='cursor:pointer; height:40px; display:inline-flex; align-items:center; gap:8px; font-family:inherit; font-size:13px; font-weight:600; color:#3A4B45; background:#fff; border:1px solid #D8E5E0; border-radius:11px; padding:0 12px 0 14px; box-shadow:0 1px 2px rgba(36,53,49,.04); transition:border-color .18s, box-shadow .18s;';
+    const ddMenu='position:absolute; top:calc(100% + 6px); left:0; min-width:100%; z-index:20; background:#fff; border:1px solid #D8E5E0; border-radius:12px; box-shadow:0 16px 40px rgba(36,53,49,.18); padding:8px; animation:popIn .15s ease;';
+    const ddMenuRight='position:absolute; top:calc(100% + 6px); right:0; min-width:100%; z-index:20; background:#fff; border:1px solid #D8E5E0; border-radius:12px; box-shadow:0 16px 40px rgba(36,53,49,.18); padding:8px; animation:popIn .15s ease;';
+    const ddItemStyle=(sel)=>'cursor:pointer; display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:8px; font-size:13.5px; color:#243531; transition:background .12s; white-space:nowrap; background:'+(sel?'#F0F5F2':'transparent')+';';
+    const sourceLabel=(sourceOptions.find(o=>o.v===st.sourceFilter)||sourceOptions[0]).l;
+    const sortLabel=(sortOptions.find(o=>o.v===st.sortBy)||sortOptions[0]).l;
+    const movementLabel=(movementFilterOptions.find(o=>o.v===st.movementFilter)||movementFilterOptions[0]).l;
+    const sourceItems=sourceOptions.map(o=>({ l:o.l, selected:o.v===st.sourceFilter, onClick:()=>this.setSourceVal(o.v), style:ddItemStyle(o.v===st.sourceFilter) }));
+    const movementItems=movementFilterOptions.map(o=>({ l:o.l, selected:o.v===st.movementFilter, onClick:()=>this.setMovementVal(o.v), style:ddItemStyle(o.v===st.movementFilter) }));
+    const sortItems=sortOptions.map(o=>({ l:o.l, selected:o.v===st.sortBy, onClick:()=>this.setSortVal(o.v), style:ddItemStyle(o.v===st.sortBy) }));
 
     const selIds=Object.keys(st.selected);
     const navTabs=[
@@ -6250,6 +6281,11 @@ class Component extends DCLogic {
       sourceFilter:st.sourceFilter, sortBy:st.sortBy,
       selStyle, sourceOptions, sortOptions,
       setSource:(e)=>this.setSource(e), setSort:(e)=>this.setSort(e),
+      ddTrigger, ddMenu, ddMenuRight,
+      sourceLabel, movementLabel, sortLabel,
+      sourceItems, movementItems, sortItems,
+      sourceMenuOpen: st.libMenu==='source', movementMenuOpen: st.libMenu==='movement', sortMenuOpen: st.libMenu==='sort',
+      toggleSourceMenu:()=>this.toggleLibMenu('source'), toggleMovementMenu:()=>this.toggleLibMenu('movement'), toggleSortMenu:()=>this.toggleLibMenu('sort'),
       openCreate:()=>this.openCreate(),
       ...bulkVM,
       hasSelection: selIds.length>=2, selectionLabel: selIds.length>1? ('('+selIds.length+')') : '',
