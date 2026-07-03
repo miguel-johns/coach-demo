@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════�����══════════════
+// ═���═════════════════════════════���������════════════════������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -6509,7 +6509,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         );
       })()}
 
-      {/* ─── STRENGTH PROGRESS (BAR CHARTS) ─── */}
+      {/* ──��� STRENGTH PROGRESS (BAR CHARTS) ─── */}
       {(() => {
         // Generate session history for each lift with progressive overload
         const generateLiftHistory = (baseline, liftIdx) => {
@@ -12619,7 +12619,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ════════════��═════════════════════════════════
+/* ════════════��═══════════════════════════════���═
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
@@ -13053,7 +13053,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ���════════���═══��������═��═════��═════��═����══════════════════════════════
+// ���════════���═══��������═��═════��═════��═����═══���══════════════════════════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -16544,7 +16544,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ═════════════════════════���═══════════════════
    MAIN DASHBOARD COMPONENT
-   ══════════════════════════���═════��════════════ */
+   ════���═════════════════════���═════��════════════ */
 // ═══════════════════════════════════════════════════════════����══
 // PROGRAMMING CANVAS - Admin group / semi-private scheduling + generation
 // ═══════════════════════════════════════════════════════════════
@@ -17945,12 +17945,6 @@ export default function MiltonDashboard() {
   // Get active session
   const activeSession = activeSessionId ? sessions.find(s => s.id === activeSessionId) : null;
 
-  // Collapse the expanded chat whenever the canvas closes so it reopens at the
-  // default split next time.
-  useEffect(() => {
-    if (!canvasMode && chatExpanded) setChatExpanded(false);
-  }, [canvasMode, chatExpanded]);
-
   // When the chat is expanded on desktop, the canvas collapses to a narrow
   // sidebar, so render its contents in the compact (mobile-style) layout.
   const canvasCompact = isMobile || chatExpanded;
@@ -18092,7 +18086,7 @@ export default function MiltonDashboard() {
       {/* ═══ DESKTOP CHAT PANEL ═══ */}
       {!isMobile && (
         <div style={{
-          ...(canvasMode && chatExpanded
+          ...(chatExpanded
             ? { flex: 1, minWidth: 0 }
             : { width: 360, flexShrink: 0 }),
           padding: "14px 6px 14px 10px",
@@ -18112,37 +18106,35 @@ export default function MiltonDashboard() {
             }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {canvasMode && (
-                  <button
-                    onClick={() => setChatExpanded(v => !v)}
-                    title={chatExpanded ? "Collapse chat" : "Expand chat"}
-                    aria-label={chatExpanded ? "Collapse chat" : "Expand chat"}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 26, height: 26, borderRadius: 8, cursor: "pointer",
-                      background: chatExpanded ? TEAL_LIGHT : "transparent",
-                      border: `1px solid ${chatExpanded ? SAGE : BORDER}`,
-                      color: chatExpanded ? TEAL : TEXT_SEC, padding: 0,
-                      transition: "all 0.15s ease"
-                    }}
-                    onMouseEnter={e => { if (!chatExpanded) e.currentTarget.style.background = "#f0f4f3"; }}
-                    onMouseLeave={e => { if (!chatExpanded) e.currentTarget.style.background = "transparent"; }}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {chatExpanded ? (
-                        <>
-                          <polyline points="9 4 4 9 9 14" />
-                          <polyline points="15 10 20 15 15 20" />
-                        </>
-                      ) : (
-                        <>
-                          <polyline points="15 4 20 9 15 14" />
-                          <polyline points="9 10 4 15 9 20" />
-                        </>
-                      )}
-                    </svg>
-                  </button>
-                )}
+                <button
+                  onClick={() => setChatExpanded(v => !v)}
+                  title={chatExpanded ? "Collapse chat" : "Expand chat"}
+                  aria-label={chatExpanded ? "Collapse chat" : "Expand chat"}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 26, height: 26, borderRadius: 8, cursor: "pointer",
+                    background: chatExpanded ? TEAL_LIGHT : "transparent",
+                    border: `1px solid ${chatExpanded ? SAGE : BORDER}`,
+                    color: chatExpanded ? TEAL : TEXT_SEC, padding: 0,
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => { if (!chatExpanded) e.currentTarget.style.background = "#f0f4f3"; }}
+                  onMouseLeave={e => { if (!chatExpanded) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {chatExpanded ? (
+                      <>
+                        <polyline points="9 4 4 9 9 14" />
+                        <polyline points="15 10 20 15 15 20" />
+                      </>
+                    ) : (
+                      <>
+                        <polyline points="15 4 20 9 15 14" />
+                        <polyline points="9 10 4 15 9 20" />
+                      </>
+                    )}
+                  </svg>
+                </button>
                 <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
               </div>
             </div>
@@ -18390,7 +18382,11 @@ export default function MiltonDashboard() {
   
   {/* ══��� MAIN CONTENT ═══ */}
       {!canvasMode && selectedClient !== null ? (
-        <main style={{ flex: 1, overflowY: "auto" }}>
+        <main style={{
+          ...(chatExpanded && !isMobile ? { width: 360, flexShrink: 0 } : { flex: 1 }),
+          overflowY: "auto",
+          transition: "width 0.3s ease"
+        }}>
           <ClientProfile
             client={clients[selectedClient]}
             onBack={() => setSelectedClient(null)}
@@ -18411,9 +18407,11 @@ export default function MiltonDashboard() {
         </main>
       ) : !canvasMode ? (
       <main style={{
-        flex: 1, overflowY: "auto", minHeight: 0,
+        ...(chatExpanded && !isMobile ? { width: 360, flexShrink: 0 } : { flex: 1 }),
+        overflowY: "auto", minHeight: 0,
         padding: isMobile ? "68px 14px 76px" : "24px 28px",
-        display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20
+        display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20,
+        transition: "width 0.3s ease"
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 16 }}>
