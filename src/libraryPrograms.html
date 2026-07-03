@@ -2554,19 +2554,19 @@
       <sc-if value="{{ isBuilder }}" hint-placeholder-val="{{ false }}">
        <sc-if value="{{ pgListVisible }}" hint-placeholder-val="{{ true }}">
         <div style="height:100%; display:flex; flex-direction:column; background:#F4F5F3;">
-          <div style="display:flex; align-items:center; gap:10px; padding:16px 22px 12px; flex-wrap:wrap; border-bottom:1px solid #EAE8E2;">
-            <h1 style="font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-.01em; color:#15302B;">Programs</h1>
-            <div style="display:inline-flex; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px; margin-left:6px;">
+          <div style="display:flex; align-items:center; gap:10px; padding:16px 22px 12px; flex-wrap:nowrap; border-bottom:1px solid #EAE8E2;">
+            <h1 style="flex:0 0 auto; font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-.01em; color:#15302B;">Programs</h1>
+            <div style="display:inline-flex; flex:0 0 auto; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px; margin-left:6px;">
               <sc-for list="{{ pgStatusChips }}" as="s" hint-placeholder-count="4">
                 <button onclick="{{ s.onClick }}" style="{{ s.style }}" style-hover="{{ s.hoverStyle }}">{{ s.label }}<span style="{{ s.countStyle }}">{{ s.count }}</span></button>
               </sc-for>
             </div>
-            <div style="position:relative; display:flex; align-items:center; margin-left:auto;">
+            <div style="position:relative; display:flex; align-items:center; margin-left:auto; flex:1 1 auto; min-width:120px; max-width:300px;">
               <svg style="position:absolute; left:13px; pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#79857F" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4" stroke-linecap="round"></path></svg>
-              <input value="{{ pgSearch }}" oninput="{{ onPgSearch }}" placeholder="Search programs, coaches, focus…" aria-label="Search programs" style="width:240px; background:#fff; border:1px solid #EAE8E2; border-radius:999px; padding:8px 14px 8px 34px; font-family:'DM Sans',sans-serif; font-size:12.5px; outline:none; color:#1E2C29;" style-focus="border-color:#D6E5DA; box-shadow:0 0 0 3px rgba(30,77,69,.1);">
+              <input value="{{ pgSearch }}" oninput="{{ onPgSearch }}" placeholder="Search programs, coaches, focus…" aria-label="Search programs" style="width:100%; background:#fff; border:1px solid #EAE8E2; border-radius:999px; padding:8px 14px 8px 34px; font-family:'DM Sans',sans-serif; font-size:12.5px; outline:none; color:#1E2C29;" style-focus="border-color:#D6E5DA; box-shadow:0 0 0 3px rgba(30,77,69,.1);">
             </div>
             <select value="{{ pgCoachFilter }}" onchange="{{ setPgCoachFilter }}" aria-label="Filter by coach" style="{{ pgSelStyle }}"><sc-for list="{{ pgCoachOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-            <button onclick="{{ openPgCreate }}" style="cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; background:#1E4D45; color:#fff; border:1px solid #1E4D45; border-radius:999px; padding:9px 15px; font-family:'DM Sans',sans-serif; font-size:12.5px; font-weight:600; transition:background .15s;" style-hover="background:#163A34; border-color:#163A34;">
+            <button onclick="{{ openPgCreate }}" style="cursor:pointer; flex:0 0 auto; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; background:#1E4D45; color:#fff; border:1px solid #1E4D45; border-radius:999px; padding:9px 15px; font-family:'DM Sans',sans-serif; font-size:12.5px; font-weight:600; transition:background .15s;" style-hover="background:#163A34; border-color:#163A34;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>New program
             </button>
           </div>
@@ -5582,7 +5582,7 @@ class Component extends DCLogic {
     // ---- coach filter options ----
     const coachSet=[...new Set(this.programs.map(p=>p.coachName).filter(Boolean))];
     const pgCoachOptions=[{v:'',l:'All coaches'}].concat(coachSet.map(c=>({v:c,l:c})));
-    const pgSelStyle='cursor:pointer; font-family:"DM Sans",sans-serif; font-weight:600; font-size:12.5px; color:'+C.ink+'; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:999px; padding:8px 30px 8px 13px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2379857F\' stroke-width=\'2.5\'><path d=\'M6 9l6 6 6-6\'/></svg>"); background-repeat:no-repeat; background-position:right 11px center;';
+    const pgSelStyle='cursor:pointer; flex:0 0 auto; white-space:nowrap; font-family:"DM Sans",sans-serif; font-weight:600; font-size:12.5px; color:'+C.ink+'; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:999px; padding:8px 30px 8px 13px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2379857F\' stroke-width=\'2.5\'><path d=\'M6 9l6 6 6-6\'/></svg>"); background-repeat:no-repeat; background-position:right 11px center;';
 
     const emptyMsg=(q||st.pgCoachFilter)?'Nothing matches that filter.':'Nothing here yet.';
 
