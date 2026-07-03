@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
 
 // ═══════════�������════════════════��══════════════════════════════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════���══════════════
+// ═���═════════════════════════════���������════════════════�����══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2030,7 +2030,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════�������������������═══���═�����══
+// ═══════════════════════��══════════════════════════�������������������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -2877,7 +2877,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ═════════════════����══════════════════════���═���═���══���═════���══════���═
+// ═══════════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -5708,6 +5708,7 @@ function MobileCanvasSheet({
       case "templates": return "Canvas";
       case "mealPlan": return "Meal Plan";
       case "workout": return "Workout Program";
+      case "library": return "Library";
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
@@ -5887,6 +5888,14 @@ isMobile={true}
             />
           )}
           {canvasType === "workout" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              clients={clients}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "library" && (
             <WorkoutCanvas 
               data={canvasData}
               clients={clients}
@@ -16536,7 +16545,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 /* ═════════════════════════���═══════════════════
    MAIN DASHBOARD COMPONENT
    ══════════════════════════���═════��════════════ */
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════����══
 // PROGRAMMING CANVAS - Admin group / semi-private scheduling + generation
 // ═══════════════════════════════════════════════════════════════
 const CLASS_TIME_SLOTS = ["6:00 AM", "7:00 AM", "9:00 AM", "12:00 PM", "4:30 PM", "5:30 PM", "6:30 PM"];
@@ -17421,6 +17430,7 @@ export default function MiltonDashboard() {
   
   // Canvas state
   const [canvasMode, setCanvasMode] = useState(false);
+  const [chatExpanded, setChatExpanded] = useState(false); // Desktop: expand chat wide, shrink canvas to sidebar
   const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'playbook' | 'messageSequence' | 'report'
   const [canvasData, setCanvasData] = useState(null);
   const [canvasClient, setCanvasClient] = useState(null);
@@ -17935,6 +17945,16 @@ export default function MiltonDashboard() {
   // Get active session
   const activeSession = activeSessionId ? sessions.find(s => s.id === activeSessionId) : null;
 
+  // Collapse the expanded chat whenever the canvas closes so it reopens at the
+  // default split next time.
+  useEffect(() => {
+    if (!canvasMode && chatExpanded) setChatExpanded(false);
+  }, [canvasMode, chatExpanded]);
+
+  // When the chat is expanded on desktop, the canvas collapses to a narrow
+  // sidebar, so render its contents in the compact (mobile-style) layout.
+  const canvasCompact = isMobile || chatExpanded;
+
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw", background: BG, fontFamily: font, color: TEXT, overflow: "hidden", position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -18072,8 +18092,12 @@ export default function MiltonDashboard() {
       {/* ═══ DESKTOP CHAT PANEL ═══ */}
       {!isMobile && (
         <div style={{
-          width: 360, flexShrink: 0, padding: "14px 6px 14px 10px",
-          display: "flex", flexDirection: "column"
+          ...(canvasMode && chatExpanded
+            ? { flex: 1, minWidth: 0 }
+            : { width: 360, flexShrink: 0 }),
+          padding: "14px 6px 14px 10px",
+          display: "flex", flexDirection: "column",
+          transition: "flex-basis 0.3s ease, width 0.3s ease"
         }}>
           <section style={{
             flex: 1, background: WHITE, display: "flex", flexDirection: "column",
@@ -18087,7 +18111,40 @@ export default function MiltonDashboard() {
               background: "rgba(247,250,249,0.5)"
             }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>Milton</span>
-              <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {canvasMode && (
+                  <button
+                    onClick={() => setChatExpanded(v => !v)}
+                    title={chatExpanded ? "Collapse chat" : "Expand chat"}
+                    aria-label={chatExpanded ? "Collapse chat" : "Expand chat"}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      width: 26, height: 26, borderRadius: 8, cursor: "pointer",
+                      background: chatExpanded ? TEAL_LIGHT : "transparent",
+                      border: `1px solid ${chatExpanded ? SAGE : BORDER}`,
+                      color: chatExpanded ? TEAL : TEXT_SEC, padding: 0,
+                      transition: "all 0.15s ease"
+                    }}
+                    onMouseEnter={e => { if (!chatExpanded) e.currentTarget.style.background = "#f0f4f3"; }}
+                    onMouseLeave={e => { if (!chatExpanded) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {chatExpanded ? (
+                        <>
+                          <polyline points="9 4 4 9 9 14" />
+                          <polyline points="15 10 20 15 15 20" />
+                        </>
+                      ) : (
+                        <>
+                          <polyline points="15 4 20 9 15 14" />
+                          <polyline points="9 10 4 15 9 20" />
+                        </>
+                      )}
+                    </svg>
+                  </button>
+                )}
+                <span style={{ fontSize: 10, color: TEXT_SEC, opacity: 0.6 }}>v1.0</span>
+              </div>
             </div>
 <ChatContent
   chatInput={chatInput} setChatInput={setChatInput}
@@ -18102,8 +18159,11 @@ export default function MiltonDashboard() {
       {/* ═══ CANVAS MODE - Desktop Only (Mobile uses MobileCanvasSheet) ═══ */}
       {canvasMode && !isMobile && (
         <div style={{
-          flex: 1,
+          ...(chatExpanded
+            ? { width: 360, flexShrink: 0 }
+            : { flex: 1, minWidth: 0 }),
           margin: "14px 14px 14px 0",
+          transition: "width 0.3s ease",
           borderRadius: 20,
           border: `1px solid ${BORDER}`,
           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
@@ -18115,7 +18175,7 @@ export default function MiltonDashboard() {
         }}>
           {canvasType === "templates" && (
             <CanvasTemplates 
-              isMobile={isMobile}
+              isMobile={canvasCompact}
               onSelect={(templateType) => {
                 if (templateType === "settings") {
                   setCanvasType("settings");
@@ -18164,7 +18224,7 @@ export default function MiltonDashboard() {
   <AIDashboardsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   onHome={() => setCanvasType("templates")}
-    isMobile={isMobile}
+    isMobile={canvasCompact}
     pendingEdit={pendingDashboardEdit}
     onEditProcessed={handleDashboardEditResult}
   />
@@ -18175,7 +18235,7 @@ export default function MiltonDashboard() {
     onHome={() => setCanvasType("templates")}
     brainDocuments={brainDocuments}
     setBrainDocuments={setBrainDocuments}
-    isMobile={isMobile}
+    isMobile={canvasCompact}
     playbook={playbook}
     setPlaybook={setPlaybook}
   />
@@ -18203,6 +18263,14 @@ export default function MiltonDashboard() {
               onHome={() => setCanvasType("templates")}
             />
           )}
+          {canvasType === "library" && (
+            <WorkoutCanvas 
+              data={canvasData}
+              clients={clients}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "messageSequence" && (
             <MessageSequenceCanvas 
               data={canvasData}
@@ -18220,7 +18288,7 @@ export default function MiltonDashboard() {
   )}
 {canvasType === "inbox" && (
   <InboxCanvas
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   />
@@ -18229,7 +18297,7 @@ export default function MiltonDashboard() {
   <SemiPrivateList
   sessions={sessions}
   clients={clients}
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("semiPrivateSession"); setCanvasData({ sessionId: sessId }); }}
@@ -18242,7 +18310,7 @@ export default function MiltonDashboard() {
   <SessionCanvas
   session={sessions.find(s => s.id === canvasData.sessionId)}
   clients={clients}
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onBack={() => setCanvasType("semiPrivate")}
   onUpdateSession={handleUpdateSession}
   onOpenFullProfile={(clientId) => {
@@ -18257,7 +18325,7 @@ export default function MiltonDashboard() {
   <GroupClassList
   sessions={sessions}
   clients={clients}
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onClose={() => setCanvasType("templates")}
   onHome={() => setCanvasType("templates")}
   onSessionClick={(sessId) => { setCanvasType("groupClassSession"); setCanvasData({ sessionId: sessId }); }}
@@ -18270,7 +18338,7 @@ export default function MiltonDashboard() {
   <GroupClassSession
   session={sessions.find(s => s.id === canvasData.sessionId)}
   clients={clients}
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onBack={() => setCanvasType("groupClass")}
   onUpdateSession={handleUpdateSession}
   onOpenFullProfile={(clientId) => {
@@ -18283,7 +18351,7 @@ export default function MiltonDashboard() {
   )}
   {canvasType === "schedule" && (
   <ScheduleCanvas
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   sessions={sessions}
@@ -18293,7 +18361,7 @@ export default function MiltonDashboard() {
   )}
   {canvasType === "programming" && (
   <ProgrammingCanvas
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   clients={clients}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
@@ -18302,7 +18370,7 @@ export default function MiltonDashboard() {
   {canvasType === "settings" && (
   <SettingsCanvas
   key={coachVersion}
-  isMobile={isMobile}
+  isMobile={canvasCompact}
   sessions={sessions}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
@@ -18507,6 +18575,7 @@ export default function MiltonDashboard() {
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
@@ -18768,7 +18837,7 @@ export default function MiltonDashboard() {
         </div>
         </>)}
 
-        {/* ═══ CLIENTS VIEW ═══ */}
+        {/* ═══ CLIENTS VIEW ═��═ */}
         {homeView === "clients" && (<>
         {/* Service Type Tab Bar */}
         {(() => {
