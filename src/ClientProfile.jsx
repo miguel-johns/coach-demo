@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  ChevronLeft, Sparkles, Camera, User, Plus, X, Clock,
+  ChevronLeft, Sparkles, Camera, User, Plus, X, Clock, Check,
   Calendar, ChevronDown, ChevronRight,
   TrendingUp, Activity, Ruler, History,
 } from "lucide-react";
@@ -39,101 +39,23 @@ const cardBase = {
   boxShadow: "0 1px 2px rgba(26,46,42,0.05)",
 };
 
-const TARGETS = { cal: 2200, protein: 140, carbs: 250, fat: 75, steps: 9000, sleep: 7, active: 45 };
-
-const NUTRITION = [
-  [4, 4, 3, 4, 2, 0, 0],
-  [4, 3, 4, 4, 3, 1, 0],
-  [4, 4, 3, 4, 2, 1, 0],
-  [4, 4, 3, 4, 3, 2, 1],
-].flat();
-
-const MOVEMENT = [
-  [2, 3, 2, 2, 2, 1, 1],
-  [3, 2, 2, 3, 2, 1, 1],
-  [2, 3, 2, 2, 2, 1, 0],
-  [2, 2, 0, 2, 2, 1, 1],
-].flat();
-
-const RECOVERY = [
-  [2, 2, 3, 2, 2, 3, 2],
-  [3, 2, 3, 3, 2, 3, 3],
-  [3, 3, 3, 3, 4, 3, 3],
-  [3, 4, 3, 4, 3, 4, 4],
-].flat();
-
-const NUTRITION_META = {
-  4: { cal: 2140, protein: 136, meals: ["Eggs and oats · 520 cal", "Chicken bowl · 780 cal", "Steak, rice, veg · 840 cal"] },
-  3: { cal: 1910, protein: 112, meals: ["Breakfast tacos · 390 cal", "Turkey sandwich · 610 cal", "Pasta dinner · 910 cal"] },
-  2: { cal: 1480, protein: 88, meals: ["Protein shake · 320 cal", "Chipotle bowl · 1,160 cal"] },
-  1: { cal: 390, protein: 20, meals: ["Breakfast tacos · 390 cal"] },
-  0: { cal: 0, protein: 0, meals: [] },
+const MEAL_POOL = {
+  4: ["Eggs and oats · 520 cal", "Chicken bowl · 780 cal", "Salmon, rice, veg · 840 cal"],
+  3: ["Greek yogurt · 340 cal", "Turkey wrap · 610 cal", "Pasta dinner · 910 cal"],
+  2: ["Protein shake · 320 cal", "Burrito bowl · 1,140 cal"],
+  1: ["Coffee and toast · 280 cal"],
+  0: [],
 };
-
-const STEPS_BY_LEVEL = [1500, 3800, 6200, 8600, 9800];
-const SLEEP_BY_LEVEL = [4.8, 5.6, 6.4, 7.2, 7.8];
-const BEDTIME = ["1:30 AM", "12:40 AM", "12:05 AM", "11:15 PM", "10:45 PM"];
-const ACTIVE_BY_LEVEL = [0, 10, 22, 38, 52];
-const SESSION_DAYS = { 23: "missed" };
-
-const NOTES = {
-  all: (d) => {
-    if (d.session === "missed") return "Missed his scheduled session, and steps stayed low. This was the day to catch.";
-    if (d.nLevel === 0) return "Nothing logged and barely any steps synced. Weekend gap, fourth week in a row.";
-    if (d.nLevel === 1) return "One breakfast, then nothing. Matches his weekend pattern. Likely unlogged, not undereaten.";
-    if (d.nLevel >= 3 && d.mLevel <= 2) return `Nutrition on point. Movement is the soft spot at ${(d.steps / 1000).toFixed(1)}k steps.`;
-    if (d.nLevel >= 3 && d.mLevel >= 3) return "Solid day across all three pillars.";
-    return "Partial logging. Enough to see the shape of the day, not the whole picture.";
-  },
-  nutrition: (d) => {
-    if (d.nLevel === 0) return "Nothing logged. Weekend gap, fourth week in a row.";
-    if (d.nLevel === 1) return "One breakfast, then nothing. Matches his weekend pattern. Likely unlogged, not undereaten.";
-    if (d.nLevel === 2) return "Two meals logged, dinner missing. The protein gap is mostly the missing meal.";
-    if (d.nLevel === 3) return "Logged the whole day. Protein came in light, macros otherwise fine.";
-    return "Hit calories and protein. Textbook day.";
-  },
-  movement: (d) => {
-    if (d.session === "missed") return "Missed his scheduled Strength session, and steps stayed low. This was the day to catch.";
-    if (d.mLevel >= 3) return `${(d.steps / 1000).toFixed(1)}k steps, near target without a session. His good days are walk-driven.`;
-    if (d.mLevel === 2) return "Steps around 6k. No session scheduled, so this is his unprompted baseline.";
-    return "Barely moved. Weekend inactivity mirrors the logging gap. A pattern, not a fluke.";
-  },
-  recovery: (d) => {
-    if (d.rLevel >= 4) return "Best sleep of the month. In bed before 11.";
-    if (d.rLevel === 3) return "Over 7 hours and bedtime holding steady. Recovery is his quiet win.";
-    return "Short night, late bedtime is the driver. Worth watching, not worth a message yet.";
-  },
-};
-
-const DAYS = NUTRITION.map((nLevel, i) => {
-  const mLevel = MOVEMENT[i];
-  const rLevel = RECOVERY[i];
-  const n = NUTRITION_META[nLevel];
-  const wiggle = nLevel >= 2 ? (i % 3) * 40 : 0;
-  const cal = n.cal + wiggle;
-  return {
-    date: `Jun ${i + 1}`,
-    nLevel, mLevel, rLevel,
-    composite: Math.round((nLevel + mLevel + rLevel) / 3),
-    cal,
-    protein: n.protein + (nLevel >= 2 ? (i % 2) * 6 : 0),
-    carbs: Math.round((cal * 0.45) / 4),
-    fat: Math.round((cal * 0.3) / 9),
-    meals: n.meals,
-    steps: STEPS_BY_LEVEL[mLevel] + (i % 3) * 150,
-    active: ACTIVE_BY_LEVEL[mLevel] + (i % 2) * 4,
-    sleep: +(SLEEP_BY_LEVEL[rLevel] + (i % 2) * 0.2).toFixed(1),
-    bedtime: BEDTIME[rLevel],
-    restingHR: 68 - rLevel * 2 + (i % 2),
-    session: SESSION_DAYS[i] || null,
-  };
-});
+const STEPS_BY_LEVEL = [1500, 3800, 6200, 8600, 10200];
+const SLEEP_BY_LEVEL = [4.8, 5.6, 6.4, 7.2, 7.9];
+const BEDTIME = ["1:30 AM", "12:40 AM", "12:05 AM", "11:15 PM", "10:40 PM"];
+const ACTIVE_BY_LEVEL = [0, 10, 22, 38, 54];
 
 const PILLARS = [
-  ["all", "All", "Nutrition carries the score. Movement drags it. Recovery is quietly improving."],
-  ["nutrition", "Nutrition", "Weekdays strong, weekends unlogged. Four straight weeks."],
-  ["movement", "Movement", "Steps flat around 6k. Zero sessions attended."],
-  ["recovery", "Recovery", "Sleep trending up. His best pillar."],
+  ["all", "All"],
+  ["nutrition", "Nutrition"],
+  ["movement", "Movement"],
+  ["recovery", "Recovery"],
 ];
 
 const levelFor = (day, pillar) =>
@@ -141,37 +63,6 @@ const levelFor = (day, pillar) =>
   pillar === "movement" ? day.mLevel :
   pillar === "recovery" ? day.rLevel : day.composite;
 
-const SESSIONS = [
-  { date: "Jun 24", status: "missed" },
-  { date: "Jun 29", status: "missed" },
-  { date: "Jul 5", status: "next" },
-  { date: "Jul 7", status: "scheduled" },
-  { date: "Jul 9", status: "scheduled" },
-  { date: "Jul 12", status: "scheduled" },
-];
-
-const PROGRESS = {
-  weight: { label: "Weight", unit: " lb", series: [212, 210.5, 209, 207.5, 206.5, 206.4, 206.1, 206] },
-  waist: { label: "Waist", unit: " in", series: [40.5, 40.2, 39.9, 39.6, 39.3, 39.1, 39, 39] },
-  bodyfat: { label: "Body fat", unit: "%", series: [28.2, 27.9, 27.6, 27.3, 27.1, 27, 26.9, 26.9] },
-};
-const PROGRESS_DATES = ["May 14", "May 21", "May 28", "Jun 4", "Jun 11", "Jun 18", "Jun 25", "Jul 1"];
-const PROGRESS_NOTES = {
-  weight: "Down 6 lb since May, then flat for three weeks. The adherence below is why.",
-  waist: "Down 1.5 in. Stalled alongside the weight the last two weeks.",
-  bodyfat: "Down 1.3 points while muscle held. The early loss was fat, not lean mass.",
-};
-
-const TIMELINE = [
-  ["Jul 1", "log", "Logged breakfast · 390 cal"],
-  ["Jun 29", "change", "Missed session · Strength, 11:00 PM"],
-  ["Jun 24", "change", "Missed session · Strength, 11:00 PM"],
-  ["Jun 18", "milestone", "First 5 lb lost · 212 to 206.5"],
-  ["Jun 12", "note", "Knee felt tight on squats. Keeping loads moderate for two weeks."],
-  ["Jun 5", "change", "Program assigned · Full Body Starter Block"],
-  ["May 22", "milestone", "Baseline measurements and photos captured"],
-  ["May 14", "change", "Client onboarded"],
-];
 const TL_BADGE = {
   milestone: ["Milestone", T.mintTint, T.mintTx],
   change: ["Change", T.creamTint, T.inkSoft],
@@ -179,6 +70,346 @@ const TL_BADGE = {
   note: ["Coach note", T.tealTint, T.tealDark],
 };
 
+/* ---------- deterministic helpers ---------- */
+function seedFrom(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const clamp04 = (v) => Math.max(0, Math.min(4, Math.round(v)));
+const round1 = (v) => Math.round(v * 10) / 10;
+function fmtIso(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+function addDaysFmt(iso, days) {
+  const d = new Date((iso || "2026-01-01") + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function genLevels(archetype, rng, kind) {
+  const arr = [];
+  for (let w = 0; w < 4; w++) {
+    for (let d = 0; d < 7; d++) {
+      const weekend = d >= 5;
+      let t;
+      if (archetype === "strong") t = weekend ? 3 : 4;
+      else if (archetype === "weekendGap") t = weekend ? 0 : 4;
+      else if (archetype === "declining") t = 4 - w - (weekend ? 1 : 0);
+      else t = 1 + w - (weekend ? 1 : 0); // improving
+      if (kind === "recovery") t = weekend ? t + 1 : t;
+      if (kind === "movement") t = t - 1;
+      const r = rng();
+      const noise = r < 0.28 ? -1 : r > 0.86 ? 1 : 0;
+      arr.push(clamp04(t + noise));
+    }
+  }
+  return arr;
+}
+
+function makeSeries(base, cur, n = 8) {
+  const arr = [];
+  for (let i = 0; i < n; i++) {
+    const p = i / (n - 1);
+    arr.push(round1(base + (cur - base) * Math.pow(p, 0.7)));
+  }
+  arr[n - 1] = round1(cur);
+  arr[0] = round1(base);
+  return arr;
+}
+
+function weekLabels(startIso, n, spanDays = 90) {
+  const out = [];
+  const start = new Date((startIso || "2026-01-01") + "T00:00:00").getTime();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(start + (i * spanDays / (n - 1)) * 86400000);
+    out.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+  }
+  return out;
+}
+
+/* ---------- per-client derivation ---------- */
+function deriveClient(client) {
+  const c = client || {};
+  const name = c.name || "Client";
+  const firstName = name.split(" ")[0];
+  const initial = firstName.charAt(0).toUpperCase();
+  const seed = seedFrom(name);
+  const rng = mulberry32(seed);
+
+  const archetype = ["strong", "weekendGap", "declining", "improving"][(seed >>> 3) % 4];
+  const photoBucket = seed % 10;
+  const photoState = photoBucket <= 4 ? "photos" : photoBucket <= 7 ? "none" : "declined";
+
+  const assess = c.assessment || {};
+  const current = c.current || {};
+  const goals = c.goals || {};
+  const nut = c.nutrition || {};
+
+  const calTarget = nut.calorieTarget || 2000;
+  const proteinTarget = nut.proteinTarget || 140;
+  const targets = {
+    cal: calTarget,
+    protein: proteinTarget,
+    carbs: Math.round((calTarget * 0.45) / 4),
+    fat: Math.round((calTarget * 0.3) / 9),
+    steps: 9000,
+    sleep: 7,
+    active: 45,
+  };
+
+  const nLevels = genLevels(archetype, rng, "nutrition");
+  const mLevels = genLevels(archetype, rng, "movement");
+  const rLevels = genLevels(archetype, rng, "recovery");
+
+  // attendance from real rate
+  const rate = typeof c.attendanceRate === "number" ? c.attendanceRate : 75;
+  const sess = c.sessions || [];
+  const olderIso = sess[1]?.date || assess.date;
+  const newerIso = sess[0]?.date || assess.date;
+  const recentType = sess[0]?.type || "Strength";
+  let att = rate >= 80 ? ["attended", "attended"] : rate >= 55 ? ["attended", "missed"] : ["missed", "missed"];
+
+  // mark missed days on the heat calendar
+  const missedDays = [];
+  if (att[0] === "missed") missedDays.push(7 + (seed % 5));
+  if (att[1] === "missed") missedDays.push(21 + (seed % 5));
+
+  const days = nLevels.map((nLevel, i) => {
+    const mLevel = mLevels[i];
+    const rLevel = rLevels[i];
+    const cal = Math.round(calTarget * (0.35 + nLevel * 0.16));
+    const protein = Math.round(proteinTarget * (0.3 + nLevel * 0.18));
+    return {
+      date: `Jun ${i + 1}`,
+      nLevel, mLevel, rLevel,
+      composite: Math.round((nLevel + mLevel + rLevel) / 3),
+      cal,
+      protein,
+      carbs: Math.round((cal * 0.45) / 4),
+      fat: Math.round((cal * 0.3) / 9),
+      meals: MEAL_POOL[nLevel] || [],
+      steps: STEPS_BY_LEVEL[mLevel] + (i % 3) * 150,
+      active: ACTIVE_BY_LEVEL[mLevel] + (i % 2) * 4,
+      sleep: round1(SLEEP_BY_LEVEL[rLevel] + (i % 2) * 0.2),
+      bedtime: BEDTIME[rLevel],
+      restingHR: 68 - rLevel * 2 + (i % 2),
+      session: missedDays.includes(i) ? "missed" : null,
+    };
+  });
+
+  const defaultDay = missedDays.length ? missedDays[missedDays.length - 1] : 27;
+
+  // progress metrics from real numbers
+  const dates = weekLabels(assess.date, 8);
+  const buildMetric = (base, cur, unit, label, betterLower, target) => {
+    const series = makeSeries(base, cur);
+    const last = series[series.length - 1];
+    const delta = round1(last - series[0]);
+    let good;
+    if (typeof target === "number") good = Math.abs(cur - target) < Math.abs(base - target);
+    else good = betterLower ? cur <= base : cur >= base;
+    return { series, last, delta, unit, label, good };
+  };
+
+  const progress = {
+    weight: buildMetric(
+      assess.bodyweight ?? 180, current.bodyweight ?? assess.bodyweight ?? 180,
+      " lb", "Weight", true, goals.targetWeight
+    ),
+    waist: buildMetric(
+      assess.measurements?.waist ?? 34, current.measurements?.waist ?? assess.measurements?.waist ?? 34,
+      " in", "Waist", true
+    ),
+    bodyfat: buildMetric(
+      assess.bodyFat ?? 24, current.bodyFat ?? assess.bodyFat ?? 24,
+      "%", "Body fat", true, goals.targetBodyFat
+    ),
+  };
+  // annotate weight chart where cumulative change first hits ~5
+  const wSeries = progress.weight.series;
+  let annotateIdx = null;
+  if (Math.abs(progress.weight.delta) >= 5) {
+    for (let i = 1; i < wSeries.length; i++) {
+      if (Math.abs(wSeries[i] - wSeries[0]) >= 5) { annotateIdx = i; break; }
+    }
+  }
+  progress.weight.annotateIdx = annotateIdx;
+  progress.weight.annotateLabel = "First 5 lb";
+
+  // sessions rail
+  const attendedCount = att.filter((a) => a === "attended").length;
+  const sessions = [
+    { date: fmtIso(olderIso), status: att[0] },
+    { date: fmtIso(newerIso), status: att[1] },
+    { date: addDaysFmt(newerIso, 3), status: "next" },
+    { date: addDaysFmt(newerIso, 6), status: "scheduled" },
+    { date: addDaysFmt(newerIso, 9), status: "scheduled" },
+    { date: addDaysFmt(newerIso, 12), status: "scheduled" },
+  ];
+  const nextLabel = sessions[2].date;
+  const sessionsSub = `${attendedCount} of 2 attended · 4 scheduled · ${recentType}`;
+
+  // measurements
+  const meas = [];
+  if (assess.bodyweight != null && current.bodyweight != null)
+    meas.push(measRow("Weight", "", assess.bodyweight, current.bodyweight, " lb", true, goals.targetWeight));
+  if (assess.measurements?.waist != null && current.measurements?.waist != null)
+    meas.push(measRow("Waist", "", assess.measurements.waist, current.measurements.waist, " in", true));
+  if (assess.bodyFat != null && current.bodyFat != null)
+    meas.push(measRow("Body fat", "InBody", assess.bodyFat, current.bodyFat, "%", true, goals.targetBodyFat, " pts"));
+  if (assess.leanMass != null && current.leanMass != null)
+    meas.push(measRow("Muscle mass", "InBody", assess.leanMass, current.leanMass, " lb", false));
+
+  // benchmarks for opted-out clients (from strength baselines)
+  const sb = assess.strengthBaselines || {};
+  const bench = [];
+  const bnames = { squat: "Back squat", deadlift: "Deadlift", benchPress: "Bench press", overheadPress: "Overhead press" };
+  ["squat", "benchPress", "deadlift"].forEach((k, idx) => {
+    if (sb[k]) {
+      const from = sb[k].weight;
+      const gain = 1.18 + (idx * 0.06) + (seed % 5) * 0.01;
+      const to = Math.round(from * gain / 5) * 5;
+      const pct = Math.round(((to - from) / from) * 100);
+      bench.push([bnames[k], `${from} lb`, `${to} lb`, `+${pct}%`]);
+    }
+  });
+
+  // Milton's read
+  const archLine = {
+    strong: `${firstName} is dialed in — logging is consistent and sessions are getting done.`,
+    weekendGap: `${firstName} logs every weekday but weekends go dark, several weeks running. That gap is the pattern to close.`,
+    declining: `${firstName} started strong, but the last two weeks have slipped across nutrition and movement.`,
+    improving: `${firstName} was shaky early on, but the trend is up — this past week is the best yet.`,
+  }[archetype];
+  const read = `${archLine} ${c.insight || c.narrative || ""}`.trim();
+
+  const pillarSummary = {
+    all: {
+      strong: "All three pillars are holding. Recovery leads, nutrition close behind.",
+      weekendGap: "Nutrition carries the score. Weekends drag it. Recovery is steady.",
+      declining: "Nutrition and movement both softening. Recovery is the last thing holding.",
+      improving: "Every pillar is climbing week over week. Momentum is real.",
+    }[archetype],
+    nutrition: {
+      strong: "Logged nearly every day. Protein consistently near target.",
+      weekendGap: "Weekdays strong, weekends unlogged. Several straight weeks.",
+      declining: "Was consistent, now trailing off. Dinners increasingly unlogged.",
+      improving: "Logging discipline is building. Last week was the most complete yet.",
+    }[archetype],
+    movement: {
+      strong: "Steps near target most days and sessions attended.",
+      weekendGap: "Steps flat around 6k. Sessions inconsistent.",
+      declining: "Step count sliding and a session slipped. Worth a nudge.",
+      improving: "Steps trending up and attendance improving.",
+    }[archetype],
+    recovery: {
+      strong: "Sleep is his anchor — over 7 hours most nights.",
+      weekendGap: "Sleep trending up. His best pillar.",
+      declining: "Sleep still fine but bedtime creeping later.",
+      improving: "Sleep steadily improving alongside everything else.",
+    }[archetype],
+  };
+
+  const readActions = {
+    photos: [
+      ["Draft a check-in", `Draft a check-in message to ${firstName} before the next session`],
+      ["Nudge on weekends", `Draft a weekend logging nudge for ${firstName}`],
+    ],
+    none: [
+      ["Draft a check-in", `Draft a check-in message to ${firstName} before the next session`],
+      ["Request baseline photos", `Ask ${firstName} for baseline photos with the pose guide`],
+    ],
+    declined: [
+      ["Draft a check-in", `Draft a check-in message to ${firstName} before the next session`],
+      ["Ask for fresh measurements", `Ask ${firstName} to log measurements this week`],
+    ],
+  };
+
+  // timeline from real data
+  const startLabel = c.startDate || fmtIso(assess.date) || "—";
+  const timeline = [];
+  if (sess[0]) timeline.push([fmtIso(sess[0].date), "log", `Logged session · ${sess[0].type}`]);
+  if (att.includes("missed")) timeline.push([fmtIso(newerIso), "change", `Missed session · ${recentType}`]);
+  if (c.narrative) timeline.push([dates[4] || startLabel, "milestone", c.narrative]);
+  if (c.coachAngle) timeline.push([dates[3] || startLabel, "note", c.coachAngle]);
+  if (c.program) timeline.push([dates[1] || startLabel, "change", `Program assigned · ${c.program}`]);
+  timeline.push([startLabel, "milestone", "Baseline measurements captured"]);
+  timeline.push([startLabel, "change", "Client onboarded"]);
+  const timelineCount = 120 + (seed % 110);
+
+  // days since last measurement (from most recent session)
+  const lastMeasDays = 18 + (seed % 40);
+
+  const subLine = [
+    (c.clientTypes && c.clientTypes.length ? c.clientTypes.join(" · ") : null),
+    goals.primary ? `Goal: ${goals.primary}` : null,
+  ].filter(Boolean).join(" · ");
+
+  return {
+    name, firstName, initial, subLine,
+    program: c.program, startLabel, nextLabel,
+    photoState, read, readActions, pillarSummary,
+    targets, days, defaultDay,
+    progress, dates,
+    sessions, sessionsSub,
+    meas, bench, timeline, timelineCount, lastMeasDays,
+    photoBaseline: dates[0], photoLatest: dates[dates.length - 1],
+  };
+}
+
+function measRow(metric, src, base, cur, unit, betterLower, target, deltaUnit) {
+  const delta = round1(cur - base);
+  let good;
+  if (typeof target === "number") good = Math.abs(cur - target) < Math.abs(base - target);
+  else good = betterLower ? cur <= base : cur >= base;
+  const du = deltaUnit || unit;
+  return {
+    metric, src,
+    base: `${round1(base)}${unit}`,
+    cur: `${round1(cur)}${unit}`,
+    delta: `${delta > 0 ? "+" : ""}${delta}${du}`,
+    good,
+  };
+}
+
+function noteFor(pillar, d, firstName) {
+  if (pillar === "all") {
+    if (d.session === "missed") return "Missed the scheduled session, and steps stayed low. This was the day to catch.";
+    if (d.nLevel === 0) return "Nothing logged and barely any steps synced.";
+    if (d.nLevel >= 3 && d.mLevel >= 3) return "Solid day across all three pillars.";
+    if (d.nLevel >= 3 && d.mLevel <= 2) return `Nutrition on point. Movement is the soft spot at ${(d.steps / 1000).toFixed(1)}k steps.`;
+    return "Partial logging. Enough to see the shape of the day, not the whole picture.";
+  }
+  if (pillar === "nutrition") {
+    if (d.nLevel === 0) return "Nothing logged this day.";
+    if (d.nLevel === 1) return "One meal, then nothing. Likely unlogged, not undereaten.";
+    if (d.nLevel === 2) return "Two meals logged, one missing. The protein gap is mostly the missing meal.";
+    if (d.nLevel === 3) return "Logged the whole day. Protein came in slightly light.";
+    return "Hit calories and protein. Textbook day.";
+  }
+  if (pillar === "movement") {
+    if (d.session === "missed") return "Missed the scheduled session, and steps stayed low.";
+    if (d.mLevel >= 3) return `${(d.steps / 1000).toFixed(1)}k steps, near target without a session.`;
+    if (d.mLevel === 2) return "Steps around 6k. No session scheduled — the unprompted baseline.";
+    return "Barely moved. A quiet day worth watching.";
+  }
+  if (d.rLevel >= 4) return "Best sleep of the month. In bed before 11.";
+  if (d.rLevel === 3) return "Over 7 hours and bedtime holding steady.";
+  return "Short night, late bedtime is the driver.";
+}
+
+/* ---------- presentational components ---------- */
 function IconSquare({ icon: Icon, tint, color }) {
   return (
     <div style={{ width: 46, height: 46, borderRadius: 14, background: tint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -244,9 +475,8 @@ function Segmented({ options, value, onChange }) {
   );
 }
 
-function ProgressChart({ metric }) {
-  const m = PROGRESS[metric];
-  const s = m.series;
+function ProgressChart({ metric, series, dates, annotateIdx, annotateLabel }) {
+  const s = series;
   const min = Math.min(...s);
   const max = Math.max(...s);
   const span = max - min || 1;
@@ -255,9 +485,9 @@ function ProgressChart({ metric }) {
   const X = (i) => 48 + (i * 532) / (s.length - 1);
   const Y = (v) => 16 + ((hi - v) / (hi - lo)) * 128;
   const pts = s.map((v, i) => `${X(i)},${Y(v)}`).join(" ");
-  const fmt = (v) => (metric === "weight" ? Math.round(v) : +v.toFixed(1));
+  const fmt = (v) => (metric === "weight" ? Math.round(v) : round1(v));
   return (
-    <svg viewBox="0 0 600 176" width="100%" role="img" aria-label={`${m.label} trend since baseline`}>
+    <svg viewBox="0 0 600 176" width="100%" role="img" aria-label="Metric trend since baseline">
       {[max, (max + min) / 2, min].map((v, i) => (
         <g key={i}>
           <line x1="48" x2="584" y1={Y(v)} y2={Y(v)} stroke={T.line} strokeWidth="1" />
@@ -268,14 +498,14 @@ function ProgressChart({ metric }) {
       {s.map((v, i) => (
         <circle key={i} cx={X(i)} cy={Y(v)} r={i === s.length - 1 ? 5 : 3.5} fill={i === s.length - 1 ? T.tealDeep : T.white} stroke={T.teal} strokeWidth="2" />
       ))}
-      {metric === "weight" && (
+      {metric === "weight" && annotateIdx != null && (
         <g>
-          <circle cx={X(4)} cy={Y(s[4])} r="8" fill="none" stroke={T.mintTx} strokeWidth="1.5" />
-          <text x={X(4)} y={Y(s[4]) - 14} textAnchor="middle" fontSize="11" fill={T.mintTx} fontFamily={FONT} fontWeight="500">First 5 lb</text>
+          <circle cx={X(annotateIdx)} cy={Y(s[annotateIdx])} r="8" fill="none" stroke={T.mintTx} strokeWidth="1.5" />
+          <text x={X(annotateIdx)} y={Y(s[annotateIdx]) - 14} textAnchor="middle" fontSize="11" fill={T.mintTx} fontFamily={FONT} fontWeight="500">{annotateLabel}</text>
         </g>
       )}
       {[0, 3, 7].map((i) => (
-        <text key={i} x={X(i)} y="171" textAnchor="middle" fontSize="11" fill={T.inkFaint} fontFamily={FONT}>{PROGRESS_DATES[i]}</text>
+        <text key={i} x={X(i)} y="171" textAnchor="middle" fontSize="11" fill={T.inkFaint} fontFamily={FONT}>{dates[i]}</text>
       ))}
     </svg>
   );
@@ -313,12 +543,22 @@ function StatTile({ label, value, target, pct }) {
 }
 
 export default function ClientProfile({ client, onBack, isMobile }) {
-  const [photoState, setPhotoState] = useState("photos");
+  const d = useMemo(() => deriveClient(client), [client]);
+
+  const [photoState, setPhotoState] = useState(d.photoState);
   const [pillar, setPillar] = useState("all");
   const [metric, setMetric] = useState("weight");
-  const [selectedDay, setSelectedDay] = useState(27);
+  const [selectedDay, setSelectedDay] = useState(d.defaultDay);
   const [mealsOpen, setMealsOpen] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // reset local state when switching clients
+  useEffect(() => {
+    setPhotoState(d.photoState);
+    setSelectedDay(d.defaultDay);
+    setPillar("all");
+    setMetric("weight");
+  }, [d]);
 
   useEffect(() => {
     if (!toast) return;
@@ -329,11 +569,10 @@ export default function ClientProfile({ client, onBack, isMobile }) {
   useEffect(() => setMealsOpen(false), [selectedDay]);
 
   const send = (msg) => setToast(msg);
-  const day = DAYS[selectedDay];
-  const pillarMeta = PILLARS.find(([k]) => k === pillar);
-  const prog = PROGRESS[metric];
-  const progLast = prog.series[prog.series.length - 1];
-  const progDelta = +(progLast - prog.series[0]).toFixed(1);
+  const day = d.days[selectedDay] || d.days[d.days.length - 1];
+  const prog = d.progress[metric];
+  const progLast = prog.last;
+  const progDelta = prog.delta;
 
   const gradeLevel = levelFor(day, pillar);
   const zeroLabel = pillar === "movement" || pillar === "recovery" ? "Off plan" : "Nothing logged";
@@ -341,21 +580,6 @@ export default function ClientProfile({ client, onBack, isMobile }) {
     gradeLevel >= 3 ? ["On plan", T.mintTint, T.mintTx] :
     gradeLevel >= 1 ? ["Partial day", T.amberTint, T.amberTx] :
     [zeroLabel, T.redTint, T.redTx];
-
-  const readActions = {
-    photos: [
-      ["Draft a check-in", "Draft a check-in message to Pops before Sunday"],
-      ["Nudge on weekends", "Draft a weekend logging nudge for Pops"],
-    ],
-    none: [
-      ["Draft a check-in", "Draft a check-in message to Pops before Sunday"],
-      ["Request baseline photos", "Ask Pops for baseline photos with the pose guide"],
-    ],
-    declined: [
-      ["Draft a check-in", "Draft a check-in message to Pops before Sunday"],
-      ["Ask for fresh measurements", "Ask Pops to log measurements this week"],
-    ],
-  };
 
   const pad = isMobile ? "20px" : "24px 26px";
   const card = { ...cardBase, padding: pad };
@@ -367,28 +591,20 @@ export default function ClientProfile({ client, onBack, isMobile }) {
         <div onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 8, color: T.inkSoft, fontSize: 15, cursor: "pointer", fontWeight: 500 }}>
           <ChevronLeft size={18} /> Back to Dashboard
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 12.5, color: T.inkFaint, fontWeight: 500 }}>Photo state</span>
-          <Segmented
-            options={[["photos", "Has photos"], ["none", "None yet"], ["declined", "Opted out"]]}
-            value={photoState}
-            onChange={setPhotoState}
-          />
-        </div>
       </div>
 
       <div style={{ maxWidth: 880, margin: "0 auto", padding: isMobile ? "0 16px 64px" : "0 32px 64px", display: "grid", gap: 16 }}>
 
         {/* Client header */}
         <div style={{ ...card, display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ width: 74, height: 74, borderRadius: "50%", background: T.teal, color: T.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, flexShrink: 0 }}>P</div>
+          <div style={{ width: 74, height: 74, borderRadius: "50%", background: T.teal, color: T.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, flexShrink: 0 }}>{d.initial}</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: isMobile ? 24 : 30, fontWeight: 700, lineHeight: 1.15, color: T.ink }}>Pops</div>
-            <div style={{ fontSize: 14, color: T.inkSoft, marginTop: 3 }}>58 · Male · Goal: lose 20 lb</div>
+            <div style={{ fontSize: isMobile ? 24 : 30, fontWeight: 700, lineHeight: 1.15, color: T.ink }}>{d.name}</div>
+            <div style={{ fontSize: 14, color: T.inkSoft, marginTop: 3 }}>{d.subLine}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-              <Pill bg={T.tealTint} color={T.tealDark}>Full Body Starter Block · Week 1 of 4 · At-Home</Pill>
-              <Pill bg={T.creamTint} color={T.inkSoft}>Next: Sun 7/5</Pill>
-              <Pill bg={T.creamTint} color={T.inkSoft}>Client since May</Pill>
+              {d.program && <Pill bg={T.tealTint} color={T.tealDark}>{d.program}</Pill>}
+              <Pill bg={T.creamTint} color={T.inkSoft}>Next: {d.nextLabel}</Pill>
+              <Pill bg={T.creamTint} color={T.inkSoft}>Client since {d.startLabel}</Pill>
               {photoState === "declined" && <Pill bg={T.amberTint} color={T.amberTx}>Photos off</Pill>}
             </div>
           </div>
@@ -401,11 +617,9 @@ export default function ClientProfile({ client, onBack, isMobile }) {
             <IconSquare icon={Sparkles} tint={T.tealTint} color={T.tealDark} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 19, fontWeight: 700, color: T.ink, marginBottom: 6 }}>Milton&apos;s read</div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: T.inkSoft }}>
-                Pops logs meals every weekday but weekends go dark, four weeks running. Sleep is climbing, so recovery is fine. Movement is the problem: steps sit at 6k and he has missed both scheduled sessions. His next one is Sunday.
-              </p>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: T.inkSoft }}>{d.read}</p>
               <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-                {readActions[photoState].map(([label, msg]) => (
+                {d.readActions[photoState].map(([label, msg]) => (
                   <GhostBtn key={label} onClick={() => send(msg)}>{label}</GhostBtn>
                 ))}
               </div>
@@ -417,18 +631,18 @@ export default function ClientProfile({ client, onBack, isMobile }) {
         <div style={card}>
           <SectionHeader
             icon={TrendingUp} tint={T.tealTint} color={T.tealDark}
-            title="Progress" sub="Since baseline · May 14"
-            right={<Segmented options={Object.entries(PROGRESS).map(([k, v]) => [k, v.label])} value={metric} onChange={setMetric} />}
+            title="Progress" sub={`Since baseline · ${d.dates[0]}`}
+            right={<Segmented options={Object.entries(d.progress).map(([k, v]) => [k, v.label])} value={metric} onChange={setMetric} />}
           />
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
             <span style={{ fontSize: 30, fontWeight: 700, color: T.ink }}>{progLast}{prog.unit}</span>
-            <Pill bg={progDelta <= 0 ? T.mintTint : T.amberTint} color={progDelta <= 0 ? T.mintTx : T.amberTx}>
-              {progDelta > 0 ? "+" : ""}{progDelta}{prog.unit} since May 14
+            <Pill bg={prog.good ? T.mintTint : T.amberTint} color={prog.good ? T.mintTx : T.amberTx}>
+              {progDelta > 0 ? "+" : ""}{progDelta}{prog.unit} since {d.dates[0]}
             </Pill>
           </div>
-          <ProgressChart metric={metric} />
+          <ProgressChart metric={metric} series={prog.series} dates={d.dates} annotateIdx={prog.annotateIdx} annotateLabel={prog.annotateLabel} />
           <p style={{ margin: "10px 0 0", fontSize: 14, color: T.inkSoft, lineHeight: 1.55, display: "flex", gap: 8 }}>
-            <Sparkles size={15} color={T.tealDark} style={{ flexShrink: 0, marginTop: 2 }} /> {PROGRESS_NOTES[metric]}
+            <Sparkles size={15} color={T.tealDark} style={{ flexShrink: 0, marginTop: 2 }} /> {progDelta === 0 ? "Holding flat since baseline." : `${prog.good ? "Trending toward goal" : "Moving away from goal"} — ${Math.abs(progDelta)}${prog.unit} change since ${d.dates[0]}.`}
           </p>
         </div>
 
@@ -441,25 +655,25 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           />
           <div style={{ display: "grid", gridTemplateColumns: "48px repeat(7, 1fr)", gap: 6, alignItems: "center" }}>
             <span />
-            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-              <span key={i} style={{ fontSize: 12, color: T.inkFaint, textAlign: "center", fontWeight: 500 }}>{d}</span>
+            {["M", "T", "W", "T", "F", "S", "S"].map((dd, i) => (
+              <span key={i} style={{ fontSize: 12, color: T.inkFaint, textAlign: "center", fontWeight: 500 }}>{dd}</span>
             ))}
             {[0, 1, 2, 3].map((w) => (
               <React.Fragment key={w}>
                 <span style={{ fontSize: 12, color: T.inkFaint, fontWeight: 500 }}>Jun {w * 7 + 1}</span>
-                {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-                  const idx = w * 7 + d;
-                  const level = levelFor(DAYS[idx], pillar);
+                {[0, 1, 2, 3, 4, 5, 6].map((dd) => {
+                  const idx = w * 7 + dd;
+                  const level = levelFor(d.days[idx], pillar);
                   const selected = idx === selectedDay;
                   return (
-                    <button key={d} onClick={() => setSelectedDay(idx)}
-                      aria-label={`${DAYS[idx].date}, ${pillar} adherence level ${level} of 4`}
+                    <button key={dd} onClick={() => setSelectedDay(idx)}
+                      aria-label={`${d.days[idx].date}, ${pillar} adherence level ${level} of 4`}
                       style={{
                         height: 30, borderRadius: 9, cursor: "pointer", padding: 0, position: "relative",
                         background: level === 0 ? T.cream : HEAT[level],
                         border: selected ? `2px solid ${T.tealDeep}` : level === 0 ? `1px solid ${T.line}` : "1px solid transparent",
                       }}>
-                      {DAYS[idx].session === "missed" && (pillar === "all" || pillar === "movement") && (
+                      {d.days[idx].session === "missed" && (pillar === "all" || pillar === "movement") && (
                         <span style={{ position: "absolute", top: 4, right: 5, width: 6, height: 6, borderRadius: "50%", background: T.red }} />
                       )}
                     </button>
@@ -479,7 +693,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               </span>
             </div>
             <span style={{ fontSize: 13.5, color: T.inkSoft, display: "flex", alignItems: "center", gap: 6 }}>
-              <Sparkles size={14} color={T.tealDark} /> {pillarMeta[2]}
+              <Sparkles size={14} color={T.tealDark} /> {d.pillarSummary[pillar]}
             </span>
           </div>
         </div>
@@ -495,30 +709,30 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 14 }}>
             {pillar === "all" && (<>
-              <StatTile label="Calories" value={day.cal.toLocaleString()} target={TARGETS.cal.toLocaleString()} pct={(day.cal / TARGETS.cal) * 100} />
-              <StatTile label="Protein" value={`${day.protein}g`} target={`${TARGETS.protein}g`} pct={(day.protein / TARGETS.protein) * 100} />
-              <StatTile label="Steps" value={day.steps.toLocaleString()} target={TARGETS.steps.toLocaleString()} pct={(day.steps / TARGETS.steps) * 100} />
-              <StatTile label="Sleep" value={`${day.sleep}h`} target={`${TARGETS.sleep}h`} pct={(day.sleep / TARGETS.sleep) * 100} />
+              <StatTile label="Calories" value={day.cal.toLocaleString()} target={d.targets.cal.toLocaleString()} pct={(day.cal / d.targets.cal) * 100} />
+              <StatTile label="Protein" value={`${day.protein}g`} target={`${d.targets.protein}g`} pct={(day.protein / d.targets.protein) * 100} />
+              <StatTile label="Steps" value={day.steps.toLocaleString()} target={d.targets.steps.toLocaleString()} pct={(day.steps / d.targets.steps) * 100} />
+              <StatTile label="Sleep" value={`${day.sleep}h`} target={`${d.targets.sleep}h`} pct={(day.sleep / d.targets.sleep) * 100} />
             </>)}
             {pillar === "nutrition" && (<>
-              <StatTile label="Calories" value={day.cal.toLocaleString()} target={TARGETS.cal.toLocaleString()} pct={(day.cal / TARGETS.cal) * 100} />
-              <StatTile label="Protein" value={`${day.protein}g`} target={`${TARGETS.protein}g`} pct={(day.protein / TARGETS.protein) * 100} />
-              <StatTile label="Carbs" value={`${day.carbs}g`} target={`${TARGETS.carbs}g`} pct={(day.carbs / TARGETS.carbs) * 100} />
-              <StatTile label="Fat" value={`${day.fat}g`} target={`${TARGETS.fat}g`} pct={(day.fat / TARGETS.fat) * 100} />
+              <StatTile label="Calories" value={day.cal.toLocaleString()} target={d.targets.cal.toLocaleString()} pct={(day.cal / d.targets.cal) * 100} />
+              <StatTile label="Protein" value={`${day.protein}g`} target={`${d.targets.protein}g`} pct={(day.protein / d.targets.protein) * 100} />
+              <StatTile label="Carbs" value={`${day.carbs}g`} target={`${d.targets.carbs}g`} pct={(day.carbs / d.targets.carbs) * 100} />
+              <StatTile label="Fat" value={`${day.fat}g`} target={`${d.targets.fat}g`} pct={(day.fat / d.targets.fat) * 100} />
             </>)}
             {pillar === "movement" && (<>
-              <StatTile label="Steps" value={day.steps.toLocaleString()} target={TARGETS.steps.toLocaleString()} pct={(day.steps / TARGETS.steps) * 100} />
-              <StatTile label="Active minutes" value={day.active} target={TARGETS.active} pct={(day.active / TARGETS.active) * 100} />
+              <StatTile label="Steps" value={day.steps.toLocaleString()} target={d.targets.steps.toLocaleString()} pct={(day.steps / d.targets.steps) * 100} />
+              <StatTile label="Active minutes" value={day.active} target={d.targets.active} pct={(day.active / d.targets.active) * 100} />
               <StatTile label="Session" value={day.session === "missed" ? "Missed" : "Rest day"} />
             </>)}
             {pillar === "recovery" && (<>
-              <StatTile label="Sleep" value={`${day.sleep}h`} target={`${TARGETS.sleep}h`} pct={(day.sleep / TARGETS.sleep) * 100} />
+              <StatTile label="Sleep" value={`${day.sleep}h`} target={`${d.targets.sleep}h`} pct={(day.sleep / d.targets.sleep) * 100} />
               <StatTile label="Bedtime" value={day.bedtime} />
               <StatTile label="Resting HR" value={`${day.restingHR} bpm`} />
             </>)}
           </div>
           <p style={{ margin: "0 0 12px", fontSize: 14, color: T.inkSoft, lineHeight: 1.55, display: "flex", gap: 8 }}>
-            <Sparkles size={15} color={T.tealDark} style={{ flexShrink: 0, marginTop: 2 }} /> {NOTES[pillar](day)}
+            <Sparkles size={15} color={T.tealDark} style={{ flexShrink: 0, marginTop: 2 }} /> {noteFor(pillar, day, d.firstName)}
           </p>
           <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 160 }}>
@@ -542,34 +756,35 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               ))}
               {pillar === "movement" && (
                 <span style={{ fontSize: 13.5, color: T.inkFaint }}>
-                  {day.session === "missed" ? "Strength · 11:00 PM · not attended" : "No session scheduled this day"}
+                  {day.session === "missed" ? "Session · not attended" : "No session scheduled this day"}
                 </span>
               )}
               {pillar === "recovery" && (
                 <span style={{ fontSize: 13.5, color: T.inkFaint }}>Synced from Apple Health · last sync 6:12 AM</span>
               )}
             </div>
-            {(pillar === "all" || pillar === "movement") && day.session === "missed" && <GhostBtn onClick={() => send("Draft a reschedule message for the missed Jun 24 session")}>Reschedule ask</GhostBtn>}
-            {(pillar === "all" || pillar === "nutrition") && !day.session && day.nLevel <= 1 && <GhostBtn onClick={() => send("Draft a weekend logging nudge for Pops")}>Nudge on weekends</GhostBtn>}
+            {(pillar === "all" || pillar === "movement") && day.session === "missed" && <GhostBtn onClick={() => send(`Draft a reschedule message for the missed ${day.date} session`)}>Reschedule ask</GhostBtn>}
+            {(pillar === "all" || pillar === "nutrition") && !day.session && day.nLevel <= 1 && <GhostBtn onClick={() => send(`Draft a weekend logging nudge for ${d.firstName}`)}>Nudge on weekends</GhostBtn>}
           </div>
         </div>
 
         {/* Sessions rail */}
         <div style={card}>
-          <SectionHeader icon={Calendar} tint={T.tealTint} color={T.tealDark} title="Sessions" sub="0 of 2 attended · 4 scheduled · all Strength, 11:00 PM" />
+          <SectionHeader icon={Calendar} tint={T.tealTint} color={T.tealDark} title="Sessions" sub={d.sessionsSub} />
           <div style={{ display: "flex", gap: 8 }}>
-            {SESSIONS.map((s) => (
-              <div key={s.date} style={{
+            {d.sessions.map((s, i) => (
+              <div key={i} style={{
                 flex: 1, textAlign: "center", padding: "14px 4px", borderRadius: 16,
                 background: T.cream,
                 border: s.status === "next" ? `2px solid ${T.teal}` : "1px solid transparent",
               }}>
                 <div style={{ fontSize: 12, color: T.inkFaint, marginBottom: 6, fontWeight: 500 }}>{s.date}</div>
                 {s.status === "missed" && <X size={16} color={T.red} />}
+                {s.status === "attended" && <Check size={16} color={T.green} />}
                 {s.status === "next" && <Clock size={16} color={T.tealDark} />}
                 {s.status === "scheduled" && <Calendar size={16} color={T.inkFaint} />}
                 <div style={{ fontSize: 12, color: T.inkSoft, marginTop: 6 }}>
-                  {s.status === "missed" ? "Missed" : s.status === "next" ? "Next" : "Strength"}
+                  {s.status === "missed" ? "Missed" : s.status === "attended" ? "Done" : s.status === "next" ? "Next" : "Planned"}
                 </div>
               </div>
             ))}
@@ -581,14 +796,14 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           <SectionHeader
             icon={Camera} tint={T.greenTint} color={T.green}
             title={photoState === "declined" ? "Progress markers" : "Progress photos"}
-            sub={photoState === "photos" ? "Front pose · 48 days apart" : photoState === "none" ? "Nothing captured yet" : "Photos are off for this client"}
+            sub={photoState === "photos" ? `Front pose · ${d.photoBaseline} to ${d.photoLatest}` : photoState === "none" ? "Nothing captured yet" : "Photos are off for this client"}
           />
 
           {photoState === "photos" && (
             <>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <Silhouette label="Baseline" date="May 14" />
-                <Silhouette label="Latest" date="Jul 1" />
+                <Silhouette label="Baseline" date={d.photoBaseline} />
+                <Silhouette label="Latest" date={d.photoLatest} />
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${T.line}`, marginTop: 16, paddingTop: 14 }}>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -599,7 +814,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
                     <Plus size={14} color={T.inkFaint} />
                   </div>
                 </div>
-                <GhostBtn onClick={() => send("Have Milton request August progress photos from Pops with the pose guide")}>Request next set</GhostBtn>
+                <GhostBtn onClick={() => send(`Have Milton request fresh progress photos from ${d.firstName} with the pose guide`)}>Request next set</GhostBtn>
               </div>
             </>
           )}
@@ -611,13 +826,13 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               </div>
               <p style={{ margin: "12px auto 4px", fontSize: 15.5, fontWeight: 700, color: T.ink }}>No photos yet</p>
               <p style={{ margin: "0 auto 16px", fontSize: 14, color: T.inkSoft, maxWidth: 380, lineHeight: 1.55 }}>
-                Milton can send Pops a baseline request with the pose guide before Sunday&apos;s session. Two minutes on his phone.
+                Milton can send {d.firstName} a baseline request with the pose guide before the next session. Two minutes on their phone.
               </p>
-              <PrimaryBtn onClick={() => send("Ask Pops for baseline photos with the pose guide")}>Have Milton ask</PrimaryBtn>
+              <PrimaryBtn onClick={() => send(`Ask ${d.firstName} for baseline photos with the pose guide`)}>Have Milton ask</PrimaryBtn>
               <div style={{ marginTop: 14 }}>
                 <button onClick={() => setPhotoState("declined")}
                   style={{ fontFamily: FONT, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: T.inkFaint, textDecoration: "underline" }}>
-                  Pops prefers not to share photos? Turn photos off
+                  {d.firstName} prefers not to share photos? Turn photos off
                 </button>
               </div>
             </div>
@@ -626,27 +841,25 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           {photoState === "declined" && (
             <>
               <p style={{ margin: "0 0 14px", fontSize: 14, color: T.inkSoft, lineHeight: 1.55 }}>
-                Pops opted out of photos, so Milton tracks his progress through performance and measurements instead. He will never be asked for photos.
+                {d.firstName} opted out of photos, so Milton tracks progress through performance and measurements instead. They will never be asked for photos.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-                {[
-                  ["Goblet squat", "35 lb", "50 lb", "+43%"],
-                  ["Push-ups", "8 reps", "15 reps", "+88%"],
-                  ["Single-arm row", "65 lb", "85 lb", "+31%"],
-                ].map(([name, from, to, delta]) => (
-                  <div key={name} style={{ background: T.cream, borderRadius: 16, padding: "14px 16px" }}>
-                    <div style={{ fontSize: 12.5, color: T.inkSoft, marginBottom: 6 }}>{name}</div>
-                    <div style={{ fontSize: 17, fontWeight: 700, color: T.ink }}>{from} <span style={{ color: T.inkFaint, fontWeight: 400 }}>&rarr;</span> {to}</div>
-                    <div style={{ fontSize: 12.5, fontWeight: 500, color: T.mintTx, marginTop: 4 }}>{delta} since baseline</div>
-                  </div>
-                ))}
-              </div>
+              {d.bench.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+                  {d.bench.map(([nm, from, to, delta]) => (
+                    <div key={nm} style={{ background: T.cream, borderRadius: 16, padding: "14px 16px" }}>
+                      <div style={{ fontSize: 12.5, color: T.inkSoft, marginBottom: 6 }}>{nm}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: T.ink }}>{from} <span style={{ color: T.inkFaint, fontWeight: 400 }}>&rarr;</span> {to}</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 500, color: T.mintTx, marginTop: 4 }}>{delta} since baseline</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "flex-end", borderTop: `1px solid ${T.line}`, marginTop: 16, paddingTop: 14, gap: 10, alignItems: "center" }}>
                 <button onClick={() => setPhotoState("none")}
                   style={{ fontFamily: FONT, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: T.inkFaint, textDecoration: "underline" }}>
                   Turn photos back on
                 </button>
-                <GhostBtn onClick={() => send("Add a new strength benchmark for Pops")}>Add a benchmark</GhostBtn>
+                <GhostBtn onClick={() => send(`Add a new strength benchmark for ${d.firstName}`)}>Add a benchmark</GhostBtn>
               </div>
             </>
           )}
@@ -657,7 +870,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           <SectionHeader
             icon={Ruler} tint={T.greenTint} color={T.green}
             title="Measurements" sub="Tape and InBody"
-            right={<Pill bg={T.amberTint} color={T.amberTx}>Last logged 39 days ago</Pill>}
+            right={<Pill bg={T.amberTint} color={T.amberTx}>Last logged {d.lastMeasDays} days ago</Pill>}
           />
           <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
             <thead>
@@ -669,23 +882,18 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               </tr>
             </thead>
             <tbody>
-              {[
-                ["Weight", "", "212 lb", "206 lb", "-6 lb"],
-                ["Waist", "", "40.5 in", "39 in", "-1.5 in"],
-                ["Body fat", "InBody", "28.2%", "26.9%", "-1.3 pts"],
-                ["Muscle mass", "InBody", "78.1 lb", "78.4 lb", "+0.3 lb"],
-              ].map(([m, src, base, cur, delta]) => (
-                <tr key={m} style={{ borderTop: `1px solid ${T.line}` }}>
-                  <td style={{ padding: "12px 0", color: T.ink, fontWeight: 500 }}>{m}{src && <span style={{ fontSize: 12, color: T.inkFaint, marginLeft: 8, fontWeight: 400 }}>{src}</span>}</td>
-                  <td style={{ textAlign: "right", color: T.inkSoft }}>{base}</td>
-                  <td style={{ textAlign: "right", fontWeight: 700, color: T.ink }}>{cur}</td>
-                  <td style={{ textAlign: "right", color: T.mintTx, fontWeight: 500 }}>{delta}</td>
+              {d.meas.map((r) => (
+                <tr key={r.metric} style={{ borderTop: `1px solid ${T.line}` }}>
+                  <td style={{ padding: "12px 0", color: T.ink, fontWeight: 500 }}>{r.metric}{r.src && <span style={{ fontSize: 12, color: T.inkFaint, marginLeft: 8, fontWeight: 400 }}>{r.src}</span>}</td>
+                  <td style={{ textAlign: "right", color: T.inkSoft }}>{r.base}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, color: T.ink }}>{r.cur}</td>
+                  <td style={{ textAlign: "right", color: r.good ? T.mintTx : T.inkSoft, fontWeight: 500 }}>{r.delta}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div style={{ display: "flex", justifyContent: "flex-end", borderTop: `1px solid ${T.line}`, marginTop: 4, paddingTop: 14 }}>
-            <GhostBtn onClick={() => send("Ask Pops to log fresh measurements this week")}>Ask for new numbers</GhostBtn>
+            <GhostBtn onClick={() => send(`Ask ${d.firstName} to log fresh measurements this week`)}>Ask for new numbers</GhostBtn>
           </div>
         </div>
 
@@ -694,10 +902,10 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           <SectionHeader
             icon={History} tint={T.tealTint} color={T.tealDark}
             title="Timeline" sub="Everything Milton tracked"
-            right={<GhostBtn onClick={() => send("Add a note to Pops' timeline")}>Add note</GhostBtn>}
+            right={<GhostBtn onClick={() => send(`Add a note to ${d.firstName}'s timeline`)}>Add note</GhostBtn>}
           />
           <div>
-            {TIMELINE.map(([date, type, text], i) => (
+            {d.timeline.map(([date, type, text], i) => (
               <div key={i} style={{ display: "flex", gap: 12, padding: "12px 0", borderTop: i ? `1px solid ${T.line}` : "none", alignItems: "flex-start" }}>
                 <span style={{ fontSize: 12.5, color: T.inkFaint, width: 54, flexShrink: 0, paddingTop: 3, fontWeight: 500 }}>{date}</span>
                 <span style={{ background: TL_BADGE[type][1], color: TL_BADGE[type][2], fontSize: 12, fontWeight: 500, borderRadius: 999, padding: "4px 12px", flexShrink: 0, whiteSpace: "nowrap" }}>{TL_BADGE[type][0]}</span>
@@ -706,9 +914,9 @@ export default function ClientProfile({ client, onBack, isMobile }) {
             ))}
           </div>
           <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14, marginTop: 2 }}>
-            <button onClick={() => send("Show Pops' full timeline")}
+            <button onClick={() => send(`Show ${d.firstName}'s full timeline`)}
               style={{ fontFamily: FONT, background: "none", border: "none", cursor: "pointer", fontSize: 13.5, color: T.tealDark, padding: 0, fontWeight: 700 }}>
-              Show all 214 entries
+              Show all {d.timelineCount} entries
             </button>
           </div>
         </div>
@@ -717,7 +925,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
       {/* Toast simulating handoff to the chat rail */}
       {toast && (
         <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", background: T.tealDeep, color: T.white, borderRadius: 999, padding: "13px 20px", fontSize: 13.5, display: "flex", alignItems: "center", gap: 10, maxWidth: 500, boxShadow: "0 8px 24px rgba(26,46,42,0.25)", zIndex: 1000 }}>
-          <Sparkles size={15} color={T.mint || "#5CDB95"} />
+          <Sparkles size={15} color="#5CDB95" />
           <span>Sent to Milton: &quot;{toast}&quot;</span>
           <X size={14} color="rgba(255,255,255,0.65)" style={{ cursor: "pointer" }} onClick={() => setToast(null)} />
         </div>
