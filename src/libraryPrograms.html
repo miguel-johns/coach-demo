@@ -2555,8 +2555,7 @@
        <sc-if value="{{ pgListVisible }}" hint-placeholder-val="{{ true }}">
         <div style="height:100%; display:flex; flex-direction:column; background:#F4F5F3;">
           <div style="display:flex; align-items:center; gap:10px; padding:16px 22px 12px; flex-wrap:nowrap; border-bottom:1px solid #EAE8E2;">
-            <h1 style="flex:0 0 auto; font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-.01em; color:#15302B;">Programs</h1>
-            <div style="display:inline-flex; flex:0 0 auto; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px; margin-left:6px;">
+            <div style="display:inline-flex; flex:0 0 auto; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px;">
               <sc-for list="{{ pgStatusChips }}" as="s" hint-placeholder-count="4">
                 <button onclick="{{ s.onClick }}" style="{{ s.style }}" style-hover="{{ s.hoverStyle }}">{{ s.label }}<span style="{{ s.countStyle }}">{{ s.count }}</span></button>
               </sc-for>

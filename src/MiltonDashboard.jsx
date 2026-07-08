@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������═══════════
+// ═══════════�������════════════════��══════════════════════���������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -9499,8 +9499,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
           {view === "list" && (
             <div className="wf-fade">
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "nowrap", marginBottom: 18 }}>
-                <h1 style={{ flex: "0 0 auto", fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.01em", color: WF_C.navy }}>Workflows</h1>
-                <div style={{ display: "inline-flex", flex: "0 0 auto", gap: 2, background: WF_C.tealBg, border: `1px solid ${WF_C.sageLine || "#D6E5DA"}`, borderRadius: 999, padding: 3, marginLeft: 6 }}>
+                <div style={{ display: "inline-flex", flex: "0 0 auto", gap: 2, background: WF_C.tealBg, border: `1px solid ${WF_C.sageLine || "#D6E5DA"}`, borderRadius: 999, padding: 3 }}>
                   {tabs.map(([key, label, count]) => {
                     const on = tab === key;
                     return (
@@ -9659,7 +9658,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═════════��═����═════════════════════���═══���══���══���═
+/* ═════════��═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
 ═════════════════════════════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
