@@ -50,7 +50,9 @@
  thead th .dn{display:block;font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-ink);margin-bottom:3px}
  thead th .df{font-family:"Archivo Expanded","Archivo",sans-serif;font-weight:700;font-size:13px;white-space:nowrap;color:var(--head)}
  thead th .dsub{display:block;margin-top:4px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.02em;color:var(--muted)}
- thead th .dc{display:inline-flex;align-items:center;margin-top:8px;font-weight:600;font-size:10.5px;color:var(--sage-ink);background:#fff;border:1px solid var(--sage-line);padding:3px 9px;border-radius:999px;white-space:nowrap}
+ thead th .dc{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-family:inherit;font-weight:600;font-size:10.5px;color:var(--sage-ink);background:#fff;border:1px solid var(--sage-line);padding:3px 9px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:border-color .12s,background .12s,box-shadow .12s}
+thead th .dc svg{opacity:.55}
+thead th .dc:hover{border-color:var(--accent);background:#F0F5F2;box-shadow:0 1px 3px rgba(43,122,120,.15)}
  thead th.corner{width:104px;min-width:104px;position:sticky;left:0;z-index:3;background:var(--sage);border-bottom:1px solid var(--sage-line)}
  thead th.snap{scroll-snap-align:start}
  thead th.wk{border-left:2px solid var(--sage-line)}
@@ -199,7 +201,7 @@
 <script>
 /* ============ seed-driven state ============ */
 let SECTIONS=[], MOVES={}, PATLAB={}, WEEKDAYS_FULL=[], MONTHSDATA=[], MONTHNAMES=[], MONTHS=0;
-let DAYMAP={}, CTX=null, SEEDED=false;
+let DAYMAP={}, CTX=null, SEEDED=false, COACHES=[];
 let cur=0, UNDO=[], PENDING=null;
 const COL=158, WEEKLEN=7, WW=()=>WEEKLEN*COL;
 
@@ -216,7 +218,7 @@ window.addEventListener('message',function(e){
 function initSeed(seed){
   SECTIONS=seed.sections||[]; MOVES=seed.moves||{}; PATLAB=seed.patlab||{};
   WEEKDAYS_FULL=seed.weekdaysFull||["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  CTX=seed.ctx||null; MONTHSDATA=seed.months||[]; MONTHNAMES=MONTHSDATA.map(m=>m.name); MONTHS=MONTHSDATA.length;
+  CTX=seed.ctx||null; COACHES=seed.coaches||[]; MONTHSDATA=seed.months||[]; MONTHNAMES=MONTHSDATA.map(m=>m.name); MONTHS=MONTHSDATA.length;
   DAYMAP={}; let gid=0;
   MONTHSDATA.forEach(m=>{ (m.days||[]).forEach(dy=>{ dy.id=gid++; if(!dy.sec)dy.sec={}; SECTIONS.forEach(s=>{ if(!dy.sec[s])dy.sec[s]=[]; }); DAYMAP[dy.id]=dy; }); });
   document.getElementById('progTitle').textContent=seed.title||'Program';
@@ -273,7 +275,7 @@ function render(){
   days.forEach((d,i)=>{
     const wkEdge=(d.weekday===0&&i>0);
     const cls=(d.weekday===0?'snap ':'')+(wkEdge?'wk ':'')+(d.rest?'rest':(i%2?'alt':''));
-    h+='<th class="'+cls+'" data-day="'+d.id+'"><span class="dn">'+esc(d.dnLabel||'')+'</span><span class="df">'+esc(d.weekdayName||'')+'</span>'+(d.split?'<span class="dsub">'+esc(d.split)+'</span>':'')+(d.coach?'<span class="dc">'+esc(d.coach)+'</span>':'')+'</th>';
+    h+='<th class="'+cls+'" data-day="'+d.id+'"><span class="dn">'+esc(d.dnLabel||'')+'</span><span class="df">'+esc(d.weekdayName||'')+'</span>'+(d.split?'<span class="dsub">'+esc(d.split)+'</span>':'')+(d.coach?'<button type="button" class="dc" data-coachpick="1" title="Reassign coach">'+esc(d.coach)+'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>':'')+'</th>';
   });
   h+='</tr></thead><tbody>';
   SECTIONS.forEach((sec,si)=>{
@@ -412,6 +414,28 @@ function swapMove(slot,name){commitPending();const {id,si,r}=parseSlot(slot);con
 function removeExercise(slot){const {id,si,r}=parseSlot(slot);const arr=DAYMAP[id].sec[SECTIONS[si]];UNDO.push({kind:'day',id:id,before:clone(DAYMAP[id])});if(UNDO.length>60)UNDO.shift();updateUndo();arr.splice(r,1);closePop();render();toast('Exercise removed');}
 function addExercise(id,si,name){UNDO.push({kind:'day',id:id,before:clone(DAYMAP[id])});if(UNDO.length>60)UNDO.shift();updateUndo();DAYMAP[id].sec[SECTIONS[si]].push({name:name,meas:{u:'reps',sets:3,reps:10},note:''});closePop();render();toast('Exercise added');}
 
+/* ============ popover: coach picker ============ */
+function coachListHTML(q){
+  q=(q||'').toLowerCase(); const cur=CTX&&CTX.coach;
+  const names=(COACHES||[]).filter(c=>!q||c.toLowerCase().indexOf(q)>=0);
+  if(!names.length)return '<div class="pop-note">No coaches match \u201c'+esc(q)+'\u201d.</div>';
+  return names.map(c=>'<button class="mv" data-coach="'+esc(c)+'"><span class="mv-n">'+esc(c)+'</span>'+(c===cur?'<span class="mv-tag t-alt">Current</span>':'')+'</button>').join('');
+}
+function openCoachPicker(anchor){
+  POPSLOT=null; PENDING=null;
+  const head='<div class="pop-head"><div><div class="pop-t">Assign coach</div><div class="pop-s">Applies to every session in '+esc((CTX&&CTX.name)||'this program')+'</div></div><button class="pop-x" onclick="closePop()" aria-label="Close">\u00d7</button></div>';
+  const search='<input class="pop-search" id="coachSearch" placeholder="Search coaches\u2026" autocomplete="off">';
+  pop().innerHTML=head+search+'<div id="coachList">'+coachListHTML('')+'</div>';
+  placePop(anchor);
+  const s=pop().querySelector('#coachSearch'); s.addEventListener('input',function(){pop().querySelector('#coachList').innerHTML=coachListHTML(s.value);}); s.focus();
+}
+function assignCoach(name){
+  MONTHSDATA.forEach(m=>(m.days||[]).forEach(d=>{ if(!d.rest&&!d.empty) d.coach=name; }));
+  if(CTX)CTX.coach=name;
+  closePop(); render(); setupCtxBanner(); toast('Coach set to '+name);
+  try{ parent.postMessage({v0cal:'coach', coach:name},'*'); }catch(_){}
+}
+
 /* ============ popover: measure editor ============ */
 function stepRow(label,field,val,unit){
   return '<div class="stp"><span class="stp-l">'+label+'</span><div class="stp-c"><button class="stp-b" onclick="stepField(\''+field+'\',-1)">\u2212</button><span class="stp-v">'+val+(unit||'')+'</span><button class="stp-b" onclick="stepField(\''+field+'\',1)">+</button></div></div>';
@@ -472,6 +496,8 @@ const GRID=document.getElementById('grid');
 GRID.addEventListener('click',e=>{
   const addBtn=e.target.closest('button[data-add]');
   if(addBtn){const a=addBtn.dataset.add.split('-');openAdd(+a[0],+a[1],addBtn);return;}
+  const coachBtn=e.target.closest('.dc[data-coachpick]');
+  if(coachBtn){e.stopPropagation();openCoachPicker(coachBtn);return;}
   const head=e.target.closest('thead th[data-day]');
   const lab=e.target.closest('th.glabel[data-si]');
   const cell=e.target.closest('td.cell');
@@ -494,11 +520,12 @@ GRID.addEventListener('keydown',e=>{
   if(!cell||(!ex&&!rx))return; e.preventDefault(); const slot=cell.dataset.slot;
   if(ex)openSwap(slot,ex); else openMeasure(slot,rx);
 });
-document.addEventListener('click',e=>{const p=pop();if(p.classList.contains('show')&&!p.contains(e.target)&&!e.target.closest('.editable')&&!e.target.closest('button[data-add]'))closePop();});
+document.addEventListener('click',e=>{const p=pop();if(p.classList.contains('show')&&!p.contains(e.target)&&!e.target.closest('.editable')&&!e.target.closest('button[data-add]')&&!e.target.closest('.dc[data-coachpick]'))closePop();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(menuEl().classList.contains('show')){hideMenu();return;}if(pop().classList.contains('show')){closePop();return;}if(SEL.size)clearSel();}});
 pop().addEventListener('click',e=>{
   const b=e.target.closest('.mv[data-mv]'); if(b&&POPSLOT){swapMove(POPSLOT,b.dataset.mv);return;}
   const ab=e.target.closest('.mv[data-addmv]'); if(ab){addExercise(+ab.dataset.tid,+ab.dataset.tsi,ab.dataset.addmv);return;}
+  const cb=e.target.closest('.mv[data-coach]'); if(cb){assignCoach(cb.dataset.coach);return;}
   if(e.target.closest('[data-remove]')&&POPSLOT){removeExercise(POPSLOT);return;}
 });
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&(e.key==='z'||e.key==='Z')){const a=document.activeElement;if(a&&a.classList&&a.classList.contains('note'))return;e.preventDefault();undo();}});
