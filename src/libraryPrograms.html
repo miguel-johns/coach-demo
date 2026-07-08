@@ -2555,8 +2555,7 @@
        <sc-if value="{{ pgListVisible }}" hint-placeholder-val="{{ true }}">
         <div style="height:100%; display:flex; flex-direction:column; background:#F4F5F3;">
           <div style="display:flex; align-items:center; gap:10px; padding:16px 22px 12px; flex-wrap:nowrap; border-bottom:1px solid #EAE8E2;">
-            <h1 style="flex:0 0 auto; font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:22px; margin:0; letter-spacing:-.01em; color:#15302B;">Programs</h1>
-            <div style="display:inline-flex; flex:0 0 auto; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px; margin-left:6px;">
+            <div style="display:inline-flex; flex:0 0 auto; background:#E9F1EB; border:1px solid #D6E5DA; border-radius:999px; padding:3px;">
               <sc-for list="{{ pgStatusChips }}" as="s" hint-placeholder-count="4">
                 <button onclick="{{ s.onClick }}" style="{{ s.style }}" style-hover="{{ s.hoverStyle }}">{{ s.label }}<span style="{{ s.countStyle }}">{{ s.count }}</span></button>
               </sc-for>
@@ -2579,7 +2578,7 @@
           <div style="flex:1; overflow-y:auto; padding:16px 22px 30px;">
             <div style="background:#fff; border:1px solid #EAE8E2; border-radius:14px; box-shadow:0 1px 2px rgba(21,48,43,.04); overflow:visible;">
               <div style="display:grid; grid-template-columns:minmax(180px,2.2fr) 92px minmax(120px,1fr) minmax(110px,1.1fr) minmax(120px,1fr) minmax(150px,1.4fr) 40px; gap:12px; align-items:center; padding:10px 16px; background:#FAFBFA; border-radius:14px 14px 0 0; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.11em; text-transform:uppercase; color:#9AA39C;">
-                <span>Program</span><span>Status</span><span>Schedule</span><span>Coach</span><span>Clients</span><span>Progress</span><span></span>
+                <span>Program</span><span>Status</span><span>Schedule</span><span>Type</span><span>Clients</span><span>Progress</span><span></span>
               </div>
               <sc-for list="{{ programCards }}" as="p" hint-placeholder-count="6">
                 <div style="{{ p.rowStyle }}" style-hover="background:#F7FAF8;">
@@ -2589,7 +2588,13 @@
                   </div>
                   <div><span style="{{ p.stateStyle }}">{{ p.stateLabel }}</span></div>
                   <div style="font-size:12px; color:#5E6B65; white-space:nowrap;">{{ p.scheduleText }}</div>
-                  <div style="font-size:12px; color:#5E6B65; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.coachText }}</div>
+                  <div style="min-width:0;">
+                    <span style="{{ p.typeStyle }}">
+                      <sc-if value="{{ p.isGroup }}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg></sc-if>
+                      <sc-if value="{{ p.isPersonal }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></sc-if>
+                      {{ p.typeText }}
+                    </span>
+                  </div>
                   <div style="font-size:12px; color:#5E6B65; white-space:nowrap;">{{ p.metricText }}</div>
                   <div style="min-width:0;">
                     <sc-if value="{{ p.hasProgress }}" hint-placeholder-val="{{ false }}">
@@ -4784,6 +4789,7 @@ class Component extends DCLogic {
     this.__calMsg=(e)=>{ const d=e&&e.data; if(!d||typeof d!=='object') return;
       if(d.v0cal==='ready'){ if(this.__calSeed && e.source){ try{ e.source.postMessage({ v0cal:'seed', seed:this.__calSeed },'*'); }catch(_){} } }
       else if(d.v0cal==='back'){ this.backToPrograms(); }
+      else if(d.v0cal==='coach'&&d.coach){ const p=this.programs.find(x=>x.id===this.__calSeedId); if(p){ p.coachName=d.coach; p.coachId=d.coach; } if(this.__calSeed){ this.__calSeed.ctx.coach=d.coach; (this.__calSeed.months||[]).forEach(m=>(m.days||[]).forEach(dy=>{ if(!dy.rest&&!dy.empty) dy.coach=d.coach; })); } this.toastMsg('Coach set to '+d.coach); }
       else if(d.v0cal==='toast'&&d.msg){ this.toastMsg(d.msg); } };
     if(typeof window!=='undefined') window.addEventListener('message', this.__calMsg);
   }
@@ -5534,14 +5540,16 @@ class Component extends DCLogic {
       const c={ id:p.id, name:p.name, onOpen:()=>this.pgCardAction('open',p.id),
         rowStyle:rowBase+ring+(p.status==='archived'?' opacity:.72;':''),
         menuOpen: st.pgRowMenu===p.id, onToggleMenu:()=>this.togglePgRowMenu(p.id),
-        hasSecondary:false, secondary:'', scheduleText:'', coachText:'—', metricText:'',
+        hasSecondary:false, secondary:'', scheduleText:'', metricText:'',
         hasProgress:false, progFillStyle:'', progLabel:'', hasFlag:false, flagShort:'', flagStyle:'', flagDotStyle:'',
+        isGroup:(p.type==='group'), isPersonal:(p.type==='private'),
+        typeText:(p.type==='private'?'Personal':p.type==='semi_private'?'Semi-private':'Group'),
+        typeStyle:'display:inline-flex; align-items:center; gap:5px; font-family:"DM Sans",sans-serif; font-weight:600; font-size:11px; border-radius:999px; padding:3px 9px; '+((p.type==='group')?'background:'+C.sage+'; color:'+C.sageInk+';':'background:#EFEDE8; color:#68716B;'),
         menuActions:[] };
 
       if(p.status==='active'){
         c.stateLabel='Active'; c.stateStyle=stateChip('Active',C.sage,C.sageInk);
         c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
-        c.coachText=p.coachName||(p.client||'—');
         c.metricText=p.clients+' · '+p.adherence+'%';
         if(p.focus){ c.hasSecondary=true; c.secondary=p.focus+(p.from?' · from '+p.from:''); }
         else if(p.from){ c.hasSecondary=true; c.secondary='Built from '+p.from; }
@@ -5554,7 +5562,6 @@ class Component extends DCLogic {
       } else if(p.status==='draft'){
         c.stateLabel='Draft'; c.stateStyle=stateChip('Draft','#EEEDEA','#68716B');
         c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
-        c.coachText=p.coachName||'—';
         c.metricText='Last '+p.touched;
         c.hasProgress=true;
         c.progFillStyle='display:block; height:100%; background:'+C.pine+'; border-radius:999px; width:'+p.pct+'%;';
@@ -5565,14 +5572,12 @@ class Component extends DCLogic {
       } else if(p.status==='template'){
         c.stateLabel='Template'; c.stateStyle=stateChip('Template','#EDE7F7','#6B4FA8');
         c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
-        c.coachText='You';
         c.metricText='Used '+p.used+'×';
         if(p.focus){ c.hasSecondary=true; c.secondary=p.focus; }
         c.menuActions=[ menuItem('Use template','use',p.id), menuItem('Preview','open',p.id) ];
       } else {
         c.stateLabel='Archived'; c.stateStyle=stateChip('Archived',C.rest,C.restInk);
         c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
-        c.coachText=p.coachName||'—';
         c.metricText=p.clients+' · '+p.adherence+'%';
         c.hasSecondary=true; c.secondary='Finished '+p.finished;
         c.menuActions=[ menuItem('Run it again','run',p.id), menuItem('Save as template','tpl',p.id), menuItem('View','open',p.id) ];
@@ -5824,7 +5829,7 @@ class Component extends DCLogic {
     };
     const PATLAB={squat:'Squat',hinge:'Hinge',glute:'Glute',hpush:'Horizontal push',vpush:'Vertical push',hpull:'Horizontal pull',vpull:'Vertical pull',lunge:'Lunge',curl:'Elbow flexion',raise:'Shoulder raise',plyo:'Plyometric',core:'Core'};
     return { title:p.name, subtitle:this.pgTypeLabel(p.type)+' \u00b7 '+p.daysOfWeek.join('/')+' \u00b7 '+(p.bounded?weeks+'-wk':'ongoing'),
-      sections:SECTIONS, weekdaysFull:FULL, moves:MOVES, patlab:PATLAB, months,
+      sections:SECTIONS, weekdaysFull:FULL, moves:MOVES, patlab:PATLAB, months, coaches:this.COACHES,
       ctx:{ name:p.name, coach, when:(p.bounded?weeks+'-week block':'ongoing'), back:'Back to programs' } };
   }
 
