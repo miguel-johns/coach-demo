@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���═══════════
+// ═══════════�������════════════════��══════════════════════�����═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9464,13 +9464,26 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
     <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
       <style>{WF_FONTS}</style>
 
-      {/* Top nav rail */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderBottom: `1px solid ${WF_C.line}`, background: WF_C.white, flexShrink: 0 }}>
-        <div onClick={onHome || onClose} style={{ width: 28, height: 28, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: WF_C.sub }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6" /></svg>
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 500, color: WF_C.ink }}>Workflows</span>
-      </div>
+      {/* Floating close button — matches Programs/Library */}
+      <button
+        onClick={onClose || onHome}
+        style={{
+          position: "absolute", top: 14, right: 16, zIndex: 10,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)",
+          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+          transition: "all 0.15s ease",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+        title="Close"
+        aria-label="Close"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
 
       {/* Body */}
       <div style={{ flex: 1, overflow: "auto", padding: "28px 20px 96px" }}>
