@@ -383,9 +383,9 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════════════════
+// ═══════════�������════════════════��══════════════════════���═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════���������════════════════������������══════════════
+// ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2031,7 +2031,7 @@ function ClassTypeToggle({ active, onChange }) {
   );
 }
 
-// ════════════════════���══��══════════════════════════�������������������═══���═�����══
+// ══���═════════════════���══��══════════════════════════�������������������═══���═�����══
 // SEMI-PRIVATE LIST - List view of semi-private sessions
 // ════════════════════════════════════════════════���══════════════
 function SemiPrivateList({ 
@@ -9106,34 +9106,34 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
    WORKFLOWS CANVAS - Milton automation workflows
 ═══════════════════════════════════════════════ */
 const WF_C = {
-  navy: "#0B1628",
-  teal: "#2BBFAA",
-  tealDark: "#0F6E56",
-  tealInk: "#085041",
-  tealBg: "#E1F5EE",
-  cream: "#F7F4ED",
+  navy: "#15302B",
+  teal: "#1E4D45",
+  tealDark: "#1E4D45",
+  tealInk: "#2E7357",
+  tealBg: "#E9F1EB",
+  cream: "#F4F5F3",
   white: "#FFFFFF",
-  ink: "#182234",
-  sub: "#5B6472",
-  faint: "#8A93A1",
-  line: "#E6E2D8",
-  amberBg: "#FAEEDA",
-  amberInk: "#854F0B",
-  redBg: "#FCEBEB",
-  redInk: "#A32D2D",
+  ink: "#1E2C29",
+  sub: "#79857F",
+  faint: "#A7A99F",
+  line: "#EAE8E2",
+  amberBg: "#F6EEDC",
+  amberInk: "#946B1C",
+  redBg: "#F6E7E1",
+  redInk: "#9C4A2F",
 };
 
 const WF_FONTS = `
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@500;600&display=swap');
 .mwf * { box-sizing: border-box; }
 .mwf { font-family: 'DM Sans', sans-serif; color: ${WF_C.ink}; }
-.mwf h1, .mwf h2, .mwf .wf-display { font-family: 'Archivo', 'DM Sans', sans-serif; }
+.mwf h1, .mwf h2, .mwf .wf-display { font-family: 'Archivo Expanded', 'Archivo', sans-serif; letter-spacing: -0.01em; }
 .mwf .wf-mono { font-family: 'JetBrains Mono', monospace; }
 .mwf button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
-.mwf .wf-row:hover { background: #FBFAF6; }
-.mwf .wf-ghost:hover { background: ${WF_C.cream}; }
-.mwf .wf-teal:hover { background: #0c5c48; }
-.mwf .wf-tpl:hover { border-color: ${WF_C.teal}; }
+.mwf .wf-row:hover { background: #F7FAF8; }
+.mwf .wf-ghost:hover { background: #E9F1EB; border-color: #D6E5DA; }
+.mwf .wf-teal:hover { background: #163A34; }
+.mwf .wf-tpl:hover { border-color: ${WF_C.teal}; background: #F7FAF8; }
 @keyframes wfFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .mwf .wf-fade { animation: wfFade .25s ease; }
 @media (prefers-reduced-motion: reduce) { .mwf .wf-fade { animation: none; } }
@@ -9186,7 +9186,7 @@ const WfGhostBtn = ({ children, onClick, style }) => (
 );
 
 const WfTealBtn = ({ children, onClick, style }) => (
-  <button className="wf-teal" onClick={onClick} style={{ background: WF_C.tealDark, color: WF_C.tealBg, border: "none", borderRadius: 10, padding: "9px 16px", fontSize: 13.5, fontWeight: 500, transition: "background .15s", ...style }}>{children}</button>
+  <button className="wf-teal" onClick={onClick} style={{ background: WF_C.tealDark, color: WF_C.white, border: "none", borderRadius: 10, padding: "9px 16px", fontSize: 13.5, fontWeight: 600, transition: "background .15s", ...style }}>{children}</button>
 );
 
 const WF_SEED = [
@@ -9480,7 +9480,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
             <div className="wf-fade">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
                 <div>
-                  <h1 style={{ fontSize: 27, fontWeight: 700, margin: 0, color: WF_C.navy }}>Workflows</h1>
+                  <h1 style={{ fontSize: 25, fontWeight: 800, margin: 0, color: WF_C.navy }}>Workflows</h1>
                   <div style={{ fontSize: 14, color: WF_C.sub, marginTop: 3 }}>Milton runs these so you don&apos;t have to</div>
                 </div>
                 <WfTealBtn onClick={() => say("Describe the workflow in a sentence — the trigger, who it's for, and what should happen — and I'll draft the whole rail for your review.", ["When a client misses 2 sessions, check in", "Weekly wins into social posts", "Win back members inactive 30 days", "Congratulate every PR"])}>+ New workflow</WfTealBtn>
@@ -9488,7 +9488,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
               <div style={{ display: "inline-flex", gap: 2, background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: 3, margin: "12px 0 16px" }}>
                 {tabs.map(([key, label]) => (
-                  <button key={key} onClick={() => setTab(key)} style={{ border: "none", borderRadius: 999, padding: "7px 15px", fontSize: 13, fontWeight: 500, background: tab === key ? WF_C.tealDark : "transparent", color: tab === key ? WF_C.tealBg : WF_C.sub }}>{label}</button>
+                  <button key={key} onClick={() => setTab(key)} style={{ border: "none", borderRadius: 999, padding: "7px 15px", fontSize: 12.5, fontWeight: 600, background: tab === key ? WF_C.tealDark : "transparent", color: tab === key ? WF_C.white : WF_C.tealInk }}>{label}</button>
                 ))}
               </div>
 
@@ -9509,7 +9509,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                       <div style={{ width: 34, height: 34, borderRadius: 9, background: WF_C.tealBg, color: WF_C.tealInk, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <WfGlyph name={t.glyph} size={18} color={WF_C.tealInk} strokeWidth={1.9} />
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: 15 }}>{t.name}</div>
+                      <div className="wf-display" style={{ fontWeight: 700, fontSize: 14, color: WF_C.navy }}>{t.name}</div>
                       <div style={{ fontSize: 13, color: WF_C.sub, lineHeight: 1.5, flex: 1 }}>{t.desc}</div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
                         {t.approval ? <WfPill bg={WF_C.amberBg} ink={WF_C.amberInk}>Approval on</WfPill> : <span style={{ fontSize: 11.5, color: WF_C.faint }}>Runs on its own</span>}
@@ -9534,7 +9534,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                       onKeyDown={(e) => { if (e.key === "Enter") openDetail(w); }}
                       style={{ display: "grid", gridTemplateColumns: grid, gap: 12, padding: "15px 20px", alignItems: "center", cursor: "pointer", borderBottom: i < visible.length - 1 ? `1px solid ${WF_C.line}` : "none" }}>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 14.5 }}>{w.name}</div>
+                        <div className="wf-display" style={{ fontWeight: 700, fontSize: 13.5, color: WF_C.navy }}>{w.name}</div>
                         <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           {w.sub}
                           {w.approval && <WfPill bg={WF_C.amberBg} ink={WF_C.amberInk}>Approval</WfPill>}
