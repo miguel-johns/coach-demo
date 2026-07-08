@@ -2577,35 +2577,41 @@
             </div>
           </sc-if>
           <div style="flex:1; overflow-y:auto; padding:16px 22px 30px;">
-            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;">
+            <div style="background:#fff; border:1px solid #EAE8E2; border-radius:14px; box-shadow:0 1px 2px rgba(21,48,43,.04); overflow:visible;">
+              <div style="display:grid; grid-template-columns:minmax(180px,2.2fr) 92px minmax(120px,1fr) minmax(110px,1.1fr) minmax(120px,1fr) minmax(150px,1.4fr) 40px; gap:12px; align-items:center; padding:10px 16px; background:#FAFBFA; border-radius:14px 14px 0 0; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.11em; text-transform:uppercase; color:#9AA39C;">
+                <span>Program</span><span>Status</span><span>Schedule</span><span>Coach</span><span>Clients</span><span>Progress</span><span></span>
+              </div>
               <sc-for list="{{ programCards }}" as="p" hint-placeholder-count="6">
-                <div style="{{ p.cardStyle }}" style-hover="{{ p.cardHover }}">
-                  <div onclick="{{ p.onOpen }}" role="button" tabindex="0" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; align-items:flex-start; gap:8px;">
-                      <div style="font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:800; font-size:14.5px; color:#15302B; line-height:1.25; flex:1;">{{ p.name }}</div>
-                      <span style="{{ p.stateStyle }}">{{ p.stateLabel }}</span>
-                    </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                      <sc-for list="{{ p.pills }}" as="pl" hint-placeholder-count="4"><span style="{{ pl.style }}">{{ pl.text }}</span></sc-for>
-                    </div>
-                    <sc-if value="{{ p.hasLine }}" hint-placeholder-val="{{ true }}">
-                      <div style="font-size:12px; color:#79857F;"><strong style="color:#15302B; font-weight:700;">{{ p.linePre }}</strong>{{ p.linePost }}</div>
-                    </sc-if>
+                <div style="{{ p.rowStyle }}" style-hover="background:#F7FAF8;">
+                  <div onclick="{{ p.onOpen }}" role="button" tabindex="0" style="cursor:pointer; min-width:0;">
+                    <div style="font-family:'Archivo Expanded','Archivo',sans-serif; font-weight:700; font-size:13px; color:#15302B; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.name }}</div>
+                    <sc-if value="{{ p.hasSecondary }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px; color:#8A9690; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.secondary }}</div></sc-if>
+                  </div>
+                  <div><span style="{{ p.stateStyle }}">{{ p.stateLabel }}</span></div>
+                  <div style="font-size:12px; color:#5E6B65; white-space:nowrap;">{{ p.scheduleText }}</div>
+                  <div style="font-size:12px; color:#5E6B65; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.coachText }}</div>
+                  <div style="font-size:12px; color:#5E6B65; white-space:nowrap;">{{ p.metricText }}</div>
+                  <div style="min-width:0;">
                     <sc-if value="{{ p.hasProgress }}" hint-placeholder-val="{{ false }}">
-                      <div style="display:flex; align-items:center; gap:9px;">
-                        <div style="flex:1; height:6px; border-radius:999px; background:#E9F1EB; overflow:hidden;"><i style="{{ p.progFillStyle }}"></i></div>
-                        <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#137A6C; white-space:nowrap;">{{ p.progLabel }}</span>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="flex:1; height:5px; border-radius:999px; background:#E9F1EB; overflow:hidden; min-width:36px;"><i style="{{ p.progFillStyle }}"></i></div>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#137A6C; white-space:nowrap;">{{ p.progLabel }}</span>
                       </div>
                     </sc-if>
                     <sc-if value="{{ p.hasFlag }}" hint-placeholder-val="{{ false }}">
-                      <div style="{{ p.flagStyle }}"><span style="{{ p.flagDotStyle }}"></span>{{ p.flagText }}</div>
-                    </sc-if>
-                    <sc-if value="{{ p.hasProv }}" hint-placeholder-val="{{ false }}">
-                      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#79857F;">{{ p.provText }}</div>
+                      <span style="{{ p.flagStyle }}"><span style="{{ p.flagDotStyle }}"></span>{{ p.flagShort }}</span>
                     </sc-if>
                   </div>
-                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
-                    <sc-for list="{{ p.actions }}" as="a" hint-placeholder-count="4"><button onclick="{{ a.onClick }}" style="{{ a.style }}" style-hover="{{ a.hoverStyle }}">{{ a.label }}</button></sc-for>
+                  <div style="position:relative; display:flex; justify-content:flex-end;">
+                    <button onclick="{{ p.onToggleMenu }}" aria-label="More actions" style="cursor:pointer; width:30px; height:30px; border-radius:8px; border:1px solid transparent; background:transparent; display:flex; align-items:center; justify-content:center; color:#79857F;" style-hover="background:#EEF2EF; color:#15302B;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg>
+                    </button>
+                    <sc-if value="{{ p.menuOpen }}" hint-placeholder-val="{{ false }}">
+                      <div onclick="{{ p.onToggleMenu }}" style="position:fixed; inset:0; z-index:15;"></div>
+                      <div style="position:absolute; top:34px; right:0; z-index:20; min-width:176px; background:#fff; border:1px solid #E5E9E6; border-radius:12px; box-shadow:0 10px 34px rgba(21,48,43,.18); padding:5px; display:flex; flex-direction:column; gap:2px; animation:popIn .12s ease;">
+                        <sc-for list="{{ p.menuActions }}" as="a" hint-placeholder-count="4"><button onclick="{{ a.onClick }}" style="{{ a.style }}" style-hover="{{ a.hoverStyle }}">{{ a.label }}</button></sc-for>
+                      </div>
+                    </sc-if>
                   </div>
                 </div>
               </sc-for>
@@ -4405,6 +4411,7 @@ class Component extends DCLogic {
     pgClientQuery: '',
     pgConflictOpen: false,
     pgPendingCreate: null,
+    pgRowMenu: null,
     checkinId: null,
     checkins: {},
   };
@@ -5515,55 +5522,60 @@ class Component extends DCLogic {
       return { text, style:s };
     };
     const stateChip=(label,bg,color)=>'font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:999px; flex:0 0 auto; background:'+bg+'; color:'+color+';';
-    const actBtn=(label,act,id,primary)=>({ label, onClick:()=>this.pgCardAction(act,id),
-      style:'font-family:"DM Sans",sans-serif; font-weight:600; font-size:11.5px; border-radius:999px; padding:6px 12px; cursor:pointer; transition:border-color .12s,background .12s; '+(primary?('background:'+C.pine+'; border:1px solid '+C.pine+'; color:#fff;'):('background:'+C.surface+'; border:1px solid '+C.line+'; color:'+C.ink+';')),
-      hoverStyle: primary?('background:'+C.pineD+';'):('border-color:'+C.sageLine+'; background:'+C.sage+';') });
+    const menuItem=(label,act,id,danger)=>({ label, onClick:()=>this.pgCardAction(act,id),
+      style:'width:100%; text-align:left; cursor:pointer; font-family:"DM Sans",sans-serif; font-weight:600; font-size:12.5px; border:0; background:transparent; border-radius:8px; padding:8px 10px; transition:background .12s; color:'+(danger?'#B0442F':C.ink)+';',
+      hoverStyle: danger?'background:#FBECE8;':'background:'+C.sage+';' });
 
     const highlightAttn=!!st.pgHighlightAttention;
+    const rowBase='display:grid; grid-template-columns:minmax(180px,2.2fr) 92px minmax(120px,1fr) minmax(110px,1.1fr) minmax(120px,1fr) minmax(150px,1.4fr) 40px; gap:12px; align-items:center; padding:12px 16px; border-top:1px solid '+C.line+'; transition:background .12s;';
     const programCards=list.map(p=>{
-      const cardBase='position:relative; background:'+C.surface+'; border:1px solid '+C.line+'; border-radius:16px; padding:16px 16px 14px; box-shadow:'+shadow+'; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s,transform .15s,box-shadow .15s;';
-      const cardHover='border-color:'+C.sageLine+'; transform:translateY(-1px); box-shadow:0 2px 4px rgba(21,48,43,.05),0 14px 34px rgba(21,48,43,.09);';
-      const pills=[ pill(p.daysOfWeek.length+' days/wk'), pill(p.weeks+' weeks'), pill(p.focus) ];
-      if(p.coachName) pills.push(pill(p.coachName,'coach'));
-
-      const c={ id:p.id, name:p.name, pills, cardHover, onOpen:()=>this.pgCardAction('open',p.id),
-        hasProgress:false, hasFlag:false, hasProv:false, hasLine:false, actions:[] };
+      const attnFlag=(p.status==='active'&&p.endsSoon&&!p.nextAssigned)||(p.status==='draft'&&p.stalled);
+      const ring=(highlightAttn&&attnFlag)?'box-shadow:inset 3px 0 0 '+C.amber+';':'';
+      const c={ id:p.id, name:p.name, onOpen:()=>this.pgCardAction('open',p.id),
+        rowStyle:rowBase+ring+(p.status==='archived'?' opacity:.72;':''),
+        menuOpen: st.pgRowMenu===p.id, onToggleMenu:()=>this.togglePgRowMenu(p.id),
+        hasSecondary:false, secondary:'', scheduleText:'', coachText:'—', metricText:'',
+        hasProgress:false, progFillStyle:'', progLabel:'', hasFlag:false, flagShort:'', flagStyle:'', flagDotStyle:'',
+        menuActions:[] };
 
       if(p.status==='active'){
-        const attnFlag=p.endsSoon&&!p.nextAssigned;
-        const ring=(highlightAttn&&attnFlag)?' box-shadow:0 0 0 3px rgba(30,77,69,.35),'+shadow+';':'';
-        c.cardStyle=cardBase+ring;
         c.stateLabel='Active'; c.stateStyle=stateChip('Active',C.sage,C.sageInk);
-        c.hasLine=true; c.linePre=p.clients+' clients'; c.linePost=' on this block · '+p.adherence+'% adherence';
+        c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
+        c.coachText=p.coachName||(p.client||'—');
+        c.metricText=p.clients+' · '+p.adherence+'%';
+        if(p.focus){ c.hasSecondary=true; c.secondary=p.focus+(p.from?' · from '+p.from:''); }
+        else if(p.from){ c.hasSecondary=true; c.secondary='Built from '+p.from; }
         c.hasProgress=true; const pct=Math.round(100*p.week/p.weeks);
         c.progFillStyle='display:block; height:100%; background:'+C.pine+'; border-radius:999px; width:'+pct+'%;';
-        c.progLabel='Week '+p.week+' of '+p.weeks;
-        if(p.endsSoon){ c.hasFlag=true;
-          if(p.nextAssigned){ c.flagText='Ends this week · next block queued'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.sage+'; color:'+C.sageInk+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.sageInk+';'; }
-          else { c.flagText='Ends this week · no next block assigned'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
-        }
-        if(p.from){ c.hasProv=true; c.provText='Built from '+p.from; }
-        c.actions=[ actBtn('Open','open',p.id,true), actBtn('Duplicate','dup',p.id), actBtn('Save as template','tpl',p.id), actBtn('Archive','arch',p.id) ];
+        c.progLabel='Wk '+p.week+'/'+p.weeks;
+        if(p.endsSoon&&!p.nextAssigned){ c.hasProgress=false; c.hasFlag=true; c.flagShort='Ends this week · no next block';
+          c.flagStyle='display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; border-radius:8px; padding:4px 8px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:6px; height:6px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
+        c.menuActions=[ menuItem('Open','open',p.id), menuItem('Duplicate','dup',p.id), menuItem('Save as template','tpl',p.id), menuItem('Archive','arch',p.id,true) ];
       } else if(p.status==='draft'){
-        c.cardStyle=cardBase;
         c.stateLabel='Draft'; c.stateStyle=stateChip('Draft','#EEEDEA','#68716B');
+        c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
+        c.coachText=p.coachName||'—';
+        c.metricText='Last '+p.touched;
         c.hasProgress=true;
         c.progFillStyle='display:block; height:100%; background:'+C.pine+'; border-radius:999px; width:'+p.pct+'%;';
         c.progLabel=p.pct+'% built';
-        c.hasLine=true; c.linePost='Last touched '+p.touched;
-        if(p.stalled){ c.hasFlag=true; c.flagText='Stalling · untouched for 2+ weeks'; c.flagStyle='display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; border-radius:10px; padding:7px 10px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
-        c.actions=[ actBtn('Keep building','open',p.id,true), actBtn('Duplicate','dup',p.id), actBtn('Discard','del',p.id) ];
+        if(p.stalled){ c.hasProgress=false; c.hasFlag=true; c.flagShort='Stalling · 2+ weeks';
+          c.flagStyle='display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; border-radius:8px; padding:4px 8px; background:'+C.amberBg+'; color:'+C.amber+';'; c.flagDotStyle='width:6px; height:6px; border-radius:50%; flex:0 0 auto; background:'+C.amber+';'; }
+        c.menuActions=[ menuItem('Keep building','open',p.id), menuItem('Duplicate','dup',p.id), menuItem('Discard','del',p.id,true) ];
       } else if(p.status==='template'){
-        c.cardStyle='position:relative; background:transparent; border:1.5px dashed '+C.sageLine+'; border-radius:16px; padding:16px 16px 14px; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s,background .15s;';
-        c.cardHover='border-color:'+C.pine+'; background:'+C.alt+';';
         c.stateLabel='Template'; c.stateStyle=stateChip('Template','#EDE7F7','#6B4FA8');
-        c.hasLine=true; c.linePre='Used '+p.used+' times'; c.linePost='';
-        c.actions=[ actBtn('Use template','use',p.id,true), actBtn('Preview','open',p.id) ];
+        c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
+        c.coachText='You';
+        c.metricText='Used '+p.used+'×';
+        if(p.focus){ c.hasSecondary=true; c.secondary=p.focus; }
+        c.menuActions=[ menuItem('Use template','use',p.id), menuItem('Preview','open',p.id) ];
       } else {
-        c.cardStyle=cardBase+' opacity:.82;';
         c.stateLabel='Archived'; c.stateStyle=stateChip('Archived',C.rest,C.restInk);
-        c.hasLine=true; c.linePost='Finished '+p.finished+' · '+p.clients+' clients · '+p.adherence+'% adherence';
-        c.actions=[ actBtn('Run it again','run',p.id,true), actBtn('Save as template','tpl',p.id), actBtn('View','open',p.id) ];
+        c.scheduleText=p.daysOfWeek.length+' days/wk · '+p.weeks+' wks';
+        c.coachText=p.coachName||'—';
+        c.metricText=p.clients+' · '+p.adherence+'%';
+        c.hasSecondary=true; c.secondary='Finished '+p.finished;
+        c.menuActions=[ menuItem('Run it again','run',p.id), menuItem('Save as template','tpl',p.id), menuItem('View','open',p.id) ];
       }
       return c;
     });
@@ -5587,7 +5599,10 @@ class Component extends DCLogic {
       ...this.pgFormVM(), ...this.builderScreenVM() };
   }
 
+  togglePgRowMenu(id){ this.setState({ pgRowMenu: this.state.pgRowMenu===id? null : id }); }
+
   pgCardAction(act,id){
+    if(this.state.pgRowMenu) this.setState({ pgRowMenu:null });
     if(act==='open'){ this.openBuilder(id); return; }
     if(act==='dup'){ this.dupProgram(id); return; }
     if(act==='arch'){ this.archiveProgram(id); return; }
