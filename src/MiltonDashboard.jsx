@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����═══════════
+// ═══════════�������════════════════��══════════════════════�������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9452,10 +9452,10 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   };
 
   const tabs = [
-    ["active", `Active ${counts.active}`],
-    ["paused", `Paused ${counts.paused}`],
-    ["drafts", `Drafts ${counts.drafts}`],
-    ["templates", `Templates ${counts.templates}`],
+    ["active", "Active", counts.active],
+    ["paused", "Paused", counts.paused],
+    ["drafts", "Drafts", counts.drafts],
+    ["templates", "Templates", counts.templates],
   ];
 
   const grid = "minmax(200px, 2.2fr) 0.9fr 1.3fr 0.9fr 1.4fr";
@@ -9485,24 +9485,36 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
         </svg>
       </button>
 
+      {/* Top nav bar — matches Programs/Library breadcrumb chip */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 28px", borderBottom: "1px solid #E0EBE8", background: "#F7FAF9", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 4, background: "#EEF4F1", border: "1px solid #DEEAE6", borderRadius: 10, padding: 4 }}>
+          <span style={{ background: "#243531", color: "#fff", border: "1px solid #243531", borderRadius: 8, padding: "8px 13px", fontSize: 13, fontWeight: 600 }}>Workflows</span>
+        </div>
+      </div>
+
       {/* Body */}
-      <div style={{ flex: 1, overflow: "auto", padding: "28px 20px 96px" }}>
+      <div style={{ flex: 1, overflow: "auto", padding: "22px 20px 96px" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
 
           {view === "list" && (
             <div className="wf-fade">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
-                <div>
-                  <h1 style={{ fontSize: 25, fontWeight: 800, margin: 0, color: WF_C.navy }}>Workflows</h1>
-                  <div style={{ fontSize: 14, color: WF_C.sub, marginTop: 3 }}>Milton runs these so you don&apos;t have to</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "nowrap", marginBottom: 18 }}>
+                <h1 style={{ flex: "0 0 auto", fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.01em", color: WF_C.navy }}>Workflows</h1>
+                <div style={{ display: "inline-flex", flex: "0 0 auto", gap: 2, background: WF_C.tealBg, border: `1px solid ${WF_C.sageLine || "#D6E5DA"}`, borderRadius: 999, padding: 3, marginLeft: 6 }}>
+                  {tabs.map(([key, label, count]) => {
+                    const on = tab === key;
+                    return (
+                      <button key={key} onClick={() => setTab(key)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, border: "none", borderRadius: 999, padding: "7px 14px", fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", transition: "background .15s, color .15s", background: on ? WF_C.tealDark : "transparent", color: on ? WF_C.white : WF_C.tealInk, boxShadow: on ? "0 1px 2px rgba(21,48,43,.15)" : "none" }}>
+                        {label}<span className="wf-mono" style={{ fontSize: 10, opacity: 0.75 }}>{count}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <WfTealBtn onClick={() => say("Describe the workflow in a sentence — the trigger, who it's for, and what should happen — and I'll draft the whole rail for your review.", ["When a client misses 2 sessions, check in", "Weekly wins into social posts", "Win back members inactive 30 days", "Congratulate every PR"])}>+ New workflow</WfTealBtn>
-              </div>
-
-              <div style={{ display: "inline-flex", gap: 2, background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: 3, margin: "12px 0 16px" }}>
-                {tabs.map(([key, label]) => (
-                  <button key={key} onClick={() => setTab(key)} style={{ border: "none", borderRadius: 999, padding: "7px 15px", fontSize: 12.5, fontWeight: 600, background: tab === key ? WF_C.tealDark : "transparent", color: tab === key ? WF_C.white : WF_C.tealInk }}>{label}</button>
-                ))}
+                <div style={{ marginLeft: "auto", flex: "0 0 auto" }}>
+                  <WfTealBtn onClick={() => say("Describe the workflow in a sentence — the trigger, who it's for, and what should happen — and I'll draft the whole rail for your review.", ["When a client misses 2 sessions, check in", "Weekly wins into social posts", "Win back members inactive 30 days", "Congratulate every PR"])} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New workflow
+                  </WfTealBtn>
+                </div>
               </div>
 
               {tab !== "templates" && approvals.length > 0 && (
