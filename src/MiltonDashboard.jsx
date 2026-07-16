@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������═══════════
+// ═══════════�������════════════════��══════════════════════�����������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════��═
+// ═══════════════════════════════════════════════════════════��═��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -11070,7 +11070,7 @@ function PlaybookChapterDetail({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════���════════════════════════════════════════════════════
 // PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
 // ═══════════════════════════════════════════════════════════════
 function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
@@ -14325,6 +14325,7 @@ export default function MiltonDashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [homeView, setHomeView] = useState("cards"); // "cards" | "clients" | "analytics"
+  const [viewMode, setViewMode] = useState("coach"); // "coach" | "owner"
   const [clientFilter, setClientFilter] = useState(null);
   const [serviceTypeTab, setServiceTypeTab] = useState("All"); // "All" | "PT" | "Semi" | "Online" | "Hybrid"
   const [serviceTypeDropdown, setServiceTypeDropdown] = useState([]); // Multi-select for dropdown filter
@@ -15529,8 +15530,32 @@ export default function MiltonDashboard() {
                     }}>
                       {/* Header */}
                       <div style={{ padding: "20px 22px", borderBottom: `1px solid ${BORDER}` }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>Coach Profile</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{viewMode === "owner" ? "Owner Profile" : "Coach Profile"}</div>
                         <div style={{ fontSize: 14, color: TEXT_SEC, marginTop: 4, textDecoration: "underline", cursor: "pointer" }}>miguel@joinmmnt.com</div>
+                      </div>
+                      {/* View Switcher */}
+                      <div style={{ padding: "16px 22px", borderBottom: `1px solid ${BORDER}` }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Viewing as</div>
+                        <div style={{ display: "flex", background: "#f0f4f3", borderRadius: 10, padding: 3, gap: 3 }}>
+                          {[
+                            { key: "coach", label: "Coach" },
+                            { key: "owner", label: "Owner" },
+                          ].map(opt => (
+                            <div
+                              key={opt.key}
+                              onClick={() => { setViewMode(opt.key); setHomeView("cards"); }}
+                              style={{
+                                flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 8,
+                                fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease",
+                                background: viewMode === opt.key ? WHITE : "transparent",
+                                color: viewMode === opt.key ? TEAL : TEXT_SEC,
+                                boxShadow: viewMode === opt.key ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                              }}
+                            >
+                              {opt.label}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       {/* Menu Items */}
                       <div style={{ padding: "8px 0" }}>
@@ -15609,7 +15634,17 @@ export default function MiltonDashboard() {
               @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
             `}</style>
             <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14 }}>
-              {[
+              {(viewMode === "owner" ? [
+                { icon: "chart", label: "Business Overview", desc: "Revenue, growth & KPIs", color: "#2B7A78", onClick: () => setHomeView("analytics") },
+                { icon: "users", label: "Manage Coaches", desc: "Staff roster & permissions", color: "#45818e", onClick: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "users", label: "All Clients", desc: "Every member across coaches", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
+                { icon: "chart", label: "Revenue & Billing", desc: "Payments, plans & payouts", color: "#6aa84f", onClick: () => setHomeView("analytics") },
+                { icon: "calendar", label: "Locations & Schedule", desc: "Facility calendar & capacity", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "aiWorkflow", label: "Automations", desc: "Business-wide workflows", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "send", label: "Marketing & Leads", desc: "Grow the whole gym", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file-text", label: "Reports", desc: "Export & share performance", color: "#3aafa9", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "smile", label: "Brand & App", desc: "Customize member experience", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
+              ] : [
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
@@ -15624,7 +15659,7 @@ export default function MiltonDashboard() {
                 { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
                 { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-              ].map(card => (
+              ]).map(card => (
                 <div
                   key={card.label}
                   className="v0-card"
