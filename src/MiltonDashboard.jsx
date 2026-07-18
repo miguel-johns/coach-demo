@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������═══════════
+// ═══════════�������════════════════��══════════════════════�����������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -14314,6 +14314,379 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CHECK-IN DECK — swipeable / expandable stack of client check-ins
+// ═══════════════════════════════════════════════════════════════
+const CHECKIN_SEED = [
+  {
+    id: "sc", name: "Sarah Chen", initials: "SC", color: "#2B7A78",
+    period: "Week 6 check-in", when: "Today · 8:24 AM",
+    mood: "Great", moodColor: "#3aaf6a",
+    note: "Feeling strong this week! Hit a new squat PR and sleep has been solid. Knee felt a little tight on the descent but nothing painful.",
+    flag: "Knee — monitor",
+    metrics: [
+      { label: "Weight", value: "154 lb", sub: "-1.2" },
+      { label: "Sleep", value: "7.4 h", sub: "+0.5" },
+      { label: "Energy", value: "8/10", sub: "+1" },
+      { label: "Adherence", value: "92%", sub: "+4%" },
+    ],
+  },
+  {
+    id: "mj", name: "Marcus Johnson", initials: "MJ", color: "#6366f1",
+    period: "Week 8 check-in", when: "Today · 7:02 AM",
+    mood: "Good", moodColor: "#3aaf6a",
+    note: "Getting some knee pain when I squat deep — not sure if it's form or load. Otherwise energy is good and I'm eating on plan.",
+    flag: "Knee pain flagged",
+    metrics: [
+      { label: "Weight", value: "201 lb", sub: "+0.4" },
+      { label: "Sleep", value: "6.8 h", sub: "-0.2" },
+      { label: "Energy", value: "7/10", sub: "0" },
+      { label: "Adherence", value: "88%", sub: "-2%" },
+    ],
+  },
+  {
+    id: "er", name: "Emily Rodriguez", initials: "ER", color: "#ef6c3e",
+    period: "Weekly check-in", when: "Yesterday · 9:41 PM",
+    mood: "Struggling", moodColor: "#e8453c",
+    note: "Been really busy with work and missed the last two sessions. Feeling a bit overwhelmed and off track — could use a simpler plan to get back into it.",
+    flag: "Attendance dropping",
+    metrics: [
+      { label: "Weight", value: "143 lb", sub: "-0.5" },
+      { label: "Sleep", value: "5.9 h", sub: "-1.1" },
+      { label: "Energy", value: "4/10", sub: "-3" },
+      { label: "Adherence", value: "45%", sub: "-20%" },
+    ],
+  },
+  {
+    id: "ap", name: "Ana Prieto", initials: "AP", color: "#45818e",
+    period: "Week 4 check-in", when: "Yesterday · 6:15 PM",
+    mood: "Good", moodColor: "#3aaf6a",
+    note: "Loving the new program! Old knee issue from volleyball has been quiet. Ready to add a little more volume if you think I'm good.",
+    flag: null,
+    metrics: [
+      { label: "Weight", value: "132 lb", sub: "-0.8" },
+      { label: "Sleep", value: "7.9 h", sub: "+0.3" },
+      { label: "Energy", value: "9/10", sub: "+1" },
+      { label: "Adherence", value: "96%", sub: "+2%" },
+    ],
+  },
+  {
+    id: "dp", name: "David Park", initials: "DP", color: "#9333ea",
+    period: "Week 12 check-in", when: "2 days ago", 
+    mood: "Great", moodColor: "#3aaf6a",
+    note: "Powerlifting prep is going great. Bench moved up and bodyweight is trending down. Knee valgus cue you gave me is really helping under heavy loads.",
+    flag: null,
+    metrics: [
+      { label: "Weight", value: "195 lb", sub: "-1.0" },
+      { label: "Sleep", value: "7.2 h", sub: "+0.1" },
+      { label: "Energy", value: "8/10", sub: "0" },
+      { label: "Adherence", value: "94%", sub: "+1%" },
+    ],
+  },
+];
+
+function CheckInDeck({ isMobile, onReply }) {
+  const [deck, setDeck] = useState(CHECKIN_SEED);
+  const [expanded, setExpanded] = useState(false);
+  const [drag, setDrag] = useState({ dx: 0, dy: 0, active: false });
+  const [leaving, setLeaving] = useState(null); // "left" | "right" | null
+  const startRef = useRef(null);
+  const movedRef = useRef(false);
+
+  const total = CHECKIN_SEED.length;
+  const reviewed = total - deck.length;
+  const top = deck[0];
+  const SWIPE_THRESHOLD = 110;
+
+  const dismiss = (dir) => {
+    if (leaving) return;
+    setExpanded(false);
+    setLeaving(dir);
+    window.setTimeout(() => {
+      setDeck((d) => d.slice(1));
+      setLeaving(null);
+      setDrag({ dx: 0, dy: 0, active: false });
+    }, 300);
+  };
+
+  const reset = () => {
+    setDeck(CHECKIN_SEED);
+    setExpanded(false);
+    setDrag({ dx: 0, dy: 0, active: false });
+  };
+
+  const onPointerDown = (e) => {
+    if (leaving || !top) return;
+    startRef.current = { x: e.clientX, y: e.clientY };
+    movedRef.current = false;
+    setDrag({ dx: 0, dy: 0, active: true });
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  };
+  const onPointerMove = (e) => {
+    if (!startRef.current) return;
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) movedRef.current = true;
+    setDrag({ dx, dy, active: true });
+  };
+  const onPointerUp = () => {
+    if (!startRef.current) return;
+    const dx = drag.dx;
+    startRef.current = null;
+    if (dx > SWIPE_THRESHOLD) { dismiss("right"); return; }
+    if (dx < -SWIPE_THRESHOLD) { dismiss("left"); return; }
+    setDrag({ dx: 0, dy: 0, active: false });
+    if (!movedRef.current) setExpanded((v) => !v);
+  };
+
+  const cardH = expanded ? (isMobile ? 380 : 340) : (isMobile ? 176 : 168);
+  const containerH = cardH + 24; // room for stacked peeks
+
+  // Header
+  const header = (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <NavIcon icon="message-circle" size={19} />
+        </div>
+        <div>
+          <div style={{ fontSize: isMobile ? 16 : 17, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</div>
+          <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 1 }}>
+            {deck.length > 0 ? `${deck.length} to review · swipe or tap to expand` : "All caught up"}
+          </div>
+        </div>
+      </div>
+      {deck.length > 0 ? (
+        <span style={{
+          minWidth: 24, height: 24, padding: "0 8px", borderRadius: 999,
+          background: TEAL, color: "#fff", fontSize: 12.5, fontWeight: 700,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>{deck.length}</span>
+      ) : (
+        <button onClick={reset} style={{
+          padding: "6px 12px", borderRadius: 999, border: `1px solid ${BORDER}`,
+          background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+        }}>Reset</button>
+      )}
+    </div>
+  );
+
+  if (deck.length === 0) {
+    return (
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 18, padding: isMobile ? 16 : 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        {header}
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 8, padding: "26px 16px", borderRadius: 14, border: `1px dashed ${BORDER}`, background: "#f7faf9"
+        }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#e6f7ee", color: ALERT_GREEN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>All check-ins reviewed</div>
+          <div style={{ fontSize: 12.5, color: TEXT_SEC, textAlign: "center" }}>You&apos;ve cleared all {total} client check-ins for today.</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 18, padding: isMobile ? 16 : 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      {header}
+
+      {/* Card stack */}
+      <div style={{ position: "relative", height: containerH, transition: "height .28s cubic-bezier(.34,1.2,.64,1)" }}>
+        {deck.slice(0, 3).map((c, i) => {
+          const isTop = i === 0;
+          const behind = i;
+          let transform, transition, opacity = 1, zIndex = 30 - i, boxShadow;
+
+          if (isTop) {
+            if (leaving) {
+              transform = `translateX(${leaving === "right" ? 140 : -140}%) rotate(${leaving === "right" ? 16 : -16}deg)`;
+              transition = "transform .3s ease, opacity .3s ease";
+              opacity = 0;
+            } else if (drag.active) {
+              transform = `translate(${drag.dx}px, ${drag.dy * 0.25}px) rotate(${drag.dx * 0.04}deg)`;
+              transition = "none";
+            } else {
+              transform = "translate(0,0) rotate(0deg)";
+              transition = "transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .2s ease";
+            }
+            boxShadow = "0 14px 34px rgba(26,46,42,0.16)";
+          } else {
+            const scale = 1 - behind * 0.05;
+            const ty = behind * 12;
+            transform = `translateY(${ty}px) scale(${scale})`;
+            transition = "transform .3s cubic-bezier(.34,1.4,.64,1), opacity .3s ease";
+            opacity = 1 - behind * 0.18;
+            boxShadow = "0 6px 16px rgba(26,46,42,0.08)";
+          }
+
+          const dragAmt = isTop && drag.active ? drag.dx : 0;
+
+          return (
+            <div
+              key={c.id}
+              onPointerDown={isTop ? onPointerDown : undefined}
+              onPointerMove={isTop ? onPointerMove : undefined}
+              onPointerUp={isTop ? onPointerUp : undefined}
+              onPointerCancel={isTop ? onPointerUp : undefined}
+              role={isTop ? "button" : undefined}
+              tabIndex={isTop ? 0 : undefined}
+              onKeyDown={isTop ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((v) => !v); } } : undefined}
+              style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: cardH,
+                background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16,
+                padding: isMobile ? 14 : 16, boxSizing: "border-box",
+                transform, transition, opacity, zIndex, boxShadow,
+                cursor: isTop ? (drag.active ? "grabbing" : "grab") : "default",
+                touchAction: "none", userSelect: "none", overflow: "hidden",
+                display: "flex", flexDirection: "column"
+              }}
+            >
+              {/* swipe intent overlays (top card only) */}
+              {isTop && (
+                <>
+                  <span style={{
+                    position: "absolute", top: 14, left: 14, padding: "4px 10px", borderRadius: 8,
+                    border: `2px solid ${ALERT_GREEN}`, color: ALERT_GREEN, fontSize: 12, fontWeight: 800,
+                    textTransform: "uppercase", letterSpacing: "0.06em", transform: "rotate(-8deg)",
+                    opacity: Math.max(0, Math.min(1, dragAmt / SWIPE_THRESHOLD)), pointerEvents: "none"
+                  }}>Reviewed</span>
+                  <span style={{
+                    position: "absolute", top: 14, right: 14, padding: "4px 10px", borderRadius: 8,
+                    border: `2px solid #d97706`, color: "#d97706", fontSize: 12, fontWeight: 800,
+                    textTransform: "uppercase", letterSpacing: "0.06em", transform: "rotate(8deg)",
+                    opacity: Math.max(0, Math.min(1, -dragAmt / SWIPE_THRESHOLD)), pointerEvents: "none"
+                  }}>Snooze</span>
+                </>
+              )}
+
+              {/* Card header row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                  background: c.color, color: "#fff", fontSize: 14, fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>{c.initials}</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</span>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: c.moodColor, background: `${c.moodColor}16`, padding: "2px 8px", borderRadius: 999, flexShrink: 0 }}>{c.mood}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{c.period} · {c.when}</div>
+                </div>
+              </div>
+
+              {/* Note */}
+              <p style={{
+                margin: "12px 0 0", fontSize: 13.5, lineHeight: 1.5, color: TEXT_SEC,
+                display: "-webkit-box", WebkitLineClamp: expanded ? "unset" : 2, WebkitBoxOrient: "vertical",
+                overflow: "hidden"
+              }}>{c.note}</p>
+
+              {/* Flag pill */}
+              {c.flag && !expanded && (
+                <div style={{ marginTop: "auto", paddingTop: 10 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "3px 9px", borderRadius: 999 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                    {c.flag}
+                  </span>
+                </div>
+              )}
+
+              {/* Expanded details */}
+              {expanded && (
+                <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                    {c.metrics.map((m) => {
+                      const n = parseFloat(m.sub);
+                      const dir = isNaN(n) || n === 0 ? "flat" : n > 0 ? "up" : "down";
+                      const goodUp = m.label !== "Weight";
+                      const col = dir === "flat" ? TEXT_SEC : (dir === "up") === goodUp ? ALERT_GREEN : "#d97706";
+                      return (
+                        <div key={m.label} style={{ background: "#f7faf9", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 9px" }}>
+                          <div style={{ fontSize: 10.5, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginTop: 3 }}>{m.value}</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: col, marginTop: 1 }}>{m.sub}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {c.flag && (
+                    <span style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "4px 10px", borderRadius: 999 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                      {c.flag}
+                    </span>
+                  )}
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); onReply && onReply(c); }}
+                    style={{
+                      alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 7,
+                      padding: "9px 16px", borderRadius: 10, border: "none",
+                      background: TEAL, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer"
+                    }}>
+                    <NavIcon icon="send" size={15} /> Reply with Milton
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
+        <button
+          onClick={() => dismiss("left")}
+          style={{
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+            padding: "10px 12px", borderRadius: 11, border: `1px solid ${BORDER}`,
+            background: WHITE, color: "#d97706", fontSize: 13, fontWeight: 600, cursor: "pointer"
+          }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
+          Snooze
+        </button>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "10px 14px", borderRadius: 11, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEXT_SEC, fontSize: 13, fontWeight: 600, cursor: "pointer"
+          }}>
+          {expanded ? "Collapse" : "Expand"}
+        </button>
+        <button
+          onClick={() => dismiss("right")}
+          style={{
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+            padding: "10px 12px", borderRadius: 11, border: "none",
+            background: ALERT_GREEN, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer"
+          }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          Reviewed
+        </button>
+      </div>
+
+      {/* Progress dots */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12 }}>
+        {CHECKIN_SEED.map((_, i) => (
+          <span key={i} style={{
+            width: i === reviewed ? 20 : 6, height: 6, borderRadius: 999,
+            background: i < reviewed ? "#cfe0dc" : i === reviewed ? TEAL : "#e0ebe8",
+            transition: "all .25s ease"
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
@@ -15595,6 +15968,19 @@ export default function MiltonDashboard() {
         {/* ═══ HOME CARDS VIEW ═══ */}
         {homeView === "cards" && (
           <>
+            {/* Client check-in deck — swipe or expand */}
+            <CheckInDeck
+              isMobile={isMobile}
+              onReply={(c) => {
+                setChatMessages(prev => [...prev, {
+                  type: "ai",
+                  title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
+                  text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? `I want to keep an eye on that — let's adjust things so it doesn't hold you back. ` : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
+                }]);
+                setChatOpen(true);
+              }}
+            />
+
             {/* Action cards */}
             <style>{`
               .v0-card { position: relative; background: ${WHITE}; border: 1px solid ${BORDER}; border-radius: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; overflow: hidden; transition: transform .22s cubic-bezier(.34,1.4,.64,1), box-shadow .22s ease, border-color .22s ease; }
