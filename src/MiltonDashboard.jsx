@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������������������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════��═��══════��═══��═════��═
+// ════════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -9178,6 +9178,12 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
     "chevron-right": <polyline points="9 6 15 12 9 18" />,
     copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
+    form: <><rect x="4" y="3" width="16" height="18" rx="2" /><line x1="8" y1="8" x2="16" y2="8" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="16" x2="12" y2="16" /></>,
+    qr: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><line x1="14" y1="14" x2="14" y2="21" /><line x1="18" y1="14" x2="21" y2="14" /><line x1="21" y1="18" x2="21" y2="21" /></>,
+    link: <><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></>,
+    tag: <><path d="M20.6 13.4 12 22l-8-8 8.6-8.6A2 2 0 0 1 14 5h6a2 2 0 0 1 2 2v6a2 2 0 0 1-1.4 1.4z" /><circle cx="16.5" cy="8.5" r="1" /></>,
+    webhook: <><circle cx="12" cy="7" r="3" /><path d="M9.5 9 6 15a3 3 0 1 0 2.8 4.2" /><path d="M14.5 9l3.5 6a3 3 0 1 1-3.5 4.2" /><path d="M9 19h6" /></>,
+    at: <><circle cx="12" cy="12" r="4" /><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.6 7.2" /></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9425,6 +9431,62 @@ const WF_ATTACH_META = {
   pdf: { glyph: "pdf", label: "PDF", sample: "meal-guide.pdf" },
 };
 
+// ── Triggers (entry methods), tags, recipients, inline Milton mentions ──
+const WF_TAGS_SEED = ["New lead", "Trial", "At-risk", "VIP", "Rehab", "Won-back", "Onboarding"];
+
+// method, label, glyph, one-line description, tag verb
+const WF_ENTRY_METHODS = [
+  ["form", "Form submission", "form", "A client submits your branded intake form"],
+  ["manual-add", "Add & tag client", "user", "You add a brand-new client and tag them"],
+  ["tag-existing", "Tag existing client", "tag", "You tag someone already in your roster"],
+  ["webhook", "Webhook", "webhook", "An external system posts to an endpoint"],
+];
+
+const WF_RECIPIENTS = [["client", "Client"], ["coach", "Coach"]];
+
+// Forms are built elsewhere (the Forms section) — here you just pick one.
+const WF_FORMS_SEED = [
+  { id: "f-intake", name: "New Client Intake", headline: "Let's get you started", brandColor: WF_C.tealDark, tag: "New lead" },
+  { id: "f-trial", name: "7-Day Trial Signup", headline: "Claim your free week", brandColor: "#2E7357", tag: "Trial" },
+  { id: "f-consult", name: "Free Consult Request", headline: "Book your strategy call", brandColor: WF_C.navy, tag: "New lead" },
+  { id: "f-reassess", name: "Quarterly Reassessment", headline: "Time to check your progress", brandColor: WF_C.amberInk, tag: "Onboarding" },
+];
+
+// Inline Milton mention labels (Notion-style chips inside a message)
+const WF_INCLUDE_LABEL = {
+  report: "Include Report",
+  workout: "Attach Workout",
+  nutrition: "Attach Nutrition Plan",
+  message: "Draft with Milton",
+  summary: "Include Progress Summary",
+  adjust: "Include Plan Update",
+};
+
+const wfSlug = (s) => ((s || "untitled").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "form");
+
+// Human-readable trigger label derived from a structured entry object.
+function wfEntryLabel(entry) {
+  if (!entry || !entry.method) return "";
+  const tag = entry.tag || "";
+  if (entry.method === "form") return `Form: ${(entry.form && entry.form.name) || "Intake form"}`;
+  if (entry.method === "manual-add") return tag ? `Manual add → ${tag}` : "Manual add";
+  if (entry.method === "tag-existing") return tag ? `Tagged: ${tag}` : "Tagged client";
+  if (entry.method === "webhook") return "Webhook";
+  return "";
+}
+
+// A sensible default entry for a workflow that predates the entry model.
+function wfDefaultEntry(w) {
+  if (w && w.entry) return w.entry;
+  const slug = wfSlug(w && w.name);
+  return {
+    method: "tag-existing",
+    tag: "At-risk",
+    form: { ...WF_FORMS_SEED[0] },
+    webhookUrl: `https://api.milton.coach/hooks/${slug}`,
+  };
+}
+
 // Build an initial simple flow from a seed workflow's steps
 function wfDeriveFlow(w) {
   const actions = (w.steps || []).filter((s) => s.kind === "action");
@@ -9433,14 +9495,54 @@ function wfDeriveFlow(w) {
     const type = s.preview ? "text" : (/milton|draft|generate|review|create|report|summar/i.test(s.body) ? "milton" : "text");
     if (type === "milton") {
       const task = /report|summar/i.test(s.body) ? "summary" : /workout|program/i.test(s.body) ? "workout" : "message";
-      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, review: w.approval ? "human" : "auto" });
+      const recipient = /coach|notify you|alert you/i.test(s.body) ? "coach" : "client";
+      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, review: w.approval ? "human" : "auto", recipient });
     } else {
-      nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body, attachments: [] });
+      const recipient = /coach|notify you|alert you/i.test(s.body) ? "coach" : "client";
+      nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body, attachments: [], includes: [], recipient });
     }
     if (idx < actions.length - 1) nodes.push({ id: wfUid(), type: "delay", amount: 1, unit: "day" });
   });
-  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "", attachments: [] });
+  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "", attachments: [], includes: [], recipient: "client" });
   return nodes;
+}
+
+// Reusable single-tag selector: pill display + suggestions + free entry
+function WfTagSelect({ value, onChange, placeholder = "Choose a tag" }) {
+  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState("");
+  const commit = (t) => { if (t && t.trim()) { onChange(t.trim()); setCustom(""); setOpen(false); } };
+  return (
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${value ? WF_C.tealDark : WF_C.line}`, borderRadius: 999, padding: "6px 11px", fontSize: 12.5, fontWeight: 600, background: value ? WF_C.tealBg : WF_C.white, color: value ? WF_C.tealInk : WF_C.sub, cursor: "pointer" }}
+      >
+        <WfGlyph name="tag" size={13} color={value ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />
+        {value || placeholder}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", zIndex: 30, top: "calc(100% + 6px)", left: 0, minWidth: 214, background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(11,22,40,0.14)", padding: 9 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {WF_TAGS_SEED.map((t) => (
+              <button key={t} type="button" onClick={() => commit(t)} style={{ border: `1px solid ${t === value ? WF_C.tealDark : WF_C.line}`, borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 600, background: t === value ? WF_C.tealBg : WF_C.white, color: t === value ? WF_C.tealInk : WF_C.ink, cursor: "pointer" }}>{t}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); commit(custom); } }}
+              placeholder="New tag…"
+              style={{ flex: 1, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 12.5, outline: "none", fontFamily: "'DM Sans', sans-serif", color: WF_C.ink }}
+            />
+            <button type="button" onClick={() => commit(custom)} style={{ border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12.5, fontWeight: 600, background: WF_C.tealDark, color: WF_C.white, cursor: "pointer" }}>Add</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Vertical connector with an inline "add step" affordance
@@ -9485,17 +9587,24 @@ function WfConnector({ index, menuAt, setMenuAt, onAdd }) {
   );
 }
 
-function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
+function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
   const [menuAt, setMenuAt] = useState(null);
   const [attachAt, setAttachAt] = useState(null);
+  const [mentionAt, setMentionAt] = useState(null);
+  const [copied, setCopied] = useState(false);
   // The node currently being edited expands to fill the canvas.
   const firstAction = (flow.find((n) => n.type !== "delay") || {}).id || null;
   const [activeId, setActiveId] = useState(firstAction);
 
+  // ── Entry (trigger) helpers ──
+  const ent = entry || {};
+  const updateEntry = (patch) => onEntryChange && onEntryChange({ ...ent, ...patch });
+  const copy = (t) => { try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (_) {} setCopied(true); setTimeout(() => setCopied(false), 1500); };
+
   const newNodeFor = (type) => {
     if (type === "delay") return { id: wfUid(), type: "delay", amount: 1, unit: "day" };
-    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", review: "human" };
-    return { id: wfUid(), type, subject: "", message: "", attachments: [] };
+    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", review: "human", recipient: "client" };
+    return { id: wfUid(), type, subject: "", message: "", attachments: [], includes: [], recipient: "client" };
   };
   const addNode = (index, type) => {
     const node = newNodeFor(type);
@@ -9510,23 +9619,76 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
 
   return (
     <div style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {/* Start Here node */}
+      {/* Start Here — the trigger is the product: how a client enters */}
       <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <WfGlyph name="bolt" size={16} color={WF_C.white} strokeWidth={2} />
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <WfEyebrow color={WF_C.tealDark}>Start here</WfEyebrow>
-            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>When this happens…</div>
+            <WfEyebrow color={WF_C.tealDark}>Start here · Trigger</WfEyebrow>
+            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>How does a client enter?</div>
           </div>
         </div>
-        <input
-          value={workflow.trigger || ""}
-          onChange={(e) => onTriggerChange && onTriggerChange(e.target.value)}
-          placeholder="Describe the trigger (e.g. client misses 2 workouts)"
-          style={{ ...inputStyle, marginTop: 12 }}
-        />
+
+        {/* Entry-method picker */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+          {WF_ENTRY_METHODS.map(([method, label, glyph, desc]) => {
+            const on = ent.method === method;
+            return (
+              <button
+                key={method}
+                type="button"
+                onClick={() => updateEntry({ method })}
+                style={{ textAlign: "left", display: "flex", gap: 9, padding: "10px 11px", borderRadius: 12, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}
+              >
+                <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: on ? WF_C.tealDark : WF_C.cream, color: on ? WF_C.white : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name={glyph} size={15} color={on ? WF_C.white : WF_C.sub} strokeWidth={2} />
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>{label}</span>
+                  <span style={{ display: "block", fontSize: 11.5, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint, marginTop: 1 }}>{desc}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Method-specific config */}
+        <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
+          {ent.method === "form" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>Form</span>
+              <select
+                value={(ent.form && ent.form.id) || ""}
+                onChange={(e) => { const f = WF_FORMS_SEED.find((x) => x.id === e.target.value); if (f) updateEntry({ form: { ...f } }); }}
+                style={{ flex: 1, minWidth: 200, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", cursor: "pointer" }}
+              >
+                {WF_FORMS_SEED.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+          ) : ent.method === "webhook" ? (
+            <>
+              <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 5 }}>POST endpoint</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 9px", background: WF_C.white, fontSize: 12, color: WF_C.ink, overflow: "hidden" }}>
+                  <WfGlyph name="webhook" size={13} color={WF_C.sub} strokeWidth={2} />
+                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ent.webhookUrl}</span>
+                </div>
+                <button type="button" onClick={() => copy(ent.webhookUrl)} className="wf-ghost" style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 11px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink }}>{copied ? "Copied" : "Copy"}</button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 11, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>Tag on receipt</span>
+                <WfTagSelect value={ent.tag} onChange={(t) => updateEntry({ tag: t })} />
+              </div>
+            </>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>{ent.method === "manual-add" ? "Add the client, then tag" : "Enters when tagged"}</span>
+              <WfTagSelect value={ent.tag} onChange={(t) => updateEntry({ tag: t })} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Steps with connectors */}
@@ -9560,9 +9722,11 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
             (() => {
               const m = WF_ACTION_META[node.type];
               const taskLabel = (WF_AGENT_TASKS.find(([v]) => v === (node.task || "report")) || [null, ""])[1];
-              const title = node.type === "milton" ? `Milton · ${taskLabel}` : m.label;
+              const recip = (node.recipient || "client") === "coach" ? "Coach" : "Client";
+              const title = node.type === "milton" ? `${taskLabel} → ${recip}` : m.label;
               const snippet = (node.type === "email" && node.subject) ? node.subject : (node.message || "Tap to add content");
               const attachCount = (node.attachments || []).length;
+              const includeCount = (node.includes || []).length;
               return (
                 <div
                   onClick={() => setActiveId(node.id)}
@@ -9577,8 +9741,16 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.ink }}>{title}</span>
+                      {node.type !== "milton" && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.tealInk, background: WF_C.tealBg, borderRadius: 999, padding: "1px 7px" }}>→ {recip}</span>
+                      )}
                       {node.type === "milton" && (
                         <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.sub, background: WF_C.cream, borderRadius: 999, padding: "1px 7px" }}>{(node.review || "human") === "human" ? "Review" : "Auto"}</span>
+                      )}
+                      {includeCount > 0 && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.tealInk }}>
+                          <WfGlyph name="spark" size={11} color={WF_C.tealInk} strokeWidth={2} />{includeCount}
+                        </span>
                       )}
                       {attachCount > 0 && (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.sub }}>
@@ -9594,19 +9766,33 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
             })()
           ) : (
             <div style={{ width: "100%", background: WF_C.white, border: `1.5px solid ${WF_C.tealDark}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 8px 28px rgba(11,22,40,0.10)" }}>
-              {/* header: type switch + delete */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* header: type switch + recipient + delete */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
                   {Object.entries(WF_ACTION_META).map(([type, m]) => {
                     const on = node.type === type;
                     return (
-                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", review: node.review || "human" } : { attachments: node.attachments || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", review: node.review || "human" } : { attachments: node.attachments || [], includes: node.includes || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
                         <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
                       </button>
                     );
                   })}
                 </div>
-                <button onClick={() => removeNode(node.id)} title="Remove" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {/* recipient toggle */}
+                <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.faint }}>To</span>
+                  <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
+                    {WF_RECIPIENTS.map(([v, label]) => {
+                      const on = (node.recipient || "client") === v;
+                      return (
+                        <button key={v} onClick={() => patchNode(node.id, { recipient: v })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.tealInk : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                          <WfGlyph name={v === "coach" ? "medal" : "user"} size={12} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <button onClick={() => removeNode(node.id)} title="Remove" style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
                 </button>
               </div>
@@ -9666,7 +9852,30 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                     rows={9}
                     style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.6, minHeight: 240 }}
                   />
-                  {/* Attachments */}
+
+                  {/* Inline Milton mentions — Notion-style chips woven into the message */}
+                  {(node.includes || []).length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10, background: WF_C.tealBg, borderRadius: 10, padding: "9px 11px" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: WF_C.tealInk }}>
+                        <WfGlyph name="spark" size={13} color={WF_C.tealInk} strokeWidth={2} />In this message, Milton will:
+                      </span>
+                      {(node.includes || []).map((inc) => (
+                        <span key={inc.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WF_C.white, border: `1px solid ${WF_C.tealDark}`, borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: WF_C.tealInk }}>
+                          <WfGlyph name="spark" size={12} color={WF_C.tealInk} strokeWidth={2} />
+                          {WF_INCLUDE_LABEL[inc.task] || inc.task}
+                          <button
+                            onClick={() => patchNode(node.id, { includes: (node.includes || []).filter((x) => x.id !== inc.id) })}
+                            title="Remove mention"
+                            style={{ display: "inline-flex", border: "none", background: "transparent", color: WF_C.faint, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                          >
+                            <WfGlyph name="x" size={12} color={WF_C.faint} strokeWidth={2.2} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* @ Milton insert + Attachments */}
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10 }}>
                     {(node.attachments || []).map((att, ai) => (
                       <span key={ai} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WF_C.cream, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "5px 8px", fontSize: 12, color: WF_C.ink }}>
@@ -9700,6 +9909,29 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px dashed ${WF_C.line}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.sub, cursor: "pointer" }}
                       >
                         <WfGlyph name="paperclip" size={13} color={WF_C.sub} strokeWidth={2} />Attach media
+                      </button>
+                    )}
+
+                    {/* @ Milton inline mention */}
+                    {mentionAt === node.id ? (
+                      <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 4 }}>
+                        {WF_AGENT_TASKS.map(([task]) => (
+                          <button
+                            key={task}
+                            onClick={() => { patchNode(node.id, { includes: [...(node.includes || []), { id: wfUid(), task }] }); setMentionAt(null); }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px solid ${WF_C.tealDark}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.tealBg, color: WF_C.tealInk, cursor: "pointer" }}
+                          >
+                            <WfGlyph name="spark" size={12} color={WF_C.tealInk} strokeWidth={2} />{WF_INCLUDE_LABEL[task]}
+                          </button>
+                        ))}
+                        <button onClick={() => setMentionAt(null)} style={{ border: "none", background: "transparent", color: WF_C.faint, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setMentionAt(node.id)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px dashed ${WF_C.tealDark}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.tealInk, cursor: "pointer" }}
+                      >
+                        <WfGlyph name="at" size={13} color={WF_C.tealInk} strokeWidth={2} />Milton
                       </button>
                     )}
                   </div>
@@ -9823,12 +10055,18 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
   // Build a blank workflow and open it straight on the canvas to edit manually.
   const createBlank = () => {
     const id = "d" + Date.now();
+    const entry = {
+      method: "form",
+      tag: "New lead",
+      form: { ...WF_FORMS_SEED[0] },
+      webhookUrl: `https://api.milton.coach/hooks/${wfSlug("untitled-" + id)}`,
+    };
     const newWf = {
-      id, name: "Untitled workflow", sub: "Draft", status: "draft", trigger: "",
+      id, name: "Untitled workflow", sub: "Draft", status: "draft", trigger: wfEntryLabel(entry), entry,
       lastRun: "Never", results: { runs: 0, headline: "Not run yet" }, approval: false, steps: [],
     };
     setWorkflows((ws) => [...ws, newWf]);
-    setFlowMap((prev) => ({ ...prev, [id]: [{ id: wfUid(), type: "text", subject: "", message: "", attachments: [] }] }));
+    setFlowMap((prev) => ({ ...prev, [id]: [{ id: wfUid(), type: "text", subject: "", message: "", attachments: [], includes: [], recipient: "client" }] }));
     setTab("drafts");
     setOpenId(id);
     setView("detail");
@@ -10072,7 +10310,8 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                   workflow={open}
                   flow={flowMap[open.id] || []}
                   setFlow={(updater) => setFlowMap((prev) => ({ ...prev, [open.id]: typeof updater === "function" ? updater(prev[open.id] || []) : updater }))}
-                  onTriggerChange={(val) => setWorkflows((ws) => ws.map((w) => (w.id === open.id ? { ...w, trigger: val } : w)))}
+                  entry={open.entry || wfDefaultEntry(open)}
+                  onEntryChange={(next) => setWorkflows((ws) => ws.map((w) => (w.id === open.id ? { ...w, entry: next, trigger: wfEntryLabel(next) || w.trigger } : w)))}
                 />
               </div>
             </div>
