@@ -383,9 +383,9 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════����������════════════════������������══════════════
+// ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════��═
+// ══════════════════════════════════════════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -3784,7 +3784,7 @@ const initialClients = [
     nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 120, calorieAvg: 1650, calorieTarget: 1800 },
     insight: "Sarah's squat has progressed from 95 to 120 lbs in 6 weeks. Bench is stalling — may need to adjust volume. Next session: Upper Body Pull.",
     coachAngle: "Test 1RM on squat next week to update training max. Consider adding an extra pressing accessory.",
-    narrative: "Squat up 25 lbs since assessment. Body comp improving — down 5 lbs, gained 1.5 lbs lean mass.",
+    narrative: "Squat up 25 lbs since assessment. Body comp improving ��� down 5 lbs, gained 1.5 lbs lean mass.",
     attendanceRate: 85,
     weightData: [158, 157, 156, 155, 154, 153.5, 153],
   },
@@ -5861,6 +5861,7 @@ isMobile={true}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+  isMobile={true}
             />
           )}
           {canvasType === "programming" && (
@@ -6957,7 +6958,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 }
 
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════��════════════════════
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
 
@@ -9134,6 +9135,14 @@ const WF_FONTS = `
 .mwf .wf-ghost:hover { background: #E9F1EB; border-color: #D6E5DA; }
 .mwf .wf-teal:hover { background: #163A34; }
 .mwf .wf-tpl:hover { border-color: ${WF_C.teal}; background: #F7FAF8; }
+.mwf .wf-actions { opacity: 0; transition: opacity .15s ease; }
+.mwf .wf-row:hover .wf-actions, .mwf .wf-row:focus-within .wf-actions { opacity: 1; }
+.mwf .wf-iconbtn { cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.mwf .wf-iconbtn:hover { background: #E9F1EB; border-color: #D6E5DA; color: ${WF_C.tealDark}; }
+.mwf .wf-iconbtn-danger:hover { background: ${WF_C.redBg}; border-color: #E7C7BC; color: ${WF_C.redInk}; }
+.mwf .wf-name-input { border: 1px solid transparent; border-radius: 8px; background: transparent; outline: none; transition: border-color .15s, background .15s; }
+.mwf .wf-name-input:hover { border-color: ${WF_C.line}; }
+.mwf .wf-name-input:focus { border-color: ${WF_C.tealDark}; background: #fff; }
 @keyframes wfFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .mwf .wf-fade { animation: wfFade .25s ease; }
 @media (prefers-reduced-motion: reduce) { .mwf .wf-fade { animation: none; } }
@@ -9154,6 +9163,21 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     chartDown: <><polyline points="3 7 9 13 13 9 21 17" /><polyline points="15 17 21 17 21 11" /></>,
     refresh: <><polyline points="21 4 21 9 16 9" /><path d="M19 9A8 8 0 1 0 20 14" /></>,
     doc: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><polyline points="14 3 14 8 19 8" /></>,
+    mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+    trash: <><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" /></>,
+    plus: <path d="M12 5v14M5 12h14" />,
+    spark: <path d="M12 3l1.9 5.6L19 10l-5.1 1.4L12 17l-1.9-5.6L5 10l5.1-1.4z" />,
+    flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
+    paperclip: <path d="M21.4 11.05 12.25 20.2a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.67 3.67 0 0 1 5.19 5.19l-9.2 9.19a1.83 1.83 0 0 1-2.59-2.59l8.49-8.48" />,
+    image: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></>,
+    video: <><path d="m22 8-6 4 6 4V8z" /><rect x="2" y="6" width="14" height="12" rx="2" /></>,
+    pdf: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><polyline points="14 3 14 8 19 8" /><path d="M9 15h6M9 12h6" /></>,
+    robot: <><rect x="4" y="8" width="16" height="11" rx="2" /><path d="M12 8V4M9 4h6" /><circle cx="9" cy="13" r="1" /><circle cx="15" cy="13" r="1" /></>,
+    user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    "chevron-right": <polyline points="9 6 15 12 9 18" />,
+    copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9361,13 +9385,357 @@ function WfRail({ steps }) {
   );
 }
 
-function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
+// ── Simple, editable canvas builder ─────────────────────────────
+let wfNodeCounter = 0;
+const wfUid = () => `n${++wfNodeCounter}`;
+
+const WF_ACTION_META = {
+  text: { glyph: "chat", label: "Text", bg: WF_C.tealBg, ink: WF_C.tealInk, placeholder: "Write the text message Milton will send…" },
+  email: { glyph: "mail", label: "Email", bg: WF_C.amberBg, ink: WF_C.amberInk, placeholder: "Write the email body…" },
+  milton: { glyph: "spark", label: "Milton", bg: WF_C.tealDark, ink: WF_C.white, placeholder: "Tell Milton what to do (e.g. draft a supportive check-in)…" },
+};
+
+const WF_DELAY_UNITS = [["hour", "Hour"], ["day", "Day"], ["week", "Week"]];
+
+// Milton agent tasks + attachment types
+const WF_AGENT_TASKS = [
+  ["report", "Build a report"],
+  ["workout", "Build a workout"],
+  ["nutrition", "Build a nutrition plan"],
+  ["message", "Draft a message"],
+  ["summary", "Summarize progress"],
+  ["adjust", "Adjust the plan"],
+];
+const WF_AGENT_PLACEHOLDER = {
+  report: "What should the report cover? (e.g. last 4 weeks of adherence and weight trend)",
+  workout: "Describe the workout to build (e.g. 45-min lower-body day, moderate volume)",
+  nutrition: "Describe the nutrition plan (e.g. 2,100 kcal, high protein, 3 meals + snack)",
+  message: "What should the message say? (e.g. supportive check-in referencing their PR)",
+  summary: "What progress should Milton summarize? (e.g. weekly wins and one focus area)",
+  adjust: "How should Milton adjust the plan? (e.g. drop volume 10%, swap knee-heavy lifts)",
+};
+const WF_ATTACH_TYPES = [
+  ["image", "Image", "image"],
+  ["video", "Video", "video"],
+  ["pdf", "PDF", "pdf"],
+];
+const WF_ATTACH_META = {
+  image: { glyph: "image", label: "Image", sample: "form-demo.jpg" },
+  video: { glyph: "video", label: "Video", sample: "exercise-demo.mp4" },
+  pdf: { glyph: "pdf", label: "PDF", sample: "meal-guide.pdf" },
+};
+
+// Build an initial simple flow from a seed workflow's steps
+function wfDeriveFlow(w) {
+  const actions = (w.steps || []).filter((s) => s.kind === "action");
+  const nodes = [];
+  actions.forEach((s, idx) => {
+    const type = s.preview ? "text" : (/milton|draft|generate|review|create|report|summar/i.test(s.body) ? "milton" : "text");
+    if (type === "milton") {
+      const task = /report|summar/i.test(s.body) ? "summary" : /workout|program/i.test(s.body) ? "workout" : "message";
+      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, review: w.approval ? "human" : "auto" });
+    } else {
+      nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body, attachments: [] });
+    }
+    if (idx < actions.length - 1) nodes.push({ id: wfUid(), type: "delay", amount: 1, unit: "day" });
+  });
+  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "", attachments: [] });
+  return nodes;
+}
+
+// Vertical connector with an inline "add step" affordance
+function WfConnector({ index, menuAt, setMenuAt, onAdd }) {
+  const open = menuAt === index;
+  const opts = [
+    ["text", "Text", "chat"],
+    ["email", "Email", "mail"],
+    ["milton", "Milton", "spark"],
+    ["delay", "Delay", "clock"],
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ width: 2, height: 14, background: WF_C.line }} />
+      {open ? (
+        <div className="wf-fade" style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: 8, boxShadow: "0 6px 20px rgba(11,22,40,0.10)" }}>
+          {opts.map(([type, label, glyph]) => {
+            const m = type === "delay" ? { bg: WF_C.cream, ink: WF_C.sub } : WF_ACTION_META[type];
+            return (
+              <button key={type} onClick={() => onAdd(index, type)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 62, padding: "8px 4px", border: `1px solid ${WF_C.line}`, borderRadius: 10, background: WF_C.white }}>
+                <span style={{ width: 26, height: 26, borderRadius: 8, background: m.bg, color: m.ink, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name={glyph} size={15} color={m.ink} strokeWidth={2} />
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: WF_C.ink }}>{label}</span>
+              </button>
+            );
+          })}
+          <button onClick={() => setMenuAt(null)} style={{ width: 62, padding: "8px 4px", border: "none", background: "transparent", color: WF_C.faint, fontSize: 11, fontWeight: 600 }}>Cancel</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setMenuAt(index)}
+          title="Add step"
+          className="wf-ghost"
+          style={{ width: 30, height: 30, borderRadius: "50%", border: `1px dashed ${WF_C.tealDark}`, background: WF_C.white, color: WF_C.tealDark, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .15s, border-color .15s" }}
+        >
+          <WfGlyph name="plus" size={15} color={WF_C.tealDark} strokeWidth={2.4} />
+        </button>
+      )}
+      <div style={{ width: 2, height: 14, background: WF_C.line }} />
+    </div>
+  );
+}
+
+function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
+  const [menuAt, setMenuAt] = useState(null);
+  const [attachAt, setAttachAt] = useState(null);
+  // The node currently being edited expands to fill the canvas.
+  const firstAction = (flow.find((n) => n.type !== "delay") || {}).id || null;
+  const [activeId, setActiveId] = useState(firstAction);
+
+  const newNodeFor = (type) => {
+    if (type === "delay") return { id: wfUid(), type: "delay", amount: 1, unit: "day" };
+    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", review: "human" };
+    return { id: wfUid(), type, subject: "", message: "", attachments: [] };
+  };
+  const addNode = (index, type) => {
+    const node = newNodeFor(type);
+    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, node); return next; });
+    setMenuAt(null);
+    if (type !== "delay") setActiveId(node.id);
+  };
+  const patchNode = (id, patch) => setFlow((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
+  const removeNode = (id) => setFlow((prev) => prev.filter((n) => n.id !== id));
+
+  const inputStyle = { width: "100%", border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {/* Start Here node */}
+      <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <WfGlyph name="bolt" size={16} color={WF_C.white} strokeWidth={2} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <WfEyebrow color={WF_C.tealDark}>Start here</WfEyebrow>
+            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>When this happens…</div>
+          </div>
+        </div>
+        <input
+          value={workflow.trigger || ""}
+          onChange={(e) => onTriggerChange && onTriggerChange(e.target.value)}
+          placeholder="Describe the trigger (e.g. client misses 2 workouts)"
+          style={{ ...inputStyle, marginTop: 12 }}
+        />
+      </div>
+
+      {/* Steps with connectors */}
+      {flow.map((node, i) => (
+        <React.Fragment key={node.id}>
+          <WfConnector index={i} menuAt={menuAt} setMenuAt={setMenuAt} onAdd={addNode} />
+          {node.type === "delay" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: WF_C.cream, border: `1px dashed ${WF_C.line}`, borderRadius: 999, padding: "8px 14px" }}>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <WfGlyph name="clock" size={14} color={WF_C.sub} strokeWidth={2} />
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>Wait</span>
+              <input
+                type="number" min="1" value={node.amount}
+                onChange={(e) => patchNode(node.id, { amount: Math.max(1, parseInt(e.target.value || "1", 10)) })}
+                style={{ width: 52, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 8px", fontSize: 13.5, textAlign: "center", background: WF_C.white, color: WF_C.ink, outline: "none" }}
+              />
+              <select
+                value={node.unit}
+                onChange={(e) => patchNode(node.id, { unit: e.target.value })}
+                style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 8px", fontSize: 13.5, background: WF_C.white, color: WF_C.ink, outline: "none", cursor: "pointer" }}
+              >
+                {WF_DELAY_UNITS.map(([v, l]) => <option key={v} value={v}>{node.amount > 1 ? l + "s" : l}</option>)}
+              </select>
+              <button onClick={() => removeNode(node.id)} title="Remove" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
+              </button>
+            </div>
+          ) : node.id !== activeId ? (
+            /* ── Collapsed summary — click to edit ── */
+            (() => {
+              const m = WF_ACTION_META[node.type];
+              const taskLabel = (WF_AGENT_TASKS.find(([v]) => v === (node.task || "report")) || [null, ""])[1];
+              const title = node.type === "milton" ? `Milton · ${taskLabel}` : m.label;
+              const snippet = (node.type === "email" && node.subject) ? node.subject : (node.message || "Tap to add content");
+              const attachCount = (node.attachments || []).length;
+              return (
+                <div
+                  onClick={() => setActiveId(node.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveId(node.id); } }}
+                  style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: "12px 14px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+                >
+                  <span style={{ width: 30, height: 30, borderRadius: 9, background: m.bg, color: m.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <WfGlyph name={m.glyph} size={15} color={m.ink} strokeWidth={2} />
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.ink }}>{title}</span>
+                      {node.type === "milton" && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.sub, background: WF_C.cream, borderRadius: 999, padding: "1px 7px" }}>{(node.review || "human") === "human" ? "Review" : "Auto"}</span>
+                      )}
+                      {attachCount > 0 && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.sub }}>
+                          <WfGlyph name="paperclip" size={11} color={WF_C.sub} strokeWidth={2} />{attachCount}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snippet}</div>
+                  </div>
+                  <span style={{ color: WF_C.faint, flexShrink: 0 }}><WfGlyph name="chevron-right" size={16} color={WF_C.faint} strokeWidth={2} /></span>
+                </div>
+              );
+            })()
+          ) : (
+            <div style={{ width: "100%", background: WF_C.white, border: `1.5px solid ${WF_C.tealDark}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 8px 28px rgba(11,22,40,0.10)" }}>
+              {/* header: type switch + delete */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
+                  {Object.entries(WF_ACTION_META).map(([type, m]) => {
+                    const on = node.type === type;
+                    return (
+                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", review: node.review || "human" } : { attachments: node.attachments || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                        <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => removeNode(node.id)} title="Remove" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
+                </button>
+              </div>
+
+              {node.type === "milton" ? (
+                /* ── Milton = agent action ── */
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 13, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>Milton will</span>
+                    <select
+                      value={node.task || "report"}
+                      onChange={(e) => patchNode(node.id, { task: e.target.value })}
+                      style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 10px", fontSize: 13.5, fontWeight: 600, background: WF_C.tealBg, color: WF_C.tealInk, outline: "none", cursor: "pointer" }}
+                    >
+                      {WF_AGENT_TASKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <textarea
+                    value={node.message || ""}
+                    onChange={(e) => patchNode(node.id, { message: e.target.value })}
+                    placeholder={WF_AGENT_PLACEHOLDER[node.task || "report"]}
+                    rows={6}
+                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.6, minHeight: 180 }}
+                  />
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>When Milton is done</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {[["human", "user", "Human review", "You approve before it sends"], ["auto", "robot", "Automated", "Sends without approval"]].map(([v, glyph, label, desc]) => {
+                        const on = (node.review || "human") === v;
+                        return (
+                          <button key={v} onClick={() => patchNode(node.id, { review: v })} style={{ flex: 1, textAlign: "left", display: "flex", flexDirection: "column", gap: 3, padding: "9px 11px", borderRadius: 10, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>
+                              <WfGlyph name={glyph} size={14} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
+                            </span>
+                            <span style={{ fontSize: 11, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint }}>{desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ── Text / Email = message + attachments ── */
+                <>
+                  {node.type === "email" && (
+                    <input
+                      value={node.subject || ""}
+                      onChange={(e) => patchNode(node.id, { subject: e.target.value })}
+                      placeholder="Subject line"
+                      style={{ ...inputStyle, marginTop: 12, fontWeight: 600 }}
+                    />
+                  )}
+                  <textarea
+                    value={node.message || ""}
+                    onChange={(e) => patchNode(node.id, { message: e.target.value })}
+                    placeholder={WF_ACTION_META[node.type].placeholder}
+                    rows={9}
+                    style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.6, minHeight: 240 }}
+                  />
+                  {/* Attachments */}
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10 }}>
+                    {(node.attachments || []).map((att, ai) => (
+                      <span key={ai} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WF_C.cream, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "5px 8px", fontSize: 12, color: WF_C.ink }}>
+                        <WfGlyph name={WF_ATTACH_META[att.kind].glyph} size={13} color={WF_C.sub} strokeWidth={2} />
+                        {att.name}
+                        <button
+                          onClick={() => patchNode(node.id, { attachments: (node.attachments || []).filter((_, k) => k !== ai) })}
+                          title="Remove attachment"
+                          style={{ display: "inline-flex", border: "none", background: "transparent", color: WF_C.faint, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                        >
+                          <WfGlyph name="x" size={13} color={WF_C.faint} strokeWidth={2.2} />
+                        </button>
+                      </span>
+                    ))}
+                    {attachAt === node.id ? (
+                      <span style={{ display: "inline-flex", gap: 4 }}>
+                        {WF_ATTACH_TYPES.map(([kind, label, glyph]) => (
+                          <button
+                            key={kind}
+                            onClick={() => { patchNode(node.id, { attachments: [...(node.attachments || []), { kind, name: WF_ATTACH_META[kind].sample }] }); setAttachAt(null); }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink, cursor: "pointer" }}
+                          >
+                            <WfGlyph name={glyph} size={13} color={WF_C.sub} strokeWidth={2} />{label}
+                          </button>
+                        ))}
+                        <button onClick={() => setAttachAt(null)} style={{ border: "none", background: "transparent", color: WF_C.faint, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setAttachAt(node.id)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px dashed ${WF_C.line}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.sub, cursor: "pointer" }}
+                      >
+                        <WfGlyph name="paperclip" size={13} color={WF_C.sub} strokeWidth={2} />Attach media
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Final connector (add at end) */}
+      <WfConnector index={flow.length} menuAt={menuAt} setMenuAt={setMenuAt} onAdd={addNode} />
+
+      {/* End node */}
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: "8px 16px" }}>
+        <span style={{ width: 20, height: 20, borderRadius: "50%", background: WF_C.tealBg, color: WF_C.tealInk, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <WfGlyph name="check" size={12} color={WF_C.tealInk} strokeWidth={2.4} />
+        </span>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>End of workflow</span>
+      </div>
+    </div>
+  );
+}
+
+function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMobile }) {
   const [workflows, setWorkflows] = useState(WF_SEED);
   const [tab, setTab] = useState("active");
   const [view, setView] = useState("list");
   const [openId, setOpenId] = useState(null);
   const [approvals, setApprovals] = useState(WF_APPROVALS_SEED);
   const [toast, setToast] = useState(null);
+  const [flowMap, setFlowMap] = useState(() => {
+    const m = {};
+    WF_SEED.forEach((w) => { m[w.id] = wfDeriveFlow(w); });
+    return m;
+  });
 
   const ping = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2400); };
 
@@ -9408,6 +9776,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const openDetail = (w) => {
     setOpenId(w.id);
     setView("detail");
+    setFlowMap((prev) => (prev[w.id] ? prev : { ...prev, [w.id]: wfDeriveFlow(w) }));
     if (w.status === "failed") {
       say(`${w.name} failed its last run — ${w.error} I paused it so nothing fires half-broken. Reconnect and I'll resume where it left off.`,
         ["Reconnect Mindbody now", "What did it miss while down?", "Turn this off for now", "Explain what this workflow does"]);
@@ -9451,6 +9820,49 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       ["Open the draft", "Make it less frequent", "Who would enter this?", "Activate it as-is"]);
   };
 
+  // Build a blank workflow and open it straight on the canvas to edit manually.
+  const createBlank = () => {
+    const id = "d" + Date.now();
+    const newWf = {
+      id, name: "Untitled workflow", sub: "Draft", status: "draft", trigger: "",
+      lastRun: "Never", results: { runs: 0, headline: "Not run yet" }, approval: false, steps: [],
+    };
+    setWorkflows((ws) => [...ws, newWf]);
+    setFlowMap((prev) => ({ ...prev, [id]: [{ id: wfUid(), type: "text", subject: "", message: "", attachments: [] }] }));
+    setTab("drafts");
+    setOpenId(id);
+    setView("detail");
+    say(`New workflow started. Name it, set the trigger up top, then add Text, Email, or Milton steps right on the canvas. Want me to draft the whole thing instead? Just describe it.`,
+      ["Draft it for me from a description", "What triggers can I use?", "Add a Milton step", "How do delays work?"]);
+  };
+
+  // Duplicate a workflow (and its canvas flow) into drafts.
+  const duplicateWorkflow = (w, e) => {
+    if (e) e.stopPropagation();
+    const id = "d" + Date.now();
+    setWorkflows((ws) => {
+      const idx = ws.findIndex((x) => x.id === w.id);
+      const copy = { ...w, id, name: `${w.name} (copy)`, status: "draft", lastRun: "Never", error: undefined, results: { runs: 0, headline: "Not run yet" } };
+      const next = [...ws];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+    const srcFlow = flowMap[w.id] || wfDeriveFlow(w);
+    const clonedFlow = srcFlow.map((n) => ({ ...n, id: wfUid(), ...(n.attachments ? { attachments: n.attachments.map((a) => ({ ...a })) } : {}) }));
+    setFlowMap((prev) => ({ ...prev, [id]: clonedFlow }));
+    setTab("drafts");
+    ping(`Copied "${w.name}" to drafts.`);
+  };
+
+  // Delete a workflow and its canvas flow.
+  const deleteWorkflow = (w, e) => {
+    if (e) e.stopPropagation();
+    setWorkflows((ws) => ws.filter((x) => x.id !== w.id));
+    setFlowMap((prev) => { const n = { ...prev }; delete n[w.id]; return n; });
+    if (openId === w.id) { setOpenId(null); setView("list"); }
+    ping(`Deleted "${w.name}".`);
+  };
+
   const tabs = [
     ["active", "Active", counts.active],
     ["paused", "Paused", counts.paused],
@@ -9458,32 +9870,35 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
     ["templates", "Templates", counts.templates],
   ];
 
-  const grid = "minmax(200px, 2.2fr) 0.9fr 1.3fr 0.9fr 1.4fr";
+  const grid = "minmax(180px, 2.2fr) 0.9fr 1.3fr 0.9fr 1.4fr 72px";
 
   return (
     <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
       <style>{WF_FONTS}</style>
 
-      {/* Floating close button — matches Programs/Library */}
-      <button
-        onClick={onClose || onHome}
-        style={{
-          position: "absolute", top: 14, right: 16, zIndex: 10,
-          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)",
-          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
-          transition: "all 0.15s ease",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
-        title="Close"
-        aria-label="Close"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      {/* Floating close button — matches Programs/Library.
+          Hidden on mobile, where the sheet header already provides a close. */}
+      {!isMobile && (
+        <button
+          onClick={onClose || onHome}
+          style={{
+            position: "absolute", top: 14, right: 16, zIndex: 10,
+            display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+            width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)",
+            borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+          title="Close"
+          aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
 
       {/* Top nav bar — matches Programs/Library breadcrumb chip */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 28px", borderBottom: "1px solid #E0EBE8", background: "#F7FAF9", flexShrink: 0 }}>
@@ -9510,7 +9925,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                   })}
                 </div>
                 <div style={{ marginLeft: "auto", flex: "0 0 auto" }}>
-                  <WfTealBtn onClick={() => say("Describe the workflow in a sentence — the trigger, who it's for, and what should happen — and I'll draft the whole rail for your review.", ["When a client misses 2 sessions, check in", "Weekly wins into social posts", "Win back members inactive 30 days", "Congratulate every PR"])} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <WfTealBtn onClick={createBlank} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New workflow
                   </WfTealBtn>
                 </div>
@@ -9546,6 +9961,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, overflow: "hidden" }}>
                   <div style={{ display: "grid", gridTemplateColumns: grid, gap: 12, padding: "12px 20px 10px", borderBottom: `1px solid ${WF_C.line}` }}>
                     {["Workflow", "Status", "Trigger", "Last run", "30-day results"].map((h) => <WfEyebrow key={h}>{h}</WfEyebrow>)}
+                    <WfEyebrow><span className="sr-only">Actions</span></WfEyebrow>
                   </div>
                   {visible.length === 0 && (
                     <div style={{ padding: "40px 20px", textAlign: "center", color: WF_C.sub, fontSize: 14 }}>
@@ -9572,6 +9988,24 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                           ? <span style={{ color: WF_C.redInk, fontWeight: 500 }}>{w.results.headline}</span>
                           : <span>{w.results.runs} runs · <span style={{ color: WF_C.tealDark, fontWeight: 500 }}>{w.results.headline}</span></span>}
                       </div>
+                      <div className="wf-actions" style={{ display: "flex", justifyContent: "flex-end", gap: 4, opacity: isMobile ? 1 : undefined }}>
+                        <button
+                          onClick={(e) => duplicateWorkflow(w, e)}
+                          title="Duplicate" aria-label={`Duplicate ${w.name}`}
+                          className="wf-iconbtn"
+                          style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <WfGlyph name="copy" size={15} color="currentColor" strokeWidth={2} />
+                        </button>
+                        <button
+                          onClick={(e) => deleteWorkflow(w, e)}
+                          title="Delete" aria-label={`Delete ${w.name}`}
+                          className="wf-iconbtn wf-iconbtn-danger"
+                          style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <WfGlyph name="trash" size={15} color="currentColor" strokeWidth={2} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -9584,20 +10018,45 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               <button onClick={toList} style={{ background: "none", border: "none", color: WF_C.sub, fontSize: 13.5, fontWeight: 500, padding: 0, marginBottom: 14 }}>← All workflows</button>
               <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "24px 28px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <h2 style={{ fontSize: 21, fontWeight: 700, margin: 0, color: WF_C.navy }}>{open.name}</h2>
+                      <input
+                        className="wf-display wf-name-input"
+                        value={open.name}
+                        onChange={(e) => setWorkflows((ws) => ws.map((w) => w.id === open.id ? { ...w, name: e.target.value } : w))}
+                        placeholder="Untitled workflow"
+                        aria-label="Workflow name"
+                        style={{ fontSize: 21, fontWeight: 700, color: WF_C.navy, padding: "2px 7px", margin: "-2px -7px", maxWidth: 380, minWidth: 120 }}
+                      />
                       <WfStatusPill status={open.status} />
                     </div>
                     <div style={{ fontSize: 13.5, color: WF_C.sub, marginTop: 5 }}>
                       {open.results.runs} runs · {open.results.headline} · last run {open.lastRun}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <WfGhostBtn onClick={() => { togglePause(open.id); ping(open.status === "paused" ? "Resumed. Milton is watching again." : "Paused. Nothing will fire."); }}>
                       {open.status === "paused" ? "Resume" : "Pause"}
                     </WfGhostBtn>
-                    <WfTealBtn onClick={() => say(`Loaded ${open.name}. Tell me what to change — try "make it 3 misses" or "move the nudge to the morning" — and I'll rewrite the rail.`, ["Make the trigger stricter", "Soften the message tone", "Add a follow-up step", "Remove the approval gate"])} style={{ padding: "8px 14px" }}>Edit in chat</WfTealBtn>
+                    <button
+                      onClick={() => duplicateWorkflow(open)}
+                      title="Duplicate" aria-label="Duplicate workflow"
+                      className="wf-iconbtn"
+                      style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <WfGlyph name="copy" size={16} color="currentColor" strokeWidth={2} />
+                    </button>
+                    <button
+                      onClick={() => deleteWorkflow(open)}
+                      title="Delete" aria-label="Delete workflow"
+                      className="wf-iconbtn wf-iconbtn-danger"
+                      style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <WfGlyph name="trash" size={16} color="currentColor" strokeWidth={2} />
+                    </button>
+                    {!isMobile && (
+                      <WfTealBtn onClick={() => say(`Loaded ${open.name}. Tell me what to change — try "make it 3 misses" or "move the nudge to the morning" — and I'll rewrite the rail.`, ["Make the trigger stricter", "Soften the message tone", "Add a follow-up step", "Remove the approval gate"])} style={{ padding: "8px 14px" }}>Edit in chat</WfTealBtn>
+                    )}
                   </div>
                 </div>
 
@@ -9609,7 +10068,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 )}
 
                 <div style={{ borderTop: `1px solid ${WF_C.line}`, margin: "20px 0 22px" }} />
-                <WfRail steps={open.steps} />
+                <WfBuilder
+                  workflow={open}
+                  flow={flowMap[open.id] || []}
+                  setFlow={(updater) => setFlowMap((prev) => ({ ...prev, [open.id]: typeof updater === "function" ? updater(prev[open.id] || []) : updater }))}
+                  onTriggerChange={(val) => setWorkflows((ws) => ws.map((w) => (w.id === open.id ? { ...w, trigger: val } : w)))}
+                />
               </div>
             </div>
           )}
@@ -9660,7 +10124,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
 
 /* ═════════��═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
-═════════════════════════════════������══════════ */
+══════════════════════��══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   return (
     <div style={{
@@ -9698,7 +10162,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════��═��═════════════════ */
-// ═════════════���════════��═══════════════════════��═══════��════════
+// ═════════════���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
@@ -10092,7 +10556,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ���════════���═══��������═��═════��═════��═����═══���═══════��══════════════════
+// ���════════���═══��������═��═════��═════��═����═══���═══════��═════════════��════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -11070,7 +11534,7 @@ function PlaybookChapterDetail({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════��════════════════════════════════════════════════════════
 // PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
 // ═══════════════════════════════════════════════════════════════
 function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
@@ -14314,6 +14778,435 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CHECK-IN DECK — swipeable / expandable stack of client check-ins
+// ═══════════════════════════════════════════════════════════════
+const CHECKIN_SEED = [
+  {
+    id: "sc", name: "Sarah Chen", initials: "SC", color: "#2B7A78",
+    period: "Week 6 check-in", when: "Today · 8:24 AM",
+    mood: "Great", moodColor: "#3aaf6a",
+    note: "Feeling strong this week! Hit a new squat PR and sleep has been solid. Knee felt a little tight on the descent but nothing painful.",
+    flag: "Knee — monitor",
+    metrics: [
+      { label: "Weight", value: "154 lb", sub: "-1.2" },
+      { label: "Sleep", value: "7.4 h", sub: "+0.5" },
+      { label: "Energy", value: "8/10", sub: "+1" },
+      { label: "Adherence", value: "92%", sub: "+4%" },
+    ],
+  },
+  {
+    id: "mj", name: "Marcus Johnson", initials: "MJ", color: "#6366f1",
+    period: "Week 8 check-in", when: "Today · 7:02 AM",
+    mood: "Good", moodColor: "#3aaf6a",
+    note: "Getting some knee pain when I squat deep — not sure if it's form or load. Otherwise energy is good and I'm eating on plan.",
+    flag: "Knee pain flagged",
+    metrics: [
+      { label: "Weight", value: "201 lb", sub: "+0.4" },
+      { label: "Sleep", value: "6.8 h", sub: "-0.2" },
+      { label: "Energy", value: "7/10", sub: "0" },
+      { label: "Adherence", value: "88%", sub: "-2%" },
+    ],
+  },
+  {
+    id: "er", name: "Emily Rodriguez", initials: "ER", color: "#ef6c3e",
+    period: "Weekly check-in", when: "Yesterday · 9:41 PM",
+    mood: "Struggling", moodColor: "#e8453c",
+    note: "Been really busy with work and missed the last two sessions. Feeling a bit overwhelmed and off track — could use a simpler plan to get back into it.",
+    flag: "Attendance dropping",
+    metrics: [
+      { label: "Weight", value: "143 lb", sub: "-0.5" },
+      { label: "Sleep", value: "5.9 h", sub: "-1.1" },
+      { label: "Energy", value: "4/10", sub: "-3" },
+      { label: "Adherence", value: "45%", sub: "-20%" },
+    ],
+  },
+  {
+    id: "ap", name: "Ana Prieto", initials: "AP", color: "#45818e",
+    period: "Week 4 check-in", when: "Yesterday · 6:15 PM",
+    mood: "Good", moodColor: "#3aaf6a",
+    note: "Loving the new program! Old knee issue from volleyball has been quiet. Ready to add a little more volume if you think I'm good.",
+    flag: null,
+    metrics: [
+      { label: "Weight", value: "132 lb", sub: "-0.8" },
+      { label: "Sleep", value: "7.9 h", sub: "+0.3" },
+      { label: "Energy", value: "9/10", sub: "+1" },
+      { label: "Adherence", value: "96%", sub: "+2%" },
+    ],
+  },
+  {
+    id: "dp", name: "David Park", initials: "DP", color: "#9333ea",
+    period: "Week 12 check-in", when: "2 days ago", 
+    mood: "Great", moodColor: "#3aaf6a",
+    note: "Powerlifting prep is going great. Bench moved up and bodyweight is trending down. Knee valgus cue you gave me is really helping under heavy loads.",
+    flag: null,
+    metrics: [
+      { label: "Weight", value: "195 lb", sub: "-1.0" },
+      { label: "Sleep", value: "7.2 h", sub: "+0.1" },
+      { label: "Energy", value: "8/10", sub: "0" },
+      { label: "Adherence", value: "94%", sub: "+1%" },
+    ],
+  },
+];
+
+function CheckInDeck({ isMobile, homeCompact, onReply }) {
+  const [deck, setDeck] = useState(CHECKIN_SEED);
+  const [expanded, setExpanded] = useState(false);
+  const [drag, setDrag] = useState({ dx: 0, dy: 0, active: false });
+  const [leaving, setLeaving] = useState(null); // "left" | "right" | null
+  const startRef = useRef(null);
+  const movedRef = useRef(false);
+
+  const total = CHECKIN_SEED.length;
+  const reviewed = total - deck.length;
+  const top = deck[0];
+  const SWIPE_THRESHOLD = 90;
+
+  const dismiss = (dir) => {
+    if (leaving) return;
+    setLeaving(dir);
+    window.setTimeout(() => {
+      setDeck((d) => d.slice(1));
+      setLeaving(null);
+      setDrag({ dx: 0, dy: 0, active: false });
+    }, 280);
+  };
+
+  const reset = () => {
+    setDeck(CHECKIN_SEED);
+    setExpanded(false);
+    setDrag({ dx: 0, dy: 0, active: false });
+  };
+
+  const onPointerDown = (e) => {
+    if (leaving || !top) return;
+    startRef.current = { x: e.clientX, y: e.clientY };
+    movedRef.current = false;
+    setDrag({ dx: 0, dy: 0, active: true });
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  };
+  const onPointerMove = (e) => {
+    if (!startRef.current) return;
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) movedRef.current = true;
+    setDrag({ dx, dy, active: true });
+  };
+  const onPointerUp = () => {
+    if (!startRef.current) return;
+    const dx = drag.dx;
+    startRef.current = null;
+    if (dx > SWIPE_THRESHOLD) { dismiss("right"); return; }
+    if (dx < -SWIPE_THRESHOLD) { dismiss("left"); return; }
+    setDrag({ dx: 0, dy: 0, active: false });
+    if (!movedRef.current) setExpanded((v) => !v);
+  };
+
+  const accent = TEAL;
+
+  // ── COLLAPSED: identical footprint to the other action cards ──
+  if (!expanded) {
+    const empty = deck.length === 0;
+    return (
+      <div
+        className="v0-card"
+        onClick={() => (empty ? reset() : setExpanded(true))}
+        style={{ "--accent": accent, padding: homeCompact ? "16px" : "20px" }}
+      >
+        <div className="v0-glow" aria-hidden="true" />
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            {/* stacked-card visual behind the icon */}
+            <span aria-hidden="true" style={{ position: "absolute", top: -5, left: 5, width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14, background: `${accent}14`, transform: "rotate(6deg)" }} />
+            <span aria-hidden="true" style={{ position: "absolute", top: -2.5, left: 2.5, width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14, background: `${accent}1f`, transform: "rotate(3deg)" }} />
+            <div className="v0-iconwrap" style={{
+              position: "relative",
+              width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
+              background: `linear-gradient(135deg, ${accent}29, ${accent}0d)`, color: accent,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
+            </div>
+            {!empty && (
+              <span style={{
+                position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
+                borderRadius: 999, background: accent, color: "#fff", fontSize: 11, fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
+                boxShadow: `0 2px 6px ${accent}73`, zIndex: 2
+              }}>{deck.length}</span>
+            )}
+          </div>
+          <span className="v0-arrow" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+          </span>
+        </div>
+        <div style={{ minWidth: 0, marginTop: homeCompact ? 12 : 16, position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+            {!empty && (
+              <span style={{ fontSize: 11, fontWeight: 600, color: accent, background: `${accent}14`, padding: "2px 8px", borderRadius: 999 }}>
+                {deck.length} to review
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>
+            {empty ? `All ${total} check-ins reviewed` : "Client check-ins · tap to review"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── EXPANDED: full-width swipeable stack ──
+  const dragAmt = drag.active ? drag.dx : 0;
+
+  return (
+    <div style={{
+      position: "relative", gridColumn: "1 / -1",
+      background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 18,
+      boxShadow: "0 14px 32px rgba(43,122,120,0.18)",
+      padding: homeCompact ? 16 : 20, overflow: "hidden", minWidth: 0,
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+          <div style={{
+            width: homeCompact ? 40 : 44, height: homeCompact ? 40 : 44, borderRadius: 12,
+            background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>
+            <NavIcon icon="message-circle" size={homeCompact ? 20 : 23} />
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: homeCompact ? 15 : 17, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+              {deck.length > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEAL, background: `${TEAL}14`, padding: "2px 8px", borderRadius: 999 }}>
+                  {deck.length} to review
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Swipe or use the buttons below</div>
+          </div>
+        </div>
+        <button
+          onClick={() => setExpanded(false)}
+          style={{
+            padding: "5px 11px", borderRadius: 999, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0
+          }}>
+          Collapse
+        </button>
+      </div>
+
+      {/* Empty state (all reviewed) */}
+      {deck.length === 0 ? (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 8, padding: "26px 16px", marginTop: 16, borderRadius: 14, border: `1px dashed ${BORDER}`, background: "#f7faf9"
+        }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#e6f7ee", color: ALERT_GREEN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>All check-ins reviewed</div>
+          <button onClick={reset} style={{
+            marginTop: 4, padding: "7px 14px", borderRadius: 999, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>Reset demo</button>
+        </div>
+      ) : (
+      <>
+      {/* Card stack */}
+      {(() => {
+        const cardH = isMobile ? 300 : 210;
+        const containerH = cardH + 20;
+        return (
+          <div style={{ position: "relative", height: containerH, marginTop: 14, transition: "height .3s cubic-bezier(.34,1.2,.64,1)" }}>
+            {deck.slice(0, 3).map((c, i) => {
+              const isTop = i === 0;
+              const behind = i;
+              let transform, transition, opacity = 1, zIndex = 30 - i, boxShadow;
+
+              if (isTop) {
+                if (leaving) {
+                  transform = `translateX(${leaving === "right" ? 130 : -130}%) rotate(${leaving === "right" ? 14 : -14}deg)`;
+                  transition = "transform .28s ease, opacity .28s ease";
+                  opacity = 0;
+                } else if (drag.active) {
+                  transform = `translate(${drag.dx}px, ${drag.dy * 0.2}px) rotate(${drag.dx * 0.04}deg)`;
+                  transition = "none";
+                } else {
+                  transform = "translate(0,0) rotate(0deg)";
+                  transition = "transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .2s ease";
+                }
+                boxShadow = "0 10px 26px rgba(26,46,42,0.14)";
+              } else {
+                const scale = 1 - behind * 0.05;
+                const ty = behind * 9;
+                transform = `translateY(${ty}px) scale(${scale})`;
+                transition = "transform .3s cubic-bezier(.34,1.4,.64,1), opacity .3s ease";
+                opacity = 1 - behind * 0.2;
+                boxShadow = "0 5px 14px rgba(26,46,42,0.08)";
+              }
+
+              const localDrag = isTop ? dragAmt : 0;
+
+              return (
+                <div
+                  key={c.id}
+                  onPointerDown={isTop ? onPointerDown : undefined}
+                  onPointerMove={isTop ? onPointerMove : undefined}
+                  onPointerUp={isTop ? onPointerUp : undefined}
+                  onPointerCancel={isTop ? onPointerUp : undefined}
+                  role={isTop ? "button" : undefined}
+                  tabIndex={isTop ? 0 : undefined}
+                  onKeyDown={isTop ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((v) => !v); } } : undefined}
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: cardH,
+                    background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14,
+                    padding: 13, boxSizing: "border-box",
+                    transform, transition, opacity, zIndex, boxShadow,
+                    cursor: isTop ? (drag.active ? "grabbing" : "grab") : "default",
+                    touchAction: "none", userSelect: "none", overflow: "hidden",
+                    display: "flex", flexDirection: "column"
+                  }}
+                >
+                  {/* swipe intent overlays */}
+                  {isTop && (
+                    <>
+                      <span style={{
+                        position: "absolute", top: 12, left: 12, padding: "3px 8px", borderRadius: 7,
+                        border: `2px solid ${ALERT_GREEN}`, color: ALERT_GREEN, fontSize: 11, fontWeight: 800,
+                        textTransform: "uppercase", letterSpacing: "0.05em", transform: "rotate(-8deg)",
+                        opacity: Math.max(0, Math.min(1, localDrag / SWIPE_THRESHOLD)), pointerEvents: "none", zIndex: 2
+                      }}>Reviewed</span>
+                      <span style={{
+                        position: "absolute", top: 12, right: 12, padding: "3px 8px", borderRadius: 7,
+                        border: `2px solid #d97706`, color: "#d97706", fontSize: 11, fontWeight: 800,
+                        textTransform: "uppercase", letterSpacing: "0.05em", transform: "rotate(8deg)",
+                        opacity: Math.max(0, Math.min(1, -localDrag / SWIPE_THRESHOLD)), pointerEvents: "none", zIndex: 2
+                      }}>Snooze</span>
+                    </>
+                  )}
+
+                  {/* header row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                      background: c.color, color: "#fff", fontSize: 12.5, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>{c.initials}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: c.moodColor, background: `${c.moodColor}16`, padding: "1px 7px", borderRadius: 999, flexShrink: 0 }}>{c.mood}</span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 1 }}>{c.period} · {c.when}</div>
+                    </div>
+                  </div>
+
+                  {/* note */}
+                  <p style={{
+                    margin: "9px 0 0", fontSize: 12.5, lineHeight: 1.45, color: TEXT_SEC,
+                    display: "-webkit-box", WebkitLineClamp: expanded ? 3 : 2, WebkitBoxOrient: "vertical",
+                    overflow: "hidden"
+                  }}>{c.note}</p>
+
+                  {/* flag pill (collapsed) */}
+                  {c.flag && !expanded && (
+                    <div style={{ marginTop: "auto", paddingTop: 8 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "2px 8px", borderRadius: 999 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                        {c.flag}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* expanded detail */}
+                  {expanded && (
+                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 8 }}>
+                        {c.metrics.map((m) => {
+                          const n = parseFloat(m.sub);
+                          const dir = isNaN(n) || n === 0 ? "flat" : n > 0 ? "up" : "down";
+                          const goodUp = m.label !== "Weight";
+                          const col = dir === "flat" ? TEXT_SEC : (dir === "up") === goodUp ? ALERT_GREEN : "#d97706";
+                          return (
+                            <div key={m.label} style={{ background: "#f7faf9", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "7px 9px" }}>
+                              <div style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginTop: 2 }}>{m.value}</div>
+                              <div style={{ fontSize: 10.5, fontWeight: 600, color: col, marginTop: 1 }}>{m.sub}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        {c.flag && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "3px 9px", borderRadius: 999 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                            {c.flag}
+                          </span>
+                        )}
+                        <button
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); onReply && onReply(c); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            padding: "8px 14px", borderRadius: 10, border: "none",
+                            background: TEAL, color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+                          }}>
+                          <NavIcon icon="send" size={14} /> Reply with Milton
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+        <button
+          onClick={() => dismiss("left")}
+          style={{
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "8px 10px", borderRadius: 10, border: `1px solid ${BORDER}`,
+            background: WHITE, color: "#d97706", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
+          Snooze
+        </button>
+        <button
+          onClick={() => dismiss("right")}
+          style={{
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "8px 10px", borderRadius: 10, border: "none",
+            background: ALERT_GREEN, color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          Reviewed
+        </button>
+      </div>
+
+      {/* Progress dots */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10 }}>
+        {CHECKIN_SEED.map((_, i) => (
+          <span key={i} style={{
+            width: i === reviewed ? 18 : 5, height: 5, borderRadius: 999,
+            background: i < reviewed ? "#cfe0dc" : i === reviewed ? TEAL : "#e0ebe8",
+            transition: "all .25s ease"
+          }} />
+        ))}
+      </div>
+      </>
+      )}
+    </div>
+  );
+}
+
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
@@ -15281,6 +16174,7 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+  isMobile={canvasCompact}
   />
   )}
   {canvasType === "mealPlan" && (
@@ -15608,7 +16502,19 @@ export default function MiltonDashboard() {
               .v0-card:hover .v0-glow { opacity: .13; transform: scale(1.2); }
               @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
             `}</style>
-            <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14, alignItems: "start" }}>
+              <CheckInDeck
+                isMobile={isMobile}
+                homeCompact={homeCompact}
+                onReply={(c) => {
+                  setChatMessages(prev => [...prev, {
+                    type: "ai",
+                    title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
+                    text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
+                  }]);
+                  setChatOpen(true);
+                }}
+              />
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
