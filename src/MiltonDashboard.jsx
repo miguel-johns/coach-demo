@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9659,26 +9659,29 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
     <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
       <style>{WF_FONTS}</style>
 
-      {/* Floating close button — matches Programs/Library */}
-      <button
-        onClick={onClose || onHome}
-        style={{
-          position: "absolute", top: 14, right: 16, zIndex: 10,
-          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)",
-          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
-          transition: "all 0.15s ease",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
-        title="Close"
-        aria-label="Close"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      {/* Floating close button — matches Programs/Library.
+          Hidden on mobile, where the sheet header already provides a close. */}
+      {!isMobile && (
+        <button
+          onClick={onClose || onHome}
+          style={{
+            position: "absolute", top: 14, right: 16, zIndex: 10,
+            display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+            width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)",
+            borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+          title="Close"
+          aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
 
       {/* Top nav bar — matches Programs/Library breadcrumb chip */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 28px", borderBottom: "1px solid #E0EBE8", background: "#F7FAF9", flexShrink: 0 }}>
