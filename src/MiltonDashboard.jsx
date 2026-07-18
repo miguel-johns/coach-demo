@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ══════════════════════════════════════════��═��══════��═══��═════��═
+// ════════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -9487,41 +9487,6 @@ function wfDefaultEntry(w) {
   };
 }
 
-// Tiny deterministic hash → QR-like preview block (no network, purely decorative-but-stable)
-function wfHash(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
-}
-function WfQR({ text = "", size = 104, color = WF_C.ink }) {
-  const n = 11;
-  const cell = size / n;
-  let h = wfHash(text || "milton");
-  const isFinder = (r, c) => (r < 3 && c < 3) || (r < 3 && c > n - 4) || (r > n - 4 && c < 3);
-  const rects = [];
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      let on;
-      if (isFinder(r, c)) {
-        const lr = r % (n - 3), lc = c % (n - 3); // relative within a 3x3 finder region
-        const rr = r < 3 ? r : r - (n - 3);
-        const cc = c < 3 ? c : c - (n - 3);
-        on = rr === 0 || rr === 2 || cc === 0 || cc === 2 || (rr === 1 && cc === 1);
-      } else {
-        h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
-        on = (h & 1) === 1;
-      }
-      if (on) rects.push(<rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} fill={color} />);
-    }
-  }
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="QR code preview" style={{ display: "block", borderRadius: 8 }}>
-      <rect x="0" y="0" width={size} height={size} fill={WF_C.white} />
-      {rects}
-    </svg>
-  );
-}
-
 // Build an initial simple flow from a seed workflow's steps
 function wfDeriveFlow(w) {
   const actions = (w.steps || []).filter((s) => s.kind === "action");
@@ -9692,61 +9657,16 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
         {/* Method-specific config */}
         <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
           {ent.method === "form" ? (
-            <>
-              <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>Choose a form</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {WF_FORMS_SEED.map((f) => {
-                  const on = (ent.form && ent.form.id) === f.id;
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => updateEntry({ form: { ...f } })}
-                      style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", padding: "9px 11px", borderRadius: 10, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}
-                    >
-                      <span style={{ width: 22, height: 22, borderRadius: 6, background: f.brandColor, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <WfGlyph name="form" size={13} color={WF_C.white} strokeWidth={2} />
-                      </span>
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>{f.name}</span>
-                        <span style={{ display: "block", fontSize: 11, color: on ? WF_C.tealInk : WF_C.faint, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>milton.coach/f/{wfSlug(f.name)}</span>
-                      </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.sub, background: on ? WF_C.white : WF_C.cream, borderRadius: 999, padding: "2px 8px", flexShrink: 0 }}>
-                        <WfGlyph name="tag" size={10} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{f.tag}
-                      </span>
-                      {on && <WfGlyph name="check" size={16} color={WF_C.tealDark} strokeWidth={2.4} />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Selected form: read-only share reference */}
-              {ent.form && ent.form.id && (
-                <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-                  <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 10, padding: 8, flexShrink: 0 }}>
-                    <WfQR text={`milton.coach/f/${wfSlug(ent.form.name)}`} size={92} color={WF_C.ink} />
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: WF_C.faint, marginTop: 5 }}>
-                      <WfGlyph name="qr" size={10} color={WF_C.faint} strokeWidth={2} />Scan to open
-                    </div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 5 }}>Shareable link</div>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 9px", background: WF_C.white, fontSize: 12.5, color: WF_C.ink, overflow: "hidden" }}>
-                          <WfGlyph name="link" size={13} color={WF_C.sub} strokeWidth={2} />
-                          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>milton.coach/f/{wfSlug(ent.form.name)}</span>
-                        </div>
-                        <button type="button" onClick={() => copy(`https://milton.coach/f/${wfSlug(ent.form.name)}`)} className="wf-ghost" style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 11px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink }}>{copied ? "Copied" : "Copy"}</button>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 11.5, color: WF_C.sub }}>
-                      Submissions are tagged <strong style={{ color: WF_C.tealInk }}>{ent.form.tag}</strong> and enter here. Edit fields &amp; branding in the Forms section.
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>Form</span>
+              <select
+                value={(ent.form && ent.form.id) || ""}
+                onChange={(e) => { const f = WF_FORMS_SEED.find((x) => x.id === e.target.value); if (f) updateEntry({ form: { ...f } }); }}
+                style={{ flex: 1, minWidth: 200, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", cursor: "pointer" }}
+              >
+                {WF_FORMS_SEED.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
           ) : ent.method === "webhook" ? (
             <>
               <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 5 }}>POST endpoint</div>
