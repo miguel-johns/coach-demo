@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������������═══════════
+// ═══════════�������════════════════��══════════════════════�����������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -6957,7 +6957,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 }
 
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════��════════════════════
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
 
@@ -9154,6 +9154,12 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     chartDown: <><polyline points="3 7 9 13 13 9 21 17" /><polyline points="15 17 21 17 21 11" /></>,
     refresh: <><polyline points="21 4 21 9 16 9" /><path d="M19 9A8 8 0 1 0 20 14" /></>,
     doc: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><polyline points="14 3 14 8 19 8" /></>,
+    mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+    trash: <><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" /></>,
+    plus: <path d="M12 5v14M5 12h14" />,
+    spark: <path d="M12 3l1.9 5.6L19 10l-5.1 1.4L12 17l-1.9-5.6L5 10l5.1-1.4z" />,
+    flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9361,6 +9367,188 @@ function WfRail({ steps }) {
   );
 }
 
+// ── Simple, editable canvas builder ─────────────────────────────
+let wfNodeCounter = 0;
+const wfUid = () => `n${++wfNodeCounter}`;
+
+const WF_ACTION_META = {
+  text: { glyph: "chat", label: "Text", bg: WF_C.tealBg, ink: WF_C.tealInk, placeholder: "Write the text message Milton will send…" },
+  email: { glyph: "mail", label: "Email", bg: WF_C.amberBg, ink: WF_C.amberInk, placeholder: "Write the email body…" },
+  milton: { glyph: "spark", label: "Milton", bg: WF_C.tealDark, ink: WF_C.white, placeholder: "Tell Milton what to do (e.g. draft a supportive check-in)…" },
+};
+
+const WF_DELAY_UNITS = [["hour", "Hour"], ["day", "Day"], ["week", "Week"]];
+
+// Build an initial simple flow from a seed workflow's steps
+function wfDeriveFlow(w) {
+  const actions = (w.steps || []).filter((s) => s.kind === "action");
+  const nodes = [];
+  actions.forEach((s, idx) => {
+    const type = s.preview ? "text" : (/milton|draft|generate|review|create/i.test(s.body) ? "milton" : "text");
+    nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body });
+    if (idx < actions.length - 1) nodes.push({ id: wfUid(), type: "delay", amount: 1, unit: "day" });
+  });
+  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "" });
+  return nodes;
+}
+
+// Vertical connector with an inline "add step" affordance
+function WfConnector({ index, menuAt, setMenuAt, onAdd }) {
+  const open = menuAt === index;
+  const opts = [
+    ["text", "Text", "chat"],
+    ["email", "Email", "mail"],
+    ["milton", "Milton", "spark"],
+    ["delay", "Delay", "clock"],
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ width: 2, height: 14, background: WF_C.line }} />
+      {open ? (
+        <div className="wf-fade" style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: 8, boxShadow: "0 6px 20px rgba(11,22,40,0.10)" }}>
+          {opts.map(([type, label, glyph]) => {
+            const m = type === "delay" ? { bg: WF_C.cream, ink: WF_C.sub } : WF_ACTION_META[type];
+            return (
+              <button key={type} onClick={() => onAdd(index, type)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, width: 62, padding: "8px 4px", border: `1px solid ${WF_C.line}`, borderRadius: 10, background: WF_C.white }}>
+                <span style={{ width: 26, height: 26, borderRadius: 8, background: m.bg, color: m.ink, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name={glyph} size={15} color={m.ink} strokeWidth={2} />
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: WF_C.ink }}>{label}</span>
+              </button>
+            );
+          })}
+          <button onClick={() => setMenuAt(null)} style={{ width: 62, padding: "8px 4px", border: "none", background: "transparent", color: WF_C.faint, fontSize: 11, fontWeight: 600 }}>Cancel</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setMenuAt(index)}
+          title="Add step"
+          className="wf-ghost"
+          style={{ width: 30, height: 30, borderRadius: "50%", border: `1px dashed ${WF_C.tealDark}`, background: WF_C.white, color: WF_C.tealDark, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .15s, border-color .15s" }}
+        >
+          <WfGlyph name="plus" size={15} color={WF_C.tealDark} strokeWidth={2.4} />
+        </button>
+      )}
+      <div style={{ width: 2, height: 14, background: WF_C.line }} />
+    </div>
+  );
+}
+
+function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
+  const [menuAt, setMenuAt] = useState(null);
+
+  const addNode = (index, type) => {
+    const node = type === "delay"
+      ? { id: wfUid(), type: "delay", amount: 1, unit: "day" }
+      : { id: wfUid(), type, subject: "", message: "" };
+    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, node); return next; });
+    setMenuAt(null);
+  };
+  const patchNode = (id, patch) => setFlow((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
+  const removeNode = (id) => setFlow((prev) => prev.filter((n) => n.id !== id));
+
+  const inputStyle = { width: "100%", border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {/* Start Here node */}
+      <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <WfGlyph name="bolt" size={16} color={WF_C.white} strokeWidth={2} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <WfEyebrow color={WF_C.tealDark}>Start here</WfEyebrow>
+            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>When this happens…</div>
+          </div>
+        </div>
+        <input
+          value={workflow.trigger || ""}
+          onChange={(e) => onTriggerChange && onTriggerChange(e.target.value)}
+          placeholder="Describe the trigger (e.g. client misses 2 workouts)"
+          style={{ ...inputStyle, marginTop: 12 }}
+        />
+      </div>
+
+      {/* Steps with connectors */}
+      {flow.map((node, i) => (
+        <React.Fragment key={node.id}>
+          <WfConnector index={i} menuAt={menuAt} setMenuAt={setMenuAt} onAdd={addNode} />
+          {node.type === "delay" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: WF_C.cream, border: `1px dashed ${WF_C.line}`, borderRadius: 999, padding: "8px 14px" }}>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <WfGlyph name="clock" size={14} color={WF_C.sub} strokeWidth={2} />
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>Wait</span>
+              <input
+                type="number" min="1" value={node.amount}
+                onChange={(e) => patchNode(node.id, { amount: Math.max(1, parseInt(e.target.value || "1", 10)) })}
+                style={{ width: 52, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 8px", fontSize: 13.5, textAlign: "center", background: WF_C.white, color: WF_C.ink, outline: "none" }}
+              />
+              <select
+                value={node.unit}
+                onChange={(e) => patchNode(node.id, { unit: e.target.value })}
+                style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 8px", fontSize: 13.5, background: WF_C.white, color: WF_C.ink, outline: "none", cursor: "pointer" }}
+              >
+                {WF_DELAY_UNITS.map(([v, l]) => <option key={v} value={v}>{node.amount > 1 ? l + "s" : l}</option>)}
+              </select>
+              <button onClick={() => removeNode(node.id)} title="Remove" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
+              {/* header: type switch + delete */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
+                  {Object.entries(WF_ACTION_META).map(([type, m]) => {
+                    const on = node.type === type;
+                    return (
+                      <button key={type} onClick={() => patchNode(node.id, { type })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                        <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => removeNode(node.id)} title="Remove" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
+                </button>
+              </div>
+              {/* body */}
+              {node.type === "email" && (
+                <input
+                  value={node.subject || ""}
+                  onChange={(e) => patchNode(node.id, { subject: e.target.value })}
+                  placeholder="Subject line"
+                  style={{ ...inputStyle, marginTop: 12, fontWeight: 600 }}
+                />
+              )}
+              <textarea
+                value={node.message || ""}
+                onChange={(e) => patchNode(node.id, { message: e.target.value })}
+                placeholder={WF_ACTION_META[node.type].placeholder}
+                rows={3}
+                style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.5, minHeight: 66 }}
+              />
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Final connector (add at end) */}
+      <WfConnector index={flow.length} menuAt={menuAt} setMenuAt={setMenuAt} onAdd={addNode} />
+
+      {/* End node */}
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: "8px 16px" }}>
+        <span style={{ width: 20, height: 20, borderRadius: "50%", background: WF_C.tealBg, color: WF_C.tealInk, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <WfGlyph name="check" size={12} color={WF_C.tealInk} strokeWidth={2.4} />
+        </span>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>End of workflow</span>
+      </div>
+    </div>
+  );
+}
+
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const [workflows, setWorkflows] = useState(WF_SEED);
   const [tab, setTab] = useState("active");
@@ -9368,6 +9556,11 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const [openId, setOpenId] = useState(null);
   const [approvals, setApprovals] = useState(WF_APPROVALS_SEED);
   const [toast, setToast] = useState(null);
+  const [flowMap, setFlowMap] = useState(() => {
+    const m = {};
+    WF_SEED.forEach((w) => { m[w.id] = wfDeriveFlow(w); });
+    return m;
+  });
 
   const ping = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2400); };
 
@@ -9408,6 +9601,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   const openDetail = (w) => {
     setOpenId(w.id);
     setView("detail");
+    setFlowMap((prev) => (prev[w.id] ? prev : { ...prev, [w.id]: wfDeriveFlow(w) }));
     if (w.status === "failed") {
       say(`${w.name} failed its last run — ${w.error} I paused it so nothing fires half-broken. Reconnect and I'll resume where it left off.`,
         ["Reconnect Mindbody now", "What did it miss while down?", "Turn this off for now", "Explain what this workflow does"]);
@@ -9609,7 +9803,12 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                 )}
 
                 <div style={{ borderTop: `1px solid ${WF_C.line}`, margin: "20px 0 22px" }} />
-                <WfRail steps={open.steps} />
+                <WfBuilder
+                  workflow={open}
+                  flow={flowMap[open.id] || []}
+                  setFlow={(updater) => setFlowMap((prev) => ({ ...prev, [open.id]: typeof updater === "function" ? updater(prev[open.id] || []) : updater }))}
+                  onTriggerChange={(val) => setWorkflows((ws) => ws.map((w) => (w.id === open.id ? { ...w, trigger: val } : w)))}
+                />
               </div>
             </div>
           )}
