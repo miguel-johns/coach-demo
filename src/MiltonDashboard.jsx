@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������������������═══════════
+// ═══════════�������════════════════��══════════════════════�������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═══════════════════════════════════════════════════��═══��═════��═
+// ════════════════════════════════════════════��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -9168,6 +9168,7 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     robot: <><rect x="4" y="8" width="16" height="11" rx="2" /><path d="M12 8V4M9 4h6" /><circle cx="9" cy="13" r="1" /><circle cx="15" cy="13" r="1" /></>,
     user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
     x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    "chevron-right": <polyline points="9 6 15 12 9 18" />,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9478,6 +9479,9 @@ function WfConnector({ index, menuAt, setMenuAt, onAdd }) {
 function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
   const [menuAt, setMenuAt] = useState(null);
   const [attachAt, setAttachAt] = useState(null);
+  // The node currently being edited expands to fill the canvas.
+  const firstAction = (flow.find((n) => n.type !== "delay") || {}).id || null;
+  const [activeId, setActiveId] = useState(firstAction);
 
   const newNodeFor = (type) => {
     if (type === "delay") return { id: wfUid(), type: "delay", amount: 1, unit: "day" };
@@ -9485,8 +9489,10 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
     return { id: wfUid(), type, subject: "", message: "", attachments: [] };
   };
   const addNode = (index, type) => {
-    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, newNodeFor(type)); return next; });
+    const node = newNodeFor(type);
+    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, node); return next; });
     setMenuAt(null);
+    if (type !== "delay") setActiveId(node.id);
   };
   const patchNode = (id, patch) => setFlow((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
   const removeNode = (id) => setFlow((prev) => prev.filter((n) => n.id !== id));
@@ -9494,7 +9500,7 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
   const inputStyle = { width: "100%", border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", boxSizing: "border-box" };
 
   return (
-    <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Start Here node */}
       <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -9540,8 +9546,45 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                 <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
               </button>
             </div>
+          ) : node.id !== activeId ? (
+            /* ── Collapsed summary — click to edit ── */
+            (() => {
+              const m = WF_ACTION_META[node.type];
+              const taskLabel = (WF_AGENT_TASKS.find(([v]) => v === (node.task || "report")) || [null, ""])[1];
+              const title = node.type === "milton" ? `Milton · ${taskLabel}` : m.label;
+              const snippet = (node.type === "email" && node.subject) ? node.subject : (node.message || "Tap to add content");
+              const attachCount = (node.attachments || []).length;
+              return (
+                <div
+                  onClick={() => setActiveId(node.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveId(node.id); } }}
+                  style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: "12px 14px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+                >
+                  <span style={{ width: 30, height: 30, borderRadius: 9, background: m.bg, color: m.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <WfGlyph name={m.glyph} size={15} color={m.ink} strokeWidth={2} />
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.ink }}>{title}</span>
+                      {node.type === "milton" && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.sub, background: WF_C.cream, borderRadius: 999, padding: "1px 7px" }}>{(node.review || "human") === "human" ? "Review" : "Auto"}</span>
+                      )}
+                      {attachCount > 0 && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.sub }}>
+                          <WfGlyph name="paperclip" size={11} color={WF_C.sub} strokeWidth={2} />{attachCount}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snippet}</div>
+                  </div>
+                  <span style={{ color: WF_C.faint, flexShrink: 0 }}><WfGlyph name="chevron-right" size={16} color={WF_C.faint} strokeWidth={2} /></span>
+                </div>
+              );
+            })()
           ) : (
-            <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
+            <div style={{ width: "100%", background: WF_C.white, border: `1.5px solid ${WF_C.tealDark}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 8px 28px rgba(11,22,40,0.10)" }}>
               {/* header: type switch + delete */}
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
@@ -9576,8 +9619,8 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                     value={node.message || ""}
                     onChange={(e) => patchNode(node.id, { message: e.target.value })}
                     placeholder={WF_AGENT_PLACEHOLDER[node.task || "report"]}
-                    rows={2}
-                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.5, minHeight: 54 }}
+                    rows={6}
+                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.6, minHeight: 180 }}
                   />
                   <div style={{ marginTop: 12 }}>
                     <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>When Milton is done</div>
@@ -9611,8 +9654,8 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                     value={node.message || ""}
                     onChange={(e) => patchNode(node.id, { message: e.target.value })}
                     placeholder={WF_ACTION_META[node.type].placeholder}
-                    rows={3}
-                    style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.5, minHeight: 66 }}
+                    rows={9}
+                    style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.6, minHeight: 240 }}
                   />
                   {/* Attachments */}
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10 }}>
@@ -10025,7 +10068,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   /* ═════════════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════��═��═════════════════ */
-// ═════════════���════════��═══════════════════════��═══════��════════
+// ═════════════���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
