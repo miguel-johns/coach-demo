@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������������������═══════════
+// ═══════════�������════════════════��══════════════════════�����������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9161,6 +9161,13 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     plus: <path d="M12 5v14M5 12h14" />,
     spark: <path d="M12 3l1.9 5.6L19 10l-5.1 1.4L12 17l-1.9-5.6L5 10l5.1-1.4z" />,
     flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
+    paperclip: <path d="M21.4 11.05 12.25 20.2a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.67 3.67 0 0 1 5.19 5.19l-9.2 9.19a1.83 1.83 0 0 1-2.59-2.59l8.49-8.48" />,
+    image: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></>,
+    video: <><path d="m22 8-6 4 6 4V8z" /><rect x="2" y="6" width="14" height="12" rx="2" /></>,
+    pdf: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><polyline points="14 3 14 8 19 8" /><path d="M9 15h6M9 12h6" /></>,
+    robot: <><rect x="4" y="8" width="16" height="11" rx="2" /><path d="M12 8V4M9 4h6" /><circle cx="9" cy="13" r="1" /><circle cx="15" cy="13" r="1" /></>,
+    user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9380,16 +9387,49 @@ const WF_ACTION_META = {
 
 const WF_DELAY_UNITS = [["hour", "Hour"], ["day", "Day"], ["week", "Week"]];
 
+// Milton agent tasks + attachment types
+const WF_AGENT_TASKS = [
+  ["report", "Build a report"],
+  ["workout", "Build a workout"],
+  ["nutrition", "Build a nutrition plan"],
+  ["message", "Draft a message"],
+  ["summary", "Summarize progress"],
+  ["adjust", "Adjust the plan"],
+];
+const WF_AGENT_PLACEHOLDER = {
+  report: "What should the report cover? (e.g. last 4 weeks of adherence and weight trend)",
+  workout: "Describe the workout to build (e.g. 45-min lower-body day, moderate volume)",
+  nutrition: "Describe the nutrition plan (e.g. 2,100 kcal, high protein, 3 meals + snack)",
+  message: "What should the message say? (e.g. supportive check-in referencing their PR)",
+  summary: "What progress should Milton summarize? (e.g. weekly wins and one focus area)",
+  adjust: "How should Milton adjust the plan? (e.g. drop volume 10%, swap knee-heavy lifts)",
+};
+const WF_ATTACH_TYPES = [
+  ["image", "Image", "image"],
+  ["video", "Video", "video"],
+  ["pdf", "PDF", "pdf"],
+];
+const WF_ATTACH_META = {
+  image: { glyph: "image", label: "Image", sample: "form-demo.jpg" },
+  video: { glyph: "video", label: "Video", sample: "exercise-demo.mp4" },
+  pdf: { glyph: "pdf", label: "PDF", sample: "meal-guide.pdf" },
+};
+
 // Build an initial simple flow from a seed workflow's steps
 function wfDeriveFlow(w) {
   const actions = (w.steps || []).filter((s) => s.kind === "action");
   const nodes = [];
   actions.forEach((s, idx) => {
-    const type = s.preview ? "text" : (/milton|draft|generate|review|create/i.test(s.body) ? "milton" : "text");
-    nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body });
+    const type = s.preview ? "text" : (/milton|draft|generate|review|create|report|summar/i.test(s.body) ? "milton" : "text");
+    if (type === "milton") {
+      const task = /report|summar/i.test(s.body) ? "summary" : /workout|program/i.test(s.body) ? "workout" : "message";
+      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, review: w.approval ? "human" : "auto" });
+    } else {
+      nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body, attachments: [] });
+    }
     if (idx < actions.length - 1) nodes.push({ id: wfUid(), type: "delay", amount: 1, unit: "day" });
   });
-  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "" });
+  if (nodes.length === 0) nodes.push({ id: wfUid(), type: "text", subject: "", message: "", attachments: [] });
   return nodes;
 }
 
@@ -9437,12 +9477,15 @@ function WfConnector({ index, menuAt, setMenuAt, onAdd }) {
 
 function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
   const [menuAt, setMenuAt] = useState(null);
+  const [attachAt, setAttachAt] = useState(null);
 
+  const newNodeFor = (type) => {
+    if (type === "delay") return { id: wfUid(), type: "delay", amount: 1, unit: "day" };
+    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", review: "human" };
+    return { id: wfUid(), type, subject: "", message: "", attachments: [] };
+  };
   const addNode = (index, type) => {
-    const node = type === "delay"
-      ? { id: wfUid(), type: "delay", amount: 1, unit: "day" }
-      : { id: wfUid(), type, subject: "", message: "" };
-    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, node); return next; });
+    setFlow((prev) => { const next = [...prev]; next.splice(index, 0, newNodeFor(type)); return next; });
     setMenuAt(null);
   };
   const patchNode = (id, patch) => setFlow((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
@@ -9505,7 +9548,7 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                   {Object.entries(WF_ACTION_META).map(([type, m]) => {
                     const on = node.type === type;
                     return (
-                      <button key={type} onClick={() => patchNode(node.id, { type })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", review: node.review || "human" } : { attachments: node.attachments || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
                         <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
                       </button>
                     );
@@ -9515,22 +9558,101 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
                   <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
                 </button>
               </div>
-              {/* body */}
-              {node.type === "email" && (
-                <input
-                  value={node.subject || ""}
-                  onChange={(e) => patchNode(node.id, { subject: e.target.value })}
-                  placeholder="Subject line"
-                  style={{ ...inputStyle, marginTop: 12, fontWeight: 600 }}
-                />
+
+              {node.type === "milton" ? (
+                /* ── Milton = agent action ── */
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 13, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>Milton will</span>
+                    <select
+                      value={node.task || "report"}
+                      onChange={(e) => patchNode(node.id, { task: e.target.value })}
+                      style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 10px", fontSize: 13.5, fontWeight: 600, background: WF_C.tealBg, color: WF_C.tealInk, outline: "none", cursor: "pointer" }}
+                    >
+                      {WF_AGENT_TASKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <textarea
+                    value={node.message || ""}
+                    onChange={(e) => patchNode(node.id, { message: e.target.value })}
+                    placeholder={WF_AGENT_PLACEHOLDER[node.task || "report"]}
+                    rows={2}
+                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.5, minHeight: 54 }}
+                  />
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>When Milton is done</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {[["human", "user", "Human review", "You approve before it sends"], ["auto", "robot", "Automated", "Sends without approval"]].map(([v, glyph, label, desc]) => {
+                        const on = (node.review || "human") === v;
+                        return (
+                          <button key={v} onClick={() => patchNode(node.id, { review: v })} style={{ flex: 1, textAlign: "left", display: "flex", flexDirection: "column", gap: 3, padding: "9px 11px", borderRadius: 10, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>
+                              <WfGlyph name={glyph} size={14} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
+                            </span>
+                            <span style={{ fontSize: 11, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint }}>{desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ── Text / Email = message + attachments ── */
+                <>
+                  {node.type === "email" && (
+                    <input
+                      value={node.subject || ""}
+                      onChange={(e) => patchNode(node.id, { subject: e.target.value })}
+                      placeholder="Subject line"
+                      style={{ ...inputStyle, marginTop: 12, fontWeight: 600 }}
+                    />
+                  )}
+                  <textarea
+                    value={node.message || ""}
+                    onChange={(e) => patchNode(node.id, { message: e.target.value })}
+                    placeholder={WF_ACTION_META[node.type].placeholder}
+                    rows={3}
+                    style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.5, minHeight: 66 }}
+                  />
+                  {/* Attachments */}
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 10 }}>
+                    {(node.attachments || []).map((att, ai) => (
+                      <span key={ai} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WF_C.cream, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "5px 8px", fontSize: 12, color: WF_C.ink }}>
+                        <WfGlyph name={WF_ATTACH_META[att.kind].glyph} size={13} color={WF_C.sub} strokeWidth={2} />
+                        {att.name}
+                        <button
+                          onClick={() => patchNode(node.id, { attachments: (node.attachments || []).filter((_, k) => k !== ai) })}
+                          title="Remove attachment"
+                          style={{ display: "inline-flex", border: "none", background: "transparent", color: WF_C.faint, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                        >
+                          <WfGlyph name="x" size={13} color={WF_C.faint} strokeWidth={2.2} />
+                        </button>
+                      </span>
+                    ))}
+                    {attachAt === node.id ? (
+                      <span style={{ display: "inline-flex", gap: 4 }}>
+                        {WF_ATTACH_TYPES.map(([kind, label, glyph]) => (
+                          <button
+                            key={kind}
+                            onClick={() => { patchNode(node.id, { attachments: [...(node.attachments || []), { kind, name: WF_ATTACH_META[kind].sample }] }); setAttachAt(null); }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink, cursor: "pointer" }}
+                          >
+                            <WfGlyph name={glyph} size={13} color={WF_C.sub} strokeWidth={2} />{label}
+                          </button>
+                        ))}
+                        <button onClick={() => setAttachAt(null)} style={{ border: "none", background: "transparent", color: WF_C.faint, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setAttachAt(node.id)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px dashed ${WF_C.line}`, borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.sub, cursor: "pointer" }}
+                      >
+                        <WfGlyph name="paperclip" size={13} color={WF_C.sub} strokeWidth={2} />Attach media
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
-              <textarea
-                value={node.message || ""}
-                onChange={(e) => patchNode(node.id, { message: e.target.value })}
-                placeholder={WF_ACTION_META[node.type].placeholder}
-                rows={3}
-                style={{ ...inputStyle, marginTop: node.type === "email" ? 8 : 12, resize: "vertical", lineHeight: 1.5, minHeight: 66 }}
-              />
             </div>
           )}
         </React.Fragment>
