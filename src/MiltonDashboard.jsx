@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════��═
+// ═══════════════════════════════════════════════════════��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -11070,7 +11070,7 @@ function PlaybookChapterDetail({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ══════��════════════════════════════════════════════════════════
 // PLAYBOOK UPLOAD MODAL - Chapter picker for document uploads
 // ═══════════════════════════════════════════════════════════════
 function PlaybookUploadModal({ chapters, renderChapterIcon, onClose, onUpload, preselectedChapter }) {
@@ -14438,90 +14438,126 @@ function CheckInDeck({ isMobile, homeCompact, onReply }) {
     if (!movedRef.current) setExpanded((v) => !v);
   };
 
-  // Match action-card footprint
-  const pad = homeCompact ? 16 : 20;
-  const outerStyle = {
-    position: "relative",
-    gridColumn: expanded ? "1 / -1" : "auto",
-    background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 18,
-    boxShadow: expanded ? "0 14px 32px rgba(43,122,120,0.18)" : "0 1px 3px rgba(0,0,0,0.04)",
-    padding: pad, overflow: "hidden", minWidth: 0,
-    transition: "box-shadow .22s ease",
-  };
+  const accent = TEAL;
 
-  // Empty state — compact tile
-  if (deck.length === 0) {
+  // ── COLLAPSED: identical footprint to the other action cards ──
+  if (!expanded) {
+    const empty = deck.length === 0;
     return (
-      <div style={outerStyle}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <div style={{
-            width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
-            background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
+      <div
+        className="v0-card"
+        onClick={() => (empty ? reset() : setExpanded(true))}
+        style={{ "--accent": accent, padding: homeCompact ? "16px" : "20px" }}
+      >
+        <div className="v0-glow" aria-hidden="true" />
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            {/* stacked-card visual behind the icon */}
+            <span aria-hidden="true" style={{ position: "absolute", top: -5, left: 5, width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14, background: `${accent}14`, transform: "rotate(6deg)" }} />
+            <span aria-hidden="true" style={{ position: "absolute", top: -2.5, left: 2.5, width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14, background: `${accent}1f`, transform: "rotate(3deg)" }} />
+            <div className="v0-iconwrap" style={{
+              position: "relative",
+              width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
+              background: `linear-gradient(135deg, ${accent}29, ${accent}0d)`, color: accent,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
+            </div>
+            {!empty && (
+              <span style={{
+                position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
+                borderRadius: 999, background: accent, color: "#fff", fontSize: 11, fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
+                boxShadow: `0 2px 6px ${accent}73`, zIndex: 2
+              }}>{deck.length}</span>
+            )}
           </div>
-          <button onClick={reset} style={{
-            padding: "6px 12px", borderRadius: 999, border: `1px solid ${BORDER}`,
-            background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
-          }}>Reset</button>
+          <span className="v0-arrow" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+          </span>
         </div>
-        <div style={{ marginTop: homeCompact ? 12 : 16 }}>
-          <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
-          <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>All {total} check-ins reviewed</div>
+        <div style={{ minWidth: 0, marginTop: homeCompact ? 12 : 16, position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+            {!empty && (
+              <span style={{ fontSize: 11, fontWeight: 600, color: accent, background: `${accent}14`, padding: "2px 8px", borderRadius: 999 }}>
+                {deck.length} to review
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>
+            {empty ? `All ${total} check-ins reviewed` : "Client check-ins · tap to review"}
+          </div>
         </div>
       </div>
     );
   }
 
+  // ── EXPANDED: full-width swipeable stack ──
   const dragAmt = drag.active ? drag.dx : 0;
 
   return (
-    <div style={outerStyle}>
-      {/* Tile header — matches other action cards */}
+    <div style={{
+      position: "relative", gridColumn: "1 / -1",
+      background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 18,
+      boxShadow: "0 14px 32px rgba(43,122,120,0.18)",
+      padding: homeCompact ? 16 : 20, overflow: "hidden", minWidth: 0,
+    }}>
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ position: "relative", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
           <div style={{
-            width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
+            width: homeCompact ? 40 : 44, height: homeCompact ? 40 : 44, borderRadius: 12,
             background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
-            display: "flex", alignItems: "center", justifyContent: "center"
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
           }}>
-            <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
+            <NavIcon icon="message-circle" size={homeCompact ? 20 : 23} />
           </div>
-          <span style={{
-            position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
-            borderRadius: 999, background: TEAL, color: "#fff", fontSize: 11, fontWeight: 700,
-            display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
-            boxShadow: `0 2px 6px ${TEAL}73`
-          }}>{deck.length}</span>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: homeCompact ? 15 : 17, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+              {deck.length > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEAL, background: `${TEAL}14`, padding: "2px 8px", borderRadius: 999 }}>
+                  {deck.length} to review
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>Swipe or use the buttons below</div>
+          </div>
         </div>
         <button
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => setExpanded(false)}
           style={{
             padding: "5px 11px", borderRadius: 999, border: `1px solid ${BORDER}`,
             background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0
           }}>
-          {expanded ? "Collapse" : "Expand"}
+          Collapse
         </button>
       </div>
 
-      {/* Title */}
-      <div style={{ marginTop: homeCompact ? 12 : 16, marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: TEAL, background: `${TEAL}14`, padding: "2px 8px", borderRadius: 999 }}>
-            {deck.length} to review
-          </span>
+      {/* Empty state (all reviewed) */}
+      {deck.length === 0 ? (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 8, padding: "26px 16px", marginTop: 16, borderRadius: 14, border: `1px dashed ${BORDER}`, background: "#f7faf9"
+        }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#e6f7ee", color: ALERT_GREEN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>All check-ins reviewed</div>
+          <button onClick={reset} style={{
+            marginTop: 4, padding: "7px 14px", borderRadius: 999, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>Reset demo</button>
         </div>
-        <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>Client check-ins · swipe or tap to expand</div>
-      </div>
-
+      ) : (
+      <>
       {/* Card stack */}
       {(() => {
-        const cardH = expanded ? (isMobile ? 300 : 210) : (isMobile ? 128 : 120);
+        const cardH = isMobile ? 300 : 210;
         const containerH = cardH + 20;
         return (
-          <div style={{ position: "relative", height: containerH, transition: "height .3s cubic-bezier(.34,1.2,.64,1)" }}>
+          <div style={{ position: "relative", height: containerH, marginTop: 14, transition: "height .3s cubic-bezier(.34,1.2,.64,1)" }}>
             {deck.slice(0, 3).map((c, i) => {
               const isTop = i === 0;
               const behind = i;
@@ -14701,6 +14737,8 @@ function CheckInDeck({ isMobile, homeCompact, onReply }) {
           }} />
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }
