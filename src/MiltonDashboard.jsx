@@ -383,9 +383,9 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������������═══════════
+// ═══════════�������════════════════��══════════════════════�������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
-// ═���═════════════════════════════����������════════════════������������══════════════
+// ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
   {
     id: "sess_001",
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════��═════��═
+// ═══════════════════════════════════════════════════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -5861,6 +5861,7 @@ isMobile={true}
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+  isMobile={true}
             />
           )}
           {canvasType === "programming" && (
@@ -9549,7 +9550,7 @@ function WfBuilder({ workflow, flow, setFlow, onTriggerChange }) {
   );
 }
 
-function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
+function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMobile }) {
   const [workflows, setWorkflows] = useState(WF_SEED);
   const [tab, setTab] = useState("active");
   const [view, setView] = useState("list");
@@ -9791,7 +9792,9 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
                     <WfGhostBtn onClick={() => { togglePause(open.id); ping(open.status === "paused" ? "Resumed. Milton is watching again." : "Paused. Nothing will fire."); }}>
                       {open.status === "paused" ? "Resume" : "Pause"}
                     </WfGhostBtn>
-                    <WfTealBtn onClick={() => say(`Loaded ${open.name}. Tell me what to change — try "make it 3 misses" or "move the nudge to the morning" — and I'll rewrite the rail.`, ["Make the trigger stricter", "Soften the message tone", "Add a follow-up step", "Remove the approval gate"])} style={{ padding: "8px 14px" }}>Edit in chat</WfTealBtn>
+                    {!isMobile && (
+                      <WfTealBtn onClick={() => say(`Loaded ${open.name}. Tell me what to change — try "make it 3 misses" or "move the nudge to the morning" — and I'll rewrite the rail.`, ["Make the trigger stricter", "Soften the message tone", "Add a follow-up step", "Remove the approval gate"])} style={{ padding: "8px 14px" }}>Edit in chat</WfTealBtn>
+                    )}
                   </div>
                 </div>
 
@@ -10291,7 +10294,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ���════════���═══��������═��═════��═════��═����═══���═══════��══════════════════
+// ���════════���═══��������═��═════��═════��═����═══���═══════��═════════════��════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -15909,6 +15912,7 @@ export default function MiltonDashboard() {
   onHome={() => setCanvasType("templates")}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
+  isMobile={canvasCompact}
   />
   )}
   {canvasType === "mealPlan" && (
