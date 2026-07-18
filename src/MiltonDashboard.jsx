@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������═══════════
+// ═══════════�������════════════════��══════════════════════�������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���═════════════════════════════����������════════════════������������══════════════
 const initialSessions = [
@@ -14385,7 +14385,7 @@ const CHECKIN_SEED = [
   },
 ];
 
-function CheckInDeck({ isMobile, onReply }) {
+function CheckInDeck({ isMobile, homeCompact, onReply }) {
   const [deck, setDeck] = useState(CHECKIN_SEED);
   const [expanded, setExpanded] = useState(false);
   const [drag, setDrag] = useState({ dx: 0, dy: 0, active: false });
@@ -14396,17 +14396,16 @@ function CheckInDeck({ isMobile, onReply }) {
   const total = CHECKIN_SEED.length;
   const reviewed = total - deck.length;
   const top = deck[0];
-  const SWIPE_THRESHOLD = 110;
+  const SWIPE_THRESHOLD = 90;
 
   const dismiss = (dir) => {
     if (leaving) return;
-    setExpanded(false);
     setLeaving(dir);
     window.setTimeout(() => {
       setDeck((d) => d.slice(1));
       setLeaving(null);
       setDrag({ dx: 0, dy: 0, active: false });
-    }, 300);
+    }, 280);
   };
 
   const reset = () => {
@@ -14439,245 +14438,264 @@ function CheckInDeck({ isMobile, onReply }) {
     if (!movedRef.current) setExpanded((v) => !v);
   };
 
-  const cardH = expanded ? (isMobile ? 380 : 340) : (isMobile ? 176 : 168);
-  const containerH = cardH + 24; // room for stacked peeks
+  // Match action-card footprint
+  const pad = homeCompact ? 16 : 20;
+  const outerStyle = {
+    position: "relative",
+    gridColumn: expanded ? "1 / -1" : "auto",
+    background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 18,
+    boxShadow: expanded ? "0 14px 32px rgba(43,122,120,0.18)" : "0 1px 3px rgba(0,0,0,0.04)",
+    padding: pad, overflow: "hidden", minWidth: 0,
+    transition: "box-shadow .22s ease",
+  };
 
-  // Header
-  const header = (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-          background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
-          display: "flex", alignItems: "center", justifyContent: "center"
-        }}>
-          <NavIcon icon="message-circle" size={19} />
-        </div>
-        <div>
-          <div style={{ fontSize: isMobile ? 16 : 17, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</div>
-          <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 1 }}>
-            {deck.length > 0 ? `${deck.length} to review · swipe or tap to expand` : "All caught up"}
-          </div>
-        </div>
-      </div>
-      {deck.length > 0 ? (
-        <span style={{
-          minWidth: 24, height: 24, padding: "0 8px", borderRadius: 999,
-          background: TEAL, color: "#fff", fontSize: 12.5, fontWeight: 700,
-          display: "flex", alignItems: "center", justifyContent: "center"
-        }}>{deck.length}</span>
-      ) : (
-        <button onClick={reset} style={{
-          padding: "6px 12px", borderRadius: 999, border: `1px solid ${BORDER}`,
-          background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
-        }}>Reset</button>
-      )}
-    </div>
-  );
-
+  // Empty state — compact tile
   if (deck.length === 0) {
     return (
-      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 18, padding: isMobile ? 16 : 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        {header}
-        <div style={{
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          gap: 8, padding: "26px 16px", borderRadius: 14, border: `1px dashed ${BORDER}`, background: "#f7faf9"
-        }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#e6f7ee", color: ALERT_GREEN, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ALERT_GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+      <div style={outerStyle}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{
+            width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
+            background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
           </div>
-          <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>All check-ins reviewed</div>
-          <div style={{ fontSize: 12.5, color: TEXT_SEC, textAlign: "center" }}>You&apos;ve cleared all {total} client check-ins for today.</div>
+          <button onClick={reset} style={{
+            padding: "6px 12px", borderRadius: 999, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEAL, fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>Reset</button>
+        </div>
+        <div style={{ marginTop: homeCompact ? 12 : 16 }}>
+          <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+          <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>All {total} check-ins reviewed</div>
         </div>
       </div>
     );
   }
 
+  const dragAmt = drag.active ? drag.dx : 0;
+
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 18, padding: isMobile ? 16 : 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      {header}
-
-      {/* Card stack */}
-      <div style={{ position: "relative", height: containerH, transition: "height .28s cubic-bezier(.34,1.2,.64,1)" }}>
-        {deck.slice(0, 3).map((c, i) => {
-          const isTop = i === 0;
-          const behind = i;
-          let transform, transition, opacity = 1, zIndex = 30 - i, boxShadow;
-
-          if (isTop) {
-            if (leaving) {
-              transform = `translateX(${leaving === "right" ? 140 : -140}%) rotate(${leaving === "right" ? 16 : -16}deg)`;
-              transition = "transform .3s ease, opacity .3s ease";
-              opacity = 0;
-            } else if (drag.active) {
-              transform = `translate(${drag.dx}px, ${drag.dy * 0.25}px) rotate(${drag.dx * 0.04}deg)`;
-              transition = "none";
-            } else {
-              transform = "translate(0,0) rotate(0deg)";
-              transition = "transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .2s ease";
-            }
-            boxShadow = "0 14px 34px rgba(26,46,42,0.16)";
-          } else {
-            const scale = 1 - behind * 0.05;
-            const ty = behind * 12;
-            transform = `translateY(${ty}px) scale(${scale})`;
-            transition = "transform .3s cubic-bezier(.34,1.4,.64,1), opacity .3s ease";
-            opacity = 1 - behind * 0.18;
-            boxShadow = "0 6px 16px rgba(26,46,42,0.08)";
-          }
-
-          const dragAmt = isTop && drag.active ? drag.dx : 0;
-
-          return (
-            <div
-              key={c.id}
-              onPointerDown={isTop ? onPointerDown : undefined}
-              onPointerMove={isTop ? onPointerMove : undefined}
-              onPointerUp={isTop ? onPointerUp : undefined}
-              onPointerCancel={isTop ? onPointerUp : undefined}
-              role={isTop ? "button" : undefined}
-              tabIndex={isTop ? 0 : undefined}
-              onKeyDown={isTop ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((v) => !v); } } : undefined}
-              style={{
-                position: "absolute", top: 0, left: 0, right: 0, height: cardH,
-                background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16,
-                padding: isMobile ? 14 : 16, boxSizing: "border-box",
-                transform, transition, opacity, zIndex, boxShadow,
-                cursor: isTop ? (drag.active ? "grabbing" : "grab") : "default",
-                touchAction: "none", userSelect: "none", overflow: "hidden",
-                display: "flex", flexDirection: "column"
-              }}
-            >
-              {/* swipe intent overlays (top card only) */}
-              {isTop && (
-                <>
-                  <span style={{
-                    position: "absolute", top: 14, left: 14, padding: "4px 10px", borderRadius: 8,
-                    border: `2px solid ${ALERT_GREEN}`, color: ALERT_GREEN, fontSize: 12, fontWeight: 800,
-                    textTransform: "uppercase", letterSpacing: "0.06em", transform: "rotate(-8deg)",
-                    opacity: Math.max(0, Math.min(1, dragAmt / SWIPE_THRESHOLD)), pointerEvents: "none"
-                  }}>Reviewed</span>
-                  <span style={{
-                    position: "absolute", top: 14, right: 14, padding: "4px 10px", borderRadius: 8,
-                    border: `2px solid #d97706`, color: "#d97706", fontSize: 12, fontWeight: 800,
-                    textTransform: "uppercase", letterSpacing: "0.06em", transform: "rotate(8deg)",
-                    opacity: Math.max(0, Math.min(1, -dragAmt / SWIPE_THRESHOLD)), pointerEvents: "none"
-                  }}>Snooze</span>
-                </>
-              )}
-
-              {/* Card header row */}
-              <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                  background: c.color, color: "#fff", fontSize: 14, fontWeight: 700,
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>{c.initials}</div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: c.moodColor, background: `${c.moodColor}16`, padding: "2px 8px", borderRadius: 999, flexShrink: 0 }}>{c.mood}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{c.period} · {c.when}</div>
-                </div>
-              </div>
-
-              {/* Note */}
-              <p style={{
-                margin: "12px 0 0", fontSize: 13.5, lineHeight: 1.5, color: TEXT_SEC,
-                display: "-webkit-box", WebkitLineClamp: expanded ? "unset" : 2, WebkitBoxOrient: "vertical",
-                overflow: "hidden"
-              }}>{c.note}</p>
-
-              {/* Flag pill */}
-              {c.flag && !expanded && (
-                <div style={{ marginTop: "auto", paddingTop: 10 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "3px 9px", borderRadius: 999 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
-                    {c.flag}
-                  </span>
-                </div>
-              )}
-
-              {/* Expanded details */}
-              {expanded && (
-                <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                    {c.metrics.map((m) => {
-                      const n = parseFloat(m.sub);
-                      const dir = isNaN(n) || n === 0 ? "flat" : n > 0 ? "up" : "down";
-                      const goodUp = m.label !== "Weight";
-                      const col = dir === "flat" ? TEXT_SEC : (dir === "up") === goodUp ? ALERT_GREEN : "#d97706";
-                      return (
-                        <div key={m.label} style={{ background: "#f7faf9", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 9px" }}>
-                          <div style={{ fontSize: 10.5, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginTop: 3 }}>{m.value}</div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: col, marginTop: 1 }}>{m.sub}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {c.flag && (
-                    <span style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "4px 10px", borderRadius: 999 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
-                      {c.flag}
-                    </span>
-                  )}
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.stopPropagation(); onReply && onReply(c); }}
-                    style={{
-                      alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 7,
-                      padding: "9px 16px", borderRadius: 10, border: "none",
-                      background: TEAL, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer"
-                    }}>
-                    <NavIcon icon="send" size={15} /> Reply with Milton
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Controls */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
-        <button
-          onClick={() => dismiss("left")}
-          style={{
-            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-            padding: "10px 12px", borderRadius: 11, border: `1px solid ${BORDER}`,
-            background: WHITE, color: "#d97706", fontSize: 13, fontWeight: 600, cursor: "pointer"
+    <div style={outerStyle}>
+      {/* Tile header — matches other action cards */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div style={{
+            width: homeCompact ? 44 : 50, height: homeCompact ? 44 : 50, borderRadius: 14,
+            background: `linear-gradient(135deg, ${TEAL}29, ${TEAL}0d)`, color: TEAL,
+            display: "flex", alignItems: "center", justifyContent: "center"
           }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
-          Snooze
-        </button>
+            <NavIcon icon="message-circle" size={homeCompact ? 22 : 25} />
+          </div>
+          <span style={{
+            position: "absolute", top: -7, right: -7, minWidth: 21, height: 21, padding: "0 6px",
+            borderRadius: 999, background: TEAL, color: "#fff", fontSize: 11, fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff",
+            boxShadow: `0 2px 6px ${TEAL}73`
+          }}>{deck.length}</span>
+        </div>
         <button
           onClick={() => setExpanded((v) => !v)}
           style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-            padding: "10px 14px", borderRadius: 11, border: `1px solid ${BORDER}`,
-            background: WHITE, color: TEXT_SEC, fontSize: 13, fontWeight: 600, cursor: "pointer"
+            padding: "5px 11px", borderRadius: 999, border: `1px solid ${BORDER}`,
+            background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0
           }}>
           {expanded ? "Collapse" : "Expand"}
+        </button>
+      </div>
+
+      {/* Title */}
+      <div style={{ marginTop: homeCompact ? 12 : 16, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: homeCompact ? 15 : 16, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Check-ins</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: TEAL, background: `${TEAL}14`, padding: "2px 8px", borderRadius: 999 }}>
+            {deck.length} to review
+          </span>
+        </div>
+        <div style={{ fontSize: homeCompact ? 12 : 13, color: TEXT_SEC, marginTop: 3, lineHeight: 1.4 }}>Client check-ins · swipe or tap to expand</div>
+      </div>
+
+      {/* Card stack */}
+      {(() => {
+        const cardH = expanded ? (isMobile ? 300 : 210) : (isMobile ? 128 : 120);
+        const containerH = cardH + 20;
+        return (
+          <div style={{ position: "relative", height: containerH, transition: "height .3s cubic-bezier(.34,1.2,.64,1)" }}>
+            {deck.slice(0, 3).map((c, i) => {
+              const isTop = i === 0;
+              const behind = i;
+              let transform, transition, opacity = 1, zIndex = 30 - i, boxShadow;
+
+              if (isTop) {
+                if (leaving) {
+                  transform = `translateX(${leaving === "right" ? 130 : -130}%) rotate(${leaving === "right" ? 14 : -14}deg)`;
+                  transition = "transform .28s ease, opacity .28s ease";
+                  opacity = 0;
+                } else if (drag.active) {
+                  transform = `translate(${drag.dx}px, ${drag.dy * 0.2}px) rotate(${drag.dx * 0.04}deg)`;
+                  transition = "none";
+                } else {
+                  transform = "translate(0,0) rotate(0deg)";
+                  transition = "transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .2s ease";
+                }
+                boxShadow = "0 10px 26px rgba(26,46,42,0.14)";
+              } else {
+                const scale = 1 - behind * 0.05;
+                const ty = behind * 9;
+                transform = `translateY(${ty}px) scale(${scale})`;
+                transition = "transform .3s cubic-bezier(.34,1.4,.64,1), opacity .3s ease";
+                opacity = 1 - behind * 0.2;
+                boxShadow = "0 5px 14px rgba(26,46,42,0.08)";
+              }
+
+              const localDrag = isTop ? dragAmt : 0;
+
+              return (
+                <div
+                  key={c.id}
+                  onPointerDown={isTop ? onPointerDown : undefined}
+                  onPointerMove={isTop ? onPointerMove : undefined}
+                  onPointerUp={isTop ? onPointerUp : undefined}
+                  onPointerCancel={isTop ? onPointerUp : undefined}
+                  role={isTop ? "button" : undefined}
+                  tabIndex={isTop ? 0 : undefined}
+                  onKeyDown={isTop ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((v) => !v); } } : undefined}
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: cardH,
+                    background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14,
+                    padding: 13, boxSizing: "border-box",
+                    transform, transition, opacity, zIndex, boxShadow,
+                    cursor: isTop ? (drag.active ? "grabbing" : "grab") : "default",
+                    touchAction: "none", userSelect: "none", overflow: "hidden",
+                    display: "flex", flexDirection: "column"
+                  }}
+                >
+                  {/* swipe intent overlays */}
+                  {isTop && (
+                    <>
+                      <span style={{
+                        position: "absolute", top: 12, left: 12, padding: "3px 8px", borderRadius: 7,
+                        border: `2px solid ${ALERT_GREEN}`, color: ALERT_GREEN, fontSize: 11, fontWeight: 800,
+                        textTransform: "uppercase", letterSpacing: "0.05em", transform: "rotate(-8deg)",
+                        opacity: Math.max(0, Math.min(1, localDrag / SWIPE_THRESHOLD)), pointerEvents: "none", zIndex: 2
+                      }}>Reviewed</span>
+                      <span style={{
+                        position: "absolute", top: 12, right: 12, padding: "3px 8px", borderRadius: 7,
+                        border: `2px solid #d97706`, color: "#d97706", fontSize: 11, fontWeight: 800,
+                        textTransform: "uppercase", letterSpacing: "0.05em", transform: "rotate(8deg)",
+                        opacity: Math.max(0, Math.min(1, -localDrag / SWIPE_THRESHOLD)), pointerEvents: "none", zIndex: 2
+                      }}>Snooze</span>
+                    </>
+                  )}
+
+                  {/* header row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                      background: c.color, color: "#fff", fontSize: 12.5, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>{c.initials}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: c.moodColor, background: `${c.moodColor}16`, padding: "1px 7px", borderRadius: 999, flexShrink: 0 }}>{c.mood}</span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 1 }}>{c.period} · {c.when}</div>
+                    </div>
+                  </div>
+
+                  {/* note */}
+                  <p style={{
+                    margin: "9px 0 0", fontSize: 12.5, lineHeight: 1.45, color: TEXT_SEC,
+                    display: "-webkit-box", WebkitLineClamp: expanded ? 3 : 2, WebkitBoxOrient: "vertical",
+                    overflow: "hidden"
+                  }}>{c.note}</p>
+
+                  {/* flag pill (collapsed) */}
+                  {c.flag && !expanded && (
+                    <div style={{ marginTop: "auto", paddingTop: 8 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "2px 8px", borderRadius: 999 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                        {c.flag}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* expanded detail */}
+                  {expanded && (
+                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 8 }}>
+                        {c.metrics.map((m) => {
+                          const n = parseFloat(m.sub);
+                          const dir = isNaN(n) || n === 0 ? "flat" : n > 0 ? "up" : "down";
+                          const goodUp = m.label !== "Weight";
+                          const col = dir === "flat" ? TEXT_SEC : (dir === "up") === goodUp ? ALERT_GREEN : "#d97706";
+                          return (
+                            <div key={m.label} style={{ background: "#f7faf9", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "7px 9px" }}>
+                              <div style={{ fontSize: 10, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginTop: 2 }}>{m.value}</div>
+                              <div style={{ fontSize: 10.5, fontWeight: 600, color: col, marginTop: 1 }}>{m.sub}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        {c.flag && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: ALERT_RED, background: "#fdecea", padding: "3px 9px", borderRadius: 999 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ALERT_RED} strokeWidth="2.4" strokeLinecap="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                            {c.flag}
+                          </span>
+                        )}
+                        <button
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); onReply && onReply(c); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            padding: "8px 14px", borderRadius: 10, border: "none",
+                            background: TEAL, color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+                          }}>
+                          <NavIcon icon="send" size={14} /> Reply with Milton
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+        <button
+          onClick={() => dismiss("left")}
+          style={{
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "8px 10px", borderRadius: 10, border: `1px solid ${BORDER}`,
+            background: WHITE, color: "#d97706", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
+          }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
+          Snooze
         </button>
         <button
           onClick={() => dismiss("right")}
           style={{
-            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-            padding: "10px 12px", borderRadius: 11, border: "none",
-            background: ALERT_GREEN, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer"
+            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "8px 10px", borderRadius: 10, border: "none",
+            background: ALERT_GREEN, color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer"
           }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           Reviewed
         </button>
       </div>
 
       {/* Progress dots */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10 }}>
         {CHECKIN_SEED.map((_, i) => (
           <span key={i} style={{
-            width: i === reviewed ? 20 : 6, height: 6, borderRadius: 999,
+            width: i === reviewed ? 18 : 5, height: 5, borderRadius: 999,
             background: i < reviewed ? "#cfe0dc" : i === reviewed ? TEAL : "#e0ebe8",
             transition: "all .25s ease"
           }} />
@@ -15968,19 +15986,6 @@ export default function MiltonDashboard() {
         {/* ═══ HOME CARDS VIEW ═══ */}
         {homeView === "cards" && (
           <>
-            {/* Client check-in deck — swipe or expand */}
-            <CheckInDeck
-              isMobile={isMobile}
-              onReply={(c) => {
-                setChatMessages(prev => [...prev, {
-                  type: "ai",
-                  title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
-                  text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? `I want to keep an eye on that — let's adjust things so it doesn't hold you back. ` : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
-                }]);
-                setChatOpen(true);
-              }}
-            />
-
             {/* Action cards */}
             <style>{`
               .v0-card { position: relative; background: ${WHITE}; border: 1px solid ${BORDER}; border-radius: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; overflow: hidden; transition: transform .22s cubic-bezier(.34,1.4,.64,1), box-shadow .22s ease, border-color .22s ease; }
@@ -15994,7 +15999,19 @@ export default function MiltonDashboard() {
               .v0-card:hover .v0-glow { opacity: .13; transform: scale(1.2); }
               @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
             `}</style>
-            <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14, alignItems: "start" }}>
+              <CheckInDeck
+                isMobile={isMobile}
+                homeCompact={homeCompact}
+                onReply={(c) => {
+                  setChatMessages(prev => [...prev, {
+                    type: "ai",
+                    title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
+                    text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
+                  }]);
+                  setChatOpen(true);
+                }}
+              />
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
