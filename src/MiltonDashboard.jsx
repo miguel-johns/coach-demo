@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2876,7 +2876,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ════════════════════════════════════════════��══════��═══��═════��═
+// ══════════════════════════════════════════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -3784,7 +3784,7 @@ const initialClients = [
     nutrition: { tracking: true, proteinAvg: 95, proteinTarget: 120, calorieAvg: 1650, calorieTarget: 1800 },
     insight: "Sarah's squat has progressed from 95 to 120 lbs in 6 weeks. Bench is stalling — may need to adjust volume. Next session: Upper Body Pull.",
     coachAngle: "Test 1RM on squat next week to update training max. Consider adding an extra pressing accessory.",
-    narrative: "Squat up 25 lbs since assessment. Body comp improving — down 5 lbs, gained 1.5 lbs lean mass.",
+    narrative: "Squat up 25 lbs since assessment. Body comp improving ��� down 5 lbs, gained 1.5 lbs lean mass.",
     attendanceRate: 85,
     weightData: [158, 157, 156, 155, 154, 153.5, 153],
   },
@@ -9135,6 +9135,14 @@ const WF_FONTS = `
 .mwf .wf-ghost:hover { background: #E9F1EB; border-color: #D6E5DA; }
 .mwf .wf-teal:hover { background: #163A34; }
 .mwf .wf-tpl:hover { border-color: ${WF_C.teal}; background: #F7FAF8; }
+.mwf .wf-actions { opacity: 0; transition: opacity .15s ease; }
+.mwf .wf-row:hover .wf-actions, .mwf .wf-row:focus-within .wf-actions { opacity: 1; }
+.mwf .wf-iconbtn { cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.mwf .wf-iconbtn:hover { background: #E9F1EB; border-color: #D6E5DA; color: ${WF_C.tealDark}; }
+.mwf .wf-iconbtn-danger:hover { background: ${WF_C.redBg}; border-color: #E7C7BC; color: ${WF_C.redInk}; }
+.mwf .wf-name-input { border: 1px solid transparent; border-radius: 8px; background: transparent; outline: none; transition: border-color .15s, background .15s; }
+.mwf .wf-name-input:hover { border-color: ${WF_C.line}; }
+.mwf .wf-name-input:focus { border-color: ${WF_C.tealDark}; background: #fff; }
 @keyframes wfFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .mwf .wf-fade { animation: wfFade .25s ease; }
 @media (prefers-reduced-motion: reduce) { .mwf .wf-fade { animation: none; } }
@@ -9169,6 +9177,7 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
     x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
     "chevron-right": <polyline points="9 6 15 12 9 18" />,
+    copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -9811,6 +9820,49 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
       ["Open the draft", "Make it less frequent", "Who would enter this?", "Activate it as-is"]);
   };
 
+  // Build a blank workflow and open it straight on the canvas to edit manually.
+  const createBlank = () => {
+    const id = "d" + Date.now();
+    const newWf = {
+      id, name: "Untitled workflow", sub: "Draft", status: "draft", trigger: "",
+      lastRun: "Never", results: { runs: 0, headline: "Not run yet" }, approval: false, steps: [],
+    };
+    setWorkflows((ws) => [...ws, newWf]);
+    setFlowMap((prev) => ({ ...prev, [id]: [{ id: wfUid(), type: "text", subject: "", message: "", attachments: [] }] }));
+    setTab("drafts");
+    setOpenId(id);
+    setView("detail");
+    say(`New workflow started. Name it, set the trigger up top, then add Text, Email, or Milton steps right on the canvas. Want me to draft the whole thing instead? Just describe it.`,
+      ["Draft it for me from a description", "What triggers can I use?", "Add a Milton step", "How do delays work?"]);
+  };
+
+  // Duplicate a workflow (and its canvas flow) into drafts.
+  const duplicateWorkflow = (w, e) => {
+    if (e) e.stopPropagation();
+    const id = "d" + Date.now();
+    setWorkflows((ws) => {
+      const idx = ws.findIndex((x) => x.id === w.id);
+      const copy = { ...w, id, name: `${w.name} (copy)`, status: "draft", lastRun: "Never", error: undefined, results: { runs: 0, headline: "Not run yet" } };
+      const next = [...ws];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+    const srcFlow = flowMap[w.id] || wfDeriveFlow(w);
+    const clonedFlow = srcFlow.map((n) => ({ ...n, id: wfUid(), ...(n.attachments ? { attachments: n.attachments.map((a) => ({ ...a })) } : {}) }));
+    setFlowMap((prev) => ({ ...prev, [id]: clonedFlow }));
+    setTab("drafts");
+    ping(`Copied "${w.name}" to drafts.`);
+  };
+
+  // Delete a workflow and its canvas flow.
+  const deleteWorkflow = (w, e) => {
+    if (e) e.stopPropagation();
+    setWorkflows((ws) => ws.filter((x) => x.id !== w.id));
+    setFlowMap((prev) => { const n = { ...prev }; delete n[w.id]; return n; });
+    if (openId === w.id) { setOpenId(null); setView("list"); }
+    ping(`Deleted "${w.name}".`);
+  };
+
   const tabs = [
     ["active", "Active", counts.active],
     ["paused", "Paused", counts.paused],
@@ -9818,7 +9870,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
     ["templates", "Templates", counts.templates],
   ];
 
-  const grid = "minmax(200px, 2.2fr) 0.9fr 1.3fr 0.9fr 1.4fr";
+  const grid = "minmax(180px, 2.2fr) 0.9fr 1.3fr 0.9fr 1.4fr 72px";
 
   return (
     <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
@@ -9873,7 +9925,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                   })}
                 </div>
                 <div style={{ marginLeft: "auto", flex: "0 0 auto" }}>
-                  <WfTealBtn onClick={() => say("Describe the workflow in a sentence — the trigger, who it's for, and what should happen — and I'll draft the whole rail for your review.", ["When a client misses 2 sessions, check in", "Weekly wins into social posts", "Win back members inactive 30 days", "Congratulate every PR"])} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <WfTealBtn onClick={createBlank} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New workflow
                   </WfTealBtn>
                 </div>
@@ -9909,6 +9961,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                 <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, overflow: "hidden" }}>
                   <div style={{ display: "grid", gridTemplateColumns: grid, gap: 12, padding: "12px 20px 10px", borderBottom: `1px solid ${WF_C.line}` }}>
                     {["Workflow", "Status", "Trigger", "Last run", "30-day results"].map((h) => <WfEyebrow key={h}>{h}</WfEyebrow>)}
+                    <WfEyebrow><span className="sr-only">Actions</span></WfEyebrow>
                   </div>
                   {visible.length === 0 && (
                     <div style={{ padding: "40px 20px", textAlign: "center", color: WF_C.sub, fontSize: 14 }}>
@@ -9935,6 +9988,24 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                           ? <span style={{ color: WF_C.redInk, fontWeight: 500 }}>{w.results.headline}</span>
                           : <span>{w.results.runs} runs · <span style={{ color: WF_C.tealDark, fontWeight: 500 }}>{w.results.headline}</span></span>}
                       </div>
+                      <div className="wf-actions" style={{ display: "flex", justifyContent: "flex-end", gap: 4, opacity: isMobile ? 1 : undefined }}>
+                        <button
+                          onClick={(e) => duplicateWorkflow(w, e)}
+                          title="Duplicate" aria-label={`Duplicate ${w.name}`}
+                          className="wf-iconbtn"
+                          style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <WfGlyph name="copy" size={15} color="currentColor" strokeWidth={2} />
+                        </button>
+                        <button
+                          onClick={(e) => deleteWorkflow(w, e)}
+                          title="Delete" aria-label={`Delete ${w.name}`}
+                          className="wf-iconbtn wf-iconbtn-danger"
+                          style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <WfGlyph name="trash" size={15} color="currentColor" strokeWidth={2} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -9947,19 +10018,42 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
               <button onClick={toList} style={{ background: "none", border: "none", color: WF_C.sub, fontSize: 13.5, fontWeight: 500, padding: 0, marginBottom: 14 }}>← All workflows</button>
               <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "24px 28px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <h2 style={{ fontSize: 21, fontWeight: 700, margin: 0, color: WF_C.navy }}>{open.name}</h2>
+                      <input
+                        className="wf-display wf-name-input"
+                        value={open.name}
+                        onChange={(e) => setWorkflows((ws) => ws.map((w) => w.id === open.id ? { ...w, name: e.target.value } : w))}
+                        placeholder="Untitled workflow"
+                        aria-label="Workflow name"
+                        style={{ fontSize: 21, fontWeight: 700, color: WF_C.navy, padding: "2px 7px", margin: "-2px -7px", maxWidth: 380, minWidth: 120 }}
+                      />
                       <WfStatusPill status={open.status} />
                     </div>
                     <div style={{ fontSize: 13.5, color: WF_C.sub, marginTop: 5 }}>
                       {open.results.runs} runs · {open.results.headline} · last run {open.lastRun}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <WfGhostBtn onClick={() => { togglePause(open.id); ping(open.status === "paused" ? "Resumed. Milton is watching again." : "Paused. Nothing will fire."); }}>
                       {open.status === "paused" ? "Resume" : "Pause"}
                     </WfGhostBtn>
+                    <button
+                      onClick={() => duplicateWorkflow(open)}
+                      title="Duplicate" aria-label="Duplicate workflow"
+                      className="wf-iconbtn"
+                      style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <WfGlyph name="copy" size={16} color="currentColor" strokeWidth={2} />
+                    </button>
+                    <button
+                      onClick={() => deleteWorkflow(open)}
+                      title="Delete" aria-label="Delete workflow"
+                      className="wf-iconbtn wf-iconbtn-danger"
+                      style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <WfGlyph name="trash" size={16} color="currentColor" strokeWidth={2} />
+                    </button>
                     {!isMobile && (
                       <WfTealBtn onClick={() => say(`Loaded ${open.name}. Tell me what to change — try "make it 3 misses" or "move the nudge to the morning" — and I'll rewrite the rail.`, ["Make the trigger stricter", "Soften the message tone", "Add a follow-up step", "Remove the approval gate"])} style={{ padding: "8px 14px" }}>Edit in chat</WfTealBtn>
                     )}
@@ -10030,7 +10124,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
 
 /* ═════════��═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
-═════════════════════════════════������══════════ */
+══════════════════════��══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   return (
     <div style={{
