@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������������������������═══════════
+// ═══════════�������════════════════��══════════════════════�������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9444,7 +9444,13 @@ const WF_ENTRY_METHODS = [
 
 const WF_RECIPIENTS = [["client", "Client"], ["coach", "Coach"]];
 
-const WF_BRAND_SWATCHES = [WF_C.tealDark, "#2E7357", WF_C.amberInk, WF_C.redInk, WF_C.navy];
+// Forms are built elsewhere (the Forms section) — here you just pick one.
+const WF_FORMS_SEED = [
+  { id: "f-intake", name: "New Client Intake", headline: "Let's get you started", brandColor: WF_C.tealDark, tag: "New lead" },
+  { id: "f-trial", name: "7-Day Trial Signup", headline: "Claim your free week", brandColor: "#2E7357", tag: "Trial" },
+  { id: "f-consult", name: "Free Consult Request", headline: "Book your strategy call", brandColor: WF_C.navy, tag: "New lead" },
+  { id: "f-reassess", name: "Quarterly Reassessment", headline: "Time to check your progress", brandColor: WF_C.amberInk, tag: "Onboarding" },
+];
 
 // Inline Milton mention labels (Notion-style chips inside a message)
 const WF_INCLUDE_LABEL = {
@@ -9476,7 +9482,7 @@ function wfDefaultEntry(w) {
   return {
     method: "tag-existing",
     tag: "At-risk",
-    form: { name: (w && w.name) || "New client intake", headline: "Let's get you started", brandColor: WF_C.tealDark, tag: "New lead" },
+    form: { ...WF_FORMS_SEED[0] },
     webhookUrl: `https://api.milton.coach/hooks/${slug}`,
   };
 }
@@ -9628,7 +9634,6 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
   // ── Entry (trigger) helpers ──
   const ent = entry || {};
   const updateEntry = (patch) => onEntryChange && onEntryChange({ ...ent, ...patch });
-  const updateForm = (patch) => onEntryChange && onEntryChange({ ...ent, form: { ...(ent.form || {}), ...patch } });
   const copy = (t) => { try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (_) {} setCopied(true); setTimeout(() => setCopied(false), 1500); };
 
   const newNodeFor = (type) => {
@@ -9688,51 +9693,59 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
         <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
           {ent.method === "form" ? (
             <>
-              <input value={(ent.form && ent.form.name) || ""} onChange={(e) => updateForm({ name: e.target.value })} placeholder="Form name (e.g. New Client Intake)" style={{ ...inputStyle, fontWeight: 600 }} />
-              <input value={(ent.form && ent.form.headline) || ""} onChange={(e) => updateForm({ headline: e.target.value })} placeholder="Headline shown to clients" style={{ ...inputStyle, marginTop: 8 }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 11 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: WF_C.sub }}>Brand</span>
-                {WF_BRAND_SWATCHES.map((c) => {
-                  const on = (ent.form && ent.form.brandColor) === c;
-                  return <button key={c} type="button" onClick={() => updateForm({ brandColor: c })} aria-label={`Brand color ${c}`} style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: on ? `2px solid ${WF_C.ink}` : `2px solid ${WF_C.white}`, boxShadow: `0 0 0 1px ${WF_C.line}`, cursor: "pointer", padding: 0 }} />;
+              <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>Choose a form</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {WF_FORMS_SEED.map((f) => {
+                  const on = (ent.form && ent.form.id) === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => updateEntry({ form: { ...f } })}
+                      style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", padding: "9px 11px", borderRadius: 10, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}
+                    >
+                      <span style={{ width: 22, height: 22, borderRadius: 6, background: f.brandColor, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <WfGlyph name="form" size={13} color={WF_C.white} strokeWidth={2} />
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>{f.name}</span>
+                        <span style={{ display: "block", fontSize: 11, color: on ? WF_C.tealInk : WF_C.faint, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>milton.coach/f/{wfSlug(f.name)}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.sub, background: on ? WF_C.white : WF_C.cream, borderRadius: 999, padding: "2px 8px", flexShrink: 0 }}>
+                        <WfGlyph name="tag" size={10} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{f.tag}
+                      </span>
+                      {on && <WfGlyph name="check" size={16} color={WF_C.tealDark} strokeWidth={2.4} />}
+                    </button>
+                  );
                 })}
               </div>
-              <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
-                <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 10, padding: 8, flexShrink: 0 }}>
-                  <WfQR text={`milton.coach/f/${wfSlug(ent.form && ent.form.name)}`} size={104} color={WF_C.ink} />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10.5, color: WF_C.faint, marginTop: 5 }}>
-                    <WfGlyph name="qr" size={11} color={WF_C.faint} strokeWidth={2} />Scan to open
+
+              {/* Selected form: read-only share reference */}
+              {ent.form && ent.form.id && (
+                <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 10, padding: 8, flexShrink: 0 }}>
+                    <WfQR text={`milton.coach/f/${wfSlug(ent.form.name)}`} size={92} color={WF_C.ink} />
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: WF_C.faint, marginTop: 5 }}>
+                      <WfGlyph name="qr" size={10} color={WF_C.faint} strokeWidth={2} />Scan to open
+                    </div>
                   </div>
-                </div>
-                <div style={{ flex: 1, minWidth: 190, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 5 }}>Shareable link</div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 9px", background: WF_C.white, fontSize: 12.5, color: WF_C.ink, overflow: "hidden" }}>
-                        <WfGlyph name="link" size={13} color={WF_C.sub} strokeWidth={2} />
-                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>milton.coach/f/{wfSlug(ent.form && ent.form.name)}</span>
+                  <div style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 5 }}>Shareable link</div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 9px", background: WF_C.white, fontSize: 12.5, color: WF_C.ink, overflow: "hidden" }}>
+                          <WfGlyph name="link" size={13} color={WF_C.sub} strokeWidth={2} />
+                          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>milton.coach/f/{wfSlug(ent.form.name)}</span>
+                        </div>
+                        <button type="button" onClick={() => copy(`https://milton.coach/f/${wfSlug(ent.form.name)}`)} className="wf-ghost" style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 11px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink }}>{copied ? "Copied" : "Copy"}</button>
                       </div>
-                      <button type="button" onClick={() => copy(`https://milton.coach/f/${wfSlug(ent.form && ent.form.name)}`)} className="wf-ghost" style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 11px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink }}>{copied ? "Copied" : "Copy"}</button>
                     </div>
-                  </div>
-                  <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${WF_C.line}` }}>
-                    <div style={{ background: (ent.form && ent.form.brandColor) || WF_C.tealDark, color: WF_C.white, padding: "12px 13px" }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 700 }}>{(ent.form && ent.form.headline) || "Let's get you started"}</div>
-                      <div style={{ fontSize: 10.5, opacity: 0.85, marginTop: 2 }}>{(ent.form && ent.form.name) || "Intake form"}</div>
-                    </div>
-                    <div style={{ background: WF_C.white, padding: "10px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
-                      {["Full name", "Email", "Goal"].map((f) => (
-                        <div key={f} style={{ height: 26, borderRadius: 6, border: `1px solid ${WF_C.line}`, display: "flex", alignItems: "center", padding: "0 8px", fontSize: 10.5, color: WF_C.faint }}>{f}</div>
-                      ))}
-                      <div style={{ height: 26, borderRadius: 6, background: (ent.form && ent.form.brandColor) || WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10.5, fontWeight: 700 }}>Submit</div>
+                    <div style={{ fontSize: 11.5, color: WF_C.sub }}>
+                      Submissions are tagged <strong style={{ color: WF_C.tealInk }}>{ent.form.tag}</strong> and enter here. Edit fields &amp; branding in the Forms section.
                     </div>
                   </div>
                 </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>On submit, tag them</span>
-                <WfTagSelect value={ent.form && ent.form.tag} onChange={(t) => updateForm({ tag: t })} />
-              </div>
+              )}
             </>
           ) : ent.method === "webhook" ? (
             <>
@@ -10125,7 +10138,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
     const entry = {
       method: "form",
       tag: "New lead",
-      form: { name: "New client intake", headline: "Let's get you started", brandColor: WF_C.tealDark, tag: "New lead" },
+      form: { ...WF_FORMS_SEED[0] },
       webhookUrl: `https://api.milton.coach/hooks/${wfSlug("untitled-" + id)}`,
     };
     const newWf = {
