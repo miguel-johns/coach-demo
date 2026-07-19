@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════�����������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -10155,6 +10155,435 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// Forms & Assessments
+// ─────────────────────────────────────────────────────────────
+let _faSeq = 0;
+const faUid = () => `fa${++_faSeq}-${Date.now().toString(36)}`;
+
+// [value, label, glyph, hasOptions, hasUnit]
+const FA_FIELD_TYPES = [
+  ["text", "Short text", "form", false, false],
+  ["textarea", "Paragraph", "doc", false, false],
+  ["email", "Email", "at", false, false],
+  ["phone", "Phone", "chat", false, false],
+  ["number", "Number", "bars", false, true],
+  ["select", "Dropdown", "flag", true, false],
+  ["multi", "Checkboxes", "check", true, false],
+  ["scale", "Scale 1–10", "bars", false, false],
+  ["date", "Date", "clock", false, false],
+  ["measurement", "Measurement", "chartUp", false, true],
+  ["file", "File / photo", "paperclip", false, false],
+  ["yesno", "Yes / No", "check", false, false],
+];
+const faTypeMeta = (t) => FA_FIELD_TYPES.find(([v]) => v === t) || FA_FIELD_TYPES[0];
+
+const FA_SEED = [
+  {
+    id: "fa-intake", kind: "form", name: "New Client Intake",
+    headline: "Let's get you started", desc: "Collected before the first session",
+    status: "published", submissions: 34,
+    fields: [
+      { id: faUid(), label: "Full name", type: "text", required: true },
+      { id: faUid(), label: "Email", type: "email", required: true },
+      { id: faUid(), label: "Phone", type: "phone", required: true },
+      { id: faUid(), label: "What's your #1 goal right now?", type: "textarea", required: true },
+      { id: faUid(), label: "Training experience", type: "select", required: true, options: ["Brand new", "Some experience", "Very experienced"] },
+      { id: faUid(), label: "Any injuries or limitations?", type: "textarea", required: false },
+      { id: faUid(), label: "Days available to train", type: "multi", required: false, options: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] },
+    ],
+  },
+  {
+    id: "fa-trial", kind: "form", name: "7-Day Trial Signup",
+    headline: "Claim your free week", desc: "Lead magnet for the trial offer",
+    status: "published", submissions: 58,
+    fields: [
+      { id: faUid(), label: "First name", type: "text", required: true },
+      { id: faUid(), label: "Email", type: "email", required: true },
+      { id: faUid(), label: "Phone", type: "phone", required: true },
+      { id: faUid(), label: "Main goal", type: "select", required: true, options: ["Lose fat", "Build muscle", "Get stronger", "Feel healthier"] },
+      { id: faUid(), label: "How did you hear about us?", type: "select", required: false, options: ["Instagram", "Referral", "Google", "Walk-in"] },
+    ],
+  },
+  {
+    id: "fa-consult", kind: "form", name: "Free Consult Request",
+    headline: "Book your strategy call", desc: "Qualifies inbound consult leads",
+    status: "draft", submissions: 0,
+    fields: [
+      { id: faUid(), label: "Full name", type: "text", required: true },
+      { id: faUid(), label: "Email", type: "email", required: true },
+      { id: faUid(), label: "Phone", type: "phone", required: true },
+      { id: faUid(), label: "Best time to reach you", type: "select", required: false, options: ["Morning", "Afternoon", "Evening"] },
+      { id: faUid(), label: "What do you want to work on?", type: "textarea", required: true },
+    ],
+  },
+  {
+    id: "fa-fms", kind: "assessment", name: "Movement Screen",
+    headline: "Baseline movement quality", desc: "7 patterns scored 0–3",
+    status: "published", submissions: 21,
+    fields: [
+      { id: faUid(), label: "Deep squat", type: "scale", required: true },
+      { id: faUid(), label: "Hurdle step", type: "scale", required: true },
+      { id: faUid(), label: "In-line lunge", type: "scale", required: true },
+      { id: faUid(), label: "Shoulder mobility", type: "scale", required: true },
+      { id: faUid(), label: "Active straight-leg raise", type: "scale", required: true },
+      { id: faUid(), label: "Trunk stability push-up", type: "scale", required: true },
+      { id: faUid(), label: "Coach notes", type: "textarea", required: false },
+    ],
+  },
+  {
+    id: "fa-inbody", kind: "assessment", name: "Body Composition",
+    headline: "InBody scan results", desc: "Logged each check-in",
+    status: "published", submissions: 47,
+    fields: [
+      { id: faUid(), label: "Bodyweight", type: "measurement", required: true, unit: "lb" },
+      { id: faUid(), label: "Body fat", type: "measurement", required: true, unit: "%" },
+      { id: faUid(), label: "Skeletal muscle mass", type: "measurement", required: true, unit: "lb" },
+      { id: faUid(), label: "Visceral fat level", type: "number", required: false, unit: "level" },
+      { id: faUid(), label: "Progress photos", type: "file", required: false },
+    ],
+  },
+  {
+    id: "fa-strength", kind: "assessment", name: "Baseline Strength",
+    headline: "Big-three benchmarks", desc: "Set the starting numbers",
+    status: "draft", submissions: 0,
+    fields: [
+      { id: faUid(), label: "Back squat 1RM", type: "measurement", required: true, unit: "lb" },
+      { id: faUid(), label: "Bench press 1RM", type: "measurement", required: true, unit: "lb" },
+      { id: faUid(), label: "Deadlift 1RM", type: "measurement", required: true, unit: "lb" },
+      { id: faUid(), label: "Assessment date", type: "date", required: true },
+      { id: faUid(), label: "Coach notes", type: "textarea", required: false },
+    ],
+  },
+];
+
+// A single field rendered as a non-interactive preview control
+function FaPreviewField({ field }) {
+  const box = { border: `1px solid ${WF_C.line}`, borderRadius: 9, background: WF_C.white, color: WF_C.faint, fontSize: 13, padding: "10px 12px" };
+  const t = field.type;
+  return (
+    <div>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.ink, marginBottom: 6 }}>
+        {field.label || <span style={{ color: WF_C.faint }}>Untitled question</span>}
+        {field.required && <span style={{ color: WF_C.redInk, marginLeft: 4 }}>*</span>}
+      </div>
+      {t === "textarea" ? (
+        <div style={{ ...box, minHeight: 62 }}>Your answer…</div>
+      ) : t === "select" ? (
+        <div style={{ ...box, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>{(field.options && field.options[0]) || "Choose one"}</span>
+          <WfGlyph name="chevron-right" size={14} color={WF_C.faint} strokeWidth={2} />
+        </div>
+      ) : t === "multi" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {(field.options || ["Option"]).map((o, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: WF_C.ink }}>
+              <span style={{ width: 16, height: 16, borderRadius: 5, border: `1.5px solid ${WF_C.line}`, flexShrink: 0 }} />{o}
+            </div>
+          ))}
+        </div>
+      ) : t === "yesno" ? (
+        <div style={{ display: "flex", gap: 8 }}>
+          {["Yes", "No"].map((o) => <div key={o} style={{ ...box, flex: 1, textAlign: "center", color: WF_C.ink, fontWeight: 600 }}>{o}</div>)}
+        </div>
+      ) : t === "scale" ? (
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+            <span key={n} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>{n}</span>
+          ))}
+        </div>
+      ) : t === "file" ? (
+        <div style={{ border: `1.5px dashed ${WF_C.line}`, borderRadius: 10, padding: "16px 12px", textAlign: "center", color: WF_C.faint, fontSize: 12.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <WfGlyph name="paperclip" size={14} color={WF_C.faint} strokeWidth={2} />Upload a file or photo
+        </div>
+      ) : t === "measurement" || t === "number" ? (
+        <div style={{ ...box, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>0</span>{field.unit && <span className="wf-mono" style={{ fontSize: 11.5, color: WF_C.faint }}>{field.unit}</span>}
+        </div>
+      ) : t === "date" ? (
+        <div style={{ ...box, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>Select a date</span><WfGlyph name="clock" size={14} color={WF_C.faint} strokeWidth={2} />
+        </div>
+      ) : (
+        <div style={box}>{t === "email" ? "you@email.com" : t === "phone" ? "(555) 000-0000" : "Your answer…"}</div>
+      )}
+    </div>
+  );
+}
+
+function FormsCanvas({ onClose, onHome, isMobile }) {
+  const [items, setItems] = useState(FA_SEED);
+  const [tab, setTab] = useState("form"); // "form" | "assessment"
+  const [openId, setOpenId] = useState(null);
+  const [view, setView] = useState("list"); // "list" | "editor"
+
+  const open = items.find((i) => i.id === openId);
+  const visible = items.filter((i) => i.kind === tab);
+  const counts = { form: items.filter((i) => i.kind === "form").length, assessment: items.filter((i) => i.kind === "assessment").length };
+  const noun = tab === "form" ? "form" : "assessment";
+
+  const patchItem = (id, patch) => setItems((list) => list.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  const patchField = (id, fid, patch) => setItems((list) => list.map((i) => (i.id === id ? { ...i, fields: i.fields.map((f) => (f.id === fid ? { ...f, ...patch } : f)) } : i)));
+  const addField = (id, type) => setItems((list) => list.map((i) => {
+    if (i.id !== id) return i;
+    const [, , , hasOptions] = faTypeMeta(type);
+    const f = { id: faUid(), label: "", type, required: false, ...(hasOptions ? { options: ["Option 1", "Option 2"] } : {}) };
+    return { ...i, fields: [...i.fields, f] };
+  }));
+  const removeField = (id, fid) => setItems((list) => list.map((i) => (i.id === id ? { ...i, fields: i.fields.filter((f) => f.id !== fid) } : i)));
+  const moveField = (id, fid, dir) => setItems((list) => list.map((i) => {
+    if (i.id !== id) return i;
+    const idx = i.fields.findIndex((f) => f.id === fid);
+    const j = idx + dir;
+    if (j < 0 || j >= i.fields.length) return i;
+    const fs = [...i.fields];
+    [fs[idx], fs[j]] = [fs[j], fs[idx]];
+    return { ...i, fields: fs };
+  }));
+
+  const createNew = () => {
+    const id = "fa" + Date.now();
+    const isForm = tab === "form";
+    setItems((l) => [...l, { id, kind: tab, name: isForm ? "Untitled form" : "Untitled assessment", headline: "", desc: "Draft", status: "draft", submissions: 0, fields: [] }]);
+    setOpenId(id);
+    setView("editor");
+  };
+  const duplicateItem = (it, e) => {
+    if (e) e.stopPropagation();
+    const id = "fa" + Date.now();
+    setItems((l) => {
+      const idx = l.findIndex((x) => x.id === it.id);
+      const copy = { ...it, id, name: `${it.name} (copy)`, status: "draft", submissions: 0, fields: it.fields.map((f) => ({ ...f, id: faUid(), options: f.options ? [...f.options] : undefined })) };
+      const next = [...l];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+  };
+  const deleteItem = (it, e) => {
+    if (e) e.stopPropagation();
+    setItems((l) => l.filter((x) => x.id !== it.id));
+    if (openId === it.id) { setOpenId(null); setView("list"); }
+  };
+  const openEditor = (it) => { setOpenId(it.id); setView("editor"); };
+
+  const tabs = [["form", "Forms", counts.form], ["assessment", "Assessments", counts.assessment]];
+  const grid = "minmax(180px, 2.4fr) 0.9fr 1fr 1fr 72px";
+
+  return (
+    <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
+      <style>{WF_FONTS}</style>
+
+      {!isMobile && (
+        <button
+          onClick={onClose || onHome}
+          style={{ position: "absolute", top: 14, right: 16, zIndex: 10, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)", borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)", transition: "all 0.15s ease" }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+          title="Close" aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
+      )}
+
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderBottom: "1px solid #E0EBE8", background: "#F7FAF9", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 4, background: "#EEF4F1", border: "1px solid #DEEAE6", borderRadius: 10, padding: 4 }}>
+          <span style={{ background: "#243531", color: "#fff", border: "1px solid #243531", borderRadius: 8, padding: "8px 13px", fontSize: 13, fontWeight: 600 }}>Forms &amp; Assessments</span>
+        </div>
+        {view === "editor" && open && (
+          <>
+            <WfGlyph name="chevron-right" size={14} color={WF_C.faint} strokeWidth={2} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 240 }}>{open.name}</span>
+          </>
+        )}
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: "22px 20px 96px" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+
+          {/* ── LIST / LIBRARY ── */}
+          {view === "list" && (
+            <div className="wf-fade">
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div style={{ display: "inline-flex", gap: 2, background: WF_C.tealBg, border: "1px solid #D6E5DA", borderRadius: 999, padding: 3 }}>
+                  {tabs.map(([key, label, count]) => {
+                    const on = tab === key;
+                    return (
+                      <button key={key} onClick={() => setTab(key)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, border: "none", borderRadius: 999, padding: "7px 14px", fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", transition: "background .15s, color .15s", background: on ? WF_C.tealDark : "transparent", color: on ? WF_C.white : WF_C.tealInk }}>
+                        {label}<span className="wf-mono" style={{ fontSize: 10, opacity: 0.75 }}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginLeft: "auto" }}>
+                  <WfTealBtn onClick={createNew} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New {noun}
+                  </WfTealBtn>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+                {visible.map((it) => (
+                  <div key={it.id} className="wf-tpl wf-row" role="button" tabIndex={0}
+                    onClick={() => openEditor(it)}
+                    onKeyDown={(e) => { if (e.key === "Enter") openEditor(it); }}
+                    style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 16px 14px", display: "flex", flexDirection: "column", gap: 10, cursor: "pointer", transition: "border-color .15s, background .15s" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ width: 36, height: 36, borderRadius: 10, background: WF_C.tealBg, color: WF_C.tealInk, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <WfGlyph name={it.kind === "form" ? "form" : "chartUp"} size={18} color={WF_C.tealInk} strokeWidth={1.9} />
+                      </span>
+                      <div className="wf-actions" style={{ display: "flex", gap: 4, opacity: isMobile ? 1 : undefined }}>
+                        <button onClick={(e) => duplicateItem(it, e)} title="Duplicate" aria-label={`Duplicate ${it.name}`} className="wf-iconbtn" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <WfGlyph name="copy" size={14} color="currentColor" strokeWidth={2} />
+                        </button>
+                        <button onClick={(e) => deleteItem(it, e)} title="Delete" aria-label={`Delete ${it.name}`} className="wf-iconbtn wf-iconbtn-danger" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <WfGlyph name="trash" size={14} color="currentColor" strokeWidth={2} />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="wf-display" style={{ fontWeight: 700, fontSize: 14.5, color: WF_C.navy }}>{it.name}</div>
+                      <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2 }}>{it.desc}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                      <WfStatusPill status={it.status === "published" ? "active" : "draft"} />
+                      <span style={{ fontSize: 11.5, color: WF_C.faint }}>{it.fields.length} fields</span>
+                      <span style={{ fontSize: 11.5, color: WF_C.faint }}>· {it.submissions} responses</span>
+                    </div>
+                  </div>
+                ))}
+                {/* Add tile */}
+                <button onClick={createNew} className="wf-ghost" style={{ background: WF_C.white, border: `1.5px dashed #D6E5DA`, borderRadius: 14, padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", minHeight: 132, color: WF_C.tealInk }}>
+                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: WF_C.tealBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <WfGlyph name="plus" size={16} color={WF_C.tealDark} strokeWidth={2.4} />
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>New {noun}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── EDITOR ── */}
+          {view === "editor" && open && (
+            <div className="wf-fade">
+              <button onClick={() => { setView("list"); setOpenId(null); }} style={{ border: "none", background: "transparent", color: WF_C.sub, fontSize: 13, fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: 14, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ transform: "rotate(180deg)", display: "inline-flex" }}><WfGlyph name="chevron-right" size={15} color={WF_C.sub} strokeWidth={2} /></span>All {open.kind === "form" ? "forms" : "assessments"}
+              </button>
+
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.15fr 0.85fr", gap: 18, alignItems: "start" }}>
+                {/* Left — builder */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px" }}>
+                    <WfEyebrow color={WF_C.tealDark}>{open.kind === "form" ? "Client-facing form" : "Assessment"}</WfEyebrow>
+                    <input value={open.name} onChange={(e) => patchItem(open.id, { name: e.target.value })} placeholder="Untitled" className="wf-name-input" style={{ fontSize: 19, fontWeight: 700, fontFamily: "'Archivo Expanded', sans-serif", color: WF_C.navy, width: "100%", padding: "4px 8px", marginTop: 4, marginLeft: -8 }} />
+                    <input value={open.headline} onChange={(e) => patchItem(open.id, { headline: e.target.value })} placeholder="Add a friendly headline shown at the top…" className="wf-name-input" style={{ fontSize: 13.5, color: WF_C.sub, width: "100%", padding: "4px 8px", marginTop: 2, marginLeft: -8 }} />
+                  </div>
+
+                  {/* Fields */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {open.fields.map((f, idx) => {
+                      const [, , , hasOptions, hasUnit] = faTypeMeta(f.type);
+                      return (
+                        <div key={f.id} style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: "12px 13px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span className="wf-mono" style={{ fontSize: 11, color: WF_C.faint, width: 18, textAlign: "center", flexShrink: 0 }}>{idx + 1}</span>
+                            <input value={f.label} onChange={(e) => patchField(open.id, f.id, { label: e.target.value })} placeholder="Question label" className="wf-name-input" style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: WF_C.ink, padding: "6px 8px" }} />
+                            <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+                              <button onClick={() => moveField(open.id, f.id, -1)} disabled={idx === 0} title="Move up" className="wf-iconbtn" style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: idx === 0 ? WF_C.line : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", cursor: idx === 0 ? "default" : "pointer" }}>
+                                <span style={{ transform: "rotate(-90deg)", display: "inline-flex" }}><WfGlyph name="chevron-right" size={13} color="currentColor" strokeWidth={2} /></span>
+                              </button>
+                              <button onClick={() => moveField(open.id, f.id, 1)} disabled={idx === open.fields.length - 1} title="Move down" className="wf-iconbtn" style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: idx === open.fields.length - 1 ? WF_C.line : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", cursor: idx === open.fields.length - 1 ? "default" : "pointer" }}>
+                                <span style={{ transform: "rotate(90deg)", display: "inline-flex" }}><WfGlyph name="chevron-right" size={13} color="currentColor" strokeWidth={2} /></span>
+                              </button>
+                              <button onClick={() => removeField(open.id, f.id)} title="Delete field" className="wf-iconbtn wf-iconbtn-danger" style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <WfGlyph name="trash" size={13} color="currentColor" strokeWidth={2} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, paddingLeft: 26, flexWrap: "wrap" }}>
+                            <select value={f.type} onChange={(e) => { const nt = e.target.value; const [, , , ho] = faTypeMeta(nt); patchField(open.id, f.id, { type: nt, ...(ho && !f.options ? { options: ["Option 1", "Option 2"] } : {}) }); }} style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 12.5, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.cream, outline: "none", cursor: "pointer" }}>
+                              {FA_FIELD_TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                            </select>
+                            {hasUnit && (
+                              <input value={f.unit || ""} onChange={(e) => patchField(open.id, f.id, { unit: e.target.value })} placeholder="unit" style={{ width: 76, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 12.5, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none" }} />
+                            )}
+                            <button onClick={() => patchField(open.id, f.id, { required: !f.required })} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${f.required ? WF_C.tealDark : WF_C.line}`, borderRadius: 999, padding: "5px 11px", fontSize: 12, fontWeight: 600, cursor: "pointer", background: f.required ? WF_C.tealBg : WF_C.white, color: f.required ? WF_C.tealInk : WF_C.sub }}>
+                              <span style={{ width: 14, height: 14, borderRadius: "50%", border: `1.5px solid ${f.required ? WF_C.tealDark : WF_C.faint}`, background: f.required ? WF_C.tealDark : "transparent", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                {f.required && <WfGlyph name="check" size={9} color={WF_C.white} strokeWidth={3} />}
+                              </span>Required
+                            </button>
+                          </div>
+
+                          {/* Options editor */}
+                          {hasOptions && (
+                            <div style={{ marginTop: 10, paddingLeft: 26, display: "flex", flexDirection: "column", gap: 6 }}>
+                              {(f.options || []).map((opt, oi) => (
+                                <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: WF_C.faint, flexShrink: 0 }} />
+                                  <input value={opt} onChange={(e) => { const opts = [...f.options]; opts[oi] = e.target.value; patchField(open.id, f.id, { options: opts }); }} style={{ flex: 1, border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 12.5, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none" }} />
+                                  <button onClick={() => patchField(open.id, f.id, { options: f.options.filter((_, x) => x !== oi) })} title="Remove option" className="wf-iconbtn" style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <WfGlyph name="x" size={12} color="currentColor" strokeWidth={2} />
+                                  </button>
+                                </div>
+                              ))}
+                              <button onClick={() => patchField(open.id, f.id, { options: [...(f.options || []), `Option ${(f.options || []).length + 1}`] })} style={{ alignSelf: "flex-start", border: "none", background: "transparent", color: WF_C.tealInk, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "2px 0", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                <WfGlyph name="plus" size={12} color={WF_C.tealInk} strokeWidth={2.4} />Add option
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {open.fields.length === 0 && (
+                      <div style={{ textAlign: "center", color: WF_C.sub, fontSize: 13, padding: "24px 12px", background: WF_C.white, border: `1px dashed ${WF_C.line}`, borderRadius: 12 }}>
+                        No fields yet. Add your first question below.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add-field palette */}
+                  <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: "13px 14px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 8 }}>Add a field</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {FA_FIELD_TYPES.map(([v, l, g]) => (
+                        <button key={v} onClick={() => addField(open.id, v)} className="wf-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: "7px 12px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: WF_C.white, color: WF_C.ink }}>
+                          <WfGlyph name={g} size={13} color={WF_C.tealInk} strokeWidth={2} />{l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right — live preview */}
+                <div style={{ position: isMobile ? "static" : "sticky", top: 12 }}>
+                  <WfEyebrow color={WF_C.faint}>Live preview</WfEyebrow>
+                  <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 16, overflow: "hidden", marginTop: 8, boxShadow: "0 8px 28px rgba(11,22,40,0.08)" }}>
+                    <div style={{ background: WF_C.tealDark, color: WF_C.white, padding: "18px 20px" }}>
+                      <div className="wf-display" style={{ fontSize: 17, fontWeight: 800 }}>{open.headline || open.name}</div>
+                      <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 3 }}>{open.kind === "form" ? "Takes about a minute" : "Coach-recorded assessment"}</div>
+                    </div>
+                    <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+                      {open.fields.length === 0 && <div style={{ color: WF_C.faint, fontSize: 13, textAlign: "center", padding: "12px 0" }}>Your questions will appear here.</div>}
+                      {open.fields.map((f) => <FaPreviewField key={f.id} field={f} />)}
+                      {open.fields.length > 0 && (
+                        <div style={{ background: WF_C.tealDark, color: WF_C.white, borderRadius: 10, padding: "11px 16px", textAlign: "center", fontSize: 13.5, fontWeight: 600, marginTop: 4 }}>
+                          {open.kind === "form" ? "Submit" : "Save assessment"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMobile }) {
   const [workflows, setWorkflows] = useState(WF_SEED);
   const [tab, setTab] = useState("active");
@@ -16620,6 +17049,13 @@ export default function MiltonDashboard() {
   isMobile={canvasCompact}
   />
   )}
+  {canvasType === "forms" && (
+  <FormsCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  isMobile={canvasCompact}
+  />
+  )}
   {canvasType === "mealPlan" && (
   <MealPlanCanvas
               data={canvasData} 
@@ -16965,6 +17401,7 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Build Programs", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file-text", label: "Forms & Assessments", desc: "Intake forms & assessments", color: "#2B7A78", onClick: () => { setCanvasType("forms"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
