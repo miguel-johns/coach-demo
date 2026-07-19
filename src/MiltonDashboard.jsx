@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════���������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -6049,7 +6049,7 @@ isMobile={true}
   );
 }
 
-/* ═══════════════════���═════���═���════════════���══
+/* ═��═════════════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
    ══════════════════════════════════��══════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -10270,7 +10270,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
       lastRun: "Never", results: { runs: 0, headline: "Not run yet" }, approval: false, steps: [],
     };
     setWorkflows((ws) => [...ws, newWf]);
-    setFlowMap((prev) => ({ ...prev, [id]: [{ id: wfUid(), type: "text", subject: "", message: "", attachments: [], includes: [], recipient: "client" }] }));
+    setFlowMap((prev) => ({ ...prev, [id]: [] }));
     setTab("drafts");
     setOpenId(id);
     setView("detail");
