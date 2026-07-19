@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════�������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2648,7 +2648,7 @@ function GroupClassSession({ session, clients, onBack, onUpdateSession, onOpenFu
           </button>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.label} · {session.sharedWorkout?.title}</div>
-            <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.time} · {coach.name} · {checkedIn}/{sessionClients.length} checked in{session.status === "in_progress" ? ` · ${elapsedMin} min` : ""}</div>
+            <div style={{ fontSize: 12, color: TEXT_SEC }}>{session.time} · {coach.name} · {checkedIn}/{sessionClients.length} checked in{session.status === "in_progress" ? ` �� ${elapsedMin} min` : ""}</div>
           </div>
         </div>
         <div style={{ flexShrink: 0 }}>
@@ -6773,7 +6773,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ──�� THIS WEEK'S FOCUS ─── */}
+      {/* ──�� THIS WEEK'S FOCUS ─��─ */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
           This Week's Focus
@@ -9641,6 +9641,8 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
 
   // ── Entry (trigger) helpers ──
   const ent = entry || {};
+  // Progressive trigger UI: "empty" (plus) → "picker" (choose type) → "config" (edit) ↔ "summary" (collapsed)
+  const [entryMode, setEntryMode] = useState(ent.method ? "summary" : "empty");
   const updateEntry = (patch) => onEntryChange && onEntryChange({ ...ent, ...patch });
   const copy = (t) => { try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (_) {} setCopied(true); setTimeout(() => setCopied(false), 1500); };
 
@@ -9662,43 +9664,102 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
 
   return (
     <div style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {/* Start Here — the trigger is the product: how a client enters */}
-      <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <WfGlyph name="bolt" size={16} color={WF_C.white} strokeWidth={2} />
+      {/* Start Here — the trigger: a simple plus that opens its experience */}
+      {entryMode === "empty" ? (
+        /* ── EMPTY: just a plus ── */
+        <button
+          type="button"
+          onClick={() => setEntryMode("picker")}
+          className="wf-ghost"
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, background: WF_C.white, border: `1.5px dashed ${WF_C.tealDark}`, borderRadius: 14, padding: "18px 18px", cursor: "pointer" }}
+        >
+          <span style={{ width: 30, height: 30, borderRadius: "50%", background: WF_C.tealBg, color: WF_C.tealDark, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <WfGlyph name="plus" size={16} color={WF_C.tealDark} strokeWidth={2.4} />
           </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <WfEyebrow color={WF_C.tealDark}>Start here · Trigger</WfEyebrow>
-            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>What starts this workflow?</div>
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: WF_C.tealInk }}>Add a trigger</span>
+        </button>
+      ) : entryMode === "picker" ? (
+        /* ── PICKER: choose a trigger type ── */
+        <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <WfGlyph name="bolt" size={16} color={WF_C.white} strokeWidth={2} />
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <WfEyebrow color={WF_C.tealDark}>Start here · Trigger</WfEyebrow>
+              <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>What starts this workflow?</div>
+            </div>
+            {ent.method && (
+              <button type="button" onClick={() => setEntryMode("summary")} style={{ border: "none", background: "transparent", color: WF_C.faint, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+            )}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+            {WF_ENTRY_METHODS.map(([method, label, glyph, desc]) => {
+              const on = ent.method === method;
+              return (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() => { updateEntry({ method }); setEntryMode("config"); }}
+                  style={{ textAlign: "left", display: "flex", gap: 9, padding: "10px 11px", borderRadius: 12, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}
+                >
+                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: on ? WF_C.tealDark : WF_C.cream, color: on ? WF_C.white : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <WfGlyph name={glyph} size={15} color={on ? WF_C.white : WF_C.sub} strokeWidth={2} />
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>{label}</span>
+                    <span style={{ display: "block", fontSize: 11.5, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint, marginTop: 1 }}>{desc}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        {/* Entry-method picker */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
-          {WF_ENTRY_METHODS.map(([method, label, glyph, desc]) => {
-            const on = ent.method === method;
+      ) : entryMode === "summary" ? (
+        /* ── SUMMARY: collapsed configured trigger — click to edit ── */
+        (() => {
+          const entMeta = WF_ENTRY_METHODS.find(([m]) => m === ent.method) || [null, "Trigger", "bolt"];
+          return (
+            <div
+              onClick={() => setEntryMode("config")}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEntryMode("config"); } }}
+              style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+            >
+              <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <WfGlyph name={entMeta[2]} size={16} color={WF_C.white} strokeWidth={2} />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <WfEyebrow color={WF_C.tealDark}>Trigger</WfEyebrow>
+                <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{entMeta[1]}</div>
+                <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{wfEntryLabel(ent)}</div>
+              </div>
+              <span style={{ color: WF_C.faint, flexShrink: 0 }}><WfGlyph name="chevron-right" size={16} color={WF_C.faint} strokeWidth={2} /></span>
+            </div>
+          );
+        })()
+      ) : (
+        /* ── CONFIG: expanded editor for the selected trigger ── */
+        <div style={{ width: "100%", background: WF_C.white, border: `1.5px solid ${WF_C.tealDark}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 8px 28px rgba(11,22,40,0.10)" }}>
+          {(() => {
+            const entMeta = WF_ENTRY_METHODS.find(([m]) => m === ent.method) || [null, "Trigger", "bolt"];
             return (
-              <button
-                key={method}
-                type="button"
-                onClick={() => updateEntry({ method })}
-                style={{ textAlign: "left", display: "flex", gap: 9, padding: "10px 11px", borderRadius: 12, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}
-              >
-                <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: on ? WF_C.tealDark : WF_C.cream, color: on ? WF_C.white : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <WfGlyph name={glyph} size={15} color={on ? WF_C.white : WF_C.sub} strokeWidth={2} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <WfGlyph name={entMeta[2]} size={16} color={WF_C.white} strokeWidth={2} />
                 </span>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>{label}</span>
-                  <span style={{ display: "block", fontSize: 11.5, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint, marginTop: 1 }}>{desc}</span>
-                </span>
-              </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <WfEyebrow color={WF_C.tealDark}>Start here · Trigger</WfEyebrow>
+                  <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>{entMeta[1]}</div>
+                </div>
+                <button type="button" onClick={() => setEntryMode("picker")} className="wf-ghost" style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "6px 11px", fontSize: 12, fontWeight: 600, background: WF_C.white, color: WF_C.ink, cursor: "pointer" }}>Change</button>
+              </div>
             );
-          })}
-        </div>
+          })()}
 
-        {/* Method-specific config */}
-        <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
+          {/* Method-specific config */}
+          <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
           {ent.method === "schedule" ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {/* Frequency */}
@@ -9822,8 +9883,12 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
               <WfTagSelect value={ent.tag} onChange={(t) => updateEntry({ tag: t })} />
             </div>
           )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+            <button type="button" onClick={() => setEntryMode("summary")} style={{ border: "none", borderRadius: 9, padding: "8px 18px", fontSize: 13, fontWeight: 600, background: WF_C.tealDark, color: WF_C.white, cursor: "pointer" }}>Done</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Steps with connectors */}
       {flow.map((node, i) => (
@@ -10190,7 +10255,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
   const createBlank = () => {
     const id = "d" + Date.now();
     const entry = {
-      method: "form",
+      method: null,
       tag: "New lead",
       form: { ...WF_FORMS_SEED[0] },
       webhookUrl: `https://api.milton.coach/hooks/${wfSlug("untitled-" + id)}`,
