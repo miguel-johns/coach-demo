@@ -383,7 +383,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════���������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════�����������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9436,11 +9436,40 @@ const WF_TAGS_SEED = ["New lead", "Trial", "At-risk", "VIP", "Rehab", "Won-back"
 
 // method, label, glyph, one-line description, tag verb
 const WF_ENTRY_METHODS = [
+  ["schedule", "On a schedule", "clock", "Runs on a repeating clock — daily, weekly, or monthly"],
+  ["event", "When something happens", "bolt", "Fires when a client event occurs (missed workout, milestone…)"],
   ["form", "Form submission", "form", "A client submits your branded intake form"],
   ["manual-add", "Add & tag client", "user", "You add a brand-new client and tag them"],
   ["tag-existing", "Tag existing client", "tag", "You tag someone already in your roster"],
   ["webhook", "Webhook", "webhook", "An external system posts to an endpoint"],
 ];
+
+// Time-based (schedule) trigger config
+const WF_SCHEDULE_FREQ = [["daily", "Daily"], ["weekly", "Weekly"], ["monthly", "Monthly"]];
+const WF_WEEKDAYS = [["mon", "Mon"], ["tue", "Tue"], ["wed", "Wed"], ["thu", "Thu"], ["fri", "Fri"], ["sat", "Sat"], ["sun", "Sun"]];
+
+// Event-based trigger config — client events Milton can watch for
+const WF_EVENT_TYPES = [
+  ["missed-workout", "Client misses a workout"],
+  ["milestone", "Client hits a milestone"],
+  ["attendance-drop", "Attendance drops sharply"],
+  ["low-protein", "Protein under target for days"],
+  ["weigh-in", "Client logs a weigh-in"],
+  ["streak", "Client hits a logging streak"],
+  ["program-finish", "Client finishes a program"],
+  ["inactive", "Client goes inactive"],
+];
+
+// Format a 24h "HH:MM" string as a friendly "7:00 am"
+function wfFmtTime(t) {
+  const [hRaw, m = "00"] = (t || "07:00").split(":");
+  let h = parseInt(hRaw, 10);
+  const ampm = h >= 12 ? "pm" : "am";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+const wfWeekdayLabel = (v) => (WF_WEEKDAYS.find(([x]) => x === v) || [null, "Mon"])[1];
+const wfOrdinal = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 
 const WF_RECIPIENTS = [["client", "Client"], ["coach", "Coach"]];
 
@@ -9468,6 +9497,15 @@ const wfSlug = (s) => ((s || "untitled").toLowerCase().trim().replace(/[^a-z0-9]
 function wfEntryLabel(entry) {
   if (!entry || !entry.method) return "";
   const tag = entry.tag || "";
+  if (entry.method === "schedule") {
+    const time = wfFmtTime(entry.time);
+    if (entry.freq === "daily") return `Every day, ${time}`;
+    if (entry.freq === "monthly") return `Monthly on the ${wfOrdinal(entry.monthDay || 1)}, ${time}`;
+    return `Every ${wfWeekdayLabel(entry.weekday)}, ${time}`;
+  }
+  if (entry.method === "event") {
+    return (WF_EVENT_TYPES.find(([v]) => v === entry.event) || [null, "Client event"])[1];
+  }
   if (entry.method === "form") return `Form: ${(entry.form && entry.form.name) || "Intake form"}`;
   if (entry.method === "manual-add") return tag ? `Manual add → ${tag}` : "Manual add";
   if (entry.method === "tag-existing") return tag ? `Tagged: ${tag}` : "Tagged client";
@@ -9484,6 +9522,11 @@ function wfDefaultEntry(w) {
     tag: "At-risk",
     form: { ...WF_FORMS_SEED[0] },
     webhookUrl: `https://api.milton.coach/hooks/${slug}`,
+    freq: "weekly",
+    time: "07:00",
+    weekday: "fri",
+    monthDay: 1,
+    event: "missed-workout",
   };
 }
 
@@ -9627,7 +9670,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <WfEyebrow color={WF_C.tealDark}>Start here · Trigger</WfEyebrow>
-            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>How does a client enter?</div>
+            <div style={{ fontSize: 14.5, fontWeight: 600, marginTop: 2 }}>What starts this workflow?</div>
           </div>
         </div>
 
@@ -9656,7 +9699,98 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
 
         {/* Method-specific config */}
         <div style={{ marginTop: 12, background: WF_C.cream, borderRadius: 12, padding: "13px 14px" }}>
-          {ent.method === "form" ? (
+          {ent.method === "schedule" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Frequency */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 6 }}>How often</div>
+                <div style={{ display: "inline-flex", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 10, padding: 3, gap: 3 }}>
+                  {WF_SCHEDULE_FREQ.map(([v, l]) => {
+                    const on = (ent.freq || "weekly") === v;
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => updateEntry({ freq: v })}
+                        style={{ border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", background: on ? WF_C.tealDark : "transparent", color: on ? WF_C.white : WF_C.sub, transition: "background .15s, color .15s" }}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Weekly: pick a weekday */}
+              {(ent.freq || "weekly") === "weekly" && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 6 }}>On which day</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {WF_WEEKDAYS.map(([v, l]) => {
+                      const on = (ent.weekday || "fri") === v;
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => updateEntry({ weekday: v })}
+                          style={{ width: 44, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, borderRadius: 8, padding: "7px 0", fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, color: on ? WF_C.tealInk : WF_C.ink }}
+                        >
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly: pick day of month */}
+              {ent.freq === "monthly" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>On the</span>
+                  <select
+                    value={ent.monthDay || 1}
+                    onChange={(e) => updateEntry({ monthDay: parseInt(e.target.value, 10) })}
+                    style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "8px 10px", fontSize: 13.5, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none", cursor: "pointer" }}
+                  >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{wfOrdinal(d)}</option>)}
+                  </select>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>of the month</span>
+                </div>
+              )}
+
+              {/* Time of day */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>At</span>
+                <input
+                  type="time"
+                  value={ent.time || "07:00"}
+                  onChange={(e) => updateEntry({ time: e.target.value })}
+                  style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "8px 10px", fontSize: 13.5, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: WF_C.ink, background: WF_C.white, outline: "none" }}
+                />
+                <span className="wf-mono" style={{ fontSize: 11.5, color: WF_C.faint }}>{wfEntryLabel(ent)}</span>
+              </div>
+            </div>
+          ) : ent.method === "event" ? (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: WF_C.sub, marginBottom: 6 }}>Fires when…</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {WF_EVENT_TYPES.map(([v, l]) => {
+                  const on = (ent.event || "missed-workout") === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => updateEntry({ event: v })}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, borderRadius: 999, padding: "7px 12px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, color: on ? WF_C.tealInk : WF_C.ink }}
+                    >
+                      <WfGlyph name="bolt" size={12} color={on ? WF_C.tealInk : WF_C.faint} strokeWidth={2} />
+                      {l}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : ent.method === "form" ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.sub }}>Form</span>
               <select
@@ -10060,6 +10194,11 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
       tag: "New lead",
       form: { ...WF_FORMS_SEED[0] },
       webhookUrl: `https://api.milton.coach/hooks/${wfSlug("untitled-" + id)}`,
+      freq: "weekly",
+      time: "07:00",
+      weekday: "fri",
+      monthDay: 1,
+      event: "missed-workout",
     };
     const newWf = {
       id, name: "Untitled workflow", sub: "Draft", status: "draft", trigger: wfEntryLabel(entry), entry,
