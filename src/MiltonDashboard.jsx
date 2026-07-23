@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══���═══════════════════�������������������������������������������═══════════
+// ═══════════�������════════════════��══����═══════════════════�������������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9106,7 +9106,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
 
 /* ═══════════════════════════════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-═══════════════════════════════════════����═══════ */
+════════════════════════════════════��══����═══════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -9352,8 +9352,7 @@ const WF_SEED = [
       { id: "o3", type: "email", subject: "Welcome aboard — here's what happens next", message: "Here's your onboarding roadmap: 1) complete your assessment, 2) I'll build your program, 3) your coach reviews it, 4) you're training. Let's go.", attachments: [], includes: [], recipient: "client" },
       { id: "o4", type: "delay", amount: 1, unit: "day" },
       { id: "o5", type: "milton", task: "assessment", message: "Collect the intake assessment: movement screen, injury history, training goals, availability, and starting measurements.", engage: "both", persist: true, persistGoal: "the assessment is submitted", signoff: false, deliver: "coach" },
-      { id: "o6", type: "text", subject: "", message: "Your assessment results are in! Take a look — your personalized summary is ready.", attachments: [], includes: [{ id: "o6i", task: "summary" }], recipient: "client" },
-      { id: "o7", type: "email", subject: "Your assessment results", message: "Milton put together a full breakdown of your starting point and what we'll focus on first.", attachments: [], includes: [{ id: "o7i", task: "summary" }], recipient: "client" },
+      { id: "o6", type: "text", subject: "", message: "Your assessment results are in! Take a look — your personalized summary is ready.", attachments: [], includes: [{ id: "o6i", task: "summary" }], recipient: "client", companions: [{ id: "o6c", channel: "email", subject: "Your assessment results", message: "Milton put together a full breakdown of your starting point and what we'll focus on first.", includes: [{ id: "o6ci", task: "summary" }] }] },
       { id: "o8", type: "delay", amount: 1, unit: "day" },
       { id: "o9", type: "milton", task: "program", message: "Build a first training program from the assessment: matched to goals, experience, and availability. Route to the coach for review, then deliver to the client once approved.", engage: "client", persist: false, persistGoal: "", signoff: true, deliver: "client" },
       { id: "o10", type: "text", subject: "", message: "Your program is live in the app 🎉 Your coach signed off on it. Let's book your first session!", attachments: [], includes: [], recipient: "client" },
@@ -9375,9 +9374,10 @@ const WF_SEED = [
       { kind: "action", label: "Then", body: "Text and email the client their report" },
     ],
     flow: [
-      { id: "f1", type: "milton", task: "report", message: "Draft this week's progress report for every active client in a program: adherence, key lifts, weight trend, and one focus for next week.", engage: "client", persist: false, persistGoal: "", signoff: false, deliver: "client" },
-      { id: "f2", type: "text", subject: "", message: "Happy Friday! Your weekly progress report is ready — here's how your week went.", attachments: [], includes: [{ id: "f2i", task: "report" }], recipient: "client" },
-      { id: "f3", type: "email", subject: "Your week in review", message: "Here's your full progress report for the week, plus what we're focusing on next.", attachments: [], includes: [{ id: "f3i", task: "report" }], recipient: "client" },
+      { id: "f1", type: "milton", task: "report", message: "Draft this week's progress report for every active client in a program: adherence, key lifts, weight trend, and one focus for next week.", engage: "client", persist: false, persistGoal: "", signoff: false, deliver: "client", companions: [
+        { id: "f1t", channel: "text", subject: "", message: "Happy Friday! Your weekly progress report is ready — here's how your week went.", includes: [{ id: "f1ti", task: "report" }] },
+        { id: "f1e", channel: "email", subject: "Your week in review", message: "Here's your full progress report for the week, plus what we're focusing on next.", includes: [{ id: "f1ei", task: "report" }] },
+      ] },
     ],
   },
 ];
@@ -9489,6 +9489,8 @@ const WF_MILTON_TASK_DEFAULTS = {
 };
 // The subset of Milton tasks that make sense woven inline into a text/email message
 const WF_INLINE_INCLUDES = ["report", "workout", "nutrition", "message", "summary", "adjust"];
+// Plain nouns for a Milton result, used in companion "Attach the ___" copy
+const WF_RESULT_NOUN = { report: "report", workout: "workout", nutrition: "nutrition plan", message: "message", summary: "progress summary", adjust: "plan update" };
 const WF_ATTACH_TYPES = [
   ["image", "Image", "image"],
   ["video", "Video", "video"],
@@ -9999,6 +10001,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
               const snippet = (node.type === "email" && node.subject) ? node.subject : (node.message || "Tap to add content");
               const attachCount = (node.attachments || []).length;
               const includeCount = (node.includes || []).length;
+              const companions = node.companions || [];
               return (
                 <div
                   onClick={() => setActiveId(node.id)}
@@ -10044,6 +10047,11 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                           <WfGlyph name="paperclip" size={11} color={WF_C.sub} strokeWidth={2} />{attachCount}
                         </span>
                       )}
+                      {companions.map((c) => (
+                        <span key={c.id} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: c.channel === "email" ? WF_C.amberInk : WF_C.tealInk, background: c.channel === "email" ? WF_C.amberBg : WF_C.tealBg, borderRadius: 999, padding: "1px 7px" }}>
+                          <WfGlyph name={c.channel === "email" ? "mail" : "chat"} size={10} color={c.channel === "email" ? WF_C.amberInk : WF_C.tealInk} strokeWidth={2} />+{c.channel === "email" ? "Email" : "Text"}
+                        </span>
+                      ))}
                     </div>
                     <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snippet}</div>
                   </div>
@@ -10053,18 +10061,22 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
             })()
           ) : (
             <div style={{ width: "100%", background: WF_C.white, border: `1.5px solid ${WF_C.tealDark}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 8px 28px rgba(11,22,40,0.10)" }}>
-              {/* header: type switch + recipient + delete */}
+              {/* header: node identity + recipient + delete */}
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
-                  {Object.entries(WF_ACTION_META).map(([type, m]) => {
-                    const on = node.type === type;
-                    return (
-                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", engage: node.engage || "client", persist: node.persist || false, persistGoal: node.persistGoal || "", signoff: node.signoff || false, deliver: node.deliver || "client" } : { attachments: node.attachments || [], includes: node.includes || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
-                        <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                {(() => {
+                  const m = WF_ACTION_META[node.type] || WF_ACTION_META.text;
+                  const identLabel = node.type === "milton"
+                    ? (WF_AGENT_TASKS.find(([v]) => v === (node.task || "report")) || [null, "Milton action"])[1]
+                    : m.label + " message";
+                  return (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: m.bg, borderRadius: 999, padding: "6px 14px 6px 7px" }}>
+                      <span style={{ width: 24, height: 24, borderRadius: "50%", background: node.type === "milton" ? "rgba(255,255,255,0.22)" : WF_C.white, color: m.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <WfGlyph name={m.glyph} size={14} color={m.ink} strokeWidth={2} />
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: m.ink }}>{node.type === "milton" ? "Milton · " : ""}{identLabel}</span>
+                    </span>
+                  );
+                })()}
                 {/* recipient toggle — Milton uses its own "engages" control in the body */}
                 {node.type !== "milton" && (
                 <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -10281,6 +10293,86 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                   </div>
                 </>
               )}
+
+              {/* ── Companion messages ── */}
+              {(() => {
+                const companions = node.companions || [];
+                const hasText = companions.some((c) => c.channel === "text");
+                const hasEmail = companions.some((c) => c.channel === "email");
+                const canAddText = node.type !== "text" && !hasText;
+                const canAddEmail = node.type !== "email" && !hasEmail;
+                const resultTask = node.type === "milton" && WF_INLINE_INCLUDES.includes(node.task || "report") ? (node.task || "report") : null;
+                const addCompanion = (channel) => {
+                  const c = { id: wfUid(), channel, subject: "", message: "", includes: resultTask ? [{ id: wfUid(), task: resultTask }] : [] };
+                  patchNode(node.id, { companions: [...companions, c] });
+                };
+                const patchCompanion = (cid, patch) => patchNode(node.id, { companions: companions.map((c) => (c.id === cid ? { ...c, ...patch } : c)) });
+                const removeCompanion = (cid) => patchNode(node.id, { companions: companions.filter((c) => c.id !== cid) });
+                return (
+                  <div style={{ marginTop: 16, borderTop: `1px solid ${WF_C.line}`, paddingTop: 14 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase", color: WF_C.faint }}>Companion messages</div>
+                    <div style={{ fontSize: 12, color: WF_C.sub, marginTop: 3, lineHeight: 1.45 }}>
+                      {node.type === "milton" ? "Send Milton's result to the client as a text and/or email." : "Also send this as a companion message on another channel."}
+                    </div>
+
+                    {companions.map((c) => {
+                      const cm = WF_ACTION_META[c.channel];
+                      const hasResult = (c.includes || []).length > 0;
+                      return (
+                        <div key={c.id} style={{ marginTop: 11, background: WF_C.cream, border: `1px solid ${WF_C.line}`, borderRadius: 12, padding: "12px 13px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: cm.ink }}>
+                              <WfGlyph name={cm.glyph} size={14} color={cm.ink} strokeWidth={2} />{cm.label}
+                            </span>
+                            <button onClick={() => removeCompanion(c.id)} title="Remove companion" style={{ marginLeft: "auto", width: 26, height: 26, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                              <WfGlyph name="trash" size={14} color={WF_C.faint} strokeWidth={2} />
+                            </button>
+                          </div>
+                          {c.channel === "email" && (
+                            <input
+                              value={c.subject || ""}
+                              onChange={(e) => patchCompanion(c.id, { subject: e.target.value })}
+                              placeholder="Subject line"
+                              style={{ ...inputStyle, marginTop: 9, padding: "8px 11px", fontSize: 13, fontWeight: 600 }}
+                            />
+                          )}
+                          <textarea
+                            value={c.message || ""}
+                            onChange={(e) => patchCompanion(c.id, { message: e.target.value })}
+                            placeholder={c.channel === "email" ? "Write the companion email…" : "Write the companion text…"}
+                            rows={3}
+                            style={{ ...inputStyle, marginTop: 9, resize: "vertical", lineHeight: 1.55, minHeight: 74 }}
+                          />
+                          {resultTask && (
+                            <button
+                              onClick={() => patchCompanion(c.id, { includes: hasResult ? [] : [{ id: wfUid(), task: resultTask }] })}
+                              style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9, border: `1px solid ${WF_C.tealDark}`, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600, background: hasResult ? WF_C.tealBg : WF_C.white, color: WF_C.tealInk, cursor: "pointer" }}
+                            >
+                              <WfGlyph name={hasResult ? "check" : "spark"} size={12} color={WF_C.tealInk} strokeWidth={2} />
+                              {hasResult ? `Attaching the ${WF_RESULT_NOUN[resultTask]}` : `Attach the ${WF_RESULT_NOUN[resultTask]}`}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {(canAddText || canAddEmail) && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 11, flexWrap: "wrap" }}>
+                        {canAddText && (
+                          <button onClick={() => addCompanion("text")} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px dashed ${WF_C.tealDark}`, borderRadius: 9, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, background: WF_C.white, color: WF_C.tealInk, cursor: "pointer" }}>
+                            <WfGlyph name="chat" size={13} color={WF_C.tealInk} strokeWidth={2} />Companion text
+                          </button>
+                        )}
+                        {canAddEmail && (
+                          <button onClick={() => addCompanion("email")} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px dashed ${WF_C.amberInk}`, borderRadius: 9, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, background: WF_C.white, color: WF_C.amberInk, cursor: "pointer" }}>
+                            <WfGlyph name="mail" size={13} color={WF_C.amberInk} strokeWidth={2} />Companion email
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </React.Fragment>
@@ -15797,7 +15889,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
 
 // ═══════════════════════════════════════════════════════════════
 // CHECK-IN DECK — swipeable / expandable stack of client check-ins
-// ═══════════════════════════════════════════════════════════════
+// ══��════════════════════════════════════════════════════════════
 const CHECKIN_SEED = [
   {
     id: "sc", name: "Sarah Chen", initials: "SC", color: "#2B7A78",
