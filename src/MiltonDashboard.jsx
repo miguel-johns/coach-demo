@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������������������������═══════════
+// ═══════════�������════════════════��══��═══════════════════�������������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2877,7 +2877,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ════════════════════════════════════���═════��═��══════��═══��═════��═
+// ═��══════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -9106,7 +9106,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
 
 /* ═══════════════════════════════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════��═══════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -10997,7 +10997,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
 
 /* ═════════��═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
-══════════════════════��══════════������══════════ */
+══════════════════════���══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   return (
     <div style={{
@@ -17059,6 +17059,7 @@ export default function MiltonDashboard() {
   )}
   {canvasType === "stories" && (
   <StoriesCanvas
+  clients={clients}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   isMobile={canvasCompact}
