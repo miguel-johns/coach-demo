@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══��═══════════════════�������������������������������������������═══════════
+// ═══════════�������════════════════��══���═══════════════════�������������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9106,7 +9106,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
 
 /* ═══════════════════════════════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-═══════════════════════════════════════��═══════ */
+═══════════════════════════════════════����═══════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -9176,6 +9176,7 @@ function WfGlyph({ name, size = 16, color = "currentColor", strokeWidth = 2 }) {
     pdf: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><polyline points="14 3 14 8 19 8" /><path d="M9 15h6M9 12h6" /></>,
     robot: <><rect x="4" y="8" width="16" height="11" rx="2" /><path d="M12 8V4M9 4h6" /><circle cx="9" cy="13" r="1" /><circle cx="15" cy="13" r="1" /></>,
     user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+    users: <><circle cx="9" cy="8" r="3.4" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.8a3.4 3.4 0 0 1 0 6.4" /><path d="M18.5 20a6.5 6.5 0 0 0-3.2-5.6" /></>,
     x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
     "chevron-right": <polyline points="9 6 15 12 9 18" />,
     copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
@@ -9327,6 +9328,58 @@ const WF_SEED = [
       { kind: "tracking", label: "Tracking", body: "Did protein recover within 5 days?", metrics: [["Adjusted in 5 days", "61%"], ["Notes sent", "23"], ["Ignored twice", "3 clients"]] },
     ],
   },
+  {
+    id: "onboard-full",
+    name: "New client onboarding",
+    sub: "Welcome, assessment, program build",
+    status: "active",
+    trigger: "New client signs up",
+    lastRun: "3 hrs ago",
+    results: { runs: 18, headline: "14 programs live" },
+    approval: true,
+    steps: [
+      { kind: "trigger", label: "Trigger", body: "A new client joins and is added to onboarding" },
+      { kind: "action", label: "Action", body: "Send a warm welcome text" },
+      { kind: "action", label: "Then", body: "Send the onboarding email with what to expect" },
+      { kind: "action", label: "Then", body: "Milton collects the assessment, engaging client and coach until it is submitted" },
+      { kind: "action", label: "Then", body: "Text and email the client linking to the assessment results Milton crafted" },
+      { kind: "action", label: "Then", body: "Milton builds a program and sends it to the coach for sign-off before delivering it to the client" },
+      { kind: "action", label: "Then", body: "Confirm the program is live and book the first session" },
+    ],
+    flow: [
+      { id: "o1", type: "text", subject: "", message: "Welcome to the team! I'm so glad you're here. Over the next few days we'll get you set up — first up, a quick assessment so your plan fits you exactly.", attachments: [], includes: [], recipient: "client" },
+      { id: "o2", type: "delay", amount: 1, unit: "hour" },
+      { id: "o3", type: "email", subject: "Welcome aboard — here's what happens next", message: "Here's your onboarding roadmap: 1) complete your assessment, 2) I'll build your program, 3) your coach reviews it, 4) you're training. Let's go.", attachments: [], includes: [], recipient: "client" },
+      { id: "o4", type: "delay", amount: 1, unit: "day" },
+      { id: "o5", type: "milton", task: "assessment", message: "Collect the intake assessment: movement screen, injury history, training goals, availability, and starting measurements.", engage: "both", persist: true, persistGoal: "the assessment is submitted", signoff: false, deliver: "coach" },
+      { id: "o6", type: "text", subject: "", message: "Your assessment results are in! Take a look — your personalized summary is ready.", attachments: [], includes: [{ id: "o6i", task: "summary" }], recipient: "client" },
+      { id: "o7", type: "email", subject: "Your assessment results", message: "Milton put together a full breakdown of your starting point and what we'll focus on first.", attachments: [], includes: [{ id: "o7i", task: "summary" }], recipient: "client" },
+      { id: "o8", type: "delay", amount: 1, unit: "day" },
+      { id: "o9", type: "milton", task: "program", message: "Build a first training program from the assessment: matched to goals, experience, and availability. Route to the coach for review, then deliver to the client once approved.", engage: "client", persist: false, persistGoal: "", signoff: true, deliver: "client" },
+      { id: "o10", type: "text", subject: "", message: "Your program is live in the app 🎉 Your coach signed off on it. Let's book your first session!", attachments: [], includes: [], recipient: "client" },
+    ],
+  },
+  {
+    id: "friday-report",
+    name: "Friday client reports",
+    sub: "Weekly report to every active client",
+    status: "active",
+    trigger: "Every Friday, 4 pm",
+    lastRun: "2 days ago",
+    results: { runs: 6, headline: "312 reports sent" },
+    approval: false,
+    steps: [
+      { kind: "trigger", label: "Trigger", body: "Every Friday at 4:00 pm" },
+      { kind: "condition", label: "Only if", body: "Client is active and enrolled in a program" },
+      { kind: "action", label: "Action", body: "Milton drafts a progress report for each active client" },
+      { kind: "action", label: "Then", body: "Text and email the client their report" },
+    ],
+    flow: [
+      { id: "f1", type: "milton", task: "report", message: "Draft this week's progress report for every active client in a program: adherence, key lifts, weight trend, and one focus for next week.", engage: "client", persist: false, persistGoal: "", signoff: false, deliver: "client" },
+      { id: "f2", type: "text", subject: "", message: "Happy Friday! Your weekly progress report is ready — here's how your week went.", attachments: [], includes: [{ id: "f2i", task: "report" }], recipient: "client" },
+      { id: "f3", type: "email", subject: "Your week in review", message: "Here's your full progress report for the week, plus what we're focusing on next.", attachments: [], includes: [{ id: "f3i", task: "report" }], recipient: "client" },
+    ],
+  },
 ];
 
 const WF_TEMPLATES = [
@@ -9406,6 +9459,8 @@ const WF_DELAY_UNITS = [["hour", "Hour"], ["day", "Day"], ["week", "Week"]];
 
 // Milton agent tasks + attachment types
 const WF_AGENT_TASKS = [
+  ["assessment", "Collect an assessment"],
+  ["program", "Build a program"],
   ["report", "Build a report"],
   ["workout", "Build a workout"],
   ["nutrition", "Build a nutrition plan"],
@@ -9414,6 +9469,8 @@ const WF_AGENT_TASKS = [
   ["adjust", "Adjust the plan"],
 ];
 const WF_AGENT_PLACEHOLDER = {
+  assessment: "What should Milton collect? (e.g. movement screen, injury history, goals, and starting measurements)",
+  program: "Describe the program to build (e.g. 8-week hypertrophy block, 4 days/week, based on their assessment)",
   report: "What should the report cover? (e.g. last 4 weeks of adherence and weight trend)",
   workout: "Describe the workout to build (e.g. 45-min lower-body day, moderate volume)",
   nutrition: "Describe the nutrition plan (e.g. 2,100 kcal, high protein, 3 meals + snack)",
@@ -9421,6 +9478,17 @@ const WF_AGENT_PLACEHOLDER = {
   summary: "What progress should Milton summarize? (e.g. weekly wins and one focus area)",
   adjust: "How should Milton adjust the plan? (e.g. drop volume 10%, swap knee-heavy lifts)",
 };
+// Who Milton keeps in the loop while it works, and where the finished output goes
+const WF_ENGAGE = [["client", "Client", "user"], ["coach", "Coach", "medal"], ["both", "Both", "users"]];
+const WF_DELIVER = [["client", "Client", "user"], ["coach", "Coach", "medal"], ["save", "Just save", "doc"]];
+// Recommended settings applied when a Milton task preset is chosen (coach can override)
+const WF_MILTON_TASK_DEFAULTS = {
+  assessment: { engage: "both", persist: true, persistGoal: "the assessment is submitted", signoff: false, deliver: "coach" },
+  program: { engage: "client", persist: false, persistGoal: "", signoff: true, deliver: "client" },
+  report: { engage: "client", persist: false, persistGoal: "", signoff: false, deliver: "client" },
+};
+// The subset of Milton tasks that make sense woven inline into a text/email message
+const WF_INLINE_INCLUDES = ["report", "workout", "nutrition", "message", "summary", "adjust"];
 const WF_ATTACH_TYPES = [
   ["image", "Image", "image"],
   ["video", "Video", "video"],
@@ -9533,14 +9601,16 @@ function wfDefaultEntry(w) {
 
 // Build an initial simple flow from a seed workflow's steps
 function wfDeriveFlow(w) {
+  // A seed workflow can ship an explicit builder flow (rich Milton nodes); clone it with fresh ids
+  if (w.flow) return w.flow.map((n) => ({ ...n, id: wfUid(), ...(n.includes ? { includes: n.includes.map((i) => ({ ...i, id: wfUid() })) } : {}) }));
   const actions = (w.steps || []).filter((s) => s.kind === "action");
   const nodes = [];
   actions.forEach((s, idx) => {
     const type = s.preview ? "text" : (/milton|draft|generate|review|create|report|summar/i.test(s.body) ? "milton" : "text");
     if (type === "milton") {
-      const task = /report|summar/i.test(s.body) ? "summary" : /workout|program/i.test(s.body) ? "workout" : "message";
-      const recipient = /coach|notify you|alert you/i.test(s.body) ? "coach" : "client";
-      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, review: w.approval ? "human" : "auto", recipient });
+      const task = /report|summar/i.test(s.body) ? "summary" : /program/i.test(s.body) ? "program" : /workout/i.test(s.body) ? "workout" : /assessment|intake|screen/i.test(s.body) ? "assessment" : "message";
+      const toCoach = /coach|notify you|alert you/i.test(s.body);
+      nodes.push({ id: wfUid(), type: "milton", task, message: s.body, engage: toCoach ? "coach" : "client", persist: task === "assessment", persistGoal: task === "assessment" ? "the assessment is submitted" : "", signoff: w.approval && task === "program", deliver: toCoach ? "coach" : "client" });
     } else {
       const recipient = /coach|notify you|alert you/i.test(s.body) ? "coach" : "client";
       nodes.push({ id: wfUid(), type, subject: "", message: s.preview ? s.preview.replace(/^"|"$/g, "") : s.body, attachments: [], includes: [], recipient });
@@ -9649,7 +9719,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
 
   const newNodeFor = (type) => {
     if (type === "delay") return { id: wfUid(), type: "delay", amount: 1, unit: "day" };
-    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", review: "human", recipient: "client" };
+    if (type === "milton") return { id: wfUid(), type: "milton", task: "report", message: "", engage: "client", persist: false, persistGoal: "", signoff: false, deliver: "client" };
     return { id: wfUid(), type, subject: "", message: "", attachments: [], includes: [], recipient: "client" };
   };
   const addNode = (index, type) => {
@@ -9923,7 +9993,9 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
               const m = WF_ACTION_META[node.type];
               const taskLabel = (WF_AGENT_TASKS.find(([v]) => v === (node.task || "report")) || [null, ""])[1];
               const recip = (node.recipient || "client") === "coach" ? "Coach" : "Client";
-              const title = node.type === "milton" ? `${taskLabel} → ${recip}` : m.label;
+              const engageLabel = (WF_ENGAGE.find(([v]) => v === (node.engage || "client")) || [null, "Client"])[1];
+              const deliverLabel = (WF_DELIVER.find(([v]) => v === (node.deliver || "client")) || [null, "Client"])[1];
+              const title = node.type === "milton" ? taskLabel : m.label;
               const snippet = (node.type === "email" && node.subject) ? node.subject : (node.message || "Tap to add content");
               const attachCount = (node.attachments || []).length;
               const includeCount = (node.includes || []).length;
@@ -9945,7 +10017,22 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                         <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.tealInk, background: WF_C.tealBg, borderRadius: 999, padding: "1px 7px" }}>→ {recip}</span>
                       )}
                       {node.type === "milton" && (
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.sub, background: WF_C.cream, borderRadius: 999, padding: "1px 7px" }}>{(node.review || "human") === "human" ? "Review" : "Auto"}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.tealInk, background: WF_C.tealBg, borderRadius: 999, padding: "1px 7px" }}>
+                          <WfGlyph name={(WF_ENGAGE.find(([v]) => v === (node.engage || "client")) || [null, null, "user"])[2]} size={10} color={WF_C.tealInk} strokeWidth={2} />{engageLabel}
+                        </span>
+                      )}
+                      {node.type === "milton" && node.persist && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.amberInk, background: WF_C.amberBg, borderRadius: 999, padding: "1px 7px" }}>
+                          <WfGlyph name="refresh" size={10} color={WF_C.amberInk} strokeWidth={2} />Follows up
+                        </span>
+                      )}
+                      {node.type === "milton" && node.signoff && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.sub, background: WF_C.cream, borderRadius: 999, padding: "1px 7px" }}>
+                          <WfGlyph name="check" size={10} color={WF_C.sub} strokeWidth={2.2} />Coach sign-off
+                        </span>
+                      )}
+                      {node.type === "milton" && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: WF_C.faint }}>→ {deliverLabel}</span>
                       )}
                       {includeCount > 0 && (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: WF_C.tealInk }}>
@@ -9972,13 +10059,14 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                   {Object.entries(WF_ACTION_META).map(([type, m]) => {
                     const on = node.type === type;
                     return (
-                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", review: node.review || "human" } : { attachments: node.attachments || [], includes: node.includes || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
+                      <button key={type} onClick={() => patchNode(node.id, { type, ...(type === "milton" ? { task: node.task || "report", engage: node.engage || "client", persist: node.persist || false, persistGoal: node.persistGoal || "", signoff: node.signoff || false, deliver: node.deliver || "client" } : { attachments: node.attachments || [], includes: node.includes || [] }) })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.ink : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", transition: "background .15s" }}>
                         <WfGlyph name={m.glyph} size={13} color={on ? m.ink : WF_C.sub} strokeWidth={2} />{m.label}
                       </button>
                     );
                   })}
                 </div>
-                {/* recipient toggle */}
+                {/* recipient toggle — Milton uses its own "engages" control in the body */}
+                {node.type !== "milton" && (
                 <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.faint }}>To</span>
                   <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
@@ -9992,6 +10080,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                     })}
                   </div>
                 </div>
+                )}
                 <button onClick={() => removeNode(node.id)} title="Remove" style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: WF_C.faint, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <WfGlyph name="trash" size={15} color={WF_C.faint} strokeWidth={2} />
                 </button>
@@ -10004,7 +10093,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                     <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>Milton will</span>
                     <select
                       value={node.task || "report"}
-                      onChange={(e) => patchNode(node.id, { task: e.target.value })}
+                      onChange={(e) => { const t = e.target.value; patchNode(node.id, { task: t, ...(WF_MILTON_TASK_DEFAULTS[t] || {}) }); }}
                       style={{ border: `1px solid ${WF_C.line}`, borderRadius: 8, padding: "7px 10px", fontSize: 13.5, fontWeight: 600, background: WF_C.tealBg, color: WF_C.tealInk, outline: "none", cursor: "pointer" }}
                     >
                       {WF_AGENT_TASKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -10014,20 +10103,75 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                     value={node.message || ""}
                     onChange={(e) => patchNode(node.id, { message: e.target.value })}
                     placeholder={WF_AGENT_PLACEHOLDER[node.task || "report"]}
-                    rows={6}
-                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.6, minHeight: 180 }}
+                    rows={5}
+                    style={{ ...inputStyle, marginTop: 10, resize: "vertical", lineHeight: 1.6, minHeight: 132 }}
                   />
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>When Milton is done</div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {[["human", "user", "Human review", "You approve before it sends"], ["auto", "robot", "Automated", "Sends without approval"]].map(([v, glyph, label, desc]) => {
-                        const on = (node.review || "human") === v;
+
+                  {/* Who Milton keeps in the loop while it works */}
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>Milton engages</div>
+                    <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
+                      {WF_ENGAGE.map(([v, label, glyph]) => {
+                        const on = (node.engage || "client") === v;
                         return (
-                          <button key={v} onClick={() => patchNode(node.id, { review: v })} style={{ flex: 1, textAlign: "left", display: "flex", flexDirection: "column", gap: 3, padding: "9px 11px", borderRadius: 10, cursor: "pointer", background: on ? WF_C.tealBg : WF_C.white, border: `1px solid ${on ? WF_C.tealDark : WF_C.line}`, transition: "background .15s, border-color .15s" }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: on ? WF_C.tealInk : WF_C.ink }}>
-                              <WfGlyph name={glyph} size={14} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
-                            </span>
-                            <span style={{ fontSize: 11, lineHeight: 1.35, color: on ? WF_C.tealInk : WF_C.faint }}>{desc}</span>
+                          <button key={v} onClick={() => patchNode(node.id, { engage: v })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 12.5, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.tealInk : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", cursor: "pointer", transition: "background .15s" }}>
+                            <WfGlyph name={glyph} size={13} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Follow up until complete */}
+                  <div style={{ marginTop: 12, border: `1px solid ${node.persist ? WF_C.tealDark : WF_C.line}`, borderRadius: 12, padding: "12px 14px", background: node.persist ? WF_C.tealBg : WF_C.white, transition: "background .15s, border-color .15s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ width: 30, height: 30, borderRadius: 8, background: node.persist ? WF_C.tealDark : WF_C.cream, color: node.persist ? WF_C.white : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <WfGlyph name="refresh" size={15} color={node.persist ? WF_C.white : WF_C.sub} strokeWidth={2} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.ink }}>Follow up until complete</div>
+                        <div style={{ fontSize: 11, lineHeight: 1.35, color: WF_C.faint }}>Milton keeps nudging on a schedule until the goal is met.</div>
+                      </div>
+                      <button onClick={() => patchNode(node.id, { persist: !node.persist })} aria-pressed={!!node.persist} title="Toggle follow-up" style={{ position: "relative", width: 40, height: 23, borderRadius: 999, border: "none", background: node.persist ? WF_C.tealDark : WF_C.line, cursor: "pointer", flexShrink: 0, transition: "background .15s" }}>
+                        <span style={{ position: "absolute", top: 2, left: node.persist ? 19 : 2, width: 19, height: 19, borderRadius: "50%", background: WF_C.white, boxShadow: "0 1px 2px rgba(11,22,40,0.25)", transition: "left .15s" }} />
+                      </button>
+                    </div>
+                    {node.persist && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 11 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.tealInk, whiteSpace: "nowrap" }}>Keep going until</span>
+                        <input
+                          value={node.persistGoal || ""}
+                          onChange={(e) => patchNode(node.id, { persistGoal: e.target.value })}
+                          placeholder="the assessment is submitted"
+                          style={{ ...inputStyle, flex: 1, padding: "7px 10px", fontSize: 12.5 }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Coach review & sign-off */}
+                  <div style={{ marginTop: 10, border: `1px solid ${node.signoff ? WF_C.tealDark : WF_C.line}`, borderRadius: 12, padding: "12px 14px", background: node.signoff ? WF_C.tealBg : WF_C.white, transition: "background .15s, border-color .15s", display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 8, background: node.signoff ? WF_C.tealDark : WF_C.cream, color: node.signoff ? WF_C.white : WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <WfGlyph name="medal" size={15} color={node.signoff ? WF_C.white : WF_C.sub} strokeWidth={2} />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: WF_C.ink }}>Coach review &amp; sign-off</div>
+                      <div style={{ fontSize: 11, lineHeight: 1.35, color: WF_C.faint }}>The coach approves Milton&apos;s work before anything is delivered.</div>
+                    </div>
+                    <button onClick={() => patchNode(node.id, { signoff: !node.signoff })} aria-pressed={!!node.signoff} title="Toggle coach sign-off" style={{ position: "relative", width: 40, height: 23, borderRadius: 999, border: "none", background: node.signoff ? WF_C.tealDark : WF_C.line, cursor: "pointer", flexShrink: 0, transition: "background .15s" }}>
+                      <span style={{ position: "absolute", top: 2, left: node.signoff ? 19 : 2, width: 19, height: 19, borderRadius: "50%", background: WF_C.white, boxShadow: "0 1px 2px rgba(11,22,40,0.25)", transition: "left .15s" }} />
+                    </button>
+                  </div>
+
+                  {/* Deliver result to */}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.sub, marginBottom: 7 }}>{node.signoff ? "After sign-off, deliver to" : "Deliver result to"}</div>
+                    <div style={{ display: "inline-flex", gap: 2, background: WF_C.cream, borderRadius: 999, padding: 3 }}>
+                      {WF_DELIVER.map(([v, label, glyph]) => {
+                        const on = (node.deliver || "client") === v;
+                        return (
+                          <button key={v} onClick={() => patchNode(node.id, { deliver: v })} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 999, padding: "6px 12px", fontSize: 12.5, fontWeight: 600, background: on ? WF_C.white : "transparent", color: on ? WF_C.tealInk : WF_C.sub, boxShadow: on ? "0 1px 2px rgba(11,22,40,0.1)" : "none", cursor: "pointer", transition: "background .15s" }}>
+                            <WfGlyph name={glyph} size={13} color={on ? WF_C.tealInk : WF_C.sub} strokeWidth={2} />{label}
                           </button>
                         );
                       })}
@@ -10115,7 +10259,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                     {/* @ Milton inline mention */}
                     {mentionAt === node.id ? (
                       <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 4 }}>
-                        {WF_AGENT_TASKS.map(([task]) => (
+                        {WF_INLINE_INCLUDES.map((task) => (
                           <button
                             key={task}
                             onClick={() => { patchNode(node.id, { includes: [...(node.includes || []), { id: wfUid(), task }] }); setMentionAt(null); }}
