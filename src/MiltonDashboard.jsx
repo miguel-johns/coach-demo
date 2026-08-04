@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������������������������═══════════
+// ═══════════�������════════════════��═���════════════════════�������������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9106,7 +9106,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
 
 /* ═══════════════════════════════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-═══════════════════════════════════════════════ */
+══════════════════════════════════════���════════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -10903,7 +10903,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                       <WfStatusPill status={open.status} />
                     </div>
                     <div style={{ fontSize: 13.5, color: WF_C.sub, marginTop: 5 }}>
-                      {open.results.runs} runs · {open.results.headline} · last run {open.lastRun}
+                      {open.results.runs} runs · {open.results.headline} �� last run {open.lastRun}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -10997,7 +10997,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
 
 /* ═════════��═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
-══════════════════════��══════════������══════════ */
+══════════════════════����══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   return (
     <div style={{
@@ -17385,18 +17385,21 @@ export default function MiltonDashboard() {
               @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
             `}</style>
             <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14, alignItems: "start" }}>
-              <CheckInDeck
-                isMobile={isMobile}
-                homeCompact={homeCompact}
-                onReply={(c) => {
-                  setChatMessages(prev => [...prev, {
-                    type: "ai",
-                    title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
-                    text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
-                  }]);
-                  setChatOpen(true);
-                }}
-              />
+              {/* Check-ins deck hidden */}
+              {false && (
+                <CheckInDeck
+                  isMobile={isMobile}
+                  homeCompact={homeCompact}
+                  onReply={(c) => {
+                    setChatMessages(prev => [...prev, {
+                      type: "ai",
+                      title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
+                      text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
+                    }]);
+                    setChatOpen(true);
+                  }}
+                />
+              )}
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
@@ -17404,15 +17407,8 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Build Programs", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file-text", label: "Forms & Assessments", desc: "Intake forms & assessments", color: "#2B7A78", onClick: () => { setCanvasType("forms"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
-                { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
