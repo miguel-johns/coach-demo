@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��═���������════════════════════�������������������������������������������═══════��═��═
+// ═══════════�������════════════════��═�����������════════════════════�������������������������������������������═══��═══��═��═
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -9106,7 +9106,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
 
 /* ═══════════════════════════════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-══════════════════════════════════════����════════ */
+═════════════════════════���════════════����════════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -17407,7 +17407,6 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
