@@ -9105,7 +9105,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ═══════════════════════════════════════════════
+/* ════════════════════════���══════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -16420,6 +16420,84 @@ export default function MiltonDashboard() {
 
     // Report customization commands (keep local for instant response)
     const low = text.toLowerCase();
+
+    // ── Navigation intent: let the chat drive the screen ──
+    // e.g. "pull up Sarah's program", "open her workout", "show my clients", "go to analytics"
+    const navIntent = (() => {
+      const hasNavVerb = /\b(pull\s*up|open|show(?:\s*me)?|go\s*to|take\s*me\s*to|bring\s*up|view|see|let'?s\s*see|navigate\s*to|jump\s*to|display|head\s*to)\b/i.test(low);
+      if (!hasNavVerb) return null;
+
+      // Match a client by first (or full) name
+      let client = null, clientIndex = -1;
+      clients.forEach((c, i) => {
+        const first = c.name.split(" ")[0].toLowerCase();
+        if (new RegExp(`\\b${first}\\b`, "i").test(low)) { client = c; clientIndex = i; }
+      });
+      // Pronoun / "the client" fallback to whoever is currently in focus
+      const pronoun = /\b(her|his|their|them|the client|this client)\b/i.test(low);
+      if (!client && pronoun) {
+        if (selectedClient !== null) { clientIndex = selectedClient; client = clients[selectedClient]; }
+        else if (canvasClient) {
+          const idx = clients.findIndex(c => c.name === canvasClient);
+          if (idx !== -1) { clientIndex = idx; client = clients[idx]; }
+        }
+      }
+
+      if (client) {
+        // A client's program, workouts, nutrition, check-ins and progress all
+        // live in their profile — open it and note what they asked to see.
+        let focus = null;
+        if (/\b(workout|program|training|routine|lifts?|exercises?|programming)\b/i.test(low)) focus = "program";
+        else if (/\b(meal\s*plan|meal|nutrition|diet|eating|macros?)\b/i.test(low)) focus = "nutrition";
+        else if (/\b(report|progress|summary|results|check-?in)\b/i.test(low)) focus = "progress";
+        return { kind: "profile", client, clientIndex, focus };
+      }
+
+      // Destination navigation (no specific client)
+      if (/\b(client\s*list|clients|roster|my\s*people)\b/i.test(low)) return { kind: "home", view: "clients" };
+      if (/\b(analytics|stats|numbers|metrics|insights)\b/i.test(low)) return { kind: "home", view: "analytics" };
+      if (/\b(home|command\s*center|main\s*screen|dashboard)\b/i.test(low)) return { kind: "home", view: "cards" };
+      if (/\b(schedule|calendar|sessions|agenda)\b/i.test(low)) return { kind: "canvas", canvas: "schedule", label: "schedule" };
+      if (/\b(inbox|messages|dms?)\b/i.test(low)) return { kind: "canvas", canvas: "inbox", label: "inbox" };
+      if (/\b(library|templates|exercise\s*library)\b/i.test(low)) return { kind: "canvas", canvas: "library", label: "library" };
+      if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
+
+      return null;
+    })();
+
+    if (navIntent) {
+      setTimeout(() => {
+        if (navIntent.kind === "profile") {
+          const firstName = navIntent.client.name.split(" ")[0];
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(navIntent.clientIndex);
+          const focusMsg = navIntent.focus === "program"
+            ? `Here's ${firstName}'s program and training history.`
+            : navIntent.focus === "nutrition"
+            ? `Here's ${firstName}'s nutrition and check-ins.`
+            : navIntent.focus === "progress"
+            ? `Here's ${firstName}'s progress and check-ins.`
+            : `Here's ${firstName}'s full profile.`;
+          setChatMessages(prev => [...prev, { type: "ai", text: `**${focusMsg}** I've opened their profile — you can see their program, check-ins, and progress from here.` }]);
+        } else if (navIntent.kind === "home") {
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(null);
+          setHomeView(navIntent.view);
+          const label = navIntent.view === "clients" ? "your full client list" : navIntent.view === "analytics" ? "your analytics" : "your home command center";
+          setChatMessages(prev => [...prev, { type: "ai", text: `Here's ${label}.` }]);
+        } else if (navIntent.kind === "canvas") {
+          setSelectedClient(null);
+          setCanvasType(navIntent.canvas);
+          setCanvasData({});
+          setCanvasMode(true);
+          setChatMessages(prev => [...prev, { type: "ai", text: `Opening your ${navIntent.label}.` }]);
+        }
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
     const reportCmd = (() => {
       const blocks = mainReportBlocks || ["top3", "rule30", "dataCards", "calendar", "insight"];
       const blockMap = {
