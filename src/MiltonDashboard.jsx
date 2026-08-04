@@ -9105,7 +9105,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════���══════════════════════
+/* ════════════════════════����══════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -16444,11 +16444,13 @@ export default function MiltonDashboard() {
       }
 
       if (client) {
-        // A client's program, workouts, nutrition, check-ins and progress all
-        // live in their profile — open it and note what they asked to see.
+        // "pull up Sarah's program/workout" → open the Workout Program canvas.
+        if (/\b(workout|program|training|routine|lifts?|exercises?|programming)\b/i.test(low)) {
+          return { kind: "clientProgram", client, clientIndex };
+        }
+        // Nutrition / progress / everything else lives in their profile.
         let focus = null;
-        if (/\b(workout|program|training|routine|lifts?|exercises?|programming)\b/i.test(low)) focus = "program";
-        else if (/\b(meal\s*plan|meal|nutrition|diet|eating|macros?)\b/i.test(low)) focus = "nutrition";
+        if (/\b(meal\s*plan|meal|nutrition|diet|eating|macros?)\b/i.test(low)) focus = "nutrition";
         else if (/\b(report|progress|summary|results|check-?in)\b/i.test(low)) focus = "progress";
         return { kind: "profile", client, clientIndex, focus };
       }
@@ -16479,6 +16481,14 @@ export default function MiltonDashboard() {
             ? `Here's ${firstName}'s progress and check-ins.`
             : `Here's ${firstName}'s full profile.`;
           setChatMessages(prev => [...prev, { type: "ai", text: `**${focusMsg}** I've opened their profile — you can see their program, check-ins, and progress from here.` }]);
+        } else if (navIntent.kind === "clientProgram") {
+          const firstName = navIntent.client.name.split(" ")[0];
+          setSelectedClient(null);
+          setCanvasType("workout");
+          setCanvasData({ clientName: navIntent.client.name, programName: `${firstName}'s Program` });
+          setCanvasClient(navIntent.client.name);
+          setCanvasMode(true);
+          setChatMessages(prev => [...prev, { type: "ai", text: `**Pulling up ${firstName}'s workout program.** It's open in the builder on the right — tell me what you'd like to adjust and I'll update it.` }]);
         } else if (navIntent.kind === "home") {
           setCanvasMode(false); setCanvasData(null); setCanvasType(null);
           setSelectedClient(null);
