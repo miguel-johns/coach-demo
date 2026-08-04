@@ -11,6 +11,7 @@ import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
+import workoutBuilderHtml from "./workoutBuilder.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -383,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�����������������������������������������═══════════
+// ═══════════�������════════════════��══════════════════════�������������������������������������������═══════════
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -6773,7 +6774,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
         </div>
       </SectionCard>
 
-      {/* ──�� THIS WEEK'S FOCUS ─��─ */}
+      {/* ──��� THIS WEEK'S FOCUS ─��─ */}
       <SectionCard style={{ background: `linear-gradient(140deg, #f2faf8, #eaf6f2, #f0f9f5)`, border: `1px solid rgba(43,122,120,0.12)` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
           This Week's Focus
@@ -9679,7 +9680,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
           <span style={{ fontSize: 13.5, fontWeight: 600, color: WF_C.tealInk }}>Add a trigger</span>
         </button>
       ) : entryMode === "picker" ? (
-        /* ── PICKER: choose a trigger type ── */
+        /* ─�� PICKER: choose a trigger type ── */
         <div style={{ width: "100%", background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 1px 2px rgba(11,22,40,0.04)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ width: 32, height: 32, borderRadius: "50%", background: WF_C.tealDark, color: WF_C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -13920,7 +13921,9 @@ function getFallbackMealPlan() {
 }
 
 function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both" }) {
-  const libraryHtml = libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
+  const libraryHtml = mode === "programs"
+    ? workoutBuilderHtml
+    : libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
       <button
