@@ -138,6 +138,14 @@ function weekLabels(startIso, n, spanDays = 90) {
   return out;
 }
 
+/* ---------- transformation photos (demo data) ---------- */
+const TRANSFORMATION_PHOTOS = {
+  "Sarah Chen": { before: "/images/transformations/sarah-before.png", after: "/images/transformations/sarah-after.png" },
+  "Marcus Johnson": { before: "/images/transformations/marcus-before.png", after: "/images/transformations/marcus-after.png" },
+  "Emily Rodriguez": { before: "/images/transformations/emily-before.png", after: "/images/transformations/emily-after.png" },
+  "David Park": { before: "/images/transformations/david-before.png", after: "/images/transformations/david-after.png" },
+};
+
 /* ---------- per-client derivation ---------- */
 function deriveClient(client) {
   const c = client || {};
@@ -148,8 +156,9 @@ function deriveClient(client) {
   const rng = mulberry32(seed);
 
   const archetype = ["strong", "weekendGap", "declining", "improving"][(seed >>> 3) % 4];
+  const photos = TRANSFORMATION_PHOTOS[name] || null;
   const photoBucket = seed % 10;
-  const photoState = photoBucket <= 4 ? "photos" : photoBucket <= 7 ? "none" : "declined";
+  const photoState = photos ? "photos" : photoBucket <= 4 ? "photos" : photoBucket <= 7 ? "none" : "declined";
 
   const assess = c.assessment || {};
   const current = c.current || {};
@@ -359,7 +368,7 @@ function deriveClient(client) {
   return {
     name, firstName, initial, subLine,
     program: c.program, startLabel, nextLabel,
-    photoState, read, readActions, pillarSummary,
+    photoState, photos, read, readActions, pillarSummary,
     targets, days, defaultDay,
     progress, dates,
     sessions, sessionsSub,
@@ -511,11 +520,15 @@ function ProgressChart({ metric, series, dates, annotateIdx, annotateLabel }) {
   );
 }
 
-function Silhouette({ label, date }) {
+function Silhouette({ label, date, src, alt }) {
   return (
     <div>
-      <div style={{ aspectRatio: "3/4", background: T.cream, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <User size={56} color={T.inkFaint} strokeWidth={1.25} />
+      <div style={{ aspectRatio: "3/4", background: T.cream, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        {src ? (
+          <img src={src || "/placeholder.svg"} alt={alt || `${label} progress photo`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          <User size={56} color={T.inkFaint} strokeWidth={1.25} />
+        )}
       </div>
       <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: T.tealDark }}>{label}</span>
@@ -802,8 +815,8 @@ export default function ClientProfile({ client, onBack, isMobile }) {
           {photoState === "photos" && (
             <>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <Silhouette label="Baseline" date={d.photoBaseline} />
-                <Silhouette label="Latest" date={d.photoLatest} />
+                <Silhouette label="Baseline" date={d.photoBaseline} src={d.photos?.before} alt={`${d.firstName} baseline progress photo`} />
+                <Silhouette label="Latest" date={d.photoLatest} src={d.photos?.after} alt={`${d.firstName} latest progress photo`} />
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${T.line}`, marginTop: 16, paddingTop: 14 }}>
                 <div style={{ display: "flex", gap: 6 }}>

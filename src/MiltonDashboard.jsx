@@ -384,7 +384,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��═�������════════════════════�������������������������������������������═══════��═��═
+// ═══════════�������════════════════��═���������════════════════════�������������������������������������������═══════��═��═
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -5402,7 +5402,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   );
 }
 
-/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ─── */
+/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ���── */
 function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
@@ -14368,13 +14368,6 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
       const cLast = cPts[cPts.length - 1], gLast = gPts[gPts.length - 1];
       const totalChange = `${(startW - currW).toFixed(1)} lbs lost`;
       const scoreChange = consistencyScore - w1c;
-      const transformationPhotos = {
-        "Sarah Chen": { before: "/images/transformations/sarah-before.png", after: "/images/transformations/sarah-after.png" },
-        "Marcus Johnson": { before: "/images/transformations/marcus-before.png", after: "/images/transformations/marcus-after.png" },
-        "Emily Rodriguez": { before: "/images/transformations/emily-before.png", after: "/images/transformations/emily-after.png" },
-        "David Park": { before: "/images/transformations/david-before.png", after: "/images/transformations/david-after.png" },
-      };
-      const clientPhotos = transformationPhotos[client.name];
       
       return (
         <WidgetWrapper key={widget.id} gradient="linear-gradient(145deg, #f0f9f5, #eaf6f2, #f5faf8)">
@@ -14386,20 +14379,6 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
               <div style={{ padding: "4px 10px", borderRadius: 16, background: `${ALERT_GREEN}15`, fontSize: 11, fontWeight: 700, color: ALERT_GREEN }}>{totalChange}</div>
             </div>
           </div>
-          {clientPhotos && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-              {[{ label: "Before", src: clientPhotos.before }, { label: "After", src: clientPhotos.after }].map((ph) => (
-                <div key={ph.label} style={{ position: "relative", borderRadius: 14, overflow: "hidden", border: `1px solid ${BORDER}`, background: WHITE }}>
-                  <img
-                    src={ph.src || "/placeholder.svg"}
-                    alt={`${client.name?.split(" ")[0] || "Client"} progress photo — ${ph.label.toLowerCase()}`}
-                    style={{ display: "block", width: "100%", height: 200, objectFit: "cover" }}
-                  />
-                  <div style={{ position: "absolute", top: 8, left: 8, padding: "3px 10px", borderRadius: 16, background: ph.label === "After" ? ALERT_GREEN : "rgba(0,0,0,0.55)", color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{ph.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
           <div style={{ borderRadius: 14, background: WHITE, border: `1px solid ${BORDER}`, padding: "10px 6px" }}>
             <svg width="100%" height={ch} viewBox={`0 0 ${cw} ${ch}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
               <defs>
