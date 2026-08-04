@@ -271,6 +271,7 @@ function NavIcon({ icon, size = 20 }) {
   aiWorkflow: <svg {...s} viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="5.5" height="5.5" rx="1.5"/><rect x="2.5" y="15" width="5.5" height="5.5" rx="1.5"/><rect x="14.5" y="9.25" width="5.5" height="5.5" rx="1.5"/><path d="M8 6.25h2.5a2 2 0 012 2V12"/><path d="M8 17.75h2.5a2 2 0 002-2V12"/><line x1="12.5" y1="12" x2="14.5" y2="12"/><path d="M19.5 2.2l.55 1.45L21.5 4.2l-1.45.55L19.5 6.2l-.55-1.45L17.5 4.2l1.45-.55z"/></svg>,
   aiDashboard: <svg {...s} viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><line x1="10.25" y1="5" x2="13.75" y2="5"/><line x1="10.5" y1="18.75" x2="13.5" y2="18.75"/></svg>,
   playbook: <svg {...s} viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 015.5 3H19a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 00-2 2z"/><path d="M4 19V4.5"/><line x1="8" y1="7.5" x2="16" y2="7.5"/><line x1="8" y1="11" x2="13" y2="11"/></svg>,
+  upload: <svg {...s} viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -384,7 +385,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��═�����������════════════════════�������������������������������������������═══��═══��═��═
+// ═══════════�������════════════════��═�������������════════════════════�������������������������������������������═══��═══��═��═
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -11038,6 +11039,153 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
 // ═════════════���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
+function MiltonBrainCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const typeFromName = (name) => {
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    if (ext === "pdf") return "PDF";
+    if (ext === "doc" || ext === "docx") return "Word";
+    if (ext === "csv") return "CSV";
+    if (ext === "md") return "Markdown";
+    if (ext === "txt") return "Text";
+    if (["png", "jpg", "jpeg", "gif", "webp", "heic"].includes(ext)) return "Image";
+    return "File";
+  };
+
+  const addFiles = (fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setBrainDocuments(prev => [
+      ...files.map((f, i) => ({
+        id: Date.now() + i,
+        name: f.name,
+        size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
+        date: today,
+        status: "pending_validation",
+        type: typeFromName(f.name),
+      })),
+      ...prev,
+    ]);
+  };
+
+  const openBrowser = () => fileInputRef.current?.click();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    addFiles(e.dataTransfer?.files);
+  };
+
+  const fileChips = [".pdf", ".docx", ".md", ".txt", ".csv", "images"];
+  const steps = [
+    { n: 1, label: "You upload your files" },
+    { n: 2, label: "I read and analyze them" },
+    { n: 3, label: "I build your knowledge base" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: WHITE, overflow: "auto" }}>
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        style={{
+          position: "absolute", top: isMobile ? 16 : 24, right: isMobile ? 16 : 24, zIndex: 5,
+          width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+          background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <div style={{ padding: isMobile ? "56px 20px 28px" : "56px 56px 40px", maxWidth: 940, width: "100%", margin: "0 auto" }}>
+        {/* Heading */}
+        <h1 style={{ fontSize: isMobile ? 30 : 44, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+          Drop everything you know.
+        </h1>
+        <p style={{ fontSize: isMobile ? 15 : 18, color: TEXT_SEC, margin: "16px 0 0", maxWidth: 620, lineHeight: 1.5 }}>
+          Programs, intake forms, client notes, progressions, your communication rules. The messier the better. I&apos;ll find the structure.
+        </p>
+
+        {/* Drop zone */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.md,.txt,.csv,image/*"
+          style={{ display: "none" }}
+          onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
+        />
+        <div
+          onClick={openBrowser}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDrop={handleDrop}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBrowser(); } }}
+          style={{
+            marginTop: 28,
+            borderRadius: 20,
+            border: `2px dashed ${dragActive ? TEAL : "#bfe0da"}`,
+            background: dragActive ? "#eef8f6" : "#f4faf9",
+            padding: isMobile ? "48px 20px" : "72px 24px",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.15s ease", textAlign: "center",
+          }}
+        >
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17,8 12,3 7,8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT, marginTop: 20 }}>Drop your work here</div>
+          <div style={{ fontSize: 14, color: TEAL, marginTop: 6 }}>or click to browse</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 22 }}>
+            {fileChips.map((chip) => (
+              <span key={chip} style={{ fontSize: 12.5, fontWeight: 600, color: TEXT_SEC, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "6px 12px" }}>
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <p style={{ fontSize: 14, color: "#94aeaa", textAlign: "center", margin: "20px auto 0", maxWidth: 560, lineHeight: 1.5 }}>
+          Your documents stay yours. I read them once, learn from them, and then let you keep refining what I know.
+        </p>
+
+        {/* What happens next */}
+        <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 32, paddingTop: 24 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, marginBottom: 16 }}>What happens next?</div>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+            {steps.map((step, idx) => (
+              <React.Fragment key={step.n}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 26, height: 26, borderRadius: "50%", background: TEAL_LIGHT, color: TEAL, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {step.n}
+                  </span>
+                  <span style={{ fontSize: 15, color: TEXT }}>{step.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9fb8b4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                  </svg>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
   const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -17032,17 +17180,25 @@ export default function MiltonDashboard() {
     onEditProcessed={handleDashboardEditResult}
   />
 )}
-{canvasType === "playbook" && (
-  <PlaybookCanvas
-    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-    onHome={() => setCanvasType("templates")}
-    brainDocuments={brainDocuments}
-    setBrainDocuments={setBrainDocuments}
-    isMobile={canvasCompact}
-    playbook={playbook}
-    setPlaybook={setPlaybook}
-  />
-  )}
+          {canvasType === "brain" && (
+            <MiltonBrainCanvas
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              brainDocuments={brainDocuments}
+              setBrainDocuments={setBrainDocuments}
+              isMobile={canvasCompact}
+            />
+          )}
+          {canvasType === "playbook" && (
+            <PlaybookCanvas
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+              brainDocuments={brainDocuments}
+              setBrainDocuments={setBrainDocuments}
+              isMobile={canvasCompact}
+              playbook={playbook}
+              setPlaybook={setPlaybook}
+            />
+          )}
   {canvasType === "workflows" && (
   <WorkflowsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -17407,7 +17563,7 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
