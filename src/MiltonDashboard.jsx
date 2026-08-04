@@ -271,6 +271,7 @@ function NavIcon({ icon, size = 20 }) {
   aiWorkflow: <svg {...s} viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="5.5" height="5.5" rx="1.5"/><rect x="2.5" y="15" width="5.5" height="5.5" rx="1.5"/><rect x="14.5" y="9.25" width="5.5" height="5.5" rx="1.5"/><path d="M8 6.25h2.5a2 2 0 012 2V12"/><path d="M8 17.75h2.5a2 2 0 002-2V12"/><line x1="12.5" y1="12" x2="14.5" y2="12"/><path d="M19.5 2.2l.55 1.45L21.5 4.2l-1.45.55L19.5 6.2l-.55-1.45L17.5 4.2l1.45-.55z"/></svg>,
   aiDashboard: <svg {...s} viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><line x1="10.25" y1="5" x2="13.75" y2="5"/><line x1="10.5" y1="18.75" x2="13.5" y2="18.75"/></svg>,
   playbook: <svg {...s} viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 015.5 3H19a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 00-2 2z"/><path d="M4 19V4.5"/><line x1="8" y1="7.5" x2="16" y2="7.5"/><line x1="8" y1="11" x2="13" y2="11"/></svg>,
+  upload: <svg {...s} viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -384,7 +385,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��══════════════════════�������������������������������������������═══════════
+// ═══════════�������════════════════��═�������������══��═════════════════�������������������������������������������═══��═══��═��═
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -2877,7 +2878,7 @@ function CoachAssignSelect({ value, onChange }) {
   );
 }
 
-// ════════════════════════════════════���═════��═��══════��═══��═════��═
+// ��═══════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
@@ -5402,7 +5403,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
   );
 }
 
-/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ─── */
+/* ─��─ Mobile Glass Chat Bar + Expandable Sheet ���── */
 function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
@@ -6962,6 +6963,54 @@ function DataCardPeriods({ periods, color, isMobile }) {
 /* ═══════════════════════��════════════════════
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
+
+// Build a real, per-client weekly program from the client's logged sessions.
+function buildClientProgram(client) {
+  const sessions = client?.sessions || [];
+  const seen = new Set();
+  const uniqueSessions = [];
+  for (const s of sessions) {
+    if (s?.type && !seen.has(s.type)) { seen.add(s.type); uniqueSessions.push(s); }
+  }
+
+  const toDay = (s) => ({
+    focus: s.type,
+    exercises: (s.exercises || []).map((ex) => {
+      const setArr = ex.sets || [];
+      const setCount = setArr.length || 3;
+      const repsArr = setArr.map((st) => st.reps).filter((r) => r != null);
+      const weightsArr = setArr.map((st) => st.weight).filter((w) => w != null);
+      const minR = repsArr.length ? Math.min(...repsArr) : 10;
+      const maxR = repsArr.length ? Math.max(...repsArr) : 10;
+      const reps = repsArr.length ? (minR === maxR ? `${minR}` : `${minR}-${maxR}`) : "10";
+      const topW = weightsArr.length ? Math.max(...weightsArr) : null;
+      const weight = topW != null ? `${topW} lbs` : "Bodyweight";
+      const rest = maxR <= 6 ? "2 min" : maxR <= 10 ? "90s" : "60s";
+      return { name: ex.name, sets: setCount, reps, weight, rest };
+    }),
+  });
+
+  const trainDays = uniqueSessions.map(toDay);
+  const restDay = { focus: "Rest Day", exercises: [] };
+  const pattern = ({
+    1: ["T", "R", "R", "R", "R", "R", "R"],
+    2: ["T", "R", "R", "T", "R", "R", "R"],
+    3: ["T", "R", "T", "R", "T", "R", "R"],
+    4: ["T", "T", "R", "T", "T", "R", "R"],
+    5: ["T", "T", "R", "T", "T", "T", "R"],
+  })[Math.min(trainDays.length, 5)] || ["T", "R", "T", "R", "T", "R", "R"];
+
+  let ti = 0;
+  const days = pattern.map((slot) => (slot === "T" && ti < trainDays.length ? trainDays[ti++] : restDay));
+  // If there were no logged sessions, keep at least one rest week so the canvas renders.
+  if (trainDays.length === 0) return { client: client?.name || "Client", programName: client?.program || "Training Program", days: [restDay] };
+
+  return {
+    client: client?.name || "Client",
+    programName: client?.program || "Training Program",
+    days,
+  };
+}
 
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
@@ -9104,9 +9153,9 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ═══════════════════════════════════════════════
+/* ════════════════════════�����══════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
-═══════════════════════════════════════════════ */
+═════════════════════════���════════════����════════ */
 const WF_C = {
   navy: "#15302B",
   teal: "#1E4D45",
@@ -10903,7 +10952,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
                       <WfStatusPill status={open.status} />
                     </div>
                     <div style={{ fontSize: 13.5, color: WF_C.sub, marginTop: 5 }}>
-                      {open.results.runs} runs · {open.results.headline} · last run {open.lastRun}
+                      {open.results.runs} runs �� {open.results.headline} �� last run {open.lastRun}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -10995,9 +11044,9 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
   );
 }
 
-/* ═════════��═����══���══════════════════���═══���══���══���═
+/* ═════════���═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
-══════════════════════��══════════������══════════ */
+══════════════════════����══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
   return (
     <div style={{
@@ -11038,6 +11087,153 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
 // ═════════════���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
+function MiltonBrainCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const typeFromName = (name) => {
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    if (ext === "pdf") return "PDF";
+    if (ext === "doc" || ext === "docx") return "Word";
+    if (ext === "csv") return "CSV";
+    if (ext === "md") return "Markdown";
+    if (ext === "txt") return "Text";
+    if (["png", "jpg", "jpeg", "gif", "webp", "heic"].includes(ext)) return "Image";
+    return "File";
+  };
+
+  const addFiles = (fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setBrainDocuments(prev => [
+      ...files.map((f, i) => ({
+        id: Date.now() + i,
+        name: f.name,
+        size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
+        date: today,
+        status: "pending_validation",
+        type: typeFromName(f.name),
+      })),
+      ...prev,
+    ]);
+  };
+
+  const openBrowser = () => fileInputRef.current?.click();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    addFiles(e.dataTransfer?.files);
+  };
+
+  const fileChips = [".pdf", ".docx", ".md", ".txt", ".csv", "images"];
+  const steps = [
+    { n: 1, label: "You upload your files" },
+    { n: 2, label: "I read and analyze them" },
+    { n: 3, label: "I build your knowledge base" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: WHITE, overflow: "auto" }}>
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        style={{
+          position: "absolute", top: isMobile ? 16 : 24, right: isMobile ? 16 : 24, zIndex: 5,
+          width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+          background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC,
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <div style={{ padding: isMobile ? "56px 20px 28px" : "56px 56px 40px", maxWidth: 940, width: "100%", margin: "0 auto" }}>
+        {/* Heading */}
+        <h1 style={{ fontSize: isMobile ? 30 : 44, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+          Drop everything you know.
+        </h1>
+        <p style={{ fontSize: isMobile ? 15 : 18, color: TEXT_SEC, margin: "16px 0 0", maxWidth: 620, lineHeight: 1.5 }}>
+          Programs, intake forms, client notes, progressions, your communication rules. The messier the better. I&apos;ll find the structure.
+        </p>
+
+        {/* Drop zone */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.md,.txt,.csv,image/*"
+          style={{ display: "none" }}
+          onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
+        />
+        <div
+          onClick={openBrowser}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDrop={handleDrop}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBrowser(); } }}
+          style={{
+            marginTop: 28,
+            borderRadius: 20,
+            border: `2px dashed ${dragActive ? TEAL : "#bfe0da"}`,
+            background: dragActive ? "#eef8f6" : "#f4faf9",
+            padding: isMobile ? "48px 20px" : "72px 24px",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.15s ease", textAlign: "center",
+          }}
+        >
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17,8 12,3 7,8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: TEXT, marginTop: 20 }}>Drop your work here</div>
+          <div style={{ fontSize: 14, color: TEAL, marginTop: 6 }}>or click to browse</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 22 }}>
+            {fileChips.map((chip) => (
+              <span key={chip} style={{ fontSize: 12.5, fontWeight: 600, color: TEXT_SEC, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "6px 12px" }}>
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <p style={{ fontSize: 14, color: "#94aeaa", textAlign: "center", margin: "20px auto 0", maxWidth: 560, lineHeight: 1.5 }}>
+          Your documents stay yours. I read them once, learn from them, and then let you keep refining what I know.
+        </p>
+
+        {/* What happens next */}
+        <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 32, paddingTop: 24 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, marginBottom: 16 }}>What happens next?</div>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+            {steps.map((step, idx) => (
+              <React.Fragment key={step.n}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 26, height: 26, borderRadius: "50%", background: TEAL_LIGHT, color: TEAL, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {step.n}
+                  </span>
+                  <span style={{ fontSize: 15, color: TEXT }}>{step.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9fb8b4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                  </svg>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, isMobile, playbook, setPlaybook }) {
   const [activeChapter, setActiveChapter] = useState(null); // null = landing, or chapter id
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -16272,6 +16468,96 @@ export default function MiltonDashboard() {
 
     // Report customization commands (keep local for instant response)
     const low = text.toLowerCase();
+
+    // ── Navigation intent: let the chat drive the screen ──
+    // e.g. "pull up Sarah's program", "open her workout", "show my clients", "go to analytics"
+    const navIntent = (() => {
+      const hasNavVerb = /\b(pull\s*up|open|show(?:\s*me)?|go\s*to|take\s*me\s*to|bring\s*up|view|see|let'?s\s*see|navigate\s*to|jump\s*to|display|head\s*to)\b/i.test(low);
+      if (!hasNavVerb) return null;
+
+      // Match a client by first (or full) name
+      let client = null, clientIndex = -1;
+      clients.forEach((c, i) => {
+        const first = c.name.split(" ")[0].toLowerCase();
+        if (new RegExp(`\\b${first}\\b`, "i").test(low)) { client = c; clientIndex = i; }
+      });
+      // Pronoun / "the client" fallback to whoever is currently in focus
+      const pronoun = /\b(her|his|their|them|the client|this client)\b/i.test(low);
+      if (!client && pronoun) {
+        if (selectedClient !== null) { clientIndex = selectedClient; client = clients[selectedClient]; }
+        else if (canvasClient) {
+          const idx = clients.findIndex(c => c.name === canvasClient);
+          if (idx !== -1) { clientIndex = idx; client = clients[idx]; }
+        }
+      }
+
+      if (client) {
+        // "pull up Sarah's program/workout" → open the Workout Program canvas.
+        if (/\b(workout|program|training|routine|lifts?|exercises?|programming)\b/i.test(low)) {
+          return { kind: "clientProgram", client, clientIndex };
+        }
+        // Nutrition / progress / everything else lives in their profile.
+        let focus = null;
+        if (/\b(meal\s*plan|meal|nutrition|diet|eating|macros?)\b/i.test(low)) focus = "nutrition";
+        else if (/\b(report|progress|summary|results|check-?in)\b/i.test(low)) focus = "progress";
+        return { kind: "profile", client, clientIndex, focus };
+      }
+
+      // Destination navigation (no specific client)
+      if (/\b(client\s*list|clients|roster|my\s*people)\b/i.test(low)) return { kind: "home", view: "clients" };
+      if (/\b(analytics|stats|numbers|metrics|insights)\b/i.test(low)) return { kind: "home", view: "analytics" };
+      if (/\b(home|command\s*center|main\s*screen|dashboard)\b/i.test(low)) return { kind: "home", view: "cards" };
+      if (/\b(schedule|calendar|sessions|agenda)\b/i.test(low)) return { kind: "canvas", canvas: "schedule", label: "schedule" };
+      if (/\b(inbox|messages|dms?)\b/i.test(low)) return { kind: "canvas", canvas: "inbox", label: "inbox" };
+      if (/\b(library|templates|exercise\s*library)\b/i.test(low)) return { kind: "canvas", canvas: "library", label: "library" };
+      if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
+
+      return null;
+    })();
+
+    if (navIntent) {
+      setTimeout(() => {
+        if (navIntent.kind === "profile") {
+          const firstName = navIntent.client.name.split(" ")[0];
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(navIntent.clientIndex);
+          const focusMsg = navIntent.focus === "program"
+            ? `Here's ${firstName}'s program and training history.`
+            : navIntent.focus === "nutrition"
+            ? `Here's ${firstName}'s nutrition and check-ins.`
+            : navIntent.focus === "progress"
+            ? `Here's ${firstName}'s progress and check-ins.`
+            : `Here's ${firstName}'s full profile.`;
+          setChatMessages(prev => [...prev, { type: "ai", text: `**${focusMsg}** I've opened their profile — you can see their program, check-ins, and progress from here.` }]);
+        } else if (navIntent.kind === "clientProgram") {
+          const firstName = navIntent.client.name.split(" ")[0];
+          const programData = buildClientProgram(navIntent.client);
+          setSelectedClient(null);
+          setCanvasSelectedDay(null);
+          setCanvasType("clientProgram");
+          setCanvasData(programData);
+          setCanvasClient(navIntent.client.name);
+          setCanvasMode(true);
+          setChatMessages(prev => [...prev, { type: "ai", text: `**Pulling up ${firstName}'s ${programData.programName} program.** It's open on the right — tap any day to see the exercises, sets, reps and weights from their sessions.` }]);
+        } else if (navIntent.kind === "home") {
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(null);
+          setHomeView(navIntent.view);
+          const label = navIntent.view === "clients" ? "your full client list" : navIntent.view === "analytics" ? "your analytics" : "your home command center";
+          setChatMessages(prev => [...prev, { type: "ai", text: `Here's ${label}.` }]);
+        } else if (navIntent.kind === "canvas") {
+          setSelectedClient(null);
+          setCanvasType(navIntent.canvas);
+          setCanvasData({});
+          setCanvasMode(true);
+          setChatMessages(prev => [...prev, { type: "ai", text: `Opening your ${navIntent.label}.` }]);
+        }
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
     const reportCmd = (() => {
       const blocks = mainReportBlocks || ["top3", "rule30", "dataCards", "calendar", "insight"];
       const blockMap = {
@@ -17032,17 +17318,25 @@ export default function MiltonDashboard() {
     onEditProcessed={handleDashboardEditResult}
   />
 )}
-{canvasType === "playbook" && (
-  <PlaybookCanvas
-    onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-    onHome={() => setCanvasType("templates")}
-    brainDocuments={brainDocuments}
-    setBrainDocuments={setBrainDocuments}
-    isMobile={canvasCompact}
-    playbook={playbook}
-    setPlaybook={setPlaybook}
-  />
-  )}
+          {canvasType === "brain" && (
+            <MiltonBrainCanvas
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              brainDocuments={brainDocuments}
+              setBrainDocuments={setBrainDocuments}
+              isMobile={canvasCompact}
+            />
+          )}
+          {canvasType === "playbook" && (
+            <PlaybookCanvas
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+              brainDocuments={brainDocuments}
+              setBrainDocuments={setBrainDocuments}
+              isMobile={canvasCompact}
+              playbook={playbook}
+              setPlaybook={setPlaybook}
+            />
+          )}
   {canvasType === "workflows" && (
   <WorkflowsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -17064,6 +17358,15 @@ export default function MiltonDashboard() {
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "clientProgram" && (
+            <CalendarCanvas
+              data={canvasData}
+              type="workout"
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
             />
           )}
           {canvasType === "workout" && (
@@ -17385,34 +17688,29 @@ export default function MiltonDashboard() {
               @keyframes v0-badge-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }
             `}</style>
             <div style={{ display: "grid", gridTemplateColumns: homeCompact ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: homeCompact ? 10 : 14, alignItems: "start" }}>
-              <CheckInDeck
-                isMobile={isMobile}
-                homeCompact={homeCompact}
-                onReply={(c) => {
-                  setChatMessages(prev => [...prev, {
-                    type: "ai",
-                    title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
-                    text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
-                  }]);
-                  setChatOpen(true);
-                }}
-              />
+              {/* Check-ins deck hidden */}
+              {false && (
+                <CheckInDeck
+                  isMobile={isMobile}
+                  homeCompact={homeCompact}
+                  onReply={(c) => {
+                    setChatMessages(prev => [...prev, {
+                      type: "ai",
+                      title: `Reply to ${c.name.split(" ")[0]} — ${c.period}`,
+                      text: `Here's a draft reply to ${c.name.split(" ")[0]}'s check-in:\n\n"Thanks for the update! ${c.flag ? "I want to keep an eye on that — let's adjust things so it doesn't hold you back. " : "Love the progress you're making. "}Keep it up and let me know if anything comes up before our next session."`
+                    }]);
+                    setChatOpen(true);
+                  }}
+                />
+              )}
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Build Programs", desc: "Build & assign programs", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file-text", label: "Forms & Assessments", desc: "Intake forms & assessments", color: "#2B7A78", onClick: () => { setCanvasType("forms"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "smile", label: "Customize App", desc: "Engagement dashboards", color: "#5CDB95", onClick: () => { setCanvasType("aiDashboards"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "playbook", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file", label: "View Files", desc: "Documents & resources", color: "#45818e", onClick: () => { setCanvasType("templates"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "users", label: "Run Classes", desc: "Group & semi-private", color: "#45818e", onClick: () => { setCanvasType("groupClass"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "send", label: "Get New Clients", desc: "Grow your roster", color: "#ef6c3e", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "chart", label: "Analytics", desc: "Attendance, growth & success", color: "#3aafa9", onClick: () => setHomeView("analytics") },
-                { icon: "layers", label: "Join a Workshop", desc: "Live coaching sessions", color: "#45818e", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "file-text", label: "Milton Academy", desc: "Courses & certifications", color: "#3aafa9", onClick: () => { setCanvasType("playbook"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
