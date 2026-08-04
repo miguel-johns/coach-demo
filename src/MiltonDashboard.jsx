@@ -385,7 +385,7 @@ const PROGRAM_TEMPLATES = {
   ],
 };
 
-// ═══════════�������════════════════��═�������������════════════════════�������������������������������������������═══��═══��═��═
+// ═══════════�������════════════════��═�������������══��═════════════════�������������������������������������������═══��═══��═��═
 // SESSION DATA MODEL - Unified schedule entries for PT & Semi-Private
 // ═���════════════════════��════════����������════════════════������������══════════════
 const initialSessions = [
@@ -6964,6 +6964,54 @@ function DataCardPeriods({ periods, color, isMobile }) {
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
 
+// Build a real, per-client weekly program from the client's logged sessions.
+function buildClientProgram(client) {
+  const sessions = client?.sessions || [];
+  const seen = new Set();
+  const uniqueSessions = [];
+  for (const s of sessions) {
+    if (s?.type && !seen.has(s.type)) { seen.add(s.type); uniqueSessions.push(s); }
+  }
+
+  const toDay = (s) => ({
+    focus: s.type,
+    exercises: (s.exercises || []).map((ex) => {
+      const setArr = ex.sets || [];
+      const setCount = setArr.length || 3;
+      const repsArr = setArr.map((st) => st.reps).filter((r) => r != null);
+      const weightsArr = setArr.map((st) => st.weight).filter((w) => w != null);
+      const minR = repsArr.length ? Math.min(...repsArr) : 10;
+      const maxR = repsArr.length ? Math.max(...repsArr) : 10;
+      const reps = repsArr.length ? (minR === maxR ? `${minR}` : `${minR}-${maxR}`) : "10";
+      const topW = weightsArr.length ? Math.max(...weightsArr) : null;
+      const weight = topW != null ? `${topW} lbs` : "Bodyweight";
+      const rest = maxR <= 6 ? "2 min" : maxR <= 10 ? "90s" : "60s";
+      return { name: ex.name, sets: setCount, reps, weight, rest };
+    }),
+  });
+
+  const trainDays = uniqueSessions.map(toDay);
+  const restDay = { focus: "Rest Day", exercises: [] };
+  const pattern = ({
+    1: ["T", "R", "R", "R", "R", "R", "R"],
+    2: ["T", "R", "R", "T", "R", "R", "R"],
+    3: ["T", "R", "T", "R", "T", "R", "R"],
+    4: ["T", "T", "R", "T", "T", "R", "R"],
+    5: ["T", "T", "R", "T", "T", "T", "R"],
+  })[Math.min(trainDays.length, 5)] || ["T", "R", "T", "R", "T", "R", "R"];
+
+  let ti = 0;
+  const days = pattern.map((slot) => (slot === "T" && ti < trainDays.length ? trainDays[ti++] : restDay));
+  // If there were no logged sessions, keep at least one rest week so the canvas renders.
+  if (trainDays.length === 0) return { client: client?.name || "Client", programName: client?.program || "Training Program", days: [restDay] };
+
+  return {
+    client: client?.name || "Client",
+    programName: client?.program || "Training Program",
+    days,
+  };
+}
+
 function CalendarCanvas({ data, type, selectedDay, onSelectDay, onClose }) {
   if (!data) return null;
   
@@ -9105,7 +9153,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════����══════════════════════
+/* ════════════════════════�����══════════════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -10996,7 +11044,7 @@ function WorkflowsCanvas({ onClose, onHome, setChatMessages, setChatTyping, isMo
   );
 }
 
-/* ═════════��═����══���══════════════════���═══���══���══���═
+/* ═════════���═����══���══════════════════���═══���══���══���═
    AI DASHBOARDS CANVAS - Dashboard template builder
 ══════════════════════����══════════������══════════ */
 function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProcessed }) {
@@ -16483,12 +16531,14 @@ export default function MiltonDashboard() {
           setChatMessages(prev => [...prev, { type: "ai", text: `**${focusMsg}** I've opened their profile — you can see their program, check-ins, and progress from here.` }]);
         } else if (navIntent.kind === "clientProgram") {
           const firstName = navIntent.client.name.split(" ")[0];
+          const programData = buildClientProgram(navIntent.client);
           setSelectedClient(null);
-          setCanvasType("workout");
-          setCanvasData({ clientName: navIntent.client.name, programName: `${firstName}'s Program` });
+          setCanvasSelectedDay(null);
+          setCanvasType("clientProgram");
+          setCanvasData(programData);
           setCanvasClient(navIntent.client.name);
           setCanvasMode(true);
-          setChatMessages(prev => [...prev, { type: "ai", text: `**Pulling up ${firstName}'s workout program.** It's open in the builder on the right — tell me what you'd like to adjust and I'll update it.` }]);
+          setChatMessages(prev => [...prev, { type: "ai", text: `**Pulling up ${firstName}'s ${programData.programName} program.** It's open on the right — tap any day to see the exercises, sets, reps and weights from their sessions.` }]);
         } else if (navIntent.kind === "home") {
           setCanvasMode(false); setCanvasData(null); setCanvasType(null);
           setSelectedClient(null);
@@ -17308,6 +17358,15 @@ export default function MiltonDashboard() {
               data={canvasData} 
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "clientProgram" && (
+            <CalendarCanvas
+              data={canvasData}
+              type="workout"
+              selectedDay={canvasSelectedDay}
+              onSelectDay={setCanvasSelectedDay}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setCanvasSelectedDay(null); }}
             />
           )}
           {canvasType === "workout" && (
