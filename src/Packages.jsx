@@ -214,7 +214,7 @@ function Tile({ label, value, sub, accent }) {
 }
 
 /* ---------- summary card (inline in profile) ---------- */
-export function PackagesSummary({ pkg, onManage, isMobile }) {
+export function PackagesSummary({ pkg, onManage, isMobile, onClose }) {
   const composition = `${pkg.plan} plan + ${pkg.carriedIn} carried + ${pkg.added} added${pkg.adjust ? ` ${pkg.adjust > 0 ? "+" : ""}${pkg.adjust} adjusted` : ""}`;
   const remainingSub = pkg.rolloverCap > 0 ? "rolls forward" : "expires Aug 31";
   return (
@@ -234,9 +234,10 @@ export function PackagesSummary({ pkg, onManage, isMobile }) {
           </div>
         </div>
         <button onClick={onManage}
-          style={{ fontFamily: FONT, fontSize: 13.5, fontWeight: 500, cursor: "pointer", borderRadius: 999, padding: "9px 16px", border: `1px solid ${T.line}`, background: T.white, color: T.ink, display: "inline-flex", alignItems: "center", gap: 4 }}>
+          style={{ fontFamily: FONT, fontSize: 13.5, fontWeight: 500, cursor: "pointer", borderRadius: 999, padding: "9px 16px", border: "none", background: T.tealDeep, color: T.white, display: "inline-flex", alignItems: "center", gap: 4 }}>
           Manage <ChevronRight size={15} />
         </button>
+        {onClose && <X size={18} color={T.inkSoft} style={{ cursor: "pointer", marginTop: 12 }} onClick={onClose} />}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>

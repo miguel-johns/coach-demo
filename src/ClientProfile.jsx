@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   ChevronLeft, Sparkles, Camera, User, Plus, X, Clock, Check,
   Calendar, ChevronDown, ChevronRight,
-  TrendingUp, Activity, Ruler, History, MessageSquare, StickyNote,
+  TrendingUp, Activity, Ruler, History, MessageSquare, StickyNote, Package,
 } from "lucide-react";
 import { usePackageState, PackagesSummary, PackageDetail } from "./Packages.jsx";
 
@@ -375,6 +375,10 @@ function deriveClient(client) {
     sessions, sessionsSub,
     meas, bench, timeline, timelineCount, lastMeasDays,
     photoBaseline: dates[0], photoLatest: dates[dates.length - 1],
+    notes: [
+      { id: 1, at: "Mar 12", text: `Prefers morning sessions. Traveling for work the last week of the month — plan lighter check-ins.` },
+      { id: 2, at: "Feb 28", text: `Right knee flared up during lunges. Swapped to step-ups, felt fine. Keep an eye on volume.` },
+    ],
   };
 }
 
@@ -463,6 +467,24 @@ function GhostBtn({ children, onClick }) {
     <button onClick={onClick}
       style={{ fontFamily: FONT, fontSize: 13.5, fontWeight: 500, cursor: "pointer", borderRadius: 999, padding: "9px 16px", border: `1px solid ${T.line}`, background: T.white, color: T.ink, boxShadow: "0 1px 2px rgba(26,46,42,0.04)" }}>
       {children}
+    </button>
+  );
+}
+
+function HeaderBtn({ icon: Icon, active, onClick, children }) {
+  return (
+    <button onClick={onClick}
+      style={{
+        fontFamily: FONT, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+        borderRadius: 999, padding: "9px 16px",
+        border: active ? `1px solid ${T.tealDeep}` : `1px solid ${T.line}`,
+        background: active ? T.tealDeep : T.white,
+        color: active ? T.white : T.ink,
+        display: "inline-flex", alignItems: "center", gap: 7,
+        boxShadow: active ? "none" : "0 1px 2px rgba(26,46,42,0.04)",
+        transition: "background 120ms ease, color 120ms ease",
+      }}>
+      <Icon size={16} /> {children}
     </button>
   );
 }
@@ -566,12 +588,13 @@ export default function ClientProfile({ client, onBack, isMobile }) {
   const [mealsOpen, setMealsOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [pkgOpen, setPkgOpen] = useState(false);
-  const [composerOpen, setComposerOpen] = useState(false);
+  const [panel, setPanel] = useState(null); // null | "message" | "notes" | "package"
   const [message, setMessage] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(d.notes || []);
   const [notesDraft, setNotesDraft] = useState("");
-  const [notesEditing, setNotesEditing] = useState(false);
   const pkg = usePackageState();
+
+  const togglePanel = (name) => setPanel((p) => (p === name ? null : name));
 
   // reset local state when switching clients
   useEffect(() => {
@@ -580,11 +603,10 @@ export default function ClientProfile({ client, onBack, isMobile }) {
     setPillar("all");
     setMetric("weight");
     setPkgOpen(false);
-    setComposerOpen(false);
+    setPanel(null);
     setMessage("");
-    setNotes("");
+    setNotes(d.notes || []);
     setNotesDraft("");
-    setNotesEditing(false);
   }, [d]);
 
   useEffect(() => {
@@ -636,15 +658,20 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               <Pill bg={T.creamTint} color={T.inkSoft}>Client since {d.startLabel}</Pill>
               {photoState === "declined" && <Pill bg={T.amberTint} color={T.amberTx}>Photos off</Pill>}
             </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+              <HeaderBtn icon={MessageSquare} active={panel === "message"} onClick={() => togglePanel("message")}>Send message</HeaderBtn>
+              <HeaderBtn icon={StickyNote} active={panel === "notes"} onClick={() => togglePanel("notes")}>
+                Notes{notes.length ? ` (${notes.length})` : ""}
+              </HeaderBtn>
+              <HeaderBtn icon={Package} active={panel === "package"} onClick={() => togglePanel("package")}>
+                Package · {pkg.remaining} left
+              </HeaderBtn>
+            </div>
           </div>
-          <button onClick={() => setComposerOpen((v) => !v)}
-            style={{ fontFamily: FONT, fontSize: 13.5, fontWeight: 500, cursor: "pointer", borderRadius: 999, padding: "10px 18px", border: "none", background: T.tealDeep, color: T.white, display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
-            <MessageSquare size={16} /> Send message
-          </button>
         </div>
 
         {/* Message composer */}
-        {composerOpen && (
+        {panel === "message" && (
           <div style={{ ...card, display: "grid", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <IconSquare icon={MessageSquare} tint={T.tealTint} color={T.tealDark} />
@@ -652,7 +679,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
                 <div style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>Message {d.firstName}</div>
                 <div style={{ fontSize: 13, color: T.inkSoft }}>Milton delivers this to their chat.</div>
               </div>
-              <X size={18} color={T.inkSoft} style={{ cursor: "pointer" }} onClick={() => setComposerOpen(false)} />
+              <X size={18} color={T.inkSoft} style={{ cursor: "pointer" }} onClick={() => setPanel(null)} />
             </div>
             <textarea
               value={message}
@@ -665,7 +692,7 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <GhostBtn onClick={() => setMessage(`Hi ${d.firstName}, checking in before our next session — how are you feeling?`)}>Check-in template</GhostBtn>
               </div>
-              <PrimaryBtn onClick={() => { if (!message.trim()) return; send(message.trim()); setMessage(""); setComposerOpen(false); }}>
+              <PrimaryBtn onClick={() => { if (!message.trim()) return; send(message.trim()); setMessage(""); setPanel(null); }}>
                 Send to {d.firstName}
               </PrimaryBtn>
             </div>
@@ -673,38 +700,57 @@ export default function ClientProfile({ client, onBack, isMobile }) {
         )}
 
         {/* Coach notes */}
-        <div style={card}>
-          <SectionHeader
-            icon={StickyNote} tint={T.amberTint} color={T.amberTx}
-            title="Coach notes" sub="Private — only visible to you"
-            right={!notesEditing && (
-              <GhostBtn onClick={() => { setNotesDraft(notes); setNotesEditing(true); }}>{notes ? "Edit" : "Add note"}</GhostBtn>
-            )}
-          />
-          {notesEditing ? (
-            <div style={{ display: "grid", gap: 12 }}>
+        {panel === "notes" && (
+          <div style={{ ...card, display: "grid", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <IconSquare icon={StickyNote} tint={T.amberTint} color={T.amberTx} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>Coach notes</div>
+                <div style={{ fontSize: 13, color: T.inkSoft }}>Private — only visible to you</div>
+              </div>
+              <X size={18} color={T.inkSoft} style={{ cursor: "pointer" }} onClick={() => setPanel(null)} />
+            </div>
+
+            {/* New note */}
+            <div style={{ display: "grid", gap: 10 }}>
               <textarea
                 value={notesDraft}
                 onChange={(e) => setNotesDraft(e.target.value)}
-                placeholder={`Notes on ${d.firstName} — context, preferences, things to remember…`}
-                rows={4}
-                autoFocus
+                placeholder={`Add a note about ${d.firstName}…`}
+                rows={3}
                 style={{ fontFamily: FONT, fontSize: 14, lineHeight: 1.55, width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${T.line}`, color: T.ink, outline: "none", resize: "vertical", background: T.cream }}
               />
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <GhostBtn onClick={() => setNotesEditing(false)}>Cancel</GhostBtn>
-                <PrimaryBtn onClick={() => { setNotes(notesDraft.trim()); setNotesEditing(false); send("Coach notes saved"); }}>Save notes</PrimaryBtn>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <PrimaryBtn onClick={() => {
+                  const text = notesDraft.trim();
+                  if (!text) return;
+                  setNotes((prev) => [{ id: Date.now(), text, at: "Just now" }, ...prev]);
+                  setNotesDraft("");
+                  send("Note saved");
+                }}>Add note</PrimaryBtn>
               </div>
             </div>
-          ) : notes ? (
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: T.ink, whiteSpace: "pre-wrap" }}>{notes}</p>
-          ) : (
-            <p style={{ margin: 0, fontSize: 14, color: T.inkFaint, lineHeight: 1.55 }}>No notes yet. Jot down anything you want to remember about {d.firstName}.</p>
-          )}
-        </div>
 
-        {/* Current package */}
-        <PackagesSummary pkg={pkg} onManage={() => setPkgOpen(true)} isMobile={isMobile} />
+            {/* Past notes */}
+            {notes.length > 0 ? (
+              <div style={{ display: "grid", gap: 10, borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
+                {notes.map((n) => (
+                  <div key={n.id} style={{ background: T.cream, border: `1px solid ${T.line}`, borderRadius: 12, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 12, color: T.inkFaint, marginBottom: 4 }}>{n.at}</div>
+                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: T.ink, whiteSpace: "pre-wrap" }}>{n.text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: 14, color: T.inkFaint, lineHeight: 1.55, borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>No notes yet. Anything you jot down stays private to you.</p>
+            )}
+          </div>
+        )}
+
+        {/* Current package (expands under header) */}
+        {panel === "package" && (
+          <PackagesSummary pkg={pkg} onManage={() => setPkgOpen(true)} isMobile={isMobile} onClose={() => setPanel(null)} />
+        )}
 
         {/* Milton's read */}
         <div style={{ ...card, position: "relative", overflow: "hidden" }}>
