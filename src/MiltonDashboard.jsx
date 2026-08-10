@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ClientProfile from "./ClientProfile";
+import PaymentsCanvas from "./PaymentsCanvas";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
 import NutritionDashboard from "./dashboards/NutritionDashboard";
 import ProgressDashboard from "./dashboards/ProgressDashboard";
@@ -272,6 +273,7 @@ function NavIcon({ icon, size = 20 }) {
   aiDashboard: <svg {...s} viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><line x1="10.25" y1="5" x2="13.75" y2="5"/><line x1="10.5" y1="18.75" x2="13.5" y2="18.75"/></svg>,
   playbook: <svg {...s} viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 015.5 3H19a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 00-2 2z"/><path d="M4 19V4.5"/><line x1="8" y1="7.5" x2="16" y2="7.5"/><line x1="8" y1="11" x2="13" y2="11"/></svg>,
   upload: <svg {...s} viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+  payments: <svg {...s} viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -5976,6 +5978,13 @@ isMobile={true}
               onCoachesChanged={() => setCoachVersion(v => v + 1)}
             />
           )}
+          {canvasType === "payments" && (
+            <PaymentsCanvas
+              isMobile={true}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "mealPlan" && (
             <MealPlanCanvas
               data={canvasData}
@@ -6143,7 +6152,7 @@ isMobile={true}
   );
 }
 
-/* ═��═════════════════���═════���═���════════════���══
+/* ═��═══════��═════════���═════���═���════════════���══
    REPORT VISUALIZATION SCREEN
    ══════════════════════════════════��══════════ */
 function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
@@ -11173,7 +11182,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   );
 }
   
-  /* ═════════════════════════════════════════════
+  /* ═════��═══════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════��═��═════════════════ */
 // ═════════════���════════��═══════════════════════����══════��════════
@@ -11717,7 +11726,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
   );
 }
 
-// ���════════���═══��������═��═════��═════��═����═══���═══════��═════════════��════
+// ���════════���═══���������═��═════��═════��═����═══���═══════��═════════════��════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
 // ═══════════════════════════════════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
@@ -15209,7 +15218,7 @@ function ReportsCanvas({ onClose, onHome, setChatMessages, setChatTyping }) {
   );
 }
 
-/* ═════════════════════════���═══════════════��═══
+/* ═════════════════════════���════��══════════��═══
    MAIN DASHBOARD COMPONENT
    ════���═════════════════════���═════��════════════ */
 // ═══════════════════════════════════════════════════════════����══
@@ -17420,6 +17429,13 @@ export default function MiltonDashboard() {
               isMobile={canvasCompact}
             />
           )}
+          {canvasType === "payments" && (
+            <PaymentsCanvas
+              isMobile={canvasCompact}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "playbook" && (
             <PlaybookCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -17805,6 +17821,7 @@ export default function MiltonDashboard() {
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
