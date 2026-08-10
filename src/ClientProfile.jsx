@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   ChevronLeft, Sparkles, Camera, User, Plus, X, Clock, Check,
   Calendar, ChevronDown, ChevronRight,
-  TrendingUp, Activity, Ruler, History,
+  TrendingUp, Activity, Ruler, History, MessageSquare, StickyNote, Package,
 } from "lucide-react";
+import { usePackageState, PackagesSummary, PackageDetail } from "./Packages.jsx";
 
 /* Palette mapped to the app theme (TEAL / MINT / SAGE / DM Sans) */
 const T = {
@@ -374,6 +375,10 @@ function deriveClient(client) {
     sessions, sessionsSub,
     meas, bench, timeline, timelineCount, lastMeasDays,
     photoBaseline: dates[0], photoLatest: dates[dates.length - 1],
+    notes: [
+      { id: 1, at: "Mar 12", text: `Prefers morning sessions. Traveling for work the last week of the month — plan lighter check-ins.` },
+      { id: 2, at: "Feb 28", text: `Right knee flared up during lunges. Swapped to step-ups, felt fine. Keep an eye on volume.` },
+    ],
   };
 }
 
@@ -462,6 +467,24 @@ function GhostBtn({ children, onClick }) {
     <button onClick={onClick}
       style={{ fontFamily: FONT, fontSize: 13.5, fontWeight: 500, cursor: "pointer", borderRadius: 999, padding: "9px 16px", border: `1px solid ${T.line}`, background: T.white, color: T.ink, boxShadow: "0 1px 2px rgba(26,46,42,0.04)" }}>
       {children}
+    </button>
+  );
+}
+
+function HeaderBtn({ icon: Icon, active, onClick, children }) {
+  return (
+    <button onClick={onClick}
+      style={{
+        fontFamily: FONT, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+        borderRadius: 999, padding: "9px 16px",
+        border: active ? `1px solid ${T.tealDeep}` : `1px solid ${T.line}`,
+        background: active ? T.tealDeep : T.white,
+        color: active ? T.white : T.ink,
+        display: "inline-flex", alignItems: "center", gap: 7,
+        boxShadow: active ? "none" : "0 1px 2px rgba(26,46,42,0.04)",
+        transition: "background 120ms ease, color 120ms ease",
+      }}>
+      <Icon size={16} /> {children}
     </button>
   );
 }
@@ -564,6 +587,14 @@ export default function ClientProfile({ client, onBack, isMobile }) {
   const [selectedDay, setSelectedDay] = useState(d.defaultDay);
   const [mealsOpen, setMealsOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [pkgOpen, setPkgOpen] = useState(false);
+  const [panel, setPanel] = useState(null); // null | "message" | "notes" | "package"
+  const [message, setMessage] = useState("");
+  const [notes, setNotes] = useState(d.notes || []);
+  const [notesDraft, setNotesDraft] = useState("");
+  const pkg = usePackageState();
+
+  const togglePanel = (name) => setPanel((p) => (p === name ? null : name));
 
   // reset local state when switching clients
   useEffect(() => {
@@ -571,6 +602,11 @@ export default function ClientProfile({ client, onBack, isMobile }) {
     setSelectedDay(d.defaultDay);
     setPillar("all");
     setMetric("weight");
+    setPkgOpen(false);
+    setPanel(null);
+    setMessage("");
+    setNotes(d.notes || []);
+    setNotesDraft("");
   }, [d]);
 
   useEffect(() => {
@@ -608,10 +644,12 @@ export default function ClientProfile({ client, onBack, isMobile }) {
 
       <div style={{ maxWidth: 880, margin: "0 auto", padding: isMobile ? "0 16px 64px" : "0 32px 64px", display: "grid", gap: 16 }}>
 
+        {!pkgOpen && (
+        <>
         {/* Client header */}
-        <div style={{ ...card, display: "flex", alignItems: "center", gap: 20 }}>
+        <div style={{ ...card, display: "flex", alignItems: "flex-start", gap: 20, flexWrap: "wrap" }}>
           <div style={{ width: 74, height: 74, borderRadius: "50%", background: T.teal, color: T.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, flexShrink: 0 }}>{d.initial}</div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontSize: isMobile ? 24 : 30, fontWeight: 700, lineHeight: 1.15, color: T.ink }}>{d.name}</div>
             <div style={{ fontSize: 14, color: T.inkSoft, marginTop: 3 }}>{d.subLine}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
@@ -620,8 +658,99 @@ export default function ClientProfile({ client, onBack, isMobile }) {
               <Pill bg={T.creamTint} color={T.inkSoft}>Client since {d.startLabel}</Pill>
               {photoState === "declined" && <Pill bg={T.amberTint} color={T.amberTx}>Photos off</Pill>}
             </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+              <HeaderBtn icon={MessageSquare} active={panel === "message"} onClick={() => togglePanel("message")}>Send message</HeaderBtn>
+              <HeaderBtn icon={StickyNote} active={panel === "notes"} onClick={() => togglePanel("notes")}>
+                Notes{notes.length ? ` (${notes.length})` : ""}
+              </HeaderBtn>
+              <HeaderBtn icon={Package} active={panel === "package"} onClick={() => togglePanel("package")}>
+                Package · {pkg.remaining} left
+              </HeaderBtn>
+            </div>
           </div>
         </div>
+
+        {/* Message composer */}
+        {panel === "message" && (
+          <div style={{ ...card, display: "grid", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <IconSquare icon={MessageSquare} tint={T.tealTint} color={T.tealDark} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>Message {d.firstName}</div>
+                <div style={{ fontSize: 13, color: T.inkSoft }}>Milton delivers this to their chat.</div>
+              </div>
+              <X size={18} color={T.inkSoft} style={{ cursor: "pointer" }} onClick={() => setPanel(null)} />
+            </div>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={`Write a quick message to ${d.firstName}…`}
+              rows={3}
+              style={{ fontFamily: FONT, fontSize: 14, lineHeight: 1.5, width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${T.line}`, color: T.ink, outline: "none", resize: "vertical", background: T.cream }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <GhostBtn onClick={() => setMessage(`Hi ${d.firstName}, checking in before our next session — how are you feeling?`)}>Check-in template</GhostBtn>
+              </div>
+              <PrimaryBtn onClick={() => { if (!message.trim()) return; send(message.trim()); setMessage(""); setPanel(null); }}>
+                Send to {d.firstName}
+              </PrimaryBtn>
+            </div>
+          </div>
+        )}
+
+        {/* Coach notes */}
+        {panel === "notes" && (
+          <div style={{ ...card, display: "grid", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <IconSquare icon={StickyNote} tint={T.amberTint} color={T.amberTx} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>Coach notes</div>
+                <div style={{ fontSize: 13, color: T.inkSoft }}>Private — only visible to you</div>
+              </div>
+              <X size={18} color={T.inkSoft} style={{ cursor: "pointer" }} onClick={() => setPanel(null)} />
+            </div>
+
+            {/* New note */}
+            <div style={{ display: "grid", gap: 10 }}>
+              <textarea
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                placeholder={`Add a note about ${d.firstName}…`}
+                rows={3}
+                style={{ fontFamily: FONT, fontSize: 14, lineHeight: 1.55, width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${T.line}`, color: T.ink, outline: "none", resize: "vertical", background: T.cream }}
+              />
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <PrimaryBtn onClick={() => {
+                  const text = notesDraft.trim();
+                  if (!text) return;
+                  setNotes((prev) => [{ id: Date.now(), text, at: "Just now" }, ...prev]);
+                  setNotesDraft("");
+                  send("Note saved");
+                }}>Add note</PrimaryBtn>
+              </div>
+            </div>
+
+            {/* Past notes */}
+            {notes.length > 0 ? (
+              <div style={{ display: "grid", gap: 10, borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
+                {notes.map((n) => (
+                  <div key={n.id} style={{ background: T.cream, border: `1px solid ${T.line}`, borderRadius: 12, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 12, color: T.inkFaint, marginBottom: 4 }}>{n.at}</div>
+                    <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: T.ink, whiteSpace: "pre-wrap" }}>{n.text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: 14, color: T.inkFaint, lineHeight: 1.55, borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>No notes yet. Anything you jot down stays private to you.</p>
+            )}
+          </div>
+        )}
+
+        {/* Current package (expands under header) */}
+        {panel === "package" && (
+          <PackagesSummary pkg={pkg} onManage={() => setPkgOpen(true)} isMobile={isMobile} onClose={() => setPanel(null)} />
+        )}
 
         {/* Milton's read */}
         <div style={{ ...card, position: "relative", overflow: "hidden" }}>
@@ -933,6 +1062,18 @@ export default function ClientProfile({ client, onBack, isMobile }) {
             </button>
           </div>
         </div>
+        </>
+        )}
+
+        {pkgOpen && (
+          <PackageDetail
+            pkg={pkg}
+            clientName={d.name}
+            onClose={() => setPkgOpen(false)}
+            onToast={send}
+            isMobile={isMobile}
+          />
+        )}
       </div>
 
       {/* Toast simulating handoff to the chat rail */}
