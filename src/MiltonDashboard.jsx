@@ -340,6 +340,31 @@ const removeCoach = (id) => {
   if (idx !== -1) COACHES.splice(idx, 1);
 };
 
+// ═══════════════════════════════════════════════════════════════
+// CLIENT TAGS - free-form labels, multiple per client
+// ═══════════════════════════════════════════════════════════════
+const TAG_OPTIONS = [
+  { id: "vip", label: "VIP", color: "#9333ea" },
+  { id: "new", label: "New client", color: "#2B7A78" },
+  { id: "at-risk", label: "At risk", color: "#ef4444" },
+  { id: "injury", label: "Injury", color: "#ef6c3e" },
+  { id: "weight-loss", label: "Weight loss", color: "#0ea5e9" },
+  { id: "strength", label: "Strength", color: "#6366f1" },
+  { id: "nutrition", label: "Nutrition focus", color: "#16a34a" },
+  { id: "prenatal", label: "Prenatal", color: "#db2777" },
+  { id: "senior", label: "Senior", color: "#ca8a04" },
+  { id: "competitor", label: "Competitor", color: "#7c3aed" },
+];
+const getTag = (id) => TAG_OPTIONS.find(t => t.id === id);
+// Seed a few clients with tags so the list has demo data
+const SEED_TAGS = {
+  "Sarah Chen": ["vip", "weight-loss"],
+  "Marcus Johnson": ["strength", "competitor"],
+  "Emily Rodriguez": ["new", "nutrition"],
+  "Jeff Turner": ["injury"],
+  "Ana Prieto": ["at-risk", "weight-loss"],
+};
+
 // Group class & semi-private templates used when generating programming
 const GROUP_CLASS_TYPES = [
   { id: "strength", label: "Strength", color: "#2B7A78", focus: "Compound lifts + accessory" },
@@ -2881,6 +2906,73 @@ function CoachAssignSelect({ value, onChange }) {
 // ��═══════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
 // ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
+// ═══════════════════════════════════════════════════════════════
+// TAG CELL - display + edit a client's tags (multiple allowed)
+// ═══════════════════════════════════════════════════════════════
+function TagCell({ tags = [], onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const toggle = (id) => onChange(tags.includes(id) ? tags.filter(t => t !== id) : [...tags, id]);
+  const selected = TAG_OPTIONS.filter(t => tags.includes(t.id));
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+      {selected.map(t => (
+        <span key={t.id} style={{
+          display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 20,
+          background: `${t.color}14`, color: t.color, fontSize: 11.5, fontWeight: 600, lineHeight: 1.4,
+          border: `1px solid ${t.color}33`, whiteSpace: "nowrap",
+        }}>{t.label}</span>
+      ))}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 3,
+          padding: selected.length ? "4px 8px" : "5px 11px", borderRadius: 20,
+          border: `1px dashed ${open ? TEAL : BORDER}`, background: open ? TEAL_LIGHT : WHITE,
+          cursor: "pointer", fontSize: 11.5, fontWeight: 600, color: open ? TEAL : TEXT_SEC, lineHeight: 1,
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        {selected.length === 0 && "Tag"}
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 30,
+          minWidth: 200, background: WHITE, borderRadius: 12, border: `1px solid ${BORDER}`,
+          boxShadow: "0 8px 28px rgba(0,0,0,0.14)", padding: 6, maxHeight: 300, overflowY: "auto",
+        }}>
+          {TAG_OPTIONS.map(t => {
+            const isSel = tags.includes(t.id);
+            return (
+              <button key={t.id} onClick={() => toggle(t.id)} style={{
+                display: "flex", alignItems: "center", gap: 9, width: "100%",
+                padding: "8px 9px", borderRadius: 8, border: "none",
+                background: isSel ? `${t.color}12` : "transparent", cursor: "pointer", textAlign: "left",
+              }}
+                onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = "#f5f7f6"; }}
+                onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = "transparent"; }}
+              >
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: t.color, flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: TEXT }}>{t.label}</span>
+                {isSel && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20,6 9,17 4,12"/></svg>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -16281,7 +16373,9 @@ function CheckInDeck({ isMobile, homeCompact, onReply }) {
 export default function MiltonDashboard() {
   const isMobile = useIsMobile();
   const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
-  const [clients, setClients] = useState([...initialClients]);
+  const [clients, setClients] = useState(() =>
+    initialClients.map(c => ({ ...c, tags: c.tags || SEED_TAGS[c.name] || [] }))
+  );
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
   const [chatTyping, setChatTyping] = useState(false);
@@ -18059,12 +18153,14 @@ export default function MiltonDashboard() {
                     </div>
                     <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2 }}>{client.program || "General Fitness"}</div>
                   </div>
-                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                    <CoachAssignSelect
-                      value={client.coachId}
-                      onChange={(coachId) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, coachId } : c))}
-                    />
-                  </div>
+                </div>
+
+                {/* Tags */}
+                <div onClick={e => e.stopPropagation()}>
+                  <TagCell
+                    tags={client.tags || []}
+                    onChange={(tags) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, tags } : c))}
+                  />
                 </div>
 
                 {/* Goal */}
@@ -18102,13 +18198,13 @@ export default function MiltonDashboard() {
             display: "flex", flexDirection: "column", minHeight: 0
           }}>
             <div style={{
-              display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
+              display: "grid", gridTemplateColumns: "1.8fr 1.7fr 0.7fr 1fr 36px",
               padding: "12px 24px", background: "#fafcfb",
               borderBottom: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600,
               color: TEXT_SEC, textTransform: "uppercase", letterSpacing: "0.05em",
               flexShrink: 0
             }}>
-              <span>Client</span><span>Coach</span><span>Sessions</span><span>Goal</span><span />
+              <span>Client</span><span>Tags</span><span>Sessions</span><span>Goal</span><span />
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {clients.filter(c => {
@@ -18126,7 +18222,7 @@ export default function MiltonDashboard() {
                 onClick={() => setSelectedClient(i)}
                 onMouseEnter={() => setHoveredClient(i)} onMouseLeave={() => setHoveredClient(null)}
                 style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 1fr 36px",
+                  display: "grid", gridTemplateColumns: "1.8fr 1.7fr 0.7fr 1fr 36px",
                   padding: "14px 24px", alignItems: "center",
                   borderBottom: i < clients.length - 1 ? `1px solid ${BORDER}` : "none",
                   background: hoveredClient === i ? "#f7faf9" : "transparent",
@@ -18143,9 +18239,9 @@ export default function MiltonDashboard() {
                   </div>
                 </div>
                 <div onClick={e => e.stopPropagation()}>
-                  <CoachAssignSelect
-                    value={client.coachId}
-                    onChange={(coachId) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, coachId } : c))}
+                  <TagCell
+                    tags={client.tags || []}
+                    onChange={(tags) => setClients(prev => prev.map((c, idx) => idx === i ? { ...c, tags } : c))}
                   />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
