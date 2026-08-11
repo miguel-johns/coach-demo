@@ -9290,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����═══════����═════════════
+/* ════════════════════════�����═════��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14380,13 +14380,17 @@ function ClassesCanvas({ onClose, onHome }) {
   };
 
   const onIframeLoad = () => {
-    requestAnimationFrame(() => setLoaded(true));
+    // Hide the duplicate inner chat BEFORE fading the iframe in, so the user
+    // never sees the two-column layout reflow to one column. Reveal as soon as
+    // the chat is hidden (or after a short fallback if the DOM never matches).
     let tries = 0;
+    const reveal = () => requestAnimationFrame(() => setLoaded(true));
     const timer = setInterval(() => {
       const done = hideInnerChat();
       tries += 1;
-      if (done || tries > 12) clearInterval(timer);
-    }, 150);
+      if (done) { clearInterval(timer); reveal(); }
+      else if (tries > 12) { clearInterval(timer); reveal(); }
+    }, 60);
   };
 
   return (
