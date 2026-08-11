@@ -1478,7 +1478,7 @@ function SessionClientTile({
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CANVAS - Full-screen session view for PT & Semi-Private
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════���════════════════════
 function SessionCanvas({ 
   session, 
   clients, 
@@ -9290,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����════════��═════════════
+/* ════════════════════════�����═══════����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14347,6 +14347,48 @@ function ClassesCanvas({ onClose, onHome }) {
   // the bundle paints. Match the surface to the app's real body color
   // (rgb(243,245,246)) so there's no color flash during load.
   const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef(null);
+
+  // The bundle ships its own inner Milton chat column next to the schedule.
+  // We already have the app's main chat on the left, so hide the duplicate.
+  // The bundle has no stable selectors, so we locate the schedule column by
+  // its heading and collapse its sibling column(s). Same-origin srcDoc lets
+  // us touch the inner DOM. Retry briefly in case the inner app re-renders.
+  const hideInnerChat = () => {
+    const doc = iframeRef.current?.contentDocument;
+    const win = iframeRef.current?.contentWindow;
+    if (!doc || !win) return false;
+    // Find the top-level columns row: a full-width, full-height horizontal
+    // flex container with the chat column and schedule column as children.
+    const row = [...doc.querySelectorAll("div")].find(n => {
+      const cs = win.getComputedStyle(n);
+      const r = n.getBoundingClientRect();
+      return cs.display === "flex" && cs.flexDirection === "row"
+        && n.childElementCount >= 2 && r.width > 1000 && r.height > 500;
+    });
+    if (!row) return false;
+    const kids = [...row.children];
+    const scheduleCol = kids.find(c => /Class schedule/.test(c.textContent || ""));
+    const chatCol = kids.find(c => c !== scheduleCol
+      && /Ask Milton|classes on/i.test(c.textContent || ""));
+    if (!scheduleCol || !chatCol) return false;
+    chatCol.style.display = "none";
+    scheduleCol.style.flex = "1 1 auto";
+    scheduleCol.style.width = "100%";
+    scheduleCol.style.maxWidth = "none";
+    return true;
+  };
+
+  const onIframeLoad = () => {
+    requestAnimationFrame(() => setLoaded(true));
+    let tries = 0;
+    const timer = setInterval(() => {
+      const done = hideInnerChat();
+      tries += 1;
+      if (done || tries > 12) clearInterval(timer);
+    }, 150);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <button
@@ -14369,9 +14411,10 @@ function ClassesCanvas({ onClose, onHome }) {
         </svg>
       </button>
       <iframe
+        ref={iframeRef}
         title="Class Schedule"
         srcDoc={classScheduleHtml}
-        onLoad={() => requestAnimationFrame(() => setLoaded(true))}
+        onLoad={onIframeLoad}
         style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
       />
     </div>
