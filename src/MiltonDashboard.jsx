@@ -13,6 +13,7 @@ import WelcomeVideoModal from "./components/WelcomeVideoModal";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
+import classScheduleHtml from "./classSchedule.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -14336,6 +14337,37 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
   );
 }
 
+function ClassesCanvas({ onClose, onHome }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#0E5D70", fontFamily: "'DM Sans', sans-serif" }}>
+      <button
+        onClick={onClose || onHome}
+        style={{
+          position: "absolute", top: 14, right: 16, zIndex: 10,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
+          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+        title="Back to home"
+        aria-label="Back to home"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <iframe
+        title="Class Schedule"
+        srcDoc={classScheduleHtml}
+        style={{ flex: 1, width: "100%", border: "none", background: "#0E5D70" }}
+      />
+    </div>
+  );
+}
+
 function MessageSequenceCanvas({ data, onClose, onHome }) {
   if (!data) return null;
   
@@ -17486,10 +17518,10 @@ export default function MiltonDashboard() {
           // They also use an opacity-only fade: a scale/translate transform on
           // an iframe container forces the iframe to re-rasterize mid-animation,
           // causing a one-frame flash.
-          ...((canvasType === "workout" || canvasType === "library")
+          ...((canvasType === "workout" || canvasType === "library" || canvasType === "classes")
             ? { border: "none", boxShadow: "none", background: "transparent" }
             : { border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", background: WHITE }),
-          animation: (canvasType === "workout" || canvasType === "library")
+          animation: (canvasType === "workout" || canvasType === "library" || canvasType === "classes")
             ? "canvasFadeIn 0.3s ease forwards"
             : "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
@@ -17627,6 +17659,12 @@ export default function MiltonDashboard() {
               data={canvasData}
               clients={clients}
               mode="library"
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "classes" && (
+            <ClassesCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -17952,6 +17990,7 @@ export default function MiltonDashboard() {
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
