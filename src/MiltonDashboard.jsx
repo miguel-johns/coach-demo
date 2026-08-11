@@ -7061,7 +7061,7 @@ function DataCardPeriods({ periods, color, isMobile }) {
 }
 
 
-/* ═══════════════════════��════════════════════
+/* ══════════���════════════��════════════════════
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
 
@@ -17483,10 +17483,15 @@ export default function MiltonDashboard() {
           borderRadius: 20,
           // The workout/library canvases render their own card inside the
           // iframe, so drop the panel's card chrome to avoid a card-in-card.
+          // They also use an opacity-only fade: a scale/translate transform on
+          // an iframe container forces the iframe to re-rasterize mid-animation,
+          // causing a one-frame flash.
           ...((canvasType === "workout" || canvasType === "library")
             ? { border: "none", boxShadow: "none", background: "transparent" }
             : { border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", background: WHITE }),
-          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          animation: (canvasType === "workout" || canvasType === "library")
+            ? "canvasFadeIn 0.3s ease forwards"
+            : "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
           flexDirection: "column",
           overflow: "hidden"
@@ -18488,9 +18493,13 @@ export default function MiltonDashboard() {
   50% { opacity: 1; }
   }
         @keyframes canvasSlideIn {
-          from { opacity: 0; transform: scale(0.96) translateX(20px); }
-          to { opacity: 1; transform: scale(1) translateX(0); }
-        }
+  from { opacity: 0; transform: scale(0.96) translateX(20px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+  }
+        @keyframes canvasFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+  }
         @keyframes canvasCellReveal {
           from { opacity: 0; transform: scale(0.8); }
           to { opacity: 1; transform: scale(1); }
