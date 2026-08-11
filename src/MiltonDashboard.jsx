@@ -7066,6 +7066,41 @@ function DataCardPeriods({ periods, color, isMobile }) {
    ═══════════════════════════════════════��═════ */
 
 // Build a real, per-client weekly program from the client's logged sessions.
+// Generate a fresh AI-built program for a client. Returns the same shape
+// CalendarCanvas expects: { client, programName, days: [{ focus, exercises }] }.
+// Emily's demo context = missed sessions + block ending, so we build a
+// gentle 2x/week full-body restart to rebuild momentum.
+function generateWorkoutProgram(client) {
+  const name = typeof client === "string" ? client : client?.name || "Client";
+
+  const dayA = {
+    focus: "Full Body A",
+    exercises: [
+      { name: "Goblet Squat", sets: 3, reps: "10", weight: "25 lbs", rest: "60s" },
+      { name: "DB Bench Press", sets: 3, reps: "10", weight: "20 lbs", rest: "60s" },
+      { name: "Seated Cable Row", sets: 3, reps: "12", weight: "45 lbs", rest: "60s" },
+      { name: "DB Romanian Deadlift", sets: 3, reps: "10", weight: "30 lbs", rest: "75s" },
+      { name: "Plank", sets: 3, reps: "30s", weight: "Bodyweight", rest: "45s" },
+    ],
+  };
+  const dayB = {
+    focus: "Full Body B",
+    exercises: [
+      { name: "DB Reverse Lunge", sets: 3, reps: "10 / leg", weight: "20 lbs", rest: "60s" },
+      { name: "Incline DB Press", sets: 3, reps: "12", weight: "15 lbs", rest: "60s" },
+      { name: "Lat Pulldown", sets: 3, reps: "12", weight: "50 lbs", rest: "60s" },
+      { name: "Hip Thrust", sets: 3, reps: "12", weight: "45 lbs", rest: "75s" },
+      { name: "Dead Bug", sets: 3, reps: "10 / side", weight: "Bodyweight", rest: "45s" },
+    ],
+  };
+  const rest = { focus: "Rest Day", exercises: [] };
+
+  // Weekly pattern (Sun → Sat): train Tue & Thu, rest the rest.
+  const days = [rest, rest, dayA, rest, dayB, rest, rest];
+
+  return { client: name, programName: "Restart · 2×/Week Full Body", days };
+}
+
 function buildClientProgram(client) {
   const sessions = client?.sessions || [];
   const seen = new Set();
@@ -16771,6 +16806,43 @@ export default function MiltonDashboard() {
       return null;
     })();
 
+    // Workout builds get a live "building" sequence in the chat, then open
+    // the weekday program view (CalendarCanvas) which animates day-by-day.
+    if (canvasIntent && canvasIntent.type === "workout") {
+      const client = canvasIntent.client;
+      const firstName = client.name.split(" ")[0];
+      const program = generateWorkoutProgram(client);
+
+      // Step 1 — acknowledge + explain the plan
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { type: "ai", text: `**Building ${firstName}'s program...**\n\nShe's missed her last 2 sessions and her current block ends this week, so I'll design a simpler **2×/week full-body restart** to rebuild momentum.` }]);
+        setChatTyping(true);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+
+      // Step 2 — show it programming the days
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { type: "ai", text: `Programming **Day 1 — Full Body A** and **Day 2 — Full Body B**. Keeping the loads light and the movements simple so she can get back in rhythm.` }]);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 1400);
+
+      // Step 3 — open the weekday program view and let it populate
+      setTimeout(() => {
+        setSelectedClient(null);
+        setCanvasSelectedDay(null);
+        setCanvasType("clientProgram");
+        setCanvasData(program);
+        setCanvasClient(client.name);
+        setCanvasHistory([program]);
+        setCanvasHistoryIndex(0);
+        setCanvasMode(true);
+        setChatMessages(prev => [...prev, { type: "ai", text: `Done — here's **${firstName}'s new program**. I've opened the weekly view on the right; watch it populate day by day. Tap any training day to see the exercises, sets, reps and weights.` }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 2900);
+      return;
+    }
+
     if (canvasIntent) {
       setTimeout(() => {
         const firstName = canvasIntent.client.name.split(" ")[0];
@@ -17472,6 +17544,7 @@ export default function MiltonDashboard() {
           )}
           {canvasType === "clientProgram" && (
             <CalendarCanvas
+              key={`prog-${canvasData?.client || ""}-${canvasData?.programName || ""}`}
               data={canvasData}
               type="workout"
               selectedDay={canvasSelectedDay}
