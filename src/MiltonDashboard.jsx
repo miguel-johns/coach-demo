@@ -13,6 +13,7 @@ import WelcomeVideoModal from "./components/WelcomeVideoModal";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
+import classScheduleHtml from "./classSchedule.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -1477,7 +1478,7 @@ function SessionClientTile({
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CANVAS - Full-screen session view for PT & Semi-Private
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════���════════════════════
 function SessionCanvas({ 
   session, 
   clients, 
@@ -2907,7 +2908,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ��═══════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
+// ══════��══��═════���═����══════════════════════���═���═���══���═════���══════���═
 // ═══════════════════════════════════════════════════════════════
 // TAG CELL - display + edit a client's tags (multiple allowed)
 // ═══════════════════════════════════════════════════════════════
@@ -7061,11 +7062,46 @@ function DataCardPeriods({ periods, color, isMobile }) {
 }
 
 
-/* ═══════════════════════��════════════════════
+/* ══════════���════════════��════════════════════
    SEND REPORT MODAL
    ═══════════════════════════════════════��═════ */
 
 // Build a real, per-client weekly program from the client's logged sessions.
+// Generate a fresh AI-built program for a client. Returns the same shape
+// CalendarCanvas expects: { client, programName, days: [{ focus, exercises }] }.
+// Emily's demo context = missed sessions + block ending, so we build a
+// gentle 2x/week full-body restart to rebuild momentum.
+function generateWorkoutProgram(client) {
+  const name = typeof client === "string" ? client : client?.name || "Client";
+
+  const dayA = {
+    focus: "Full Body A",
+    exercises: [
+      { name: "Goblet Squat", sets: 3, reps: "10", weight: "25 lbs", rest: "60s" },
+      { name: "DB Bench Press", sets: 3, reps: "10", weight: "20 lbs", rest: "60s" },
+      { name: "Seated Cable Row", sets: 3, reps: "12", weight: "45 lbs", rest: "60s" },
+      { name: "DB Romanian Deadlift", sets: 3, reps: "10", weight: "30 lbs", rest: "75s" },
+      { name: "Plank", sets: 3, reps: "30s", weight: "Bodyweight", rest: "45s" },
+    ],
+  };
+  const dayB = {
+    focus: "Full Body B",
+    exercises: [
+      { name: "DB Reverse Lunge", sets: 3, reps: "10 / leg", weight: "20 lbs", rest: "60s" },
+      { name: "Incline DB Press", sets: 3, reps: "12", weight: "15 lbs", rest: "60s" },
+      { name: "Lat Pulldown", sets: 3, reps: "12", weight: "50 lbs", rest: "60s" },
+      { name: "Hip Thrust", sets: 3, reps: "12", weight: "45 lbs", rest: "75s" },
+      { name: "Dead Bug", sets: 3, reps: "10 / side", weight: "Bodyweight", rest: "45s" },
+    ],
+  };
+  const rest = { focus: "Rest Day", exercises: [] };
+
+  // Weekly pattern (Sun → Sat): train Tue & Thu, rest the rest.
+  const days = [rest, rest, dayA, rest, dayB, rest, rest];
+
+  return { client: name, programName: "Restart · 2×/Week Full Body", days };
+}
+
 function buildClientProgram(client) {
   const sessions = client?.sessions || [];
   const seen = new Set();
@@ -9254,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����══════════════════════
+/* ════════════════════════�����═════��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14217,12 +14253,64 @@ function getFallbackMealPlan() {
   );
 }
 
-function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both" }) {
+function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both", autoOpen = false }) {
   const libraryHtml = mode === "programs"
     ? workoutBuilderHtml
     : libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
+
+  const iframeRef = useRef(null);
+  // Keep the iframe hidden until its bundle loads, then fade in — prevents the
+  // blank-panel flash before the heavy app paints.
+  const [loaded, setLoaded] = useState(false);
+
+  // When launched from a "build a workout" flow, auto-drill into the client's
+  // program and land on the Weekdays tab. The bundled prototype loads async,
+  // so we poll its (same-origin srcDoc) document until the controls exist.
+  useEffect(() => {
+    if (!autoOpen || mode !== "programs") return;
+    let rowClicked = false;
+    let tabClicked = false;
+    const start = Date.now();
+
+    const fireClick = (el, win) => {
+      const r = el.getBoundingClientRect();
+      const opts = { bubbles: true, cancelable: true, view: win, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
+      ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(t => {
+        try { el.dispatchEvent(new MouseEvent(t, opts)); } catch (_) { el.click && el.click(); }
+      });
+    };
+
+    const timer = setInterval(() => {
+      const win = iframeRef.current?.contentWindow;
+      const doc = iframeRef.current?.contentDocument;
+      if (!doc) return;
+
+      if (!rowClicked) {
+        const rows = [...doc.querySelectorAll("div,button,a,li")]
+          .filter(n => /Put on 10 lb of muscle/.test(n.textContent || ""));
+        if (rows.length) {
+          rows.sort((a, b) => a.textContent.length - b.textContent.length);
+          fireClick(rows[0], win);
+          rowClicked = true;
+        }
+      } else if (!tabClicked) {
+        const tabs = [...doc.querySelectorAll("button,div,span")]
+          .filter(n => (n.textContent || "").trim() === "Weekdays");
+        if (tabs.length) {
+          tabs.sort((a, b) => a.textContent.length - b.textContent.length);
+          fireClick(tabs[0], win);
+          tabClicked = true;
+        }
+      }
+
+      if ((rowClicked && tabClicked) || Date.now() - start > 9000) clearInterval(timer);
+    }, 250);
+
+    return () => clearInterval(timer);
+  }, [autoOpen, mode]);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <button
         onClick={onClose || onHome}
         style={{
@@ -14243,9 +14331,95 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
         </svg>
       </button>
       <iframe
+        ref={iframeRef}
         title="Library & Programs"
         srcDoc={libraryHtml}
-        style={{ flex: 1, width: "100%", border: "none", background: "#FBFAF7" }}
+        onLoad={() => requestAnimationFrame(() => setLoaded(true))}
+        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
+      />
+    </div>
+  );
+}
+
+function ClassesCanvas({ onClose, onHome }) {
+  // The class schedule bundle is a heavy iframe app. Keep it hidden until its
+  // load event fires, then fade it in — otherwise a blank panel flashes before
+  // the bundle paints. Match the surface to the app's real body color
+  // (rgb(243,245,246)) so there's no color flash during load.
+  const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef(null);
+
+  // The bundle ships its own inner Milton chat column next to the schedule.
+  // We already have the app's main chat on the left, so hide the duplicate.
+  // The bundle has no stable selectors, so we locate the schedule column by
+  // its heading and collapse its sibling column(s). Same-origin srcDoc lets
+  // us touch the inner DOM. Retry briefly in case the inner app re-renders.
+  const hideInnerChat = () => {
+    const doc = iframeRef.current?.contentDocument;
+    const win = iframeRef.current?.contentWindow;
+    if (!doc || !win) return false;
+    // Find the top-level columns row: a full-width, full-height horizontal
+    // flex container with the chat column and schedule column as children.
+    const row = [...doc.querySelectorAll("div")].find(n => {
+      const cs = win.getComputedStyle(n);
+      const r = n.getBoundingClientRect();
+      return cs.display === "flex" && cs.flexDirection === "row"
+        && n.childElementCount >= 2 && r.width > 1000 && r.height > 500;
+    });
+    if (!row) return false;
+    const kids = [...row.children];
+    const scheduleCol = kids.find(c => /Class schedule/.test(c.textContent || ""));
+    const chatCol = kids.find(c => c !== scheduleCol
+      && /Ask Milton|classes on/i.test(c.textContent || ""));
+    if (!scheduleCol || !chatCol) return false;
+    chatCol.style.display = "none";
+    scheduleCol.style.flex = "1 1 auto";
+    scheduleCol.style.width = "100%";
+    scheduleCol.style.maxWidth = "none";
+    return true;
+  };
+
+  const onIframeLoad = () => {
+    // Hide the duplicate inner chat BEFORE fading the iframe in, so the user
+    // never sees the two-column layout reflow to one column. Reveal as soon as
+    // the chat is hidden (or after a short fallback if the DOM never matches).
+    let tries = 0;
+    const reveal = () => requestAnimationFrame(() => setLoaded(true));
+    const timer = setInterval(() => {
+      const done = hideInnerChat();
+      tries += 1;
+      if (done) { clearInterval(timer); reveal(); }
+      else if (tries > 12) { clearInterval(timer); reveal(); }
+    }, 60);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
+      <button
+        onClick={onClose || onHome}
+        style={{
+          position: "absolute", top: 14, right: 16, zIndex: 10,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
+          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+          transition: "all 0.15s ease"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+        title="Back to home"
+        aria-label="Back to home"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <iframe
+        ref={iframeRef}
+        title="Class Schedule"
+        srcDoc={classScheduleHtml}
+        onLoad={onIframeLoad}
+        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
       />
     </div>
   );
@@ -15901,7 +16075,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
                         <div style={{ fontSize: 8.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.3 }}>% max</div>
                         {isEditing("pct")
                           ? cellInput("pct", ex.pct || "", { fontSize: 12.5, fontWeight: 700, color: "#ef6c3e", textAlign: "center" })
-                          : <span style={{ fontSize: 12.5, fontWeight: 700, color: (ex.pct && ex.pct !== "—") ? "#ef6c3e" : "#c2cecb" }}>{ex.pct || "—"}</span>}
+                          : <span style={{ fontSize: 12.5, fontWeight: 700, color: (ex.pct && ex.pct !== "—") ? "#ef6c3e" : "#c2cecb" }}>{ex.pct || "��"}</span>}
                       </div>
 
                       {/* scheme + target */}
@@ -16539,6 +16713,7 @@ export default function MiltonDashboard() {
   const [canvasMode, setCanvasMode] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false); // Desktop: expand chat wide, shrink canvas to sidebar
   const [canvasType, setCanvasType] = useState(null); // 'mealPlan' | 'workout' | 'playbook' | 'messageSequence' | 'report'
+  const [workoutAutoOpen, setWorkoutAutoOpen] = useState(false); // auto-drill into program + Weekdays tab when built from chat
   const [canvasData, setCanvasData] = useState(null);
   const [canvasClient, setCanvasClient] = useState(null);
   const [canvasHistory, setCanvasHistory] = useState([]);
@@ -16770,6 +16945,44 @@ export default function MiltonDashboard() {
       
       return null;
     })();
+
+    // Workout builds get a live "building" sequence in the chat, then open
+    // the existing Workout Program canvas (workoutBuilder.html) on the
+    // Weekdays tab so the coach sees the real program view populate.
+    if (canvasIntent && canvasIntent.type === "workout") {
+      const client = canvasIntent.client;
+      const firstName = client.name.split(" ")[0];
+
+      // Step 1 — acknowledge + explain the plan
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { type: "ai", text: `**Building ${firstName}'s program...**\n\nShe's missed her last 2 sessions and her current block ends this week, so I'll design a simpler **2×/week full-body restart** to rebuild momentum.` }]);
+        setChatTyping(true);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+
+      // Step 2 — show it programming the days
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { type: "ai", text: `Programming the week now — laying out the **Weekdays** view with warm-ups, supersets and circuits so she can get back in rhythm.` }]);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 1400);
+
+      // Step 3 — open the existing Workout Program canvas (Weekdays tab)
+      setTimeout(() => {
+        setSelectedClient(null);
+        setCanvasSelectedDay(null);
+        setWorkoutAutoOpen(true);
+        setCanvasType("workout");
+        setCanvasData({});
+        setCanvasClient(client.name);
+        setCanvasHistory([{}]);
+        setCanvasHistoryIndex(0);
+        setCanvasMode(true);
+        setChatMessages(prev => [...prev, { type: "ai", text: `Done — here's **${firstName}'s new program**. I've opened it on the right on the **Weekdays** tab; tap any training day to see the exercises, sets, reps and weights.` }]);
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay + 2900);
+      return;
+    }
 
     if (canvasIntent) {
       setTimeout(() => {
@@ -17357,12 +17570,19 @@ export default function MiltonDashboard() {
           margin: "14px 14px 14px 0",
           transition: "width 0.3s ease",
           borderRadius: 20,
-          border: `1px solid ${BORDER}`,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          // The workout/library canvases render their own card inside the
+          // iframe, so drop the panel's card chrome to avoid a card-in-card.
+          // They also use an opacity-only fade: a scale/translate transform on
+          // an iframe container forces the iframe to re-rasterize mid-animation,
+          // causing a one-frame flash.
+          ...((canvasType === "workout" || canvasType === "library" || canvasType === "classes")
+            ? { border: "none", boxShadow: "none", background: "transparent" }
+            : { border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", background: WHITE }),
+          animation: (canvasType === "workout" || canvasType === "library" || canvasType === "classes")
+            ? "canvasFadeIn 0.3s ease forwards"
+            : "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
           flexDirection: "column",
-          background: WHITE, 
           overflow: "hidden"
         }}>
           {canvasType === "templates" && (
@@ -17383,6 +17603,7 @@ export default function MiltonDashboard() {
                     weeklyTargets: { calories: 2000, protein: 150 }
                   });
   } else if (templateType === "workout") {
+  setWorkoutAutoOpen(false);
   setCanvasType("workout");
   setCanvasData({
   clientName: "New Client",
@@ -17472,6 +17693,7 @@ export default function MiltonDashboard() {
           )}
           {canvasType === "clientProgram" && (
             <CalendarCanvas
+              key={`prog-${canvasData?.client || ""}-${canvasData?.programName || ""}`}
               data={canvasData}
               type="workout"
               selectedDay={canvasSelectedDay}
@@ -17484,8 +17706,9 @@ export default function MiltonDashboard() {
               data={canvasData}
               clients={clients}
               mode="programs"
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-              onHome={() => setCanvasType("templates")}
+              autoOpen={workoutAutoOpen}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setWorkoutAutoOpen(false); }}
+              onHome={() => { setWorkoutAutoOpen(false); setCanvasType("templates"); }}
             />
           )}
           {canvasType === "library" && (
@@ -17493,6 +17716,12 @@ export default function MiltonDashboard() {
               data={canvasData}
               clients={clients}
               mode="library"
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "classes" && (
+            <ClassesCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -17817,7 +18046,8 @@ export default function MiltonDashboard() {
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
                 { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
@@ -18359,9 +18589,13 @@ export default function MiltonDashboard() {
   50% { opacity: 1; }
   }
         @keyframes canvasSlideIn {
-          from { opacity: 0; transform: scale(0.96) translateX(20px); }
-          to { opacity: 1; transform: scale(1) translateX(0); }
-        }
+  from { opacity: 0; transform: scale(0.96) translateX(20px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+  }
+        @keyframes canvasFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+  }
         @keyframes canvasCellReveal {
           from { opacity: 0; transform: scale(0.8); }
           to { opacity: 1; transform: scale(1); }
