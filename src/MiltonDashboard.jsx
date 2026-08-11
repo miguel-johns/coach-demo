@@ -17481,12 +17481,14 @@ export default function MiltonDashboard() {
           margin: "14px 14px 14px 0",
           transition: "width 0.3s ease",
           borderRadius: 20,
-          border: `1px solid ${BORDER}`,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          // The workout/library canvases render their own card inside the
+          // iframe, so drop the panel's card chrome to avoid a card-in-card.
+          ...((canvasType === "workout" || canvasType === "library")
+            ? { border: "none", boxShadow: "none", background: "transparent" }
+            : { border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", background: WHITE }),
           animation: "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
           flexDirection: "column",
-          background: WHITE, 
           overflow: "hidden"
         }}>
           {canvasType === "templates" && (
