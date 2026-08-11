@@ -2908,7 +2908,7 @@ function CoachAssignSelect({ value, onChange }) {
 
 // ��═══════════════════════════════════���═════��═��══════��═══��═════��═
 // SETTINGS CANVAS - Manage coaches (add / delete)
-// ══════��════════���═����══════════════════════���═���═���══���═════���══════���═
+// ══════��══��═════���═����══════════════════════���═���═���══���═════���══════���═
 // ═══════════════════════════════════════════════════════════════
 // TAG CELL - display + edit a client's tags (multiple allowed)
 // ═══════════════════════════════════════════════════════════════
@@ -9290,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����══════════════════════
+/* ════════════════════════�����════════��═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14259,6 +14259,9 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
     : libraryProgramsHtml.replace('"__LIB_MODE__"', JSON.stringify(mode));
 
   const iframeRef = useRef(null);
+  // Keep the iframe hidden until its bundle loads, then fade in — prevents the
+  // blank-panel flash before the heavy app paints.
+  const [loaded, setLoaded] = useState(false);
 
   // When launched from a "build a workout" flow, auto-drill into the client's
   // program and land on the Weekdays tab. The bundled prototype loads async,
@@ -14307,7 +14310,7 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
   }, [autoOpen, mode]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#FBFAF7", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <button
         onClick={onClose || onHome}
         style={{
@@ -14331,15 +14334,21 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
         ref={iframeRef}
         title="Library & Programs"
         srcDoc={libraryHtml}
-        style={{ flex: 1, width: "100%", border: "none", background: "#FBFAF7" }}
+        onLoad={() => requestAnimationFrame(() => setLoaded(true))}
+        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
       />
     </div>
   );
 }
 
 function ClassesCanvas({ onClose, onHome }) {
+  // The class schedule bundle is a heavy iframe app. Keep it hidden until its
+  // load event fires, then fade it in — otherwise a blank panel flashes before
+  // the bundle paints. Match the surface to the app's real body color
+  // (rgb(243,245,246)) so there's no color flash during load.
+  const [loaded, setLoaded] = useState(false);
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#0E5D70", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <button
         onClick={onClose || onHome}
         style={{
@@ -14362,7 +14371,8 @@ function ClassesCanvas({ onClose, onHome }) {
       <iframe
         title="Class Schedule"
         srcDoc={classScheduleHtml}
-        style={{ flex: 1, width: "100%", border: "none", background: "#0E5D70" }}
+        onLoad={() => requestAnimationFrame(() => setLoaded(true))}
+        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
       />
     </div>
   );
