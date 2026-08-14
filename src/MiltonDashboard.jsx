@@ -14,6 +14,7 @@ import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
 import classScheduleHtml from "./classSchedule.html?raw";
+import trainerScorecardHtml from "./trainerScorecard.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -9290,7 +9291,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����══���══��═����═════════════
+/* ════════════════════════�������═���══��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14517,6 +14518,38 @@ function ClassesCanvas({ onClose, onHome }) {
   );
 }
 
+function ScorecardCanvas({ onClose, onHome }) {
+  // Standalone bundled design (no inner chat to hide). Keep the iframe hidden
+  // until it loads, then scale-to-fit + fade in — same treatment as the other
+  // canvases so the wide design never scrolls off and the X stays clear.
+  const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef(null);
+  const { wrapRef, box, measure } = useFitDesign(iframeRef);
+
+  const onLoad = () => {
+    measure();
+    [120, 400, 900, 1600].forEach(ms => setTimeout(measure, ms));
+    requestAnimationFrame(() => setLoaded(true));
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
+      <CanvasCloseButton onClick={onClose || onHome} />
+      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
+      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
+      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+        <iframe
+          ref={iframeRef}
+          title="Trainer Scorecard"
+          srcDoc={trainerScorecardHtml}
+          onLoad={onLoad}
+          style={scaledIframeStyle(box, loaded)}
+        />
+      </div>
+    </div>
+  );
+}
+
 function MessageSequenceCanvas({ data, onClose, onHome }) {
   if (!data) return null;
   
@@ -17667,10 +17700,10 @@ export default function MiltonDashboard() {
           // They also use an opacity-only fade: a scale/translate transform on
           // an iframe container forces the iframe to re-rasterize mid-animation,
           // causing a one-frame flash.
-          ...((canvasType === "workout" || canvasType === "library" || canvasType === "classes")
+          ...((canvasType === "workout" || canvasType === "library" || canvasType === "classes" || canvasType === "scorecard")
             ? { border: "none", boxShadow: "none", background: "transparent" }
             : { border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", background: WHITE }),
-          animation: (canvasType === "workout" || canvasType === "library" || canvasType === "classes")
+          animation: (canvasType === "workout" || canvasType === "library" || canvasType === "classes" || canvasType === "scorecard")
             ? "canvasFadeIn 0.3s ease forwards"
             : "canvasSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           display: "flex", 
@@ -17814,6 +17847,12 @@ export default function MiltonDashboard() {
           )}
           {canvasType === "classes" && (
             <ClassesCanvas
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
+          {canvasType === "scorecard" && (
+            <ScorecardCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               onHome={() => setCanvasType("templates")}
             />
@@ -18140,6 +18179,7 @@ export default function MiltonDashboard() {
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "chart", label: "Trainer Scorecard", desc: "Coaching performance & retention", color: "#0E5D70", onClick: () => { setCanvasType("scorecard"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
