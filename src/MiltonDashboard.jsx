@@ -1478,7 +1478,7 @@ function SessionClientTile({
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION CANVAS - Full-screen session view for PT & Semi-Private
-// ══════════════════════════════════════════���════════════════════
+// ══════════════════════════════════════════�����════════════════════
 function SessionCanvas({ 
   session, 
   clients, 
@@ -9290,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����══��══��═����═════════════
+/* ════════════════════════�����══���══��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14264,45 +14264,45 @@ function useFitDesign(iframeRef) {
   const boxRef = useRef(null);
   const [box, setBox] = useState(null);
 
+  // Given the current container size + known natural width, compute the target
+  // box and push it to state. Never mutates the iframe style directly (that
+  // fights React) — the rendered style comes from `scaledIframeStyle(box)`.
   const apply = () => {
-    const wrap = wrapRef.current, ifr = iframeRef.current;
-    if (!wrap || !ifr) return;
+    const wrap = wrapRef.current;
+    if (!wrap) return;
     const cw = wrap.clientWidth, ch = wrap.clientHeight;
     if (!cw || !ch) return;
     const nat = naturalWRef.current;
     let next;
     if (nat && nat > cw + 1) {
       const scale = cw / nat;
+      // Lay the iframe out at its natural width and grow its logical height by
+      // 1/scale so the scaled-down result still fills the panel height.
       next = { w: nat, h: Math.ceil(ch / scale), scale };
     } else {
       next = { w: cw, h: ch, scale: 1 };
     }
     const p = boxRef.current;
-    if (!p || p.w !== next.w || p.h !== next.h || p.scale !== next.scale) {
+    if (!p || p.w !== next.w || p.h !== next.h || Math.abs(p.scale - next.scale) > 0.001) {
       boxRef.current = next;
       setBox(next);
     }
   };
 
-  // Measure the design's natural (unconstrained) content width, then re-apply
-  // the scale. Called after load and after any inner-DOM changes (auto-open,
-  // hiding the duplicate chat) that can change the layout width.
+  // Read the design's natural (unconstrained) content width by measuring the
+  // inner document's scrollWidth while it is laid out at its full width, then
+  // recompute the scale. Called after load and after any inner-DOM changes
+  // (auto-open, hiding the duplicate chat) that can change the layout width.
   const measure = () => {
-    const wrap = wrapRef.current, ifr = iframeRef.current;
-    if (!wrap || !ifr) return;
+    const ifr = iframeRef.current;
+    if (!ifr) return;
     const doc = ifr.contentDocument;
     if (!doc || !doc.body) return;
-    const cw = wrap.clientWidth, ch = wrap.clientHeight;
-    if (!cw) return;
-    // Lay the iframe out at container width with no scale to read overflow.
-    ifr.style.transform = "none";
-    ifr.style.width = cw + "px";
-    ifr.style.height = (ch || 0) + "px";
     const nat = Math.max(
       doc.documentElement ? doc.documentElement.scrollWidth : 0,
-      doc.body.scrollWidth
+      doc.body ? doc.body.scrollWidth : 0
     );
-    naturalWRef.current = nat;
+    if (nat) naturalWRef.current = nat;
     apply();
   };
 
@@ -14448,6 +14448,7 @@ function ClassesCanvas({ onClose, onHome }) {
   // (rgb(243,245,246)) so there's no color flash during load.
   const [loaded, setLoaded] = useState(false);
   const iframeRef = useRef(null);
+  const { wrapRef, box, measure } = useFitDesign(iframeRef);
 
   // The bundle ships its own inner Milton chat column next to the schedule.
   // We already have the app's main chat on the left, so hide the duplicate.
@@ -14458,13 +14459,14 @@ function ClassesCanvas({ onClose, onHome }) {
     const doc = iframeRef.current?.contentDocument;
     const win = iframeRef.current?.contentWindow;
     if (!doc || !win) return false;
-    // Find the top-level columns row: a full-width, full-height horizontal
-    // flex container with the chat column and schedule column as children.
+    // Find the top-level columns row: a wide horizontal flex container with the
+    // chat column and schedule column as children. (Measured pre-scale, so use
+    // the design's natural width threshold, not the scaled panel width.)
     const row = [...doc.querySelectorAll("div")].find(n => {
       const cs = win.getComputedStyle(n);
       const r = n.getBoundingClientRect();
       return cs.display === "flex" && cs.flexDirection === "row"
-        && n.childElementCount >= 2 && r.width > 1000 && r.height > 500;
+        && n.childElementCount >= 2 && r.width > 700 && r.height > 400;
     });
     if (!row) return false;
     const kids = [...row.children];
@@ -14480,47 +14482,37 @@ function ClassesCanvas({ onClose, onHome }) {
   };
 
   const onIframeLoad = () => {
-    // Hide the duplicate inner chat BEFORE fading the iframe in, so the user
-    // never sees the two-column layout reflow to one column. Reveal as soon as
-    // the chat is hidden (or after a short fallback if the DOM never matches).
+    // Hide the duplicate inner chat BEFORE measuring/fading in, so the user
+    // never sees the two-column layout reflow to one column, and so the fit
+    // measurement reflects the single-column width.
     let tries = 0;
-    const reveal = () => requestAnimationFrame(() => setLoaded(true));
+    const finish = () => {
+      measure();
+      [120, 400, 900].forEach(ms => setTimeout(measure, ms));
+      requestAnimationFrame(() => setLoaded(true));
+    };
     const timer = setInterval(() => {
       const done = hideInnerChat();
       tries += 1;
-      if (done) { clearInterval(timer); reveal(); }
-      else if (tries > 12) { clearInterval(timer); reveal(); }
+      if (done) { clearInterval(timer); finish(); }
+      else if (tries > 12) { clearInterval(timer); finish(); }
     }, 60);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
-      <button
-        onClick={onClose || onHome}
-        style={{
-          position: "absolute", top: 14, right: 16, zIndex: 10,
-          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
-          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
-        title="Back to home"
-        aria-label="Back to home"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <iframe
-        ref={iframeRef}
-        title="Class Schedule"
-        srcDoc={classScheduleHtml}
-        onLoad={onIframeLoad}
-        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
-      />
+      <CanvasCloseButton onClick={onClose || onHome} />
+      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
+      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
+      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+        <iframe
+          ref={iframeRef}
+          title="Class Schedule"
+          srcDoc={classScheduleHtml}
+          onLoad={onIframeLoad}
+          style={scaledIframeStyle(box, loaded)}
+        />
+      </div>
     </div>
   );
 }
