@@ -6494,7 +6494,7 @@ function ReportView({ client, onBack, isMobile, autoOpenShare = false }) {
                 <div>
                   <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: TEXT }}>{m.label}</div>
                   <div style={{ fontSize: 13, color: TEXT_SEC, marginTop: 2 }}>
-                    {m.start}{m.unit} → {m.current}{m.unit} → <strong style={{ color: m.color }}>{m.goal}{m.unit} goal</strong>
+                    {m.start}{m.unit} → {m.current}{m.unit} �� <strong style={{ color: m.color }}>{m.goal}{m.unit} goal</strong>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -9291,7 +9291,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�������═���══��═����═════════════
+/* ═══════���════════════════�������═���══��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -14259,11 +14259,35 @@ function getFallbackMealPlan() {
 // The iframe is laid out at the design's natural width and CSS-scaled from the
 // top-left; its logical height is grown by 1/scale so the scaled result still
 // fills the panel height (keeps the canvas as tall as the chat).
-function useFitDesign(iframeRef) {
+// Panel-space vertical room reserved at the top of the canvas for the floating
+// close button, so the design's own header controls never sit under the X.
+const CANVAS_X_CLEARANCE = 56;
+
+function useFitDesign(iframeRef, { topClearance = CANVAS_X_CLEARANCE, scroll = false } = {}) {
   const wrapRef = useRef(null);
   const naturalWRef = useRef(0);
+  const naturalHRef = useRef(0);
   const boxRef = useRef(null);
   const [box, setBox] = useState(null);
+
+  // Push the design's own content down from INSIDE the iframe so the X (which
+  // floats over the top-right of the panel) never overlaps the design header.
+  // Injected as a persistent CSS rule (survives the inner app's re-renders).
+  // The clearance is specified in panel px, so divide by scale to convert to
+  // the design's own (pre-transform) coordinate space.
+  const ensureClearance = (scale) => {
+    if (!topClearance) return;
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    let st = doc.getElementById("v0-fit-clearance");
+    if (!st) {
+      st = doc.createElement("style");
+      st.id = "v0-fit-clearance";
+      (doc.head || doc.documentElement).appendChild(st);
+    }
+    const p = Math.ceil(topClearance / (scale || 1));
+    st.textContent = `body>div:first-child{padding-top:${p}px!important;box-sizing:border-box!important;}`;
+  };
 
   // Given the current container size + known natural width, compute the target
   // box and push it to state. Never mutates the iframe style directly (that
@@ -14274,15 +14298,20 @@ function useFitDesign(iframeRef) {
     const cw = wrap.clientWidth, ch = wrap.clientHeight;
     if (!cw || !ch) return;
     const nat = naturalWRef.current;
-    let next;
-    if (nat && nat > cw + 1) {
-      const scale = cw / nat;
-      // Lay the iframe out at its natural width and grow its logical height by
-      // 1/scale so the scaled-down result still fills the panel height.
-      next = { w: nat, h: Math.ceil(ch / scale), scale };
-    } else {
-      next = { w: cw, h: ch, scale: 1 };
-    }
+    // Fit width: lay the iframe out at its natural width and scale down when it
+    // is wider than the panel.
+    const w = nat && nat > cw + 1 ? nat : cw;
+    const scale = w > cw ? cw / w : 1;
+    // Height depends on mode:
+    // - scroll: use the design's natural content height so nothing is clipped;
+    //   the wrap scrolls vertically through the (scaled) content.
+    // - fit: grow the logical height by 1/scale so the scaled result exactly
+    //   fills the panel height (canvas stays as tall as the chat).
+    let h;
+    if (scroll) h = naturalHRef.current || Math.ceil(ch / scale);
+    else h = Math.ceil(ch / scale);
+    const next = { w, h, scale };
+    ensureClearance(next.scale);
     const p = boxRef.current;
     if (!p || p.w !== next.w || p.h !== next.h || Math.abs(p.scale - next.scale) > 0.001) {
       boxRef.current = next;
@@ -14304,6 +14333,13 @@ function useFitDesign(iframeRef) {
       doc.body ? doc.body.scrollWidth : 0
     );
     if (nat) naturalWRef.current = nat;
+    if (scroll) {
+      const nh = Math.max(
+        doc.documentElement ? doc.documentElement.scrollHeight : 0,
+        doc.body ? doc.body.scrollHeight : 0
+      );
+      if (nh) naturalHRef.current = nh;
+    }
     apply();
   };
 
@@ -14319,8 +14355,6 @@ function useFitDesign(iframeRef) {
   return { wrapRef, box, measure };
 }
 
-const CANVAS_GUTTER = 52; // top strip that holds the floating X, clear of the design
-
 function scaledIframeStyle(box, loaded) {
   return {
     position: "absolute", top: 0, left: 0, border: "none", background: "#F3F5F6",
@@ -14331,6 +14365,35 @@ function scaledIframeStyle(box, loaded) {
     opacity: loaded ? 1 : 0,
     transition: "opacity 0.25s ease",
   };
+}
+
+// Renders the scaled design iframe inside its measured wrapper.
+// - fit mode: the iframe is grown/scaled to exactly fill the panel (no scroll).
+// - scroll mode: a sizer div takes the iframe's *visual* (post-scale) size so
+//   the wrap can scroll vertically — a CSS transform doesn't change layout
+//   footprint, so without the sizer the scrollable area would be wrong.
+function FitIframe({ wrapRef, box, loaded, scroll, iframeRef, title, srcDoc, onLoad }) {
+  const wrapStyle = scroll
+    ? { flex: 1, position: "relative", overflowY: "auto", overflowX: "hidden", minHeight: 0 }
+    : { flex: 1, position: "relative", overflow: "hidden", minHeight: 0 };
+  const iframe = (
+    <iframe
+      ref={iframeRef}
+      title={title}
+      srcDoc={srcDoc}
+      onLoad={onLoad}
+      style={scaledIframeStyle(box, loaded)}
+    />
+  );
+  return (
+    <div ref={wrapRef} style={wrapStyle}>
+      {scroll ? (
+        <div style={{ position: "relative", width: box ? box.w * box.scale : "100%", height: box ? box.h * box.scale : "100%" }}>
+          {iframe}
+        </div>
+      ) : iframe}
+    </div>
+  );
 }
 
 function CanvasCloseButton({ onClick }) {
@@ -14427,17 +14490,10 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <CanvasCloseButton onClick={onClose || onHome} />
-      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
-      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
-      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
-        <iframe
-          ref={iframeRef}
-          title="Library & Programs"
-          srcDoc={libraryHtml}
-          onLoad={onLoad}
-          style={scaledIframeStyle(box, loaded)}
-        />
-      </div>
+      <FitIframe
+        wrapRef={wrapRef} box={box} loaded={loaded}
+        iframeRef={iframeRef} title="Library & Programs" srcDoc={libraryHtml} onLoad={onLoad}
+      />
     </div>
   );
 }
@@ -14503,28 +14559,21 @@ function ClassesCanvas({ onClose, onHome }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <CanvasCloseButton onClick={onClose || onHome} />
-      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
-      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
-      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
-        <iframe
-          ref={iframeRef}
-          title="Class Schedule"
-          srcDoc={classScheduleHtml}
-          onLoad={onIframeLoad}
-          style={scaledIframeStyle(box, loaded)}
-        />
-      </div>
+      <FitIframe
+        wrapRef={wrapRef} box={box} loaded={loaded}
+        iframeRef={iframeRef} title="Class Schedule" srcDoc={classScheduleHtml} onLoad={onIframeLoad}
+      />
     </div>
   );
 }
 
 function ScorecardCanvas({ onClose, onHome }) {
-  // Standalone bundled design (no inner chat to hide). Keep the iframe hidden
-  // until it loads, then scale-to-fit + fade in — same treatment as the other
-  // canvases so the wide design never scrolls off and the X stays clear.
+  // Standalone bundled design (no inner chat to hide). It's a tall report, so
+  // use scroll mode: scale to fit width, size to the design's full content
+  // height, and let the wrap scroll vertically so nothing is clipped.
   const [loaded, setLoaded] = useState(false);
   const iframeRef = useRef(null);
-  const { wrapRef, box, measure } = useFitDesign(iframeRef);
+  const { wrapRef, box, measure } = useFitDesign(iframeRef, { scroll: true });
 
   const onLoad = () => {
     measure();
@@ -14535,17 +14584,10 @@ function ScorecardCanvas({ onClose, onHome }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
       <CanvasCloseButton onClick={onClose || onHome} />
-      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
-      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
-      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
-        <iframe
-          ref={iframeRef}
-          title="Trainer Scorecard"
-          srcDoc={trainerScorecardHtml}
-          onLoad={onLoad}
-          style={scaledIframeStyle(box, loaded)}
-        />
-      </div>
+      <FitIframe
+        wrapRef={wrapRef} box={box} loaded={loaded} scroll
+        iframeRef={iframeRef} title="Trainer Scorecard" srcDoc={trainerScorecardHtml} onLoad={onLoad}
+      />
     </div>
   );
 }
