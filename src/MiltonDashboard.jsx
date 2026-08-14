@@ -9290,7 +9290,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����═════��═����═════════════
+/* ════════════════════════�����══��══��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -11708,7 +11708,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                   <span>{stats.activeRules} rules active</span>
                   <span style={{ color: BORDER }}>·</span>
                   <span>{stats.documents.length} documents</span>
-                  <span style={{ color: BORDER }}>·</span>
+                  <span style={{ color: BORDER }}>��</span>
                   <span>{formatRelativeTime(stats.lastUpdated)}</span>
                 </div>
                 
@@ -14253,6 +14253,109 @@ function getFallbackMealPlan() {
   );
 }
 
+// Scales a fixed-width bundled design (rendered in a same-origin srcDoc iframe)
+// down to fit the canvas width, so wide prototypes never scroll off-screen.
+// The iframe is laid out at the design's natural width and CSS-scaled from the
+// top-left; its logical height is grown by 1/scale so the scaled result still
+// fills the panel height (keeps the canvas as tall as the chat).
+function useFitDesign(iframeRef) {
+  const wrapRef = useRef(null);
+  const naturalWRef = useRef(0);
+  const boxRef = useRef(null);
+  const [box, setBox] = useState(null);
+
+  const apply = () => {
+    const wrap = wrapRef.current, ifr = iframeRef.current;
+    if (!wrap || !ifr) return;
+    const cw = wrap.clientWidth, ch = wrap.clientHeight;
+    if (!cw || !ch) return;
+    const nat = naturalWRef.current;
+    let next;
+    if (nat && nat > cw + 1) {
+      const scale = cw / nat;
+      next = { w: nat, h: Math.ceil(ch / scale), scale };
+    } else {
+      next = { w: cw, h: ch, scale: 1 };
+    }
+    const p = boxRef.current;
+    if (!p || p.w !== next.w || p.h !== next.h || p.scale !== next.scale) {
+      boxRef.current = next;
+      setBox(next);
+    }
+  };
+
+  // Measure the design's natural (unconstrained) content width, then re-apply
+  // the scale. Called after load and after any inner-DOM changes (auto-open,
+  // hiding the duplicate chat) that can change the layout width.
+  const measure = () => {
+    const wrap = wrapRef.current, ifr = iframeRef.current;
+    if (!wrap || !ifr) return;
+    const doc = ifr.contentDocument;
+    if (!doc || !doc.body) return;
+    const cw = wrap.clientWidth, ch = wrap.clientHeight;
+    if (!cw) return;
+    // Lay the iframe out at container width with no scale to read overflow.
+    ifr.style.transform = "none";
+    ifr.style.width = cw + "px";
+    ifr.style.height = (ch || 0) + "px";
+    const nat = Math.max(
+      doc.documentElement ? doc.documentElement.scrollWidth : 0,
+      doc.body.scrollWidth
+    );
+    naturalWRef.current = nat;
+    apply();
+  };
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => apply());
+    ro.observe(wrap);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { wrapRef, box, measure };
+}
+
+const CANVAS_GUTTER = 52; // top strip that holds the floating X, clear of the design
+
+function scaledIframeStyle(box, loaded) {
+  return {
+    position: "absolute", top: 0, left: 0, border: "none", background: "#F3F5F6",
+    width: box ? box.w : "100%",
+    height: box ? box.h : "100%",
+    transform: box && box.scale !== 1 ? `scale(${box.scale})` : "none",
+    transformOrigin: "0 0",
+    opacity: loaded ? 1 : 0,
+    transition: "opacity 0.25s ease",
+  };
+}
+
+function CanvasCloseButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        position: "absolute", top: 12, right: 16, zIndex: 10,
+        display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
+        borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
+        transition: "all 0.15s ease"
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+      title="Back to home"
+      aria-label="Back to home"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  );
+}
+
 function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "both", autoOpen = false }) {
   const libraryHtml = mode === "programs"
     ? workoutBuilderHtml
@@ -14262,6 +14365,14 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
   // Keep the iframe hidden until its bundle loads, then fade in — prevents the
   // blank-panel flash before the heavy app paints.
   const [loaded, setLoaded] = useState(false);
+  const { wrapRef, box, measure } = useFitDesign(iframeRef);
+
+  const onLoad = () => {
+    measure();
+    // Re-measure a few times to catch async layout / late paints.
+    [120, 400, 900, 1600].forEach(ms => setTimeout(measure, ms));
+    requestAnimationFrame(() => setLoaded(true));
+  };
 
   // When launched from a "build a workout" flow, auto-drill into the client's
   // program and land on the Weekdays tab. The bundled prototype loads async,
@@ -14300,6 +14411,8 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
           tabs.sort((a, b) => a.textContent.length - b.textContent.length);
           fireClick(tabs[0], win);
           tabClicked = true;
+          // The detail view can be wider than the list — refit after it paints.
+          [60, 300, 700].forEach(ms => setTimeout(measure, ms));
         }
       }
 
@@ -14307,36 +14420,23 @@ function WorkoutCanvas({ data, onClose, onHome, onSave, clients = [], mode = "bo
     }, 250);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpen, mode]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
-      <button
-        onClick={onClose || onHome}
-        style={{
-          position: "absolute", top: 14, right: 16, zIndex: 10,
-          display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          width: 36, height: 36, background: "#fff", border: "1px solid rgba(26,46,42,0.10)",
-          borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)",
-          transition: "all 0.15s ease"
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
-        title="Back to home"
-        aria-label="Back to home"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <iframe
-        ref={iframeRef}
-        title="Library & Programs"
-        srcDoc={libraryHtml}
-        onLoad={() => requestAnimationFrame(() => setLoaded(true))}
-        style={{ flex: 1, width: "100%", border: "none", background: "#F3F5F6", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }}
-      />
+      <CanvasCloseButton onClick={onClose || onHome} />
+      {/* Top gutter keeps the design's own top-right controls clear of the X. */}
+      <div style={{ height: CANVAS_GUTTER, flexShrink: 0 }} />
+      <div ref={wrapRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+        <iframe
+          ref={iframeRef}
+          title="Library & Programs"
+          srcDoc={libraryHtml}
+          onLoad={onLoad}
+          style={scaledIframeStyle(box, loaded)}
+        />
+      </div>
     </div>
   );
 }
