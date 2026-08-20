@@ -14,6 +14,7 @@ import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
 import classScheduleHtml from "./classSchedule.html?raw";
+import progressStoriesHtml from "./progressStories.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -5929,9 +5930,6 @@ clientName: "New Client",
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
   setCanvasData({});
-  } else if (templateType === "progress") {
-  setCanvasType("progress");
-  setCanvasData({});
   }
   }}
   onClose={onClose}
@@ -5946,8 +5944,8 @@ clientName: "New Client",
   onEditProcessed={onDashboardEditProcessed}
   />
   )}
-  {canvasType === "progress" && (
-  <ProgressCanvas
+  {canvasType === "stories" && (
+  <StoriesCanvas
   onClose={onClose}
   onHome={() => setCanvasType("templates")}
   />
@@ -11228,13 +11226,13 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
 }
 
 /* ══════════════════════════════════════════════
-   PROGRESS CANVAS - Shareable client transformation story
+   STORIES CANVAS - Shareable client progress / social media stories
    ══════════════════════════════════════════════ */
-function ProgressCanvas({ onClose, onHome }) {
+function StoriesCanvas({ onClose, onHome }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", height: "100%",
-      position: "relative", background: "#ffffff", overflowY: "auto"
+      position: "relative", background: "#ffffff", fontFamily: "'DM Sans', sans-serif"
     }}>
       {/* Back button - top left */}
       <div
@@ -11255,7 +11253,11 @@ function ProgressCanvas({ onClose, onHome }) {
           <polyline points="15,18 9,12 15,6"/>
         </svg>
       </div>
-      <ProgressDashboard />
+      <iframe
+        title="Client Progress Stories"
+        srcDoc={progressStoriesHtml}
+        style={{ flex: 1, width: "100%", border: "none", background: "#ffffff" }}
+      />
     </div>
   );
 }
@@ -11750,7 +11752,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
                   <span>{stats.activeRules} rules active</span>
                   <span style={{ color: BORDER }}>·</span>
                   <span>{stats.documents.length} documents</span>
-                  <span style={{ color: BORDER }}>��</span>
+                  <span style={{ color: BORDER }}>·</span>
                   <span>{formatRelativeTime(stats.lastUpdated)}</span>
                 </div>
                 
@@ -13608,16 +13610,6 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       bgColor: "#e8f5f3",
       available: true,
       number: 2
-    },
-    {
-      id: "progress",
-      icon: "chart",
-      title: "Progress Story",
-      desc: "A shareable client transformation card — body composition, strength gains, milestones, and a coach note",
-      color: "#1a1a1a",
-      bgColor: "#f1f1f1",
-      available: true,
-      number: 6
     }
   ];
   
@@ -16841,7 +16833,6 @@ export default function MiltonDashboard() {
       if (/\b(inbox|messages|dms?)\b/i.test(low)) return { kind: "canvas", canvas: "inbox", label: "inbox" };
       if (/\b(library|templates|exercise\s*library)\b/i.test(low)) return { kind: "canvas", canvas: "library", label: "library" };
       if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
-      if (/\b(progress\s*story|transformation|progress\s*card|progress\s*recap|share\s*progress)\b/i.test(low)) return { kind: "canvas", canvas: "progress", label: "progress story" };
 
       return null;
     })();
@@ -17681,9 +17672,6 @@ export default function MiltonDashboard() {
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
   setCanvasData({});
-  } else if (templateType === "progress") {
-  setCanvasType("progress");
-  setCanvasData({});
   }
   }}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -17693,18 +17681,18 @@ export default function MiltonDashboard() {
   <AIDashboardsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   onHome={() => setCanvasType("templates")}
-    isMobile={canvasCompact}
-    pendingEdit={pendingDashboardEdit}
-    onEditProcessed={handleDashboardEditResult}
+  isMobile={canvasCompact}
+  pendingEdit={pendingDashboardEdit}
+  onEditProcessed={handleDashboardEditResult}
   />
-)}
-  {canvasType === "progress" && (
-  <ProgressCanvas
+  )}
+  {canvasType === "stories" && (
+  <StoriesCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
   />
-)}
-          {canvasType === "brain" && (
+  )}
+  {canvasType === "brain" && (
             <MiltonBrainCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               brainDocuments={brainDocuments}
