@@ -5930,6 +5930,9 @@ clientName: "New Client",
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
   setCanvasData({});
+  } else if (templateType === "stories") {
+  setCanvasType("stories");
+  setCanvasData({});
   }
   }}
   onClose={onClose}
@@ -11265,7 +11268,7 @@ function StoriesCanvas({ onClose, onHome }) {
   /* ═════��═══════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════��═��═════════════════ */
-// ═════════════���════════��═══════════════════════����══════��════════
+// ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function MiltonBrainCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
@@ -13610,6 +13613,15 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       bgColor: "#e8f5f3",
       available: true,
       number: 2
+    },
+    {
+      id: "stories",
+      icon: "send",
+      title: "Progress Stories",
+      desc: "Auto-generated, shareable client transformation cards — review, then send to clients for social",
+      color: "#3aafa9",
+      available: true,
+      number: 6
     }
   ];
   
@@ -16832,9 +16844,10 @@ export default function MiltonDashboard() {
       if (/\b(schedule|calendar|sessions|agenda)\b/i.test(low)) return { kind: "canvas", canvas: "schedule", label: "schedule" };
       if (/\b(inbox|messages|dms?)\b/i.test(low)) return { kind: "canvas", canvas: "inbox", label: "inbox" };
       if (/\b(library|templates|exercise\s*library)\b/i.test(low)) return { kind: "canvas", canvas: "library", label: "library" };
-      if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
-
-      return null;
+  if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
+  if (/\b(progress\s*stor(y|ies)|transformation\s*(card|stor)|share\s*progress|social\s*(card|stor)|story\s*card)\b/i.test(low)) return { kind: "canvas", canvas: "stories", label: "progress stories" };
+  
+  return null;
     })();
 
     if (navIntent) {
@@ -17671,6 +17684,9 @@ export default function MiltonDashboard() {
   setCanvasData({});
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
+  setCanvasData({});
+  } else if (templateType === "stories") {
+  setCanvasType("stories");
   setCanvasData({});
   }
   }}
