@@ -14,6 +14,7 @@ import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
 import classScheduleHtml from "./classSchedule.html?raw";
+import progressStoriesHtml from "./progressStories.html?raw";
 
 const TEAL = "#2B7A78";
 const MINT = "#5CDB95";
@@ -5929,6 +5930,9 @@ clientName: "New Client",
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
   setCanvasData({});
+  } else if (templateType === "stories") {
+  setCanvasType("stories");
+  setCanvasData({});
   }
   }}
   onClose={onClose}
@@ -5941,6 +5945,12 @@ clientName: "New Client",
   isMobile={true}
   pendingEdit={pendingDashboardEdit}
   onEditProcessed={onDashboardEditProcessed}
+  />
+  )}
+  {canvasType === "stories" && (
+  <StoriesCanvas
+  onClose={onClose}
+  onHome={() => setCanvasType("templates")}
   />
   )}
   {canvasType === "aiEngine" && (
@@ -9290,7 +9300,7 @@ function ScheduleCanvas({ onClose, onHome, isMobile, sessions = [], clients = []
   );
 }
 
-/* ════════════════════════�����═════��═����═════════════
+/* ════════════════════════�����══��══��═����═════════════
    WORKFLOWS CANVAS - Milton automation workflows
 ═════════════════════════���════════════����════════ */
 const WF_C = {
@@ -11217,11 +11227,48 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
     </div>
   );
 }
+
+/* ══════════════════════════════════════════════
+   STORIES CANVAS - Shareable client progress / social media stories
+   ══════════════════════════════════════════════ */
+function StoriesCanvas({ onClose, onHome }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      position: "relative", background: "#ffffff", fontFamily: "'DM Sans', sans-serif"
+    }}>
+      {/* Back button - top left */}
+      <div
+        onClick={onHome || onClose}
+        style={{
+          position: "absolute", top: 16, left: 16, zIndex: 10,
+          width: 32, height: 32, borderRadius: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: "#6b7280", opacity: 0.7,
+          background: "rgba(255,255,255,0.92)", border: "1px solid rgba(26,46,42,0.08)",
+          transition: "all 0.15s ease", boxShadow: "0 1px 2px rgba(26,46,42,0.06)"
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = "#1a2e2a"; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = 0.7; e.currentTarget.style.color = "#6b7280"; }}
+        title="Back"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+      </div>
+      <iframe
+        title="Client Progress Stories"
+        srcDoc={progressStoriesHtml}
+        style={{ flex: 1, width: "100%", border: "none", background: "#ffffff" }}
+      />
+    </div>
+  );
+}
   
   /* ═════��═══════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ═════════════════════════��═��═════════════════ */
-// ═════════════���════════��═══════════════════════����══════��════════
+  ═════════════════════════��═��═���═══════════════ */
+// ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
 function MiltonBrainCanvas({ onClose, brainDocuments, setBrainDocuments, isMobile }) {
@@ -13566,6 +13613,15 @@ function CanvasTemplates({ onSelect, onClose, isMobile }) {
       bgColor: "#e8f5f3",
       available: true,
       number: 2
+    },
+    {
+      id: "stories",
+      icon: "send",
+      title: "Progress Stories",
+      desc: "Auto-generated, shareable client transformation cards — review, then send to clients for social",
+      color: "#3aafa9",
+      available: true,
+      number: 6
     }
   ];
   
@@ -16788,9 +16844,10 @@ export default function MiltonDashboard() {
       if (/\b(schedule|calendar|sessions|agenda)\b/i.test(low)) return { kind: "canvas", canvas: "schedule", label: "schedule" };
       if (/\b(inbox|messages|dms?)\b/i.test(low)) return { kind: "canvas", canvas: "inbox", label: "inbox" };
       if (/\b(library|templates|exercise\s*library)\b/i.test(low)) return { kind: "canvas", canvas: "library", label: "library" };
-      if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
-
-      return null;
+  if (/\b(workflows?|automations?)\b/i.test(low)) return { kind: "canvas", canvas: "workflows", label: "workflows" };
+  if (/\b(progress\s*stor(y|ies)|transformation\s*(card|stor)|share\s*progress|social\s*(card|stor)|story\s*card)\b/i.test(low)) return { kind: "canvas", canvas: "stories", label: "progress stories" };
+  
+  return null;
     })();
 
     if (navIntent) {
@@ -17628,6 +17685,9 @@ export default function MiltonDashboard() {
   } else if (templateType === "playbook") {
   setCanvasType("playbook");
   setCanvasData({});
+  } else if (templateType === "stories") {
+  setCanvasType("stories");
+  setCanvasData({});
   }
   }}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -17637,12 +17697,18 @@ export default function MiltonDashboard() {
   <AIDashboardsCanvas
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setPendingDashboardEdit(null); }}
   onHome={() => setCanvasType("templates")}
-    isMobile={canvasCompact}
-    pendingEdit={pendingDashboardEdit}
-    onEditProcessed={handleDashboardEditResult}
+  isMobile={canvasCompact}
+  pendingEdit={pendingDashboardEdit}
+  onEditProcessed={handleDashboardEditResult}
   />
-)}
-          {canvasType === "brain" && (
+  )}
+  {canvasType === "stories" && (
+  <StoriesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  />
+  )}
+  {canvasType === "brain" && (
             <MiltonBrainCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
               brainDocuments={brainDocuments}
@@ -18050,6 +18116,7 @@ export default function MiltonDashboard() {
                 { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "send", label: "Progress Stories", desc: "Shareable client transformation cards", color: "#3aafa9", onClick: () => { setCanvasType("stories"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
