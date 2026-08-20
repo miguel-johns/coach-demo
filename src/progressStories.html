@@ -978,6 +978,51 @@ a:hover { color: var(--teal-800); }
                 <button sc-camel-on-click="{{ sendMarcus }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ marcusSendLabel }}</button>
               </div>
             </div>
+            <!-- Nia (transformation, before/after) -->
+            <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center;">
+              <div style="width:64px; height:114px; border-radius:10px; overflow:hidden; flex-shrink:0; position:relative; background:#0b1417;">
+                <div style="position:absolute; inset:0; top:0; bottom:50%; background:#0b1417 url(/stories/nia-before.png) center/cover no-repeat;"></div>
+                <div style="position:absolute; inset:0; top:50%; bottom:0; background:#0b1417 url(/stories/nia-after.png) center/cover no-repeat;"></div>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <div style="font-size:17px; font-weight:600;">Nia — 12-Week Transformation</div>
+                  <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-brand-bg); color:var(--sem-brand-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Transformation</span>
+                  <sc-if value="{{ niaSent }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Sent</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:13px; color:var(--fg-3); margin-top:4px;">4 cards · before/after photos + bodyweight and strength trends · generated 7:03 AM</div>
+                <div style="font-size:13px; color:var(--fg-2); margin-top:6px;">Highlights: <strong>−14 lb</strong> · +35 lb back squat · 36 sessions · leaner and stronger</div>
+              </div>
+              <div style="display:flex; gap:10px; flex-shrink:0;">
+                <button sc-camel-on-click="{{ openNia }}" style="padding:10px 18px; border-radius:999px; background:var(--white); color:var(--fg-1); border:0; box-shadow:inset 0 0 0 1px var(--ink-200); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--ink-050);">Review</button>
+                <button sc-camel-on-click="{{ sendNia }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ niaSendLabel }}</button>
+              </div>
+            </div>
+            <!-- Tom (PR-day carousel) -->
+            <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center;">
+              <div style="width:64px; height:114px; border-radius:10px; overflow:hidden; flex-shrink:0; position:relative; background:#0b1417 url(/stories/tom-bench.png) center/cover no-repeat;">
+                <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(11,20,23,0.7), transparent 55%); display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px;">
+                  <span style="font-size:15px; font-weight:700; color:{{ accent }};">225</span>
+                </div>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <div style="font-size:17px; font-weight:600;">Tom — Bench PR Day</div>
+                  <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Milestone</span>
+                  <sc-if value="{{ tomSent }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Sent</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:13px; color:var(--fg-3); margin-top:4px;">3 cards · lift photo + bar climb · triggered by a new 1RM logged today · generated 32 min ago</div>
+                <div style="font-size:13px; color:var(--fg-2); margin-top:6px;">Highlights: <strong>225 lb bench</strong> · +40 lb since spring · locked out clean</div>
+              </div>
+              <div style="display:flex; gap:10px; flex-shrink:0;">
+                <button sc-camel-on-click="{{ openTom }}" style="padding:10px 18px; border-radius:999px; background:var(--white); color:var(--fg-1); border:0; box-shadow:inset 0 0 0 1px var(--ink-200); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--ink-050);">Review</button>
+                <button sc-camel-on-click="{{ sendTom }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ tomSendLabel }}</button>
+              </div>
+            </div>
             <!-- David (after early generation) -->
             <sc-if value="{{ davidReady }}" hint-placeholder-val="{{ false }}">
               <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center; animation:cardIn 400ms var(--ease-out);">
@@ -2060,7 +2105,7 @@ class Component extends DCLogic {
       accent,
       isHome: s.view === 'home', isReview: s.view === 'review',
       isSarah, isMarcus: s.story === 'marcus', isDavid: s.story === 'david',
-      isGeneric: !!generic, genericCards: generic ? generic.cards : [],
+      isGeneric: !!generic, genericCards: generic ? generic.cards.map(processCard) : [],
       showReady: s.tab === 'ready', showScheduled: s.tab === 'scheduled', showSent: s.tab === 'sent',
       tabReadyClick: () => this.setState({ tab: 'ready' }),
       tabScheduledClick: () => this.setState({ tab: 'scheduled' }),
@@ -2068,6 +2113,11 @@ class Component extends DCLogic {
       goSentTab: () => this.setState({ view: 'home', tab: 'sent' }),
       tabReadyBg: rT.bg, tabReadyFg: rT.fg, tabScheduledBg: sT.bg, tabScheduledFg: sT.fg, tabSentBg: nT.bg, tabSentFg: nT.fg,
       openSarah: open('sarah'), openMarcus: open('marcus'),
+      openNia: open('nia'), openTom: open('tom'),
+      niaSent: !!s.sent.nia, tomSent: !!s.sent.tom,
+      niaSendLabel: s.sent.nia ? 'Sent' : 'Send to Nia',
+      tomSendLabel: s.sent.tom ? 'Sent' : 'Send to Tom',
+      sendNia: send('nia', 'Nia'), sendTom: send('tom', 'Tom'),
       backHome: () => this.setState({ view: 'home' }),
       sendSarah: send('sarah', 'Sarah'), sendMarcus: send('marcus', 'Marcus'),
       sendActive: send(a.sendKey, a.sendName),
@@ -2086,9 +2136,9 @@ class Component extends DCLogic {
       previewLabel: 'Preview as ' + a.clientFirst,
       playerOpen: s.playerOpen,
       playerName: isSarah ? 'Sarah Chen' : s.story === 'marcus' ? 'Marcus Johnson' : s.story === 'david' ? 'David Park'
-        : { emily: 'Emily Rodriguez', rachel: 'Rachel Kim', jason: 'Jason Williams', lisa: 'Lisa Martinez' }[s.story],
+        : { emily: 'Emily Rodriguez', rachel: 'Rachel Kim', jason: 'Jason Williams', lisa: 'Lisa Martinez', nia: 'Nia Okafor', tom: 'Tom Bennett', coachwins: 'MMNT Team', priya: 'Priya Nair', devon: 'Devon Clarke' }[s.story],
       playerInitials: isSarah ? 'SC' : s.story === 'marcus' ? 'MJ' : s.story === 'david' ? 'DP'
-        : { emily: 'ER', rachel: 'RK', jason: 'JW', lisa: 'LM' }[s.story],
+        : { emily: 'ER', rachel: 'RK', jason: 'JW', lisa: 'LM', nia: 'NO', tom: 'TB', coachwins: 'MM', priya: 'PN', devon: 'DC' }[s.story],
       playerSegs: Array.from({ length: this.lastIdx() + 1 }, (_, i) => ({
         w: i < s.playerIdx ? '100%' : i === s.playerIdx ? Math.round(s.playerProg * 100) + '%' : '0%'
       })),
@@ -2104,9 +2154,9 @@ class Component extends DCLogic {
       holdStart: () => this.setState({ playerPaused: true }),
       holdEnd: () => { if (!(s.playerIdx === this.lastIdx() && s.playerProg >= 1)) this.setState({ playerPaused: false }); },
       replay: () => this.setState({ playerIdx: 0, playerProg: 0, playerPaused: false }),
-      readyCount: 2 + (s.david === 'ready' ? 1 : 0),
+      readyCount: 4 + (s.david === 'ready' ? 1 : 0),
       scheduledCount: s.david === 'scheduled' || s.david === 'generating' ? 1 : 0,
-      sentCount: 4 + Object.keys(s.sent).length,
+      sentCount: 7 + Object.keys(s.sent).length,
       davidScheduled: s.david === 'scheduled', davidGenerating: s.david === 'generating',
       davidReady: s.david === 'ready', davidDone: s.david === 'ready',
       davidSent: !!s.sent.david,
@@ -2121,8 +2171,13 @@ class Component extends DCLogic {
         ...(s.sent.sarah ? [{ key: 'sarah', title: "Sarah's 12-Week Wrapped", type: 'Recap \u00b7 7 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
         ...(s.sent.marcus ? [{ key: 'marcus', title: 'Marcus \u2014 Deadlift PR', type: 'Milestone \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
         ...(s.sent.david ? [{ key: 'david', title: 'David \u2014 Meet Prep, Week 6', type: 'Recap \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        ...(s.sent.nia ? [{ key: 'nia', title: 'Nia \u2014 12-Week Transformation', type: 'Transformation \u00b7 4 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        ...(s.sent.tom ? [{ key: 'tom', title: 'Tom \u2014 Bench PR Day', type: 'Milestone \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        { key: 'devon', title: 'Devon \u2014 6-Month Transformation', type: 'Transformation \u00b7 3 cards', sent: 'Jun 30', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 6\u00d7 \u00b7 88 link views' },
         { key: 'emily', title: "Emily's June Recap", type: 'Monthly \u00b7 3 cards', sent: 'Jul 1', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 5\u00d7 \u00b7 41 link views' },
+        { key: 'priya', title: 'Priya \u2014 47 Sessions, Zero Excuses', type: 'Consistency \u00b7 3 cards', sent: 'Jul 8', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 4\u00d7 \u00b7 33 link views' },
         { key: 'rachel', title: 'Rachel \u2014 First Unassisted Pull-up', type: 'Milestone \u00b7 3 cards', sent: 'Jun 26', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 3\u00d7 \u00b7 18 link views' },
+        { key: 'coachwins', title: 'This Week at MMNT', type: 'Coach recap \u00b7 3 cards', sent: 'Jul 20', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 9\u00d7 \u00b7 124 link views' },
         { key: 'jason', title: "Jason's June Recap", type: 'Monthly \u00b7 3 cards', sent: 'Jul 1', pill: 'Opened', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 2\u00d7 \u00b7 4 link views' },
         { key: 'lisa', title: 'Lisa \u2014 First Full Snatch', type: 'Milestone \u00b7 3 cards', sent: 'Jun 19', pill: 'Opened', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened once' }
       ].map(r => ({ ...r, view: () => this.setState({ view: 'review', story: r.key, copied: false }) })),
