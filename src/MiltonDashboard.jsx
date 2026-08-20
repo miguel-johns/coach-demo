@@ -11267,7 +11267,7 @@ function StoriesCanvas({ onClose, onHome }) {
   
   /* ═════��═══════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ═════════════════════════��═��═════════════════ */
+  ═════════════════════════��═��═���═══════════════ */
 // ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
@@ -18116,6 +18116,7 @@ export default function MiltonDashboard() {
                 { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "send", label: "Progress Stories", desc: "Shareable client transformation cards", color: "#3aafa9", onClick: () => { setCanvasType("stories"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
