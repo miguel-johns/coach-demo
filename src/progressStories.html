@@ -978,6 +978,51 @@ a:hover { color: var(--teal-800); }
                 <button sc-camel-on-click="{{ sendMarcus }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ marcusSendLabel }}</button>
               </div>
             </div>
+            <!-- Nia (transformation, before/after) -->
+            <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center;">
+              <div style="width:64px; height:114px; border-radius:10px; overflow:hidden; flex-shrink:0; position:relative; background:#0b1417;">
+                <div style="position:absolute; inset:0; top:0; bottom:50%; background:#0b1417 url(/stories/nia-before.png) center/cover no-repeat;"></div>
+                <div style="position:absolute; inset:0; top:50%; bottom:0; background:#0b1417 url(/stories/nia-after.png) center/cover no-repeat;"></div>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <div style="font-size:17px; font-weight:600;">Nia — 12-Week Transformation</div>
+                  <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-brand-bg); color:var(--sem-brand-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Transformation</span>
+                  <sc-if value="{{ niaSent }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Sent</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:13px; color:var(--fg-3); margin-top:4px;">4 cards · before/after photos + bodyweight and strength trends · generated 7:03 AM</div>
+                <div style="font-size:13px; color:var(--fg-2); margin-top:6px;">Highlights: <strong>−14 lb</strong> · +35 lb back squat · 36 sessions · leaner and stronger</div>
+              </div>
+              <div style="display:flex; gap:10px; flex-shrink:0;">
+                <button sc-camel-on-click="{{ openNia }}" style="padding:10px 18px; border-radius:999px; background:var(--white); color:var(--fg-1); border:0; box-shadow:inset 0 0 0 1px var(--ink-200); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--ink-050);">Review</button>
+                <button sc-camel-on-click="{{ sendNia }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ niaSendLabel }}</button>
+              </div>
+            </div>
+            <!-- Tom (PR-day carousel) -->
+            <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center;">
+              <div style="width:64px; height:114px; border-radius:10px; overflow:hidden; flex-shrink:0; position:relative; background:#0b1417 url(/stories/tom-bench.png) center/cover no-repeat;">
+                <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(11,20,23,0.7), transparent 55%); display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px;">
+                  <span style="font-size:15px; font-weight:700; color:{{ accent }};">225</span>
+                </div>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <div style="font-size:17px; font-weight:600;">Tom — Bench PR Day</div>
+                  <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Milestone</span>
+                  <sc-if value="{{ tomSent }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--sem-success-bg); color:var(--sem-success-fg); font-size:12px; font-weight:600;"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;"></span>Sent</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:13px; color:var(--fg-3); margin-top:4px;">3 cards · lift photo + bar climb · triggered by a new 1RM logged today · generated 32 min ago</div>
+                <div style="font-size:13px; color:var(--fg-2); margin-top:6px;">Highlights: <strong>225 lb bench</strong> · +40 lb since spring · locked out clean</div>
+              </div>
+              <div style="display:flex; gap:10px; flex-shrink:0;">
+                <button sc-camel-on-click="{{ openTom }}" style="padding:10px 18px; border-radius:999px; background:var(--white); color:var(--fg-1); border:0; box-shadow:inset 0 0 0 1px var(--ink-200); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--ink-050);">Review</button>
+                <button sc-camel-on-click="{{ sendTom }}" style="padding:10px 18px; border-radius:999px; background:var(--teal-800); color:var(--white); border:0; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--teal-700);">{{ tomSendLabel }}</button>
+              </div>
+            </div>
             <!-- David (after early generation) -->
             <sc-if value="{{ davidReady }}" hint-placeholder-val="{{ false }}">
               <div style="background:var(--white); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-card); padding:20px; display:flex; gap:20px; align-items:center; animation:cardIn 400ms var(--ease-out);">
@@ -1303,16 +1348,112 @@ a:hover { color: var(--teal-800); }
               <!-- ARCHIVED / GENERIC CARDS -->
               <sc-if value="{{ isGeneric }}" hint-placeholder-val="{{ false }}">
                 <sc-for list="{{ genericCards }}" as="gc" hint-placeholder-count="3">
-                  <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column; box-shadow:var(--shadow-md);">
-                    <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
-                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                      <div style="font-size:20px; font-weight:600; line-height:1.35;">{{ gc.head }}</div>
-                      <div style="font-size:80px; font-weight:700; line-height:0.95; letter-spacing:-0.03em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
-                      <div style="font-size:15px; color:rgba(255,255,255,0.72); margin-top:10px;">{{ gc.sub }}</div>
-                      <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:16px;">{{ gc.caption }}</div>
+
+                  <!-- stat / number -->
+                  <sc-if value="{{ gc.isStat }}" hint-placeholder-val="{{ true }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column; box-shadow:var(--shadow-md);">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="font-size:20px; font-weight:600; line-height:1.35;">{{ gc.head }}</div>
+                        <div style="font-size:80px; font-weight:700; line-height:0.95; letter-spacing:-0.03em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
+                        <div style="font-size:15px; color:rgba(255,255,255,0.72); margin-top:10px;">{{ gc.sub }}</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:16px;">{{ gc.caption }}</div>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
-                  </div>
+                  </sc-if>
+
+                  <!-- full-bleed photo -->
+                  <sc-if value="{{ gc.isPhoto }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; overflow:hidden; position:relative; background:#0b1417 url({{ gc.photo }}) center/cover no-repeat; box-shadow:var(--shadow-md);">
+                      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,20,23,0.6), rgba(11,20,23,0.05) 38%, rgba(11,20,23,0.85));"></div>
+                      <div style="position:relative; height:100%; padding:26px; display:flex; flex-direction:column; color:var(--white); box-sizing:border-box;">
+                        <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                        <div style="flex:1;"></div>
+                        <div style="font-size:52px; font-weight:700; line-height:0.95; letter-spacing:-0.02em; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                        <div style="font-size:20px; font-weight:600; line-height:1.25; margin-top:8px;">{{ gc.head }}</div>
+                        <div style="font-size:13px; color:rgba(255,255,255,0.78); margin-top:8px;">{{ gc.sub }}</div>
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.6); letter-spacing:0.08em; margin-top:16px;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <!-- before / after split -->
+                  <sc-if value="{{ gc.isSplit }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; overflow:hidden; position:relative; box-shadow:var(--shadow-md); display:flex; flex-direction:column; background:#0b1417;">
+                      <div style="flex:1; position:relative; background:#0b1417 url({{ gc.before }}) center/cover no-repeat;">
+                        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,20,23,0.45), transparent 45%);"></div>
+                        <div style="position:absolute; top:14px; left:14px; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--white); background:rgba(11,20,23,0.55); padding:5px 10px; border-radius:999px;">{{ gc.beforeLabel }}</div>
+                      </div>
+                      <div style="flex:1; position:relative; background:#0b1417 url({{ gc.after }}) center/cover no-repeat;">
+                        <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(11,20,23,0.82), transparent 52%);"></div>
+                        <div style="position:absolute; top:14px; left:14px; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#0b1417; background:{{ gc.bigColor }}; padding:5px 10px; border-radius:999px;">{{ gc.afterLabel }}</div>
+                        <div style="position:absolute; left:0; right:0; bottom:0; padding:18px 20px; color:var(--white);">
+                          <div style="font-size:19px; font-weight:700; line-height:1.2;">{{ gc.head }}</div>
+                          <div style="font-size:12px; color:rgba(255,255,255,0.8); margin-top:4px;">{{ gc.sub }}</div>
+                        </div>
+                      </div>
+                      <div style="position:absolute; top:14px; right:14px; font-size:10px; color:rgba(255,255,255,0.85); letter-spacing:0.08em;">{{ gc.idx }}</div>
+                    </div>
+                  </sc-if>
+
+                  <!-- consistency heatmap -->
+                  <sc-if value="{{ gc.isHeatmap }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column; box-shadow:var(--shadow-md);">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="font-size:20px; font-weight:600;">{{ gc.head }}</div>
+                        <div style="font-size:64px; font-weight:700; line-height:1; letter-spacing:-0.02em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
+                        <div style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:8px;">{{ gc.sub }}</div>
+                        <div style="display:grid; grid-template-columns:repeat(12, 1fr); gap:6px; margin-top:24px;">
+                          <sc-for list="{{ gc.gridList }}" as="d" hint-placeholder-count="36">
+                            <div style="width:100%; aspect-ratio:1; border-radius:4px; background:{{ d.bg }};"></div>
+                          </sc-for>
+                        </div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:12px;">{{ gc.caption }}</div>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                    </div>
+                  </sc-if>
+
+                  <!-- coach wins wall -->
+                  <sc-if value="{{ gc.isWins }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column; box-shadow:var(--shadow-md);">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                      <div style="margin-top:12px;">
+                        <div style="font-size:64px; font-weight:700; line-height:1; letter-spacing:-0.02em; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                        <div style="font-size:18px; font-weight:600; line-height:1.25; margin-top:6px;">{{ gc.head }}</div>
+                      </div>
+                      <div style="flex:1; display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                        <sc-for list="{{ gc.winList }}" as="w" hint-placeholder-count="4">
+                          <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.06);">
+                            <span style="width:8px; height:8px; border-radius:999px; background:{{ gc.bigColor }}; flex-shrink:0;"></span>
+                            <span style="flex:1; min-width:0;"><span style="display:block; font-size:13px; font-weight:600;">{{ w.name }}</span><span style="display:block; font-size:12px; color:rgba(255,255,255,0.6);">{{ w.detail }}</span></span>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                    </div>
+                  </sc-if>
+
+                  <!-- bar climb -->
+                  <sc-if value="{{ gc.isBars }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:280px; height:498px; flex-shrink:0; border-radius:24px; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column; box-shadow:var(--shadow-md);">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="font-size:20px; font-weight:600;">{{ gc.head }}</div>
+                        <div style="font-size:34px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:12px; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                        <div style="display:flex; align-items:flex-end; gap:10px; height:150px; margin-top:22px;">
+                          <sc-for list="{{ gc.barList }}" as="b" hint-placeholder-count="4">
+                            <div style="flex:1; height:{{ b.h }}; border-radius:6px 6px 2px 2px; background:{{ b.bg }};"></div>
+                          </sc-for>
+                        </div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:10px;">{{ gc.sub }}</div>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                    </div>
+                  </sc-if>
+
                 </sc-for>
               </sc-if>
             </div>
@@ -1583,16 +1724,112 @@ a:hover { color: var(--teal-800); }
 
             <sc-if value="{{ isGeneric }}" hint-placeholder-val="{{ false }}">
               <sc-for list="{{ genericCards }}" as="gc" hint-placeholder-count="3">
-                <div style="width:280px; height:498px; flex-shrink:0; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column;">
-                  <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
-                  <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                    <div style="font-size:20px; font-weight:600; line-height:1.35;">{{ gc.head }}</div>
-                    <div style="font-size:80px; font-weight:700; line-height:0.95; letter-spacing:-0.03em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
-                    <div style="font-size:15px; color:rgba(255,255,255,0.72); margin-top:10px;">{{ gc.sub }}</div>
-                    <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:16px;">{{ gc.caption }}</div>
+
+                <!-- stat / number -->
+                <sc-if value="{{ gc.isStat }}" hint-placeholder-val="{{ true }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column;">
+                    <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                      <div style="font-size:20px; font-weight:600; line-height:1.35;">{{ gc.head }}</div>
+                      <div style="font-size:80px; font-weight:700; line-height:0.95; letter-spacing:-0.03em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
+                      <div style="font-size:15px; color:rgba(255,255,255,0.72); margin-top:10px;">{{ gc.sub }}</div>
+                      <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:16px;">{{ gc.caption }}</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
                   </div>
-                  <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
-                </div>
+                </sc-if>
+
+                <!-- full-bleed photo -->
+                <sc-if value="{{ gc.isPhoto }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; overflow:hidden; position:relative; background:#0b1417 url({{ gc.photo }}) center/cover no-repeat;">
+                    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,20,23,0.6), rgba(11,20,23,0.05) 38%, rgba(11,20,23,0.85));"></div>
+                    <div style="position:relative; height:100%; padding:26px; display:flex; flex-direction:column; color:var(--white); box-sizing:border-box;">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                      <div style="flex:1;"></div>
+                      <div style="font-size:52px; font-weight:700; line-height:0.95; letter-spacing:-0.02em; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                      <div style="font-size:20px; font-weight:600; line-height:1.25; margin-top:8px;">{{ gc.head }}</div>
+                      <div style="font-size:13px; color:rgba(255,255,255,0.78); margin-top:8px;">{{ gc.sub }}</div>
+                      <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.6); letter-spacing:0.08em; margin-top:16px;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- before / after split -->
+                <sc-if value="{{ gc.isSplit }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; overflow:hidden; position:relative; display:flex; flex-direction:column; background:#0b1417;">
+                    <div style="flex:1; position:relative; background:#0b1417 url({{ gc.before }}) center/cover no-repeat;">
+                      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,20,23,0.45), transparent 45%);"></div>
+                      <div style="position:absolute; top:14px; left:14px; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--white); background:rgba(11,20,23,0.55); padding:5px 10px; border-radius:999px;">{{ gc.beforeLabel }}</div>
+                    </div>
+                    <div style="flex:1; position:relative; background:#0b1417 url({{ gc.after }}) center/cover no-repeat;">
+                      <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(11,20,23,0.82), transparent 52%);"></div>
+                      <div style="position:absolute; top:14px; left:14px; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#0b1417; background:{{ gc.bigColor }}; padding:5px 10px; border-radius:999px;">{{ gc.afterLabel }}</div>
+                      <div style="position:absolute; left:0; right:0; bottom:0; padding:18px 20px; color:var(--white);">
+                        <div style="font-size:19px; font-weight:700; line-height:1.2;">{{ gc.head }}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.8); margin-top:4px;">{{ gc.sub }}</div>
+                      </div>
+                    </div>
+                    <div style="position:absolute; top:14px; right:14px; font-size:10px; color:rgba(255,255,255,0.85); letter-spacing:0.08em;">{{ gc.idx }}</div>
+                  </div>
+                </sc-if>
+
+                <!-- consistency heatmap -->
+                <sc-if value="{{ gc.isHeatmap }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column;">
+                    <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                      <div style="font-size:20px; font-weight:600;">{{ gc.head }}</div>
+                      <div style="font-size:64px; font-weight:700; line-height:1; letter-spacing:-0.02em; color:{{ gc.bigColor }}; margin-top:8px;">{{ gc.big }}</div>
+                      <div style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:8px;">{{ gc.sub }}</div>
+                      <div style="display:grid; grid-template-columns:repeat(12, 1fr); gap:6px; margin-top:24px;">
+                        <sc-for list="{{ gc.gridList }}" as="d" hint-placeholder-count="36">
+                          <div style="width:100%; aspect-ratio:1; border-radius:4px; background:{{ d.bg }};"></div>
+                        </sc-for>
+                      </div>
+                      <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:12px;">{{ gc.caption }}</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                  </div>
+                </sc-if>
+
+                <!-- coach wins wall -->
+                <sc-if value="{{ gc.isWins }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column;">
+                    <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                    <div style="margin-top:12px;">
+                      <div style="font-size:64px; font-weight:700; line-height:1; letter-spacing:-0.02em; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                      <div style="font-size:18px; font-weight:600; line-height:1.25; margin-top:6px;">{{ gc.head }}</div>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                      <sc-for list="{{ gc.winList }}" as="w" hint-placeholder-count="4">
+                        <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.06);">
+                          <span style="width:8px; height:8px; border-radius:999px; background:{{ gc.bigColor }}; flex-shrink:0;"></span>
+                          <span style="flex:1; min-width:0;"><span style="display:block; font-size:13px; font-weight:600;">{{ w.name }}</span><span style="display:block; font-size:12px; color:rgba(255,255,255,0.6);">{{ w.detail }}</span></span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                  </div>
+                </sc-if>
+
+                <!-- bar climb -->
+                <sc-if value="{{ gc.isBars }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:280px; height:498px; flex-shrink:0; background:{{ gc.bg }}; color:var(--white); padding:26px; display:flex; flex-direction:column;">
+                    <div style="font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-300);">{{ gc.eyebrow }}</div>
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                      <div style="font-size:20px; font-weight:600;">{{ gc.head }}</div>
+                      <div style="font-size:34px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:12px; color:{{ gc.bigColor }};">{{ gc.big }}</div>
+                      <div style="display:flex; align-items:flex-end; gap:10px; height:150px; margin-top:22px;">
+                        <sc-for list="{{ gc.barList }}" as="b" hint-placeholder-count="4">
+                          <div style="flex:1; height:{{ b.h }}; border-radius:6px 6px 2px 2px; background:{{ b.bg }};"></div>
+                        </sc-for>
+                      </div>
+                      <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:10px;">{{ gc.sub }}</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.08em;"><span>MILTON × MMNT</span><span>{{ gc.idx }}</span></div>
+                  </div>
+                </sc-if>
+
               </sc-for>
             </sc-if>
           </div>
@@ -1652,7 +1889,13 @@ class Component extends DCLogic {
     this._t = setTimeout(() => this.setState({ toast: null }), 3500);
   }
 
-  lastIdx() { return this.state.story === 'sarah' ? 6 : 2; }
+  lastIdx() {
+    const st = this.state.story;
+    if (st === 'sarah') return 6;
+    const g = this.archiveData()[st];
+    if (g && g.cards) return g.cards.length - 1;
+    return 2;
+  }
 
   archiveData() {
     const dark = 'var(--ink-900)', teal = 'var(--teal-800)';
@@ -1705,6 +1948,72 @@ class Component extends DCLogic {
           { bg: dark, eyebrow: 'Milestone', head: 'First full snatch', big: '95', bigColor: accent, sub: 'lb \u00b7 caught in a full squat \u00b7 Jun 18', caption: 'Lisa Martinez \u00b7 Olympic Lifting Intro', idx: '01 / 03' },
           { bg: dark, eyebrow: 'The work', head: 'Positions paid off', big: '11', bigColor: accent, sub: 'weeks of drills before the first full lift', caption: 'Hang \u2192 power \u2192 full', idx: '02 / 03' },
           quote('\u201cTextbook turnover. The boring drills did this.\u201d', '03 / 03')
+        ]
+      },
+      nia: {
+        storyTitle: 'Nia \u2014 12-Week Transformation', storySub: 'Nia Okafor \u00b7 Fat Loss \u2014 Phase 1 \u00b7 ready to send',
+        triggerText: '12-week block completed', cardCount: '4', sourcesText: '3 progress photos \u00b7 36 sessions \u00b7 bodyweight log',
+        generatedText: 'Today, 7:03 AM', clientFirst: 'Nia', downloadLabel: 'Download 4 story images',
+        miltonNote: 'The photos tell it better than numbers \u2014 I led with the before/after and let the data back it up.',
+        sendKey: 'nia', sendName: 'Nia',
+        cards: [
+          { variant: 'split', before: '/stories/nia-before.png', after: '/stories/nia-after.png', beforeLabel: 'Day 1', afterLabel: 'Week 12', head: '12 weeks apart', sub: 'Same person \u00b7 same camera \u00b7 same 6am light', bigColor: accent, idx: '01 / 04' },
+          { bg: dark, eyebrow: 'Bodyweight', head: 'Down and holding', big: '\u221214 lb', bigColor: accent, sub: '167 \u2192 153 lb over 12 weeks', caption: 'Every week logged \u2014 no crash weeks', idx: '02 / 04' },
+          { bg: dark, eyebrow: 'Strength', head: 'Leaner and stronger', big: '+35 lb', bigColor: accent, sub: 'Back squat 85 \u2192 120 lb', caption: 'Fat loss without losing the gym', idx: '03 / 04' },
+          quote('\u201cNia trusted the process on the weeks the scale didn\u2019t move. That\u2019s why it worked.\u201d', '04 / 04')
+        ]
+      },
+      tom: {
+        storyTitle: 'Tom \u2014 Bench PR Day', storySub: 'Tom Bennett \u00b7 Strength \u2014 Upper \u00b7 ready to send',
+        triggerText: 'New 1RM logged today', cardCount: '3', sourcesText: '1 PR lift \u00b7 12 bench sessions',
+        generatedText: 'Today, 32 min ago', clientFirst: 'Tom', downloadLabel: 'Download 3 story images',
+        miltonNote: 'Caught the lift photo from his upload. PR-day stories hit hardest when they go out same-day.',
+        sendKey: 'tom', sendName: 'Tom',
+        cards: [
+          { variant: 'photo', photo: '/stories/tom-bench.png', eyebrow: 'PR alert', big: '225', head: 'A new bench max', sub: 'lb \u00b7 locked out clean \u00b7 today', bigColor: accent, idx: '01 / 03' },
+          { variant: 'bars', bg: dark, eyebrow: 'The climb', head: '+40 lb since spring', big: '185 \u2192 225', bigColor: accent, bars: [185, 195, 205, 225], sub: '185 \u00b7 195 \u00b7 205 \u00b7 225', idx: '02 / 03' },
+          quote('\u201cTwelve weeks of pressing paid off in one rep. Nobody PRs by accident.\u201d', '03 / 03')
+        ]
+      },
+      coachwins: {
+        storyTitle: 'This Week at MMNT', storySub: 'Coach recap \u00b7 shared to your channel \u00b7 sent Jul 20',
+        triggerText: 'Weekly coach recap \u00b7 Jul 20', cardCount: '3', sourcesText: 'All client logs \u00b7 Jul 14\u201320',
+        generatedText: 'Jul 20, 8:00 AM', clientFirst: 'the team', downloadLabel: 'Download 3 story images',
+        miltonNote: 'A coach-facing wins wall \u2014 great for your own socials. I pulled every PR and milestone from the week.',
+        sendKey: 'coachwins', sendName: 'the team', archived: true, sentLabel: 'Sent Jul 20',
+        cards: [
+          { variant: 'wins', bg: dark, eyebrow: 'This week', big: '4', head: 'PRs across the roster', bigColor: accent, wins: [
+            { name: 'Marcus J.', detail: '315 lb deadlift \u00b7 +40' },
+            { name: 'Tom B.', detail: '225 lb bench \u00b7 +40' },
+            { name: 'Rachel K.', detail: 'first unassisted pull-up' },
+            { name: 'Lisa M.', detail: 'first full snatch \u00b7 95 lb' }
+          ], idx: '01 / 03' },
+          { bg: dark, eyebrow: 'Momentum', head: 'Sessions logged this week', big: '128', bigColor: accent, sub: 'across 22 active clients', caption: '93% of scheduled sessions attended', idx: '02 / 03' },
+          quote('\u201cFour PRs in one week. This is what showing up looks like.\u201d', '03 / 03')
+        ]
+      },
+      priya: {
+        storyTitle: 'Priya \u2014 47 Sessions, Zero Excuses', storySub: 'Priya Nair \u00b7 Consistency Habit \u00b7 sent Jul 8',
+        triggerText: 'Consistency milestone \u00b7 47 sessions', cardCount: '3', sourcesText: '12 weeks of attendance \u00b7 1 action photo',
+        generatedText: 'Jul 8, 6:30 AM', clientFirst: 'Priya', downloadLabel: 'Download 3 story images',
+        miltonNote: 'Priya shared this the same morning \u2014 consistency stories land while the streak is still alive.',
+        sendKey: 'priya', sendName: 'Priya', archived: true, sentLabel: 'Sent Jul 8',
+        cards: [
+          { variant: 'heatmap', bg: dark, eyebrow: 'Consistency', head: '12 weeks. Barely a gap.', big: '47', bigColor: accent, sub: 'sessions in 12 weeks \u00b7 98% attendance', gridCount: 36, gridOff: [19], caption: 'Longest streak: 11 straight weeks', idx: '01 / 03' },
+          { variant: 'photo', photo: '/stories/priya-session.png', eyebrow: 'The habit', big: '', head: 'Showed up on the hard days', sub: '6am, rain or shine', bigColor: accent, idx: '02 / 03' },
+          quote('\u201cTalent is optional. Priya just refused to miss.\u201d', '03 / 03')
+        ]
+      },
+      devon: {
+        storyTitle: 'Devon \u2014 6-Month Transformation', storySub: 'Devon Clarke \u00b7 Body Recomposition \u00b7 sent Jun 30',
+        triggerText: '6-month check-in', cardCount: '3', sourcesText: '2 progress photos \u00b7 74 sessions',
+        generatedText: 'Jun 30, 5:45 PM', clientFirst: 'Devon', downloadLabel: 'Download 3 story images',
+        miltonNote: 'Six months is a long arc \u2014 the side-by-side does the talking. Devon posted it within the hour.',
+        sendKey: 'devon', sendName: 'Devon', archived: true, sentLabel: 'Sent Jun 30',
+        cards: [
+          { variant: 'split', before: '/stories/devon-before.png', after: '/stories/devon-after.png', beforeLabel: 'January', afterLabel: 'June', head: 'Six months, one habit', sub: '\u221222 lb \u00b7 +2 pull-ups \u00b7 same discipline', bigColor: accent, idx: '01 / 03' },
+          { bg: dark, eyebrow: 'By the numbers', head: 'What changed', big: '\u221222 lb', bigColor: accent, sub: '205 \u2192 183 lb \u00b7 body fat 26% \u2192 18%', caption: '74 sessions across 6 months', idx: '02 / 03' },
+          quote('\u201cDevon stopped chasing quick wins and got the real one.\u201d', '03 / 03')
         ]
       }
     };
@@ -1770,11 +2079,33 @@ class Component extends DCLogic {
     const archive = this.archiveData();
     const generic = archive[s.story];
     const a = isSarah ? sarah : s.story === 'marcus' ? marcus : s.story === 'david' ? david : generic;
+    const processCard = (c) => {
+      const v = c.variant || 'stat';
+      const out = { ...c,
+        isStat: v === 'stat', isPhoto: v === 'photo', isSplit: v === 'split',
+        isHeatmap: v === 'heatmap', isWins: v === 'wins', isBars: v === 'bars',
+        bg: c.bg || 'var(--ink-900)', bigColor: c.bigColor || accent };
+      if (v === 'bars') {
+        const vals = c.bars || [1];
+        const mx = Math.max(...vals), mn = Math.min(...vals), range = (mx - mn) || 1;
+        out.barList = vals.map((val, i, arr) => ({
+          h: Math.round(38 + ((val - mn) / range) * 62) + '%',
+          bg: i === arr.length - 1 ? accent : 'rgba(255,255,255,' + (0.22 + (i / arr.length) * 0.38).toFixed(2) + ')'
+        }));
+      }
+      if (v === 'heatmap') {
+        const off = new Set(c.gridOff || []);
+        const n = c.gridCount || 36;
+        out.gridList = Array.from({ length: n }, (_, i) => ({ bg: off.has(i) ? 'rgba(255,255,255,0.14)' : accent }));
+      }
+      if (v === 'wins') out.winList = c.wins || [];
+      return out;
+    };
     return {
       accent,
       isHome: s.view === 'home', isReview: s.view === 'review',
       isSarah, isMarcus: s.story === 'marcus', isDavid: s.story === 'david',
-      isGeneric: !!generic, genericCards: generic ? generic.cards : [],
+      isGeneric: !!generic, genericCards: generic ? generic.cards.map(processCard) : [],
       showReady: s.tab === 'ready', showScheduled: s.tab === 'scheduled', showSent: s.tab === 'sent',
       tabReadyClick: () => this.setState({ tab: 'ready' }),
       tabScheduledClick: () => this.setState({ tab: 'scheduled' }),
@@ -1782,6 +2113,11 @@ class Component extends DCLogic {
       goSentTab: () => this.setState({ view: 'home', tab: 'sent' }),
       tabReadyBg: rT.bg, tabReadyFg: rT.fg, tabScheduledBg: sT.bg, tabScheduledFg: sT.fg, tabSentBg: nT.bg, tabSentFg: nT.fg,
       openSarah: open('sarah'), openMarcus: open('marcus'),
+      openNia: open('nia'), openTom: open('tom'),
+      niaSent: !!s.sent.nia, tomSent: !!s.sent.tom,
+      niaSendLabel: s.sent.nia ? 'Sent' : 'Send to Nia',
+      tomSendLabel: s.sent.tom ? 'Sent' : 'Send to Tom',
+      sendNia: send('nia', 'Nia'), sendTom: send('tom', 'Tom'),
       backHome: () => this.setState({ view: 'home' }),
       sendSarah: send('sarah', 'Sarah'), sendMarcus: send('marcus', 'Marcus'),
       sendActive: send(a.sendKey, a.sendName),
@@ -1800,9 +2136,9 @@ class Component extends DCLogic {
       previewLabel: 'Preview as ' + a.clientFirst,
       playerOpen: s.playerOpen,
       playerName: isSarah ? 'Sarah Chen' : s.story === 'marcus' ? 'Marcus Johnson' : s.story === 'david' ? 'David Park'
-        : { emily: 'Emily Rodriguez', rachel: 'Rachel Kim', jason: 'Jason Williams', lisa: 'Lisa Martinez' }[s.story],
+        : { emily: 'Emily Rodriguez', rachel: 'Rachel Kim', jason: 'Jason Williams', lisa: 'Lisa Martinez', nia: 'Nia Okafor', tom: 'Tom Bennett', coachwins: 'MMNT Team', priya: 'Priya Nair', devon: 'Devon Clarke' }[s.story],
       playerInitials: isSarah ? 'SC' : s.story === 'marcus' ? 'MJ' : s.story === 'david' ? 'DP'
-        : { emily: 'ER', rachel: 'RK', jason: 'JW', lisa: 'LM' }[s.story],
+        : { emily: 'ER', rachel: 'RK', jason: 'JW', lisa: 'LM', nia: 'NO', tom: 'TB', coachwins: 'MM', priya: 'PN', devon: 'DC' }[s.story],
       playerSegs: Array.from({ length: this.lastIdx() + 1 }, (_, i) => ({
         w: i < s.playerIdx ? '100%' : i === s.playerIdx ? Math.round(s.playerProg * 100) + '%' : '0%'
       })),
@@ -1818,9 +2154,9 @@ class Component extends DCLogic {
       holdStart: () => this.setState({ playerPaused: true }),
       holdEnd: () => { if (!(s.playerIdx === this.lastIdx() && s.playerProg >= 1)) this.setState({ playerPaused: false }); },
       replay: () => this.setState({ playerIdx: 0, playerProg: 0, playerPaused: false }),
-      readyCount: 2 + (s.david === 'ready' ? 1 : 0),
+      readyCount: 4 + (s.david === 'ready' ? 1 : 0),
       scheduledCount: s.david === 'scheduled' || s.david === 'generating' ? 1 : 0,
-      sentCount: 4 + Object.keys(s.sent).length,
+      sentCount: 7 + Object.keys(s.sent).length,
       davidScheduled: s.david === 'scheduled', davidGenerating: s.david === 'generating',
       davidReady: s.david === 'ready', davidDone: s.david === 'ready',
       davidSent: !!s.sent.david,
@@ -1835,8 +2171,13 @@ class Component extends DCLogic {
         ...(s.sent.sarah ? [{ key: 'sarah', title: "Sarah's 12-Week Wrapped", type: 'Recap \u00b7 7 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
         ...(s.sent.marcus ? [{ key: 'marcus', title: 'Marcus \u2014 Deadlift PR', type: 'Milestone \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
         ...(s.sent.david ? [{ key: 'david', title: 'David \u2014 Meet Prep, Week 6', type: 'Recap \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        ...(s.sent.nia ? [{ key: 'nia', title: 'Nia \u2014 12-Week Transformation', type: 'Transformation \u00b7 4 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        ...(s.sent.tom ? [{ key: 'tom', title: 'Tom \u2014 Bench PR Day', type: 'Milestone \u00b7 3 cards', sent: 'Just now', pill: 'Delivered', pillBg: 'var(--sem-info-bg)', pillFg: 'var(--sem-info-fg)', activity: 'Not opened yet' }] : []),
+        { key: 'devon', title: 'Devon \u2014 6-Month Transformation', type: 'Transformation \u00b7 3 cards', sent: 'Jun 30', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 6\u00d7 \u00b7 88 link views' },
         { key: 'emily', title: "Emily's June Recap", type: 'Monthly \u00b7 3 cards', sent: 'Jul 1', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 5\u00d7 \u00b7 41 link views' },
+        { key: 'priya', title: 'Priya \u2014 47 Sessions, Zero Excuses', type: 'Consistency \u00b7 3 cards', sent: 'Jul 8', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 4\u00d7 \u00b7 33 link views' },
         { key: 'rachel', title: 'Rachel \u2014 First Unassisted Pull-up', type: 'Milestone \u00b7 3 cards', sent: 'Jun 26', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 3\u00d7 \u00b7 18 link views' },
+        { key: 'coachwins', title: 'This Week at MMNT', type: 'Coach recap \u00b7 3 cards', sent: 'Jul 20', pill: 'Shared to IG', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 9\u00d7 \u00b7 124 link views' },
         { key: 'jason', title: "Jason's June Recap", type: 'Monthly \u00b7 3 cards', sent: 'Jul 1', pill: 'Opened', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened 2\u00d7 \u00b7 4 link views' },
         { key: 'lisa', title: 'Lisa \u2014 First Full Snatch', type: 'Milestone \u00b7 3 cards', sent: 'Jun 19', pill: 'Opened', pillBg: 'var(--sem-success-bg)', pillFg: 'var(--sem-success-fg)', activity: 'Opened once' }
       ].map(r => ({ ...r, view: () => this.setState({ view: 'review', story: r.key, copied: false }) })),
