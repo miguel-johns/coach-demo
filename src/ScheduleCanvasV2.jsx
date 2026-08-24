@@ -178,7 +178,7 @@ const Bar = ({ pct, color }) => (
   </div>
 );
 
-export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
+export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [persona, setPersona] = useState("coach");
   const [tab, setTab] = useState("week");
   const [weekStart, setWeekStart] = useState(WEEK0);
@@ -1454,8 +1454,15 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: PAGE_BG, position: "relative", overflow: "hidden" }}>
       {/* header */}
       <div style={{ background: WHITE, borderBottom: `1px solid ${B_SOFT}`, padding: `${narrow ? 12 : 14}px ${PAD}px 0` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <button onClick={onHome} style={{ border: 0, background: "transparent", color: FG3, fontFamily: "inherit", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>← Home</button>
+        {/* Anchored to the corner rather than inline, so it cannot get pushed
+            onto a second row when the header controls wrap. */}
+        {onClose && (
+          <button onClick={onClose} aria-label="Close"
+            style={{ position: "absolute", top: narrow ? 12 : 14, right: PAD, zIndex: 5, width: 32, height: 32, borderRadius: 8, border: `1px solid ${B_SOFT}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: FG3 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingRight: 40 }}>
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: narrow ? 15 : 17, fontWeight: 700, color: FG1, letterSpacing: "-.01em" }}>
               {persona === "admin" ? "Facility scheduling" : "My schedule"}
@@ -1477,7 +1484,6 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
             </button>
             <button style={btn("secondary")} onClick={() => flash("Week exported to CSV")}>Export</button>
           </>}
-          {onClose && <button onClick={onClose} style={{ border: 0, background: "transparent", color: FG3, fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 2px" }} aria-label="Close">×</button>}
         </div>
         {/* tabs */}
         <div className="hide-scrollbar" style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>

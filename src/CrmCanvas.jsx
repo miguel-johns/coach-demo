@@ -442,7 +442,7 @@ const QA = ({ q, a }) => (
 const initialsOf = (name) => name.split(" ").map((w) => w[0]).join("");
 
 // ── Main ────────────────────────────────────────────────────────
-export default function CrmCanvas({ onClose, onHome, isMobile }) {
+export default function CrmCanvas({ onClose, isMobile }) {
   const [screen, setScreen] = useState("queue");
   const [who, setWho] = useState("Danielle Reyes");
   const [from, setFrom] = useState("queue");
@@ -1034,10 +1034,7 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6" /></svg>
-              </button>
-              <Eyebrow>Leads and relationships</Eyebrow>
+                <Eyebrow>Leads and relationships</Eyebrow>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <h1 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>CRM</h1>
@@ -1047,7 +1044,7 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
               Milton ranks who is worth your time today, keeps everyone else on a cadence, and hands you the whole record before you call.
             </p>
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+              <button onClick={onClose} aria-label="Close" style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>

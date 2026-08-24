@@ -6000,11 +6000,10 @@ isMobile={true}
             />
           )}
           {canvasType === "crm" && (
-            <CrmCanvas
-              isMobile={true}
-              onClose={onClose}
-              onHome={() => setCanvasType("templates")}
-            />
+  <CrmCanvas
+  isMobile={true}
+  onClose={onClose}
+  />
           )}
           {canvasType === "mealPlan" && (
             <MealPlanCanvas
@@ -6054,11 +6053,10 @@ isMobile={true}
             />
           )}
           {canvasType === "schedule" && (
-            <ScheduleCanvasV2
-              isMobile={true}
-              onClose={onClose}
-              onHome={() => setCanvasType("templates")}
-            />
+  <ScheduleCanvasV2
+  isMobile={true}
+  onClose={onClose}
+  />
           )}
           {canvasType === "semiPrivate" && (
             <SemiPrivateList
@@ -17731,11 +17729,10 @@ export default function MiltonDashboard() {
             />
           )}
           {canvasType === "crm" && (
-            <CrmCanvas
-              isMobile={canvasCompact}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-              onHome={() => setCanvasType("templates")}
-            />
+  <CrmCanvas
+  isMobile={canvasCompact}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
           )}
           {canvasType === "playbook" && (
             <PlaybookCanvas
@@ -17888,7 +17885,6 @@ export default function MiltonDashboard() {
   <ScheduleCanvasV2
   isMobile={canvasCompact}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-  onHome={() => setCanvasType("templates")}
   />
   )}
   {canvasType === "programming" && (
