@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TEAL, TEAL_LIGHT, WHITE, TEXT, TEXT_SEC, BORDER, ALERT_RED } from "./constants";
 
 const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace";
@@ -451,6 +451,13 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
   const [sent, setSent] = useState(false);
   const [tagFor, setTagFor] = useState(null);
   const [added, setAdded] = useState({});
+  const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
+
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const bg = 47;
   const allRows = LEADS.map((r) => [r[0], r[1], r[2], r[3], r[6], r[7], "Lead"]).concat(OFF_LIST);
@@ -597,7 +604,12 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
   const tabActive = (k) =>
     screen === k || (["contact", "answers", "brief"].includes(screen) && from === k);
 
-  const gridCols = "32px minmax(0,1.25fr) 210px 78px 108px 140px 92px";
+  // Source and last-contact are the first to go when the canvas gets narrow —
+  // name, tags, band and state are what the coach actually scans.
+  const wide = !isMobile && vw >= 1180;
+  const gridCols = wide
+    ? "30px minmax(140px,1.5fr) minmax(150px,1.4fr) 72px 96px minmax(96px,1fr) 84px"
+    : "30px minmax(120px,1.5fr) minmax(130px,1.3fr) 72px 96px";
 
   // ── Screens ──
   const Queue = () => (
@@ -698,7 +710,8 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
           <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12, padding: "10px 18px", background: INK_050 }}>
             <span />
             <Eyebrow>Name</Eyebrow><Eyebrow>Tags</Eyebrow><Eyebrow>Band</Eyebrow>
-            <Eyebrow>State</Eyebrow><Eyebrow>Source</Eyebrow><Eyebrow>Last contact</Eyebrow>
+            <Eyebrow>State</Eyebrow>
+            {wide && <><Eyebrow>Source</Eyebrow><Eyebrow>Last contact</Eyebrow></>}
           </div>
         )}
         {filtered.map(([name, band, reason, source, rowState, last, rowType], n) => {
@@ -734,14 +747,18 @@ export default function CrmCanvas({ onClose, onHome, isMobile }) {
               }}>
               <Avatar initials={initialsOf(name)} bg={av} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: TEXT }}>{name}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
                 <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reason}</div>
               </div>
               <TagCell name={name} rowType={rowType} />
               {isLead ? <BandPill band={band} /> : <span style={{ fontSize: 12, color: TEXT_SEC }}>—</span>}
               <span style={{ fontSize: 12.5, color: TEXT }}>{isLead ? rowState : "—"}</span>
-              <span style={{ fontSize: 12, color: TEXT_SEC }}>{source}</span>
-              <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO }}>{last}</span>
+              {wide && (
+                <>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{source}</span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>{last}</span>
+                </>
+              )}
             </div>
           );
         })}
