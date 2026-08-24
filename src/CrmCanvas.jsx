@@ -1030,35 +1030,28 @@ export default function CrmCanvas({ onClose, isMobile }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: PAGE_BG }}>
       {/* Header */}
-      <div style={{ padding: isMobile ? "16px" : "22px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <Eyebrow>Leads and relationships</Eyebrow>
+      <div style={{ padding: isMobile ? "14px 16px" : "16px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", minWidth: 0 }}>
+            <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>CRM</h1>
+            <Pill bg={TEAL_LIGHT} color={TEAL} dot={TEAL}>{`Working ${bg} leads quietly`}</Pill>
+
+            {/* Segmented toggle, matching the schedule canvas's Admin/Trainer control */}
+            <div style={{ display: "inline-flex", gap: 3, background: INK_050, padding: 3, borderRadius: 999, border: `1px solid ${BORDER}` }}>
+              {TABS.map(([k, label]) => {
+                const active = tabActive(k);
+                return (
+                  <button key={k} onClick={go(k)}
+                    style={{ border: 0, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, padding: "6px 14px", borderRadius: 999, background: active ? WHITE : "transparent", color: active ? TEAL : TEXT_SEC, boxShadow: active ? "0 1px 2px rgba(16,40,34,0.08)" : "none" }}>
+                    {label}
+                  </button>
+                );
+              })}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <h1 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>CRM</h1>
-              <Pill bg={TEAL_LIGHT} color={TEAL} dot={TEAL}>{`Working ${bg} leads quietly`}</Pill>
-            </div>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5, maxWidth: 660 }}>
-              Milton ranks who is worth your time today, keeps everyone else on a cadence, and hands you the whole record before you call.
-            </p>
           </div>
-              <button onClick={onClose} aria-label="Close" style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+          <button onClick={onClose} aria-label="Close" style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
-        </div>
-
-        <div style={{ display: "flex", gap: 22, marginTop: 18, borderBottom: `1px solid ${BORDER}`, marginLeft: -4 }}>
-          {TABS.map(([k, label]) => {
-            const active = tabActive(k);
-            return (
-              <button key={k} onClick={go(k)}
-                style={{ background: "none", border: "none", padding: "0 4px 10px", cursor: "pointer", fontSize: 14, fontWeight: active ? 700 : 500, color: active ? TEAL : TEXT_SEC, borderBottom: `2px solid ${active ? TEAL : "transparent"}`, marginBottom: -1 }}>
-                {label}
-              </button>
-            );
-          })}
         </div>
       </div>
 
