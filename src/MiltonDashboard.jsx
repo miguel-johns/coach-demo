@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import ClientProfile from "./ClientProfile";
 import PaymentsCanvas from "./PaymentsCanvas";
 import CrmCanvas from "./CrmCanvas";
+import ScheduleCanvasV2 from "./ScheduleCanvasV2";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
 import NutritionDashboard from "./dashboards/NutritionDashboard";
 import ProgressDashboard from "./dashboards/ProgressDashboard";
@@ -6053,13 +6054,10 @@ isMobile={true}
             />
           )}
           {canvasType === "schedule" && (
-            <ScheduleCanvas
+            <ScheduleCanvasV2
               isMobile={true}
               onClose={onClose}
               onHome={() => setCanvasType("templates")}
-              sessions={sessions}
-              clients={clients}
-              onSessionClick={(sessId) => { onClose(); onSessionClick?.(sessId); }}
             />
           )}
           {canvasType === "semiPrivate" && (
@@ -10682,7 +10680,7 @@ function FormsCanvas({ onClose, onHome, isMobile }) {
                   <div style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 18px" }}>
                     <WfEyebrow color={WF_C.tealDark}>{open.kind === "form" ? "Client-facing form" : "Assessment"}</WfEyebrow>
                     <input value={open.name} onChange={(e) => patchItem(open.id, { name: e.target.value })} placeholder="Untitled" className="wf-name-input" style={{ fontSize: 19, fontWeight: 700, fontFamily: "'Archivo Expanded', sans-serif", color: WF_C.navy, width: "100%", padding: "4px 8px", marginTop: 4, marginLeft: -8 }} />
-                    <input value={open.headline} onChange={(e) => patchItem(open.id, { headline: e.target.value })} placeholder="Add a friendly headline shown at the top…" className="wf-name-input" style={{ fontSize: 13.5, color: WF_C.sub, width: "100%", padding: "4px 8px", marginTop: 2, marginLeft: -8 }} />
+                    <input value={open.headline} onChange={(e) => patchItem(open.id, { headline: e.target.value })} placeholder="Add a friendly headline shown at the top���" className="wf-name-input" style={{ fontSize: 13.5, color: WF_C.sub, width: "100%", padding: "4px 8px", marginTop: 2, marginLeft: -8 }} />
                   </div>
 
                   {/* Fields */}
@@ -17887,13 +17885,10 @@ export default function MiltonDashboard() {
   />
   )}
   {canvasType === "schedule" && (
-  <ScheduleCanvas
+  <ScheduleCanvasV2
   isMobile={canvasCompact}
   onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
   onHome={() => setCanvasType("templates")}
-  sessions={sessions}
-  clients={clients}
-  onSessionClick={(sessId) => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); setActiveSessionId(sessId); }}
   />
   )}
   {canvasType === "programming" && (
@@ -18126,7 +18121,7 @@ export default function MiltonDashboard() {
               )}
               {[
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
-                { icon: "calendar", label: "Schedule", desc: "Sessions & calendar", color: "#2B7A78", badge: clients.filter(c => c.alertType === "red").length, badgeLabel: "due", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
