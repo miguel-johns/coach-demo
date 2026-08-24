@@ -12026,7 +12026,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
   );
 }
 
-// ═══��══════��══��═══��═��═══����══��═��═════════════��═══════════════════
+// ═══��══════��══��═══��═��══�������══��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
 // ═══════════════════════════════════════════════════════════════
 function PlaybookChapterDetail({ 
@@ -18116,17 +18116,17 @@ export default function MiltonDashboard() {
                 />
               )}
               {[
+                { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
-                { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "crm", label: "CRM", desc: "Leads, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Build Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "send", label: "Progress Stories", desc: "Shareable client transformation cards", color: "#3aafa9", onClick: () => { setCanvasType("stories"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "program", label: "Build Workouts", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "send", label: "Progress Stories", desc: "Shareable client transformation cards", color: "#3aafa9", onClick: () => { setCanvasType("stories"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "crm", label: "CRM", desc: "Leads, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
