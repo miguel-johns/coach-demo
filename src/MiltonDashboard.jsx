@@ -5993,11 +5993,10 @@ isMobile={true}
             />
           )}
           {canvasType === "payments" && (
-            <PaymentsCanvas
-              isMobile={true}
-              onClose={onClose}
-              onHome={() => setCanvasType("templates")}
-            />
+  <PaymentsCanvas
+  isMobile={true}
+  onClose={onClose}
+  />
           )}
           {canvasType === "crm" && (
   <CrmCanvas
@@ -11270,7 +11269,7 @@ function StoriesCanvas({ onClose, onHome }) {
   );
 }
   
-  /* ═════��═══════════════════════════════════════
+  /* ═════��══════════════════════════��════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
   ═════════════════════════�������═���═══════════════ */
 // ═════════��═══���════════��═══════════════════════����══════��════════
@@ -17722,11 +17721,10 @@ export default function MiltonDashboard() {
             />
           )}
           {canvasType === "payments" && (
-            <PaymentsCanvas
-              isMobile={canvasCompact}
-              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
-              onHome={() => setCanvasType("templates")}
-            />
+  <PaymentsCanvas
+  isMobile={canvasCompact}
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  />
           )}
           {canvasType === "crm" && (
   <CrmCanvas

@@ -606,7 +606,7 @@ const newTemplateFrom = (defaults) => ({
   state: "draft", activeSubs: 0,
 });
 
-export default function PaymentsCanvas({ onClose, onHome, isMobile, onOpenClient }) {
+export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
   const [routingActive, setRoutingActive] = useState(false);
   const [templates, setTemplates] = useState(SEED_TEMPLATES);
   const [tab, setTab] = useState("setup");
@@ -634,9 +634,6 @@ export default function PaymentsCanvas({ onClose, onHome, isMobile, onOpenClient
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <button onClick={onHome} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
-              </button>
               <Eyebrow>Organization settings</Eyebrow>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -647,7 +644,7 @@ export default function PaymentsCanvas({ onClose, onHome, isMobile, onOpenClient
               Connect providers, define what you sell, and monitor money moving through your organization.
             </p>
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+          <button onClick={onClose} aria-label="Close" style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
