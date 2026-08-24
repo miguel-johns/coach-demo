@@ -837,6 +837,10 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
   }
 
   function FacilityPanel() {
+    // Narrower gutter than the mockup's 130px, and columns that can shrink, so
+    // the default 5 resources fit the card without a horizontal scrollbar.
+    // Past ~7 resources the min kicks in and overflowX takes over.
+    const RES_COLS = `52px repeat(${resources.length}, minmax(84px,1fr))`;
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -866,8 +870,10 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
 
         <Card style={{ overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
-            <div style={{ minWidth: 760 }}>
-              <div style={{ display: "grid", gridTemplateColumns: `130px repeat(${resources.length}, minmax(110px,1fr))`, borderBottom: `1px solid ${B_SUB}` }}>
+            {/* No minWidth: the columns flex to fit the card so the admin grid
+                does not get its own horizontal scrollbar at normal widths. */}
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: RES_COLS, borderBottom: `1px solid ${B_SUB}` }}>
                 <div />
                 {resources.map((r) => (
                   <div key={r.id + r.type} style={{ padding: "9px 8px", borderLeft: `1px solid ${B_SUB}` }}>
@@ -876,11 +882,11 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
                   </div>
                 ))}
               </div>
-              <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                <div style={{ display: "grid", gridTemplateColumns: `130px repeat(${resources.length}, minmax(110px,1fr))` }}>
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
                   <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
                     {HOURS.map((h, i) => (
-                      <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 10, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
+                      <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
                     ))}
                   </div>
                   {resources.map((r) => (
@@ -1474,7 +1480,7 @@ export default function ScheduleCanvasV2({ onClose, onHome, isMobile }) {
           {onClose && <button onClick={onClose} style={{ border: 0, background: "transparent", color: FG3, fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 2px" }} aria-label="Close">×</button>}
         </div>
         {/* tabs */}
-        <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>
+        <div className="hide-scrollbar" style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>
           {tabsDef.map((t, i) =>
             t[0] === "sep" ? (
               <span key={"s" + i} style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".1em", color: FG4, padding: "0 10px 0 16px", whiteSpace: "nowrap" }}>{t[1]}</span>
