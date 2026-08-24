@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ClientProfile from "./ClientProfile";
 import PaymentsCanvas from "./PaymentsCanvas";
+import CrmCanvas from "./CrmCanvas";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
 import NutritionDashboard from "./dashboards/NutritionDashboard";
 import ProgressDashboard from "./dashboards/ProgressDashboard";
@@ -276,6 +277,7 @@ function NavIcon({ icon, size = 20 }) {
   playbook: <svg {...s} viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 015.5 3H19a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 00-2 2z"/><path d="M4 19V4.5"/><line x1="8" y1="7.5" x2="16" y2="7.5"/><line x1="8" y1="11" x2="13" y2="11"/></svg>,
   upload: <svg {...s} viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   payments: <svg {...s} viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>,
+  crm: <svg {...s} viewBox="0 0 24 24"><path d="M3 4.5h18l-6.8 7.6v6.2L9.8 21v-8.9z"/><circle cx="18.5" cy="17.5" r="3"/><line x1="18.5" y1="16" x2="18.5" y2="19"/><line x1="17" y1="17.5" x2="20" y2="17.5"/></svg>,
   };
   return icons[icon] || null;
 }
@@ -5996,6 +5998,13 @@ isMobile={true}
               onHome={() => setCanvasType("templates")}
             />
           )}
+          {canvasType === "crm" && (
+            <CrmCanvas
+              isMobile={true}
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "mealPlan" && (
             <MealPlanCanvas
               data={canvasData}
@@ -11267,7 +11276,7 @@ function StoriesCanvas({ onClose, onHome }) {
   
   /* ═════��═══════════════════════════════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ═════════════════════════��═��═���═══════════════ */
+  ═════════════════════════�������═���═══════════════ */
 // ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
@@ -17723,6 +17732,13 @@ export default function MiltonDashboard() {
               onHome={() => setCanvasType("templates")}
             />
           )}
+          {canvasType === "crm" && (
+            <CrmCanvas
+              isMobile={canvasCompact}
+              onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+              onHome={() => setCanvasType("templates")}
+            />
+          )}
           {canvasType === "playbook" && (
             <PlaybookCanvas
               onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
@@ -18118,6 +18134,7 @@ export default function MiltonDashboard() {
                 { icon: "aiWorkflow", label: "Build Workflows", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "send", label: "Progress Stories", desc: "Shareable client transformation cards", color: "#3aafa9", onClick: () => { setCanvasType("stories"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "crm", label: "CRM", desc: "Leads, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "payments", label: "Billing & payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
