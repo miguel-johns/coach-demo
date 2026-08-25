@@ -11271,7 +11271,7 @@ function StoriesCanvas({ onClose, onHome }) {
   
   /* ═════��══════════════════════════��════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ���════════════════════════�������═���═══════════════ */
+  ����════════════════════════�������═���═══════════════ */
 // ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
@@ -14408,7 +14408,10 @@ function ClassesCanvas({ onClose, onHome }) {
   // (rgb(243,245,246)) so there's no color flash during load.
   const [loaded, setLoaded] = useState(false);
   const iframeRef = useRef(null);
-  const rowRef = useRef(null);
+  const scheduleColRef = useRef(null);
+  const observerRef = useRef(null);
+
+  useEffect(() => () => observerRef.current?.disconnect(), []);
 
   // The bundle ships its own inner Milton chat column next to the schedule.
   // We already have the app's main chat on the left, so hide the duplicate.
@@ -14439,42 +14442,114 @@ function ClassesCanvas({ onClose, onHome }) {
     scheduleCol.style.flex = "1 1 auto";
     scheduleCol.style.width = "100%";
     scheduleCol.style.maxWidth = "none";
+    scheduleColRef.current = scheduleCol;
 
     fitRow(row, doc, win);
-    rowRef.current = row;
     return true;
   };
 
   // The bundle was authored as a standalone page: its root row hardcodes
   // `min-width:1200px` (940px of schedule + a 260px chat column) and sizes
-  // itself with 100vh. Dropped into our canvas panel that overflows sideways
-  // (the date and Edit schedule button get clipped) and, on iOS Safari, vh
-  // resolves against the wrong viewport so the card ends short of the panel.
-  // Lay the row out at the bundle's design width and scale it down to fit —
-  // the schedule keeps its intended proportions at any panel size. Don't lower
-  // FLOOR to gain font size: below ~940px the row's flex children collapse and
-  // class names truncate to an ellipsis.
+  // itself with 100vh. Dropped into our ~670px canvas panel that overflows
+  // sideways (the date and Edit schedule button get clipped) and, on iOS
+  // Safari, vh resolves against the wrong viewport so the card ends short of
+  // the panel. Drop the min-width and chain real height down from the iframe.
+  // No transform scaling: at this panel width that shrinks the schedule to
+  // ~0.6 and the text becomes unreadable.
   const fitRow = (row, doc, win) => {
-    const W = doc.documentElement.clientWidth;
-    const H = doc.documentElement.clientHeight;
-    if (!W || !H) return;
-    const FLOOR = 940;  // schedule column's design width, chat column hidden
-    const GUTTER = 44;  // keeps the card header clear of our close button
-    const avail = W - GUTTER;
-    const scale = Math.min(1, avail / FLOOR);
     row.style.minWidth = "0";
+    row.style.width = "100%";
+    row.style.maxWidth = "100%";
+    row.style.height = "100%";
     row.style.boxSizing = "border-box";
-    row.style.paddingRight = `${GUTTER / scale}px`;
-    row.style.width = `${W / scale}px`;
-    row.style.height = `${H / scale}px`;
-    row.style.transform = `scale(${scale})`;
-    row.style.transformOrigin = "0 0";
+    row.style.paddingRight = "44px"; // clears our absolute close button
     for (let el = row.parentElement; el && el !== doc.documentElement; el = el.parentElement) {
       el.style.height = "100%";
       el.style.minWidth = "0";
     }
     doc.documentElement.style.height = "100%";
-    doc.body.style.overflow = "hidden";
+    doc.body.style.height = "100%";
+    doc.body.style.minWidth = "0";
+    doc.body.style.overflowX = "hidden";
+    reflowRows(doc, win);
+
+    // Today/Week/Month swap the whole view out, so the fixes above have to be
+    // re-applied to the freshly rendered DOM. Watch the schedule column and
+    // reflow on each change, guarding against our own style writes looping.
+    if (!observerRef.current && scheduleColRef.current) {
+      let queued = false;
+      observerRef.current = new win.MutationObserver(() => {
+        if (queued) return;
+        queued = true;
+        win.requestAnimationFrame(() => { queued = false; reflowRows(doc, win); });
+      });
+      observerRef.current.observe(scheduleColRef.current, { childList: true, subtree: true });
+    }
+  };
+
+  // Narrowing alone isn't enough. Every class row is a flex row of mostly
+  // FIXED-width siblings (time 74px, registered block 180px, status badge
+  // 150px, chevron) and the one flexible child — the class name + coach/repeat
+  // meta — is `flex:1 1 0%; min-width:0`. Below ~940px the fixed siblings eat
+  // the row, so the flexible column collapses toward 0 and the class name
+  // disappears while the meta text wraps one word per line. Give that column a
+  // real min-width and let the row wrap, so the name always reads and the
+  // status badge drops to a second line instead of crushing the title.
+  const reflowRows = (doc, win) => {
+    const rows = [...doc.querySelectorAll("button")]
+      .filter(b => /registered|Full/.test(b.textContent || "")
+        && win.getComputedStyle(b).display === "flex");
+    rows.forEach(b => {
+      b.style.flexWrap = "wrap";
+      b.style.rowGap = "6px";
+      b.style.alignItems = "center";
+      [...b.children].forEach(c => {
+        const cs = win.getComputedStyle(c);
+        // The flexible title/meta column: give it room to actually render.
+        if (cs.flexGrow === "1") {
+          c.style.minWidth = "220px";
+          c.style.flexBasis = "220px";
+        }
+      });
+    });
+
+    // Same problem in the card header: an icon + title block + a nowrap
+    // controls group (Today/Week/Month, the date, Edit schedule) that together
+    // need ~695px. At 598px the title crushed to 87px and Edit schedule got
+    // clipped. Let it wrap to a second line and keep the title readable.
+    const hdr = [...doc.querySelectorAll("div")].filter(n => {
+      const cs = win.getComputedStyle(n);
+      return /Class schedule/.test(n.textContent || "")
+        && /Edit schedule/.test(n.textContent || "")
+        && cs.display === "flex" && cs.flexDirection === "row";
+    }).sort((a, b) => a.getBoundingClientRect().height - b.getBoundingClientRect().height)[0];
+    if (hdr) {
+      hdr.style.flexWrap = "wrap";
+      hdr.style.rowGap = "12px";
+      [...hdr.children].forEach(c => {
+        const t = (c.textContent || "").trim();
+        if (/^Class schedule/.test(t)) { c.style.flex = "1 1 240px"; c.style.minWidth = "240px"; }
+        if (/Edit schedule/.test(t)) { c.style.flex = "1 1 100%"; c.style.justifyContent = "flex-start"; }
+      });
+    }
+
+    // Month/Week views use a 7-column grid whose columns are sized from
+    // min-content (~86px each = 650px with gaps), so in a 554px panel the SUN
+    // column overflowed and got clipped. Let the columns share the width.
+    [...doc.querySelectorAll("div")]
+      .filter(n => win.getComputedStyle(n).display === "grid"
+        && win.getComputedStyle(n).gridTemplateColumns.split(" ").length === 7)
+      .forEach(g => { g.style.gridTemplateColumns = "repeat(7, minmax(0, 1fr))"; });
+
+    // With rows now two lines tall the list is taller than the panel, and the
+    // bundle has no scroll container of its own (it assumed a tall page), so
+    // the last class was simply cut off. Make the schedule column scroll.
+    if (scheduleColRef.current) {
+      scheduleColRef.current.style.overflowY = "auto";
+      scheduleColRef.current.style.overflowX = "hidden";
+      scheduleColRef.current.style.height = "100%";
+      scheduleColRef.current.style.boxSizing = "border-box";
+    }
   };
 
   const onIframeLoad = () => {
@@ -14490,19 +14565,6 @@ function ClassesCanvas({ onClose, onHome }) {
       else if (tries > 12) { clearInterval(timer); reveal(); }
     }, 60);
   };
-
-  // Re-fit when the panel resizes (chat expand/collapse, window resize).
-  useEffect(() => {
-    const onResize = () => {
-      const doc = iframeRef.current?.contentDocument;
-      const win = iframeRef.current?.contentWindow;
-      if (doc && win && rowRef.current) fitRow(rowRef.current, doc, win);
-    };
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
-    if (ro && iframeRef.current) ro.observe(iframeRef.current);
-    window.addEventListener("resize", onResize);
-    return () => { ro?.disconnect(); window.removeEventListener("resize", onResize); };
-  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
