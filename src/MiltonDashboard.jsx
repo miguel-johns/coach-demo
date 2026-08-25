@@ -12,7 +12,7 @@ import MorningDashboard from "./dashboards/MorningDashboard";
 import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
-import VoiceMode from "./VoiceMode";
+import VoiceBar from "./VoiceBar";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
@@ -5388,7 +5388,7 @@ function MicButton({ onClick, size = 32 }) {
   );
 }
 
-function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType, onVoice }) {
+function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType, onVoice, voiceActive, onStopVoice, onVoiceCommand }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
   const showSuggestions = messages.length <= 1 && !typing && canvasType !== "workflows";
   return (
@@ -5506,6 +5506,9 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
     <div ref={chatEndRef} />
     </div>
       <div style={{ padding: isMobile ? "8px 12px 12px" : "12px 16px 16px" }}>
+        {voiceActive ? (
+          <VoiceBar active={voiceActive} onStop={onStopVoice} onCommand={onVoiceCommand} />
+        ) : (
         <div style={{
           display: "flex", alignItems: "center", gap: 8, background: WHITE,
           borderRadius: 24, border: `1.5px solid ${BORDER}`, padding: "10px 12px 10px 16px",
@@ -5527,13 +5530,14 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
             </svg>
           </div>
         </div>
+        )}
       </div>
     </>
   );
 }
 
 /* ─��─ Mobile Glass Chat Bar + Expandable Sheet ���── */
-function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode, onVoice }) {
+function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode, onVoice, voiceActive, onStopVoice, onVoiceCommand }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
   const startH = useRef(65);
@@ -5732,6 +5736,9 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
               borderTop: "1px solid rgba(224,235,232,0.4)",
               ...glass, background: "rgba(247,250,249,0.6)"
             }}>
+              {voiceActive ? (
+                <VoiceBar active={voiceActive} onStop={onStopVoice} onCommand={onVoiceCommand} />
+              ) : (
               <div style={{
                 display: "flex", alignItems: "center", gap: 8,
                 background: "rgba(255,255,255,0.8)", borderRadius: 22,
@@ -5757,6 +5764,7 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
                   </svg>
                 </div>
               </div>
+              )}
             </div>
           </div>
         </>
@@ -16848,7 +16856,7 @@ export default function MiltonDashboard() {
       setTimeout(() => {
         setChatMessages(prev => [...prev, { type: "ai", text: cmd.chat }]);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-      }, 420 + (cmd.steps?.length || 1) * 200);
+      }, (cmd.steps?.length || 1) * 680 + 240);
     }
   };
 
@@ -17679,6 +17687,9 @@ export default function MiltonDashboard() {
   chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
   canvasType={canvasType}
   onVoice={() => setVoiceOpen(true)}
+  voiceActive={voiceOpen}
+  onStopVoice={() => setVoiceOpen(false)}
+  onVoiceCommand={handleVoiceCommand}
             />
           </section>
         </div>
@@ -18662,17 +18673,12 @@ export default function MiltonDashboard() {
       chatEndRef={chatEndRef} typing={chatTyping}
       canvasMode={canvasMode}
       onVoice={() => setVoiceOpen(true)}
+      voiceActive={voiceOpen}
+      onStopVoice={() => setVoiceOpen(false)}
+      onVoiceCommand={handleVoiceCommand}
     />
   )}
 
-  {/* ═══ MILTON VOICE — hands-free control ═══ */}
-  <VoiceMode
-    open={voiceOpen}
-    onClose={() => setVoiceOpen(false)}
-    onCommand={handleVoiceCommand}
-    onFallback={handleChatSend}
-  />
-  
   {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═��═ */}
   {isMobile && (
 <MobileCanvasSheet
