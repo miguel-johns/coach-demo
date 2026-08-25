@@ -12,6 +12,7 @@ import MorningDashboard from "./dashboards/MorningDashboard";
 import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
+import VoiceMode from "./VoiceMode";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
@@ -5359,7 +5360,35 @@ function ReportBlock({ id, label, customizeMode, onEditBlock, onRemoveBlock, chi
   );
 }
 
-function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType }) {
+/* ─── Mic button: the door into hands-free voice mode ─── */
+function MicButton({ onClick, size = 32 }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      title="Talk to Milton"
+      aria-label="Talk to Milton"
+      style={{
+        width: size, height: size, borderRadius: "50%", flexShrink: 0, cursor: "pointer",
+        display: "grid", placeItems: "center", position: "relative",
+        background: hover ? TEAL : TEAL_LIGHT,
+        border: `1px solid ${hover ? TEAL : BORDER}`,
+        transition: "all 0.16s ease",
+      }}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+        stroke={hover ? WHITE : TEAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+        <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+        <line x1="12" y1="19" x2="12" y2="22" />
+      </svg>
+    </button>
+  );
+}
+
+function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, isMobile, typing, canvasType, onVoice }) {
   const font = `'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif`;
   const showSuggestions = messages.length <= 1 && !typing && canvasType !== "workflows";
   return (
@@ -5484,9 +5513,10 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
         }}>
           <input value={chatInput} onChange={e => setChatInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { onSend(chatInput.trim()); setChatInput(""); }}}
-            placeholder="Ask Milton about your clients..."
+            placeholder="Ask Milton, or tap the mic to talk..."
             style={{ flex: 1, border: "none", outline: "none", fontSize: 14, fontFamily: font, color: TEXT, background: "transparent" }}
           />
+          {onVoice && <MicButton onClick={onVoice} />}
           <div onClick={() => { if (chatInput.trim()) { onSend(chatInput.trim()); setChatInput(""); }}} style={{
             width: 32, height: 32, borderRadius: "50%", background: chatInput.trim() ? TEAL : "#c8d8d4",
             display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() ? "pointer" : "default",
@@ -5503,7 +5533,7 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
 }
 
 /* ─��─ Mobile Glass Chat Bar + Expandable Sheet ���── */
-function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode }) {
+function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messages, onSend, chatEndRef, typing, canvasMode, onVoice }) {
   const [sheetHeight, setSheetHeight] = useState(65);
   const startY = useRef(0);
   const startH = useRef(65);
@@ -5711,9 +5741,10 @@ function MobileChatSheet({ chatOpen, setChatOpen, chatInput, setChatInput, messa
               }}>
                 <input ref={inputRef} value={chatInput} onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { onSend(chatInput.trim()); setChatInput(""); }}}
-                  placeholder="Ask Milton about your clients..."
+                  placeholder="Ask Milton, or tap the mic to talk..."
                   style={{ flex: 1, border: "none", outline: "none", fontSize: 14, fontFamily: font, color: TEXT, background: "transparent" }}
                 />
+                {onVoice && <MicButton onClick={onVoice} />}
                 <div onClick={() => { if (chatInput.trim()) { onSend(chatInput.trim()); setChatInput(""); }}} style={{
                   width: 32, height: 32, borderRadius: "50%",
                   background: chatInput.trim() ? `linear-gradient(135deg, ${TEAL}, ${SAGE})` : "#c8d8d4",
@@ -16620,6 +16651,7 @@ export default function MiltonDashboard() {
     initialClients.map(c => ({ ...c, tags: c.tags || SEED_TAGS[c.name] || [] }))
   );
   const [chatInput, setChatInput] = useState("");
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([...chatSeedMessages]);
   const [chatTyping, setChatTyping] = useState(false);
   const [hoveredClient, setHoveredClient] = useState(null);
@@ -16790,6 +16822,35 @@ export default function MiltonDashboard() {
   };
 
   const clientNames = clients.map(c => c.name);
+
+  /* ─── Voice mode: a spoken command drives the screen and leaves a
+         receipt in the chat, so the coach has a paper trail of every
+         thing Milton did while they were talking. ─── */
+  const handleVoiceCommand = (cmd) => {
+    setChatMessages(prev => [
+      ...prev,
+      { type: "user", text: cmd.utterance, voice: true },
+    ]);
+
+    if (cmd.home) {
+      setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+      setSelectedClient(null);
+      setHomeView(cmd.home);
+    } else if (cmd.canvas) {
+      setSelectedClient(null);
+      setCanvasSelectedDay(null);
+      setCanvasType(cmd.canvas);
+      setCanvasData({});
+      setCanvasMode(true);
+    }
+
+    if (cmd.chat) {
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { type: "ai", text: cmd.chat }]);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, 420 + (cmd.steps?.length || 1) * 200);
+    }
+  };
 
   const handleChatSend = async (text) => {
     const newUserMessage = { type: "user", text };
@@ -17617,6 +17678,7 @@ export default function MiltonDashboard() {
   messages={chatMessages} onSend={handleChatSend}
   chatEndRef={chatEndRef} isMobile={false} typing={chatTyping}
   canvasType={canvasType}
+  onVoice={() => setVoiceOpen(true)}
             />
           </section>
         </div>
@@ -18599,8 +18661,17 @@ export default function MiltonDashboard() {
       messages={chatMessages} onSend={handleChatSend}
       chatEndRef={chatEndRef} typing={chatTyping}
       canvasMode={canvasMode}
+      onVoice={() => setVoiceOpen(true)}
     />
   )}
+
+  {/* ═══ MILTON VOICE — hands-free control ═══ */}
+  <VoiceMode
+    open={voiceOpen}
+    onClose={() => setVoiceOpen(false)}
+    onCommand={handleVoiceCommand}
+    onFallback={handleChatSend}
+  />
   
   {/* ═══ MOBILE CANVAS SHEET - Swipe up drawer ═��═ */}
   {isMobile && (
