@@ -11271,7 +11271,7 @@ function StoriesCanvas({ onClose, onHome }) {
   
   /* ═════��══════════════════════════��════════════
   AI ENGINE CANVAS - Multi-modal content upload with validation
-  ═════════════════════════�������═���═══════════════ */
+  ���════════════════════════�������═���═══════════════ */
 // ═════════��═══���════════��═══════════════════════����══════��════════
 // PLAYBOOK CANVAS - The gym's operating system with 7 chapters
 // ═════════════════════════════════��═════════════════════════════
@@ -14408,6 +14408,7 @@ function ClassesCanvas({ onClose, onHome }) {
   // (rgb(243,245,246)) so there's no color flash during load.
   const [loaded, setLoaded] = useState(false);
   const iframeRef = useRef(null);
+  const rowRef = useRef(null);
 
   // The bundle ships its own inner Milton chat column next to the schedule.
   // We already have the app's main chat on the left, so hide the duplicate.
@@ -14418,13 +14419,15 @@ function ClassesCanvas({ onClose, onHome }) {
     const doc = iframeRef.current?.contentDocument;
     const win = iframeRef.current?.contentWindow;
     if (!doc || !win) return false;
-    // Find the top-level columns row: a full-width, full-height horizontal
-    // flex container with the chat column and schedule column as children.
+    // Find the top-level columns row: a horizontal flex container holding the
+    // chat column and the schedule column. Keep the size floor low — once we
+    // strip the bundle's 1200px min-width the row matches the panel width.
     const row = [...doc.querySelectorAll("div")].find(n => {
       const cs = win.getComputedStyle(n);
       const r = n.getBoundingClientRect();
       return cs.display === "flex" && cs.flexDirection === "row"
-        && n.childElementCount >= 2 && r.width > 1000 && r.height > 500;
+        && n.childElementCount >= 2 && r.width > 360 && r.height > 300
+        && /Class schedule/.test(n.textContent || "");
     });
     if (!row) return false;
     const kids = [...row.children];
@@ -14436,7 +14439,39 @@ function ClassesCanvas({ onClose, onHome }) {
     scheduleCol.style.flex = "1 1 auto";
     scheduleCol.style.width = "100%";
     scheduleCol.style.maxWidth = "none";
+
+    fitRow(row, doc, win);
+    rowRef.current = row;
     return true;
+  };
+
+  // The bundle was authored as a standalone page: its root row hardcodes
+  // `min-width:1200px` (940px of schedule + a 260px chat column) and sizes
+  // itself with 100vh. Dropped into our canvas panel that overflows sideways
+  // (the date and Edit schedule button get clipped) and, on iOS Safari, vh
+  // resolves against the wrong viewport so the card ends short of the panel.
+  // Lay the row out at its natural width and scale it down to fit instead —
+  // the schedule keeps its intended proportions at any panel size.
+  const fitRow = (row, doc, win) => {
+    const W = doc.documentElement.clientWidth;
+    const H = doc.documentElement.clientHeight;
+    if (!W || !H) return;
+    const NATURAL = 940; // schedule column's design width, chat column hidden
+    const GUTTER = 44;   // keeps the card header clear of our close button
+    const scale = Math.min(1, (W - GUTTER) / NATURAL);
+    row.style.minWidth = "0";
+    row.style.boxSizing = "border-box";
+    row.style.paddingRight = `${GUTTER / scale}px`;
+    row.style.width = `${W / scale}px`;
+    row.style.height = `${H / scale}px`;
+    row.style.transform = `scale(${scale})`;
+    row.style.transformOrigin = "0 0";
+    for (let el = row.parentElement; el && el !== doc.documentElement; el = el.parentElement) {
+      el.style.height = "100%";
+      el.style.minWidth = "0";
+    }
+    doc.documentElement.style.height = "100%";
+    doc.body.style.overflow = "hidden";
   };
 
   const onIframeLoad = () => {
@@ -14452,6 +14487,19 @@ function ClassesCanvas({ onClose, onHome }) {
       else if (tries > 12) { clearInterval(timer); reveal(); }
     }, 60);
   };
+
+  // Re-fit when the panel resizes (chat expand/collapse, window resize).
+  useEffect(() => {
+    const onResize = () => {
+      const doc = iframeRef.current?.contentDocument;
+      const win = iframeRef.current?.contentWindow;
+      if (doc && win && rowRef.current) fitRow(rowRef.current, doc, win);
+    };
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    if (ro && iframeRef.current) ro.observe(iframeRef.current);
+    window.addEventListener("resize", onResize);
+    return () => { ro?.disconnect(); window.removeEventListener("resize", onResize); };
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", background: "#F3F5F6", fontFamily: "'DM Sans', sans-serif" }}>
