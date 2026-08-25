@@ -14450,15 +14450,18 @@ function ClassesCanvas({ onClose, onHome }) {
   // itself with 100vh. Dropped into our canvas panel that overflows sideways
   // (the date and Edit schedule button get clipped) and, on iOS Safari, vh
   // resolves against the wrong viewport so the card ends short of the panel.
-  // Lay the row out at its natural width and scale it down to fit instead —
-  // the schedule keeps its intended proportions at any panel size.
+  // Lay the row out at the bundle's design width and scale it down to fit —
+  // the schedule keeps its intended proportions at any panel size. Don't lower
+  // FLOOR to gain font size: below ~940px the row's flex children collapse and
+  // class names truncate to an ellipsis.
   const fitRow = (row, doc, win) => {
     const W = doc.documentElement.clientWidth;
     const H = doc.documentElement.clientHeight;
     if (!W || !H) return;
-    const NATURAL = 940; // schedule column's design width, chat column hidden
-    const GUTTER = 44;   // keeps the card header clear of our close button
-    const scale = Math.min(1, (W - GUTTER) / NATURAL);
+    const FLOOR = 940;  // schedule column's design width, chat column hidden
+    const GUTTER = 44;  // keeps the card header clear of our close button
+    const avail = W - GUTTER;
+    const scale = Math.min(1, avail / FLOOR);
     row.style.minWidth = "0";
     row.style.boxSizing = "border-box";
     row.style.paddingRight = `${GUTTER / scale}px`;
