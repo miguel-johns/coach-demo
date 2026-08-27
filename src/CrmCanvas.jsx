@@ -894,7 +894,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
       <BackLink onClick={go("contact")}>{c.backToRecord}</BackLink>
       <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>{c.answersHeadline}</h3>
       <p style={{ margin: 0, fontSize: 13, color: TEXT_SEC, lineHeight: 1.55, maxWidth: 640 }}>
-        One submission. On the left, what a CRM gives the coach today. On the right, what Milton gives them.
+        One submission. On the left, what a typical lead tool gives the coach today. On the right, what Milton gives them.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, alignItems: "start" }}>
@@ -1033,7 +1033,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
       <div style={{ padding: isMobile ? "14px 16px" : "16px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", minWidth: 0 }}>
-            <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>CRM</h1>
+            <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Leads</h1>
             <Pill bg={TEAL_LIGHT} color={TEAL} dot={TEAL}>{`Working ${bg} leads quietly`}</Pill>
 
             {/* Segmented toggle, matching the schedule canvas's Admin/Trainer control */}
