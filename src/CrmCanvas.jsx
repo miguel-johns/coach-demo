@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TEAL, TEAL_LIGHT, WHITE, TEXT, TEXT_SEC, BORDER, ALERT_RED } from "./constants";
+import PagesSection from "./PagesCanvas";
 
 const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 const PAGE_BG = "#fafcfb";
@@ -600,7 +601,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
     : filter === "Quiet" ? allRows.filter((r) => r[4] === "Dormant" || r[4] === "Reaching out")
     : allRows.filter((r) => r[4] === filter);
 
-  const TABS = [["queue", "Queue"], ["list", "Contact list"]];
+  const TABS = [["queue", "Queue"], ["list", "Contact list"], ["pages", "Pages"]];
   const tabActive = (k) =>
     screen === k || (["contact", "answers", "brief"].includes(screen) && from === k);
 
@@ -1063,6 +1064,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
           {screen === "contact" && <Contact />}
           {screen === "answers" && <Answers />}
           {screen === "brief" && <Brief />}
+          {screen === "pages" && <PagesSection isMobile={isMobile} />}
         </div>
       </div>
 
