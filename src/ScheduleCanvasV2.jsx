@@ -671,9 +671,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const miltonLine = persona === "admin"
     ? (dayConflicts.length ? dayConflicts[0].title + ". Recovery is the least used room this week." : "No room conflicts today. Recovery is the least used room this week.")
     : (flags.length ? flags[0].title + ". " + flags[0].body : "Week looks clean — every class is filling and nothing is unconfirmed.");
-  const chips = persona === "admin"
-    ? [["Show me today's conflicts", () => setTab("week")], ["Which rooms are under-used?", () => setTab("rooms")], ["Book a team meeting", () => openCreate({ date: day, start: 11, dur: 0.5, name: "Team meeting" }, "internal")], ["Open the class caps", () => setTab("classes")]]
-    : [["Fill my emptiest class", () => (flags.length ? flags[0].act() : flash("Nothing to fill"))], ["Draft next week from this one", () => { setWeekStart(addDays(WEEK0, 7)); setTab("week"); }], ["Book a 1:1", () => openCreate({ date: TODAY, start: 16 }, "oneone")], ["Edit my hours", () => { setTab("hours"); setWho("trainer"); }]];
 
   /* ---------- render helpers ---------- */
   const PAD = narrow ? 16 : 28;
@@ -905,7 +902,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   }
 
   function SessionsPanel() {
-    const cols = narrow ? "minmax(0,1.6fr) 110px 90px" : "minmax(0,1.7fr) 130px minmax(0,1fr) 110px 72px 118px";
+    const cols = narrow ? "minmax(0,1.6fr) 96px 92px" : "minmax(0,1.5fr) 100px minmax(0,1.1fr) minmax(0,1fr) 56px 106px";
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -921,21 +918,26 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           </div>
           {sessionRows.map(({ e, date, st, lk }, i) => (
             <div key={e.id + date + i} role="button" tabIndex={0} onClick={() => { setSel({ id: e.id, date: e.date, instance: !!e.instance }); setSheet("detail"); }}
-              style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "12px 16px", borderTop: `1px solid ${B_SUB}`, alignItems: "center", cursor: "pointer" }}>
+              style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "11px 16px", borderTop: `1px solid ${B_SUB}`, alignItems: "center", cursor: "pointer" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
                 <span style={{ width: 9, height: 9, borderRadius: 999, flex: "0 0 9px", background: KIND[e.kind].bar }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: FG1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
               </div>
-              <span style={{ fontSize: 12, color: FG2, fontFamily: MONO, whiteSpace: "nowrap" }}>{fmtShort(date)} · {fmtT(e.start)}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 11.5, color: FG2, fontFamily: MONO, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fmtShort(date)}</div>
+                <div style={{ fontSize: 11, color: FG3, fontFamily: MONO, whiteSpace: "nowrap", marginTop: 2 }}>{fmtT(e.start)}</div>
+              </div>
               {!narrow && <>
                 <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                   <span style={avatarStyle(e.trainer)}>{initials(trainerName(e.trainer) || "S S")}</span>
                   <span style={{ fontSize: 12, color: FG2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{trainerName(e.trainer) || "Self-serve"}</span>
                 </div>
-                <span style={{ fontSize: 12, color: FG2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.virtual ? (PROVIDERS.find((p) => p.id === lk.provider) || {}).name : roomName(e.room)}</span>
-                <span style={{ fontSize: 12, color: FG2, fontFamily: MONO }}>{e.cap ? `${e.filled}/${e.cap}` : "1:1"}</span>
+                <span style={{ fontSize: 12, color: FG2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.virtual ? (PROVIDERS.find((p) => p.id === lk.provider) || {}).name : roomName(e.room)}</span>
+                <span style={{ fontSize: 12, color: FG2, fontFamily: MONO, whiteSpace: "nowrap" }}>{e.cap ? `${e.filled}/${e.cap}` : "1:1"}</span>
               </>}
-              <span style={tone(st.tone)}>{st.label}</span>
+              <div style={{ display: "flex", justifyContent: "flex-start", minWidth: 0 }}>
+                <span style={{ ...tone(st.tone), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{st.label}</span>
+              </div>
             </div>
           ))}
           <div style={{ padding: "11px 16px", borderTop: `1px solid ${B_SUB}`, fontSize: 11.5, color: FG3, lineHeight: 1.5 }}>
@@ -1520,11 +1522,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <span style={{ width: 24, height: 24, flex: "0 0 24px", borderRadius: 999, background: T050, color: T800, fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>M</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12.5, color: FG1, lineHeight: 1.5 }}>{miltonLine}</div>
-            <div style={{ display: "flex", gap: 7, marginTop: 9, flexWrap: "wrap" }}>
-              {chips.map((c) => (
-                <button key={c[0]} style={{ border: `1px solid ${B_SOFT}`, background: PAGE_BG, color: FG2, fontFamily: "inherit", fontSize: 11.5, fontWeight: 500, padding: "6px 12px", borderRadius: 999, cursor: "pointer" }} onClick={c[1]}>{c[0]}</button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
