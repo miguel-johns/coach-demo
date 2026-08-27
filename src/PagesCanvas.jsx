@@ -698,7 +698,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
           </div>
         </div>
 
-        <OutputsPanel slug={slug} isMobile={isMobile} />
+        <OutputsPanel slug={slug} isMobile={tight} />
 
         <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
           <Btn kind="primary" onClick={onBack}>Done</Btn>
@@ -729,7 +729,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
         </Btn>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) minmax(0,420px)", gap: 20, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: stacked ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,400px)", gap: 20, alignItems: "start" }}>
         {/* form */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
           <Card>
@@ -824,7 +824,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
                           <span style={{ fontSize: 11.5, color: TEAL, fontWeight: 600 }}>Milton ranks your queue on this answer</span>
                         </div>
                       )}
-                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", flexWrap: isMobile ? "wrap" : "nowrap" }}>
+                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", flexWrap: tight ? "wrap" : "nowrap" }}>
                         <input
                           value={q.label}
                           onChange={(e) => setQ(q.id, { label: e.target.value })}
@@ -834,7 +834,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
                         <select
                           value={q.type}
                           onChange={(e) => setQ(q.id, { type: e.target.value })}
-                          style={{ ...inputStyle, width: isMobile ? "100%" : 124, flexShrink: 0, cursor: "pointer" }}
+                          style={{ ...inputStyle, width: tight ? "100%" : 124, flexShrink: 0, cursor: "pointer" }}
                         >
                           {["Short text", "Long text", "Email", "Phone", "Choice"].map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
@@ -939,7 +939,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
           bonusId={bonusId}
           picked={picked}
           slug={slug}
-          isMobile={isMobile}
+          isMobile={stacked}
         />
       </div>
     </div>
@@ -950,20 +950,29 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
 export default function PagesSection({ isMobile }) {
   const [view, setView] = useState("list");
   const [pages, setPages] = useState(SEED_PAGES);
+  const [ref, width] = useContainerWidth();
 
   const addPage = ({ mode, name, slug }) => {
     setPages((ps) => [{ id: `p${Date.now()}`, name, mode, slug, leads: 0, sales: 0, revenue: 0, updated: "just now" }].concat(ps));
   };
 
-  if (view === "builder") {
-    return <PageBuilder isMobile={isMobile} onBack={() => setView("list")} onSave={addPage} />;
-  }
+  // width is 0 on the very first paint, before the observer reports. Render
+  // the roomy layout then so nothing flashes into a stacked state and back.
+  const w = width || 1000;
+
   return (
-    <PagesList
-      pages={pages}
-      isMobile={isMobile}
-      onNew={() => setView("builder")}
-      onRemove={(id) => setPages((ps) => ps.filter((p) => p.id !== id))}
-    />
+    <div ref={ref}>
+      {view === "builder" ? (
+        <PageBuilder isMobile={isMobile} width={w} onBack={() => setView("list")} onSave={addPage} />
+      ) : (
+        <PagesList
+          pages={pages}
+          isMobile={isMobile}
+          width={w}
+          onNew={() => setView("builder")}
+          onRemove={(id) => setPages((ps) => ps.filter((p) => p.id !== id))}
+        />
+      )}
+    </div>
   );
 }
