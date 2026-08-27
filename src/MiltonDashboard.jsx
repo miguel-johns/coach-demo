@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ClientProfile from "./ClientProfile";
 import PaymentsCanvas from "./PaymentsCanvas";
+import FilesCanvas from "./FilesCanvas";
 import CrmCanvas from "./CrmCanvas";
 import ScheduleCanvasV2 from "./ScheduleCanvasV2";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
@@ -5850,6 +5851,7 @@ function MobileCanvasSheet({
       case "mealPlan": return "Meal Plan";
       case "workout": return "Workout Program";
       case "library": return "Exercise Library";
+      case "files": return "Files";
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
@@ -6011,6 +6013,13 @@ isMobile={true}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
   isMobile={true}
+            />
+          )}
+          {canvasType === "files" && (
+            <FilesCanvas
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+              isMobile={true}
             />
           )}
           {canvasType === "programming" && (
@@ -7645,7 +7654,7 @@ function InboxCanvas({ onClose, onHome, isMobile }) {
   };
 
   const BROADCASTS = [
-    { id: 1, title: "Quick update, team — grocery list template is live", audienceId: "online", time: "2m", read: 14, replied: 6, status: "sent", recent: true, replies: [
+    { id: 1, title: "Quick update, team �� grocery list template is live", audienceId: "online", time: "2m", read: 14, replied: 6, status: "sent", recent: true, replies: [
       { clientId: "sc", body: "Love this, thanks Rachel!", time: "1m" },
       { clientId: "er", body: "Adding to my list now", time: "3m" },
       { clientId: "kl", body: "Question — is the grain-free version available too?", time: "5m" },
@@ -11271,7 +11280,7 @@ function AIDashboardsCanvas({ onClose, onHome, isMobile, pendingEdit, onEditProc
   );
 }
 
-/* ══════════════════════════════════════════════
+/* ════════════════════════════════════════════��═
    STORIES CANVAS - Shareable client progress / social media stories
    ══════════════════════════════════════════════ */
 function StoriesCanvas({ onClose, onHome }) {
@@ -11854,7 +11863,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
 
 // ���════════���═══���������═��═════��═════��═����═══���═══════��═════════════��════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════��═════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
   const [expandedPattern, setExpandedPattern] = useState(null);
   
@@ -17107,7 +17116,7 @@ export default function MiltonDashboard() {
         setCanvasHistory([{}]);
         setCanvasHistoryIndex(0);
         setCanvasMode(true);
-        setChatMessages(prev => [...prev, { type: "ai", text: `Done — here's **${firstName}'s new program**. I've opened it on the right on the **Weekdays** tab; tap any training day to see the exercises, sets, reps and weights.` }]);
+        setChatMessages(prev => [...prev, { type: "ai", text: `Done ��� here's **${firstName}'s new program**. I've opened it on the right on the **Weekdays** tab; tap any training day to see the exercises, sets, reps and weights.` }]);
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, delay + 2900);
@@ -17832,6 +17841,13 @@ export default function MiltonDashboard() {
   isMobile={canvasCompact}
   />
   )}
+  {canvasType === "files" && (
+  <FilesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  isMobile={canvasCompact}
+  />
+  )}
   {canvasType === "mealPlan" && (
   <MealPlanCanvas
               data={canvasData} 
@@ -18025,7 +18041,7 @@ export default function MiltonDashboard() {
               {homeView === "cards" ? (
                 <div>
                   <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>Home</div>
-                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your coaching command center</div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your command center</div>
                 </div>
               ) : (
                 <div
@@ -18197,6 +18213,7 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Workout Builder", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Exercise Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Workflows & Automations", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file", label: "Files", desc: "Contracts, docs & shared media", color: "#45818e", onClick: () => { setCanvasType("files"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
