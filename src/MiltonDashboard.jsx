@@ -3,6 +3,7 @@ import ClientProfile from "./ClientProfile";
 import PaymentsCanvas from "./PaymentsCanvas";
 import FilesCanvas from "./FilesCanvas";
 import CrmCanvas from "./CrmCanvas";
+import IntegrationsPanel from "./IntegrationsPanel";
 import ScheduleCanvasV2 from "./ScheduleCanvasV2";
 import WorkoutDashboard from "./dashboards/WorkoutDashboard";
 import NutritionDashboard from "./dashboards/NutritionDashboard";
@@ -2432,7 +2433,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═════════════════════════════════════��═════════════════════════
+// ═════════════════════════════════════��═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -2983,6 +2984,7 @@ function TagCell({ tags = [], onChange }) {
 }
 
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
+  const [tab, setTab] = useState("coaches");
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [email, setEmail] = useState("");
@@ -3019,20 +3021,45 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                 <span style={{ fontSize: 12, fontWeight: 600, color: TEAL }}>Settings</span>
               </div>
             </div>
-            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Coaches</h1>
+            <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
+              {tab === "coaches" ? "Coaches" : "Integrations"}
+            </h1>
             <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
-              Add or remove the coaches who can be assigned to classes and sessions.
+              {tab === "coaches"
+                ? "Add or remove the coaches who can be assigned to classes and sessions."
+                : "Connect the places your leads already come from, so nothing is typed in by hand."}
             </p>
           </div>
           <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+
+        {/* Tabs */}
+        <div style={{ display: "inline-flex", gap: 4, marginTop: 18, padding: 3, background: "#eef3f2", borderRadius: 999 }}>
+          {[["coaches", "Coaches"], ["integrations", "Integrations"]].map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              style={{
+                padding: "7px 15px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "inherit",
+                fontSize: 13, fontWeight: 700,
+                background: tab === k ? WHITE : "transparent",
+                color: tab === k ? TEAL : TEXT_SEC,
+                boxShadow: tab === k ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+          {tab === "integrations" && <IntegrationsPanel isMobile={isMobile} />}
+          {tab === "coaches" && <>
           {/* Add coach */}
           <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, padding: isMobile ? 16 : 20 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: "0 0 14px" }}>Add a coach</h2>
@@ -3131,6 +3158,7 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
               </p>
             )}
           </div>
+          </>}
         </div>
       </div>
     </div>
@@ -18205,7 +18233,7 @@ export default function MiltonDashboard() {
               {[
                 { icon: "payments", label: "Billing & Payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
-                { icon: "crm", label: "CRM", desc: "Leads, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "crm", label: "Leads", desc: "Prospects, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
@@ -18215,6 +18243,7 @@ export default function MiltonDashboard() {
                 { icon: "aiWorkflow", label: "Workflows & Automations", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "Files", desc: "Contracts, docs & shared media", color: "#45818e", onClick: () => { setCanvasType("files"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "users", label: "Settings", desc: "Coaches & integrations like Meta Ads", color: "#45818e", onClick: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}

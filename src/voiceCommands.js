@@ -104,20 +104,20 @@ const COMMANDS = [
           ? "Working your queue. Nine people need a touch today. I've drafted each one in your voice — approve them on screen and they send."
           : "You have nine people in the queue today. Two are hot, four are waiting on a reply from you, and three have gone cold.",
         chat: acting
-          ? "**Drafted outreach for all 9 people in your queue.** Each message references their last conversation and the reason they came in. They're staged in the CRM — approve and they go out on the right cadence."
+          ? "**Drafted outreach for all 9 people in your queue.** Each message references their last conversation and the reason they came in. They're staged in Leads — approve and they go out on the right cadence."
           : "**9 people in your queue today.** 2 are ready to buy, 4 are waiting on you, 3 need a re-engagement touch. The queue is open on the right, sorted by who's most likely to close.",
         steps: acting
           ? [
               "Reading the last touch on all 9 queued contacts",
               "Drafting personalised messages in your tone of voice",
               "Setting send times to each person's best response window",
-              "Staged for your approval in the CRM queue",
+              "Staged for your approval in the Leads queue",
             ]
           : [
               "Scoring every open lead on intent and recency",
               "Ranking by likelihood to close this week",
               "Surfacing the 2 hot contacts up top",
-              "Opening your CRM queue",
+              "Opening your Leads queue",
             ],
       };
     },
@@ -246,11 +246,11 @@ const COMMANDS = [
       canvas: "forms",
       title: "Lead capture",
       spoken: "Here's your lead capture. The front-desk QR form is converting at thirty-one percent, which is your best source right now.",
-      chat: "**Lead capture is live in 4 places.** The front-desk QR form converts at **31%** — your best source. Every submission drops straight into the CRM queue with a first touch inside 5 minutes.",
+      chat: "**Lead capture is live in 4 places.** The front-desk QR form converts at **31%** — your best source. Every submission drops straight into the Leads queue with a first touch inside 5 minutes.",
       steps: [
         "Loading your 4 live capture points",
         "Comparing conversion by source",
-        "Verifying each one routes into the CRM queue",
+        "Verifying each one routes into the Leads queue",
         "Opening Forms",
       ],
     }),
