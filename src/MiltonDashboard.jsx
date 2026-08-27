@@ -5850,6 +5850,7 @@ function MobileCanvasSheet({
       case "mealPlan": return "Meal Plan";
       case "workout": return "Workout Program";
       case "library": return "Exercise Library";
+      case "files": return "Files";
       case "messages": return "Messages";
   case "report": return "Reports";
   case "messageSequence": return "Message Sequence";
@@ -6011,6 +6012,13 @@ isMobile={true}
   setChatMessages={setChatMessages}
   setChatTyping={setChatTyping}
   isMobile={true}
+            />
+          )}
+          {canvasType === "files" && (
+            <FilesCanvas
+              onClose={onClose}
+              onHome={() => setCanvasType("templates")}
+              isMobile={true}
             />
           )}
           {canvasType === "programming" && (
@@ -10547,6 +10555,189 @@ function FaPreviewField({ field }) {
       ) : (
         <div style={box}>{t === "email" ? "you@email.com" : t === "phone" ? "(555) 000-0000" : "Your answer…"}</div>
       )}
+    </div>
+  );
+}
+
+const FILES_FOLDERS = [
+  { id: "all", label: "All files" },
+  { id: "contracts", label: "Contracts" },
+  { id: "intake", label: "Intake" },
+  { id: "programs", label: "Programs" },
+  { id: "media", label: "Media" },
+];
+
+const FILES_SEED = [
+  { id: "f1", name: "Coaching Agreement 2025.pdf", kind: "pdf", folder: "contracts", size: "248 KB", owner: "Milton", updated: "2 days ago", shared: ["Sarah M.", "James O."] },
+  { id: "f2", name: "Liability Waiver.pdf", kind: "pdf", folder: "contracts", size: "96 KB", owner: "Milton", updated: "1 week ago", shared: ["All clients"] },
+  { id: "f3", name: "Intake Questionnaire.docx", kind: "doc", folder: "intake", size: "54 KB", owner: "Milton", updated: "3 days ago", shared: [] },
+  { id: "f4", name: "Nutrition Baseline Sheet.xlsx", kind: "doc", folder: "intake", size: "132 KB", owner: "Milton", updated: "Yesterday", shared: ["Priya K."] },
+  { id: "f5", name: "12-Week Strength Block.pdf", kind: "pdf", folder: "programs", size: "1.2 MB", owner: "Milton", updated: "5 hours ago", shared: ["Sarah M."] },
+  { id: "f6", name: "Deadlift Setup Cues.mp4", kind: "video", folder: "media", size: "18.4 MB", owner: "Milton", updated: "4 days ago", shared: ["James O.", "Priya K."] },
+  { id: "f7", name: "Squat Depth Check.mp4", kind: "video", folder: "media", size: "22.1 MB", owner: "Milton", updated: "1 week ago", shared: [] },
+  { id: "f8", name: "Gym Layout & Rack Map.png", kind: "image", folder: "media", size: "780 KB", owner: "Milton", updated: "2 weeks ago", shared: [] },
+];
+
+const filesKindMeta = (kind) => {
+  if (kind === "pdf") return ["pdf", WF_C.redInk, WF_C.redBg, "PDF"];
+  if (kind === "video") return ["video", WF_C.tealInk, WF_C.tealBg, "Video"];
+  if (kind === "image") return ["image", WF_C.amberInk, WF_C.amberBg, "Image"];
+  return ["doc", WF_C.tealDark, WF_C.tealBg, "Doc"];
+};
+
+function FilesCanvas({ onClose, onHome, isMobile }) {
+  const [items, setItems] = useState(FILES_SEED);
+  const [folder, setFolder] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const counts = FILES_FOLDERS.reduce((acc, f) => {
+    acc[f.id] = f.id === "all" ? items.length : items.filter((i) => i.folder === f.id).length;
+    return acc;
+  }, {});
+
+  const visible = items.filter((i) => {
+    const inFolder = folder === "all" || i.folder === folder;
+    const q = query.trim().toLowerCase();
+    return inFolder && (!q || i.name.toLowerCase().includes(q));
+  });
+
+  const deleteItem = (it, e) => {
+    if (e) e.stopPropagation();
+    setItems((l) => l.filter((x) => x.id !== it.id));
+  };
+  const duplicateItem = (it, e) => {
+    if (e) e.stopPropagation();
+    setItems((l) => {
+      const idx = l.findIndex((x) => x.id === it.id);
+      const dot = it.name.lastIndexOf(".");
+      const base = dot > 0 ? it.name.slice(0, dot) : it.name;
+      const ext = dot > 0 ? it.name.slice(dot) : "";
+      const copy = { ...it, id: "file" + Date.now(), name: `${base} (copy)${ext}`, updated: "Just now", shared: [] };
+      const next = [...l];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+  };
+  const addFile = () => {
+    const target = folder === "all" ? "intake" : folder;
+    setItems((l) => [
+      { id: "file" + Date.now(), name: "Untitled document.pdf", kind: "pdf", folder: target, size: "0 KB", owner: "Milton", updated: "Just now", shared: [] },
+      ...l,
+    ]);
+  };
+
+  return (
+    <div className="mwf" style={{ display: "flex", flexDirection: "column", height: "100%", background: WF_C.cream, position: "relative" }}>
+      <style>{WF_FONTS}</style>
+
+      {!isMobile && (
+        <button
+          onClick={onClose || onHome}
+          style={{ position: "absolute", top: 14, right: 16, zIndex: 10, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", width: 36, height: 36, background: WF_C.white, border: "1px solid rgba(26,46,42,0.10)", borderRadius: 10, color: "#243531", boxShadow: "0 1px 3px rgba(26,46,42,0.08)", transition: "all 0.15s ease" }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = WF_C.teal; e.currentTarget.style.color = WF_C.teal; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(26,46,42,0.10)"; e.currentTarget.style.color = "#243531"; }}
+          title="Close" aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
+      )}
+
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderBottom: "1px solid #E0EBE8", background: "#F7FAF9", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 4, background: "#EEF4F1", border: "1px solid #DEEAE6", borderRadius: 10, padding: 4 }}>
+          <span style={{ background: "#243531", color: "#fff", border: "1px solid #243531", borderRadius: 8, padding: "8px 13px", fontSize: 13, fontWeight: 600 }}>Files</span>
+        </div>
+        {folder !== "all" && (
+          <>
+            <WfGlyph name="chevron-right" size={14} color={WF_C.faint} strokeWidth={2} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: WF_C.sub }}>{FILES_FOLDERS.find((f) => f.id === folder)?.label}</span>
+          </>
+        )}
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: "22px 20px 96px" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+          <div className="wf-fade">
+            {/* Folder tabs + actions */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+              <div style={{ display: "inline-flex", gap: 2, background: WF_C.tealBg, border: "1px solid #D6E5DA", borderRadius: 999, padding: 3, flexWrap: "wrap" }}>
+                {FILES_FOLDERS.map((f) => {
+                  const on = folder === f.id;
+                  return (
+                    <button key={f.id} onClick={() => setFolder(f.id)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, border: "none", borderRadius: 999, padding: "7px 14px", fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", transition: "background .15s, color .15s", background: on ? WF_C.tealDark : "transparent", color: on ? WF_C.white : WF_C.tealInk }}>
+                      {f.label}<span className="wf-mono" style={{ fontSize: 10, opacity: 0.75 }}>{counts[f.id]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search files"
+                  aria-label="Search files"
+                  style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: "9px 14px", fontSize: 12.5, color: WF_C.ink, width: isMobile ? 140 : 190, outline: "none", fontFamily: "inherit" }}
+                />
+                <WfTealBtn onClick={addFile} style={{ borderRadius: 999, padding: "9px 15px", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" />
+                  </svg>Upload
+                </WfTealBtn>
+              </div>
+            </div>
+
+            {/* File grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+              {visible.map((it) => {
+                const [glyph, ink, bg, label] = filesKindMeta(it.kind);
+                return (
+                  <div key={it.id} className="wf-tpl wf-row" role="button" tabIndex={0}
+                    style={{ background: WF_C.white, border: `1px solid ${WF_C.line}`, borderRadius: 14, padding: "16px 16px 14px", display: "flex", flexDirection: "column", gap: 10, cursor: "pointer", transition: "border-color .15s, background .15s" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ width: 36, height: 36, borderRadius: 10, background: bg, color: ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <WfGlyph name={glyph} size={18} color={ink} strokeWidth={1.9} />
+                      </span>
+                      <div className="wf-actions" style={{ display: "flex", gap: 4, opacity: isMobile ? 1 : undefined }}>
+                        <button onClick={(e) => duplicateItem(it, e)} title="Duplicate" aria-label={`Duplicate ${it.name}`} className="wf-iconbtn" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <WfGlyph name="copy" size={14} color="currentColor" strokeWidth={2} />
+                        </button>
+                        <button onClick={(e) => deleteItem(it, e)} title="Delete" aria-label={`Delete ${it.name}`} className="wf-iconbtn wf-iconbtn-danger" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${WF_C.line}`, background: WF_C.white, color: WF_C.sub, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <WfGlyph name="trash" size={14} color="currentColor" strokeWidth={2} />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="wf-display" style={{ fontWeight: 700, fontSize: 14.5, color: WF_C.navy, wordBreak: "break-word" }}>{it.name}</div>
+                      <div style={{ fontSize: 12.5, color: WF_C.sub, marginTop: 2 }}>{label} · {it.size} · {it.updated}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
+                      {it.shared.length > 0 ? (
+                        <span style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.tealInk, background: WF_C.tealBg, borderRadius: 999, padding: "3px 9px" }}>
+                          Shared with {it.shared.length === 1 ? it.shared[0] : `${it.shared.length} clients`}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11.5, fontWeight: 600, color: WF_C.faint, border: `1px solid ${WF_C.line}`, borderRadius: 999, padding: "3px 9px" }}>Private</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Upload tile */}
+              <button onClick={addFile} className="wf-ghost" style={{ background: WF_C.white, border: `1.5px dashed #D6E5DA`, borderRadius: 14, padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", minHeight: 132, color: WF_C.tealInk }}>
+                <span style={{ width: 34, height: 34, borderRadius: "50%", background: WF_C.tealBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <WfGlyph name="plus" size={16} color={WF_C.tealDark} strokeWidth={2.4} />
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Upload file</span>
+                <span style={{ fontSize: 11.5, color: WF_C.faint }}>PDF, DOC, image or video</span>
+              </button>
+            </div>
+
+            {visible.length === 0 && (
+              <div style={{ textAlign: "center", padding: "28px 0 4px", fontSize: 13, color: WF_C.sub }}>No files match “{query}”.</div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -17832,6 +18023,13 @@ export default function MiltonDashboard() {
   isMobile={canvasCompact}
   />
   )}
+  {canvasType === "files" && (
+  <FilesCanvas
+  onClose={() => { setCanvasMode(false); setCanvasData(null); setCanvasType(null); }}
+  onHome={() => setCanvasType("templates")}
+  isMobile={canvasCompact}
+  />
+  )}
   {canvasType === "mealPlan" && (
   <MealPlanCanvas
               data={canvasData} 
@@ -18197,6 +18395,7 @@ export default function MiltonDashboard() {
                 { icon: "program", label: "Workout Builder", desc: "Build & assign workouts", color: "#6aa84f", onClick: () => { setWorkoutAutoOpen(false); setCanvasType("workout"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "layers", label: "Exercise Library", desc: "Exercises & programs", color: "#6aa84f", onClick: () => { setCanvasType("library"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "aiWorkflow", label: "Workflows & Automations", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "file", label: "Files", desc: "Contracts, docs & shared media", color: "#45818e", onClick: () => { setCanvasType("files"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
