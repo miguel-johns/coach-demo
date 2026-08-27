@@ -12045,7 +12045,7 @@ function PlaybookCanvas({ onClose, onHome, brainDocuments, setBrainDocuments, is
 
 // ���════════���═══���������═��═════��═════��═����═══���═══════��═════════════��════
 // MASTER PROGRAM SESSION DRAWER - Right-side detail view
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════��═════════════════════════════════
 function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, onClose, isMobile }) {
   const [expandedPattern, setExpandedPattern] = useState(null);
   
@@ -18223,7 +18223,7 @@ export default function MiltonDashboard() {
               {homeView === "cards" ? (
                 <div>
                   <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>Home</div>
-                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your coaching command center</div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: TEXT_SEC, marginTop: 2 }}>Your command center</div>
                 </div>
               ) : (
                 <div
