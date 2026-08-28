@@ -1099,109 +1099,25 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
   );
 }
 
-// ── A read-only summary of the page, shown in the detail view ──
-function DetailSummary({ page, form, onOpenContacts }) {
-  const { showForm, showProds, questions, bonusId, picked, image } = form;
-  const prods = BILLING.filter((b) => picked.indexOf(b.id) >= 0);
-  const stat = (label, value) => (
-    <div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: MONO, letterSpacing: "-0.01em" }}>{value}</div>
-      <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 2 }}>{label}</div>
-    </div>
-  );
-  const field = (label, value) => (
-    <div>
-      <Eyebrow>{label}</Eyebrow>
-      <div style={{ fontSize: 13.5, color: value ? TEXT : TEXT_SEC, lineHeight: 1.5, marginTop: 6 }}>{value || "Not set"}</div>
-    </div>
-  );
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
-      <Card>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
-          <Eyebrow>Results</Eyebrow>
-          <ModePill mode={page.mode} />
-        </div>
-        <div style={{ display: "flex", gap: 26, flexWrap: "wrap" }}>
-          {(page.mode === "form" || page.mode === "both") && stat("Leads", page.leads)}
-          {(page.mode === "products" || page.mode === "both") && stat("Sales", page.sales)}
-          {(page.mode === "products" || page.mode === "both") && stat("Revenue", money(page.revenue))}
-        </div>
-        {(page.leads > 0 || page.sales > 0) && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-            <Btn sm onClick={() => onOpenContacts(page)}>
-              <Icon d={I_USERS} size={13} />
-              See the people this page brought in
-              <Icon d={I_ARROW} size={13} />
-            </Btn>
-          </div>
-        )}
-      </Card>
-
-      <Card>
-        <Eyebrow>The basics</Eyebrow>
-        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <Eyebrow>Live at</Eyebrow>
-            <div style={{ fontSize: 12.5, color: TEXT, fontFamily: MONO, marginTop: 6, wordBreak: "break-all" }}>{urlFor(page.slug)}</div>
-          </div>
-          {field("Headline", page.headline)}
-          {field("Subhead", page.subhead)}
-          {image && (
-            <div>
-              <Eyebrow>Image</Eyebrow>
-              <img src={image.src} alt={image.label || ""} style={{ display: "block", width: "100%", maxWidth: 260, height: 120, objectFit: "cover", borderRadius: 10, border: `1px solid ${BORDER}`, marginTop: 8 }} />
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {showForm && (
-        <Card>
-          <Eyebrow>Questions</Eyebrow>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-            {questions.map((q) => (
-              <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 9, justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, color: TEXT, display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                  {q.id === bonusId && <span style={{ color: TEAL, display: "inline-flex", flexShrink: 0 }}><Icon d={I_STAR} size={12} /></span>}
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{q.label || "Untitled question"}</span>
-                </span>
-                <Pill bg={INK_050} color={TEXT_SEC} outline>{q.type}</Pill>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {showProds && (
-        <Card>
-          <Eyebrow>Packages</Eyebrow>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-            {prods.length === 0 && <div style={{ fontSize: 12.5, color: TEXT_SEC }}>No packages on this page yet.</div>}
-            {prods.map((b) => (
-              <div key={b.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{b.name}</span>
-                <span style={{ fontSize: 12.5, color: TEXT, fontFamily: MONO }}>{money(b.price)} <span style={{ color: TEXT_SEC }}>{b.cadence}</span></span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-}
-
 // ── Screen three, the page detail. Same builder, opened on a page ──
 function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDelete, onTogglePublish, onOpenContacts }) {
   const stacked = isMobile || width < 880;
   const tight = isMobile || width < 640;
   const form = usePageForm(page);
-  const [editing, setEditing] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
 
-  const done = () => { onUpdate(page.id, form.values()); setEditing(false); };
-  const cancel = () => { form.reset(page); setEditing(false); };
+  // The detail view is the builder opened on a page, not a separate edit
+  // screen. Edits persist as they are made, so the preview, the stored page,
+  // and the live link never drift apart.
+  const savedRef = useRef(JSON.stringify(form.values()));
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    const next = JSON.stringify(form.values());
+    if (next === savedRef.current) return;
+    savedRef.current = next;
+    onUpdate(page.id, form.values());
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -1210,32 +1126,46 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>{editing ? (form.name || "Untitled page") : page.name}</h3>
+            <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>{form.name || "Untitled page"}</h3>
             <ModePill mode={page.mode} />
             <StatusPill published={page.published} />
           </div>
-          <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 5, fontFamily: MONO }}>{urlFor(page.slug)}</div>
+          <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 5, fontFamily: MONO }}>{urlFor(form.slug)}</div>
         </div>
+        {(page.leads > 0 || page.sales > 0) && (
+          <button
+            onClick={() => onOpenContacts(page)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "inherit", cursor: "pointer",
+              background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 999, padding: "7px 13px",
+              fontSize: 12.5, fontWeight: 700, color: TEAL,
+            }}
+          >
+            <Icon d={I_USERS} size={13} />
+            {page.mode === "products"
+              ? `${page.sales} sales`
+              : page.mode === "both"
+              ? `${page.leads} leads, ${page.sales} sales`
+              : `${page.leads} leads`}
+            <span style={{ color: TEXT_SEC, fontWeight: 600 }}>See the people</span>
+            <Icon d={I_ARROW} size={13} />
+          </button>
+        )}
       </div>
 
       {/* Action row, above the preview */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: 10, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
-        <Btn kind="primary" disabled={!page.published} title={page.published ? "Open the live page" : "Publish first to open it"} onClick={() => openLive(page.slug)}>
+        <Btn kind="primary" disabled={!page.published} title={page.published ? "Open the live page in a new tab" : "Publish first to open it"} onClick={() => openLive(form.slug)}>
           <Icon d={I_EXT} size={14} />Open live page
         </Btn>
-        {editing ? (
-          <>
-            <Btn kind="primary" onClick={done}><Icon d={I_CHECK} size={14} />Done</Btn>
-            <Btn onClick={cancel}>Cancel</Btn>
-          </>
-        ) : (
-          <Btn kind="primary" onClick={() => setEditing(true)}><Icon d={I_PENCIL} size={14} />Edit</Btn>
-        )}
         <Btn onClick={() => onDuplicate(page)}><Icon d={I_COPY} size={14} />Duplicate</Btn>
         <Btn onClick={() => onTogglePublish(page.id)}>
           <Icon d={page.published ? I_EYE_OFF : I_EYE} size={14} />{page.published ? "Unpublish" : "Publish"}
         </Btn>
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: TEXT_SEC, fontWeight: 600 }}>
+            <Icon d={I_CHECK} size={12.5} stroke={2.6} />Saved
+          </span>
           <Btn kind="quiet" danger onClick={() => setConfirmDel(true)}><Icon d={I_TRASH} size={14} />Delete</Btn>
         </div>
       </div>
@@ -1243,7 +1173,7 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
       {confirmDel && (
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: 14, background: "#fbf1ef", border: `1px solid #e7c9c3`, borderRadius: 12 }}>
           <div style={{ flex: 1, minWidth: 200, fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
-            Delete <strong>{page.name}</strong>? The link, QR code, and embed stop working straight away. This cannot be undone.
+            Delete <strong>{form.name || page.name}</strong>? The link, QR code, and embed stop working straight away. This cannot be undone.
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <Btn onClick={() => setConfirmDel(false)}>Keep it</Btn>
@@ -1257,17 +1187,13 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
         </div>
       )}
 
-      {editing && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: TEAL, fontWeight: 600 }}>
-          <MiltonMark size={18} />
-          Editing. Every change shows in the preview as you make it. Press Done to publish it.
-        </div>
-      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: TEAL, fontWeight: 600 }}>
+        <MiltonMark size={18} />
+        Change any field on the left and it shows in the preview as you type. Every edit is saved for you.
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: stacked ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,400px)", gap: 20, alignItems: "start" }}>
-        {editing
-          ? <BuilderFields form={form} tight={tight} />
-          : <DetailSummary page={page} form={form} onOpenContacts={onOpenContacts} />}
+        <BuilderFields form={form} tight={tight} />
 
         <Preview
           mode={form.mode}
@@ -1277,13 +1203,13 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
           questions={form.questions}
           bonusId={form.bonusId}
           picked={form.picked}
-          slug={editing ? form.slug : page.slug}
+          slug={form.slug}
           isMobile={stacked}
         />
       </div>
 
       <OutputsPanel
-        slug={page.slug}
+        slug={form.slug}
         isMobile={tight}
         heading="Grab and go"
         note="The same link, QR code, and embed shown on the list. They are here too, so you never have to leave the page to share it."
