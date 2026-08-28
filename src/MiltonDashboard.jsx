@@ -2433,7 +2433,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═════════════════════════════════════��═════════════════�����═══════
+// ═════════════════════════════════════���═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -17619,6 +17619,15 @@ export default function MiltonDashboard() {
                         </svg>
                         <span style={{ fontSize: 15, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                       </div>
+                      <div onClick={() => { setShowProfileMenu(false); setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); }} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 20px",
+                        cursor: "pointer", transition: "background 0.15s ease"
+                      }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                        </svg>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: TEXT }}>Settings</span>
+                      </div>
                       <div style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px",
                         cursor: "not-allowed", opacity: 0.5
@@ -18167,6 +18176,15 @@ export default function MiltonDashboard() {
                           </svg>
                           <span style={{ fontSize: 16, fontWeight: 500, color: "#2B7A78" }}>Playbook</span>
                         </div>
+                        <div onClick={() => { setShowProfileMenu(false); setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); }} style={{
+                          display: "flex", alignItems: "center", gap: 14, padding: "14px 22px",
+                          cursor: "pointer", transition: "background 0.15s ease"
+                        }} onMouseEnter={e => e.currentTarget.style.background = "#f7faf9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={TEXT_SEC} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                          </svg>
+                          <span style={{ fontSize: 16, fontWeight: 500, color: TEXT }}>Settings</span>
+                        </div>
                         <div style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px",
                           cursor: "not-allowed", opacity: 0.5
@@ -18243,7 +18261,6 @@ export default function MiltonDashboard() {
                 { icon: "aiWorkflow", label: "Workflows & Automations", desc: "Automate your coaching", color: "#3aafa9", onClick: () => { setCanvasType("workflows"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "file", label: "Files", desc: "Contracts, docs & shared media", color: "#45818e", onClick: () => { setCanvasType("files"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "upload", label: "Customize Milton", desc: "Your coaching system", color: "#2B7A78", onClick: () => { setCanvasType("brain"); setCanvasData({}); setCanvasMode(true); } },
-                { icon: "users", label: "Settings", desc: "Coaches & integrations like Meta Ads", color: "#45818e", onClick: () => { setCanvasType("settings"); setCanvasData({}); setCanvasMode(true); } },
               ].map(card => (
                 <div
                   key={card.label}
