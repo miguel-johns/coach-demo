@@ -59,6 +59,16 @@ const OFF_LIST = [
   ["Gus Portillo", "Cool", "Wrong number on the form, Milton flagged it.", "Meta lead ad", "Reaching out", "11 days ago", "Lead"],
 ];
 
+// Which lead sources each Pages entry feeds. Keyed by the stable page id from
+// PagesCanvas so renaming a page (which changes its slug) does not break the
+// link between a page and the people it brought in.
+const PAGE_SOURCES = {
+  p1: ["Meta lead ad", "Milton sales page"],
+  p2: ["Milton form"],
+  p3: ["Milton sales page", "Referral"],
+  p4: ["QR, front desk"],
+};
+
 const EXTRA_TAGS = {
   "Danielle Reyes": ["Wedding Oct"],
   "Tyler Boone": ["Wedding Oct"],
@@ -452,6 +462,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [sent, setSent] = useState(false);
   const [tagFor, setTagFor] = useState(null);
   const [added, setAdded] = useState({});
+  const [pageFilter, setPageFilter] = useState(null);
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
   useEffect(() => {
@@ -479,6 +490,16 @@ export default function CrmCanvas({ onClose, isMobile }) {
     setSent(false);
   };
   const go = (s) => () => { setScreen(s); setDraft(null); setSent(false); };
+  // The tabs are a fresh start, so they drop any page filter. Back links keep
+  // using go(), so returning from a contact preserves the filtered list.
+  const goTab = (s) => () => { setPageFilter(null); setScreen(s); setDraft(null); setSent(false); };
+  const openContactsForPage = (page) => {
+    setPageFilter({ id: page.id, name: page.name, sources: PAGE_SOURCES[page.id] || [] });
+    setFilter("Everyone");
+    setScreen("list");
+    setDraft(null);
+    setSent(false);
+  };
   const openContact = (name, origin) => (e) => {
     if (e) e.stopPropagation();
     setWho(name); setFrom(origin); setScreen("contact"); setDraft(null); setSent(false);
@@ -597,7 +618,8 @@ export default function CrmCanvas({ onClose, isMobile }) {
   };
 
   const filtered =
-    filter === "Everyone" ? allRows
+    pageFilter ? allRows.filter((r) => pageFilter.sources.indexOf(r[3]) >= 0)
+    : filter === "Everyone" ? allRows
     : filter === "Quiet" ? allRows.filter((r) => r[4] === "Dormant" || r[4] === "Reaching out")
     : allRows.filter((r) => r[4] === filter);
 
@@ -697,14 +719,30 @@ export default function CrmCanvas({ onClose, isMobile }) {
             Everyone you have. Tags are yours to add and never feed the ranking, bands and states only apply to leads.
           </p>
         </div>
-        <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>{allRows.length + 41} contacts</span>
+        <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>
+          {pageFilter ? `${filtered.length} shown` : `${allRows.length + 41} contacts`}
+        </span>
       </div>
 
-      <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-        {["Everyone", "New", "Engaged", "Booked", "Quiet", "Won"].map((label) => (
-          <Btn key={label} sm kind={filter === label ? "primary" : "secondary"} onClick={() => setFilter(label)}>{label}</Btn>
-        ))}
-      </div>
+      {pageFilter ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 14px", background: TEAL_LIGHT, border: `1px solid #bfe0dc`, borderRadius: 12 }}>
+          <MiltonMark size={20} />
+          <div style={{ flex: 1, minWidth: 200, fontSize: 13.5, color: TEXT, lineHeight: 1.45 }}>
+            The people who came in through <strong>{pageFilter.name}</strong>.
+            {filtered.length === 0 && " No one from this page is in your contacts yet."}
+          </div>
+          <Btn sm onClick={() => setPageFilter(null)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            Clear, show everyone
+          </Btn>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+          {["Everyone", "New", "Engaged", "Booked", "Quiet", "Won"].map((label) => (
+            <Btn key={label} sm kind={filter === label ? "primary" : "secondary"} onClick={() => setFilter(label)}>{label}</Btn>
+          ))}
+        </div>
+      )}
 
       <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
         {!isMobile && (
@@ -1042,7 +1080,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
               {TABS.map(([k, label]) => {
                 const active = tabActive(k);
                 return (
-                  <button key={k} onClick={go(k)}
+                  <button key={k} onClick={goTab(k)}
                     style={{ border: 0, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, padding: "6px 14px", borderRadius: 999, background: active ? WHITE : "transparent", color: active ? TEAL : TEXT_SEC, boxShadow: active ? "0 1px 2px rgba(16,40,34,0.08)" : "none" }}>
                     {label}
                   </button>
@@ -1064,7 +1102,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
           {screen === "contact" && <Contact />}
           {screen === "answers" && <Answers />}
           {screen === "brief" && <Brief />}
-          {screen === "pages" && <PagesSection isMobile={isMobile} />}
+          {screen === "pages" && <PagesSection isMobile={isMobile} onOpenContacts={openContactsForPage} />}
         </div>
       </div>
 
