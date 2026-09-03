@@ -15,6 +15,7 @@ import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
 import VoiceBar from "./VoiceBar";
+import { resolveVoiceCommand } from "./voiceCommands";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
@@ -2433,7 +2434,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═════════════════════════════════════���═════════════════�����═══════
+// ══════════════════���══════════════════����═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -5019,15 +5020,16 @@ const initialClients = [
 ];
 
 const chatSeedMessages = [
-  { type: "ai", text: "**Good morning, Coach!**\n\nYou have 8 sessions scheduled today. Here's what needs your attention:\n\n- **Sarah Chen** — **GOAL REACHED** Hit 135 lb squat yesterday! Time to celebrate and set her next goal\n- **Marcus Johnson** — Assessment due. It's been 8 weeks since his baseline\n- **Emily Rodriguez** — Missed last 2 sessions. Consider a check-in\n\nWant me to pull up anyone's program?" },
+  { type: "ai", text: "**Good morning! Here's where your business stands today.**\n\n- **Revenue** — $8,420 booked this month, up 11%. 3 payments failed and need a retry\n- **Leads** — 5 new leads in your queue, 2 haven't been contacted in 48 hours\n- **Schedule** — 8 sessions booked today, and Thursday's group class has 4 open spots\n- **Retention** — Emily Rodriguez has missed 2 sessions and is a churn risk\n\nWant me to start with revenue, your lead queue, or filling that class?" },
 ];
 
 const suggestedPrompts = [
-  "Pull up Sarah's program",
-  "What did Marcus do last session?",
-  "Build a workout for Emily",
-  "Who needs programming this week?",
-  "Show me Sarah's squat progression",
+  "How's revenue this month?",
+  "Who's in my lead queue today?",
+  "Reply to everything in my inbox",
+  "What's on my schedule this week?",
+  "Fill Thursday's group class",
+  "Make a progress story for Sarah",
 ];
 
 // Demo client data for Milton AI responses
@@ -12103,7 +12105,7 @@ function MasterProgramSessionDrawer({ session, viewingBlock, formatPatternType, 
 
 // ═══��══════��══��═══��═��══�������══��═��═════════════��═══════════════════
 // PLAYBOOK CHAPTER DETAIL - Individual chapter view with tabs
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════��
 function PlaybookChapterDetail({ 
   chapter, 
   chapterData, 
@@ -16262,7 +16264,7 @@ function SessionProgramDrawer({ session, clients, isMobile, onClose, onUpdate, o
 
 // ═══════════════════════════════════════════════════════════════
 // CHECK-IN DECK — swipeable / expandable stack of client check-ins
-// ═══════════════════════════════════════════════════════════════
+// ════════════��══════════════════════════════════════════════════
 const CHECKIN_SEED = [
   {
     id: "sc", name: "Sarah Chen", initials: "SC", color: "#2B7A78",
@@ -16916,6 +16918,13 @@ export default function MiltonDashboard() {
     // ── Navigation intent: let the chat drive the screen ──
     // e.g. "pull up Sarah's program", "open her workout", "show my clients", "go to analytics"
     const navIntent = (() => {
+      // Progress stories are a story-canvas action even when a client name is
+      // present ("make a progress story for Sarah"), so match this before the
+      // client lookup — otherwise the name would open the client's profile.
+      if (/\b(progress\s*stor(y|ies)|transformation\s*(card|stor)|share\s*progress|social\s*(card|stor)|story\s*card)\b/i.test(low)) {
+        return { kind: "canvas", canvas: "stories", label: "progress stories" };
+      }
+
       const hasNavVerb = /\b(pull\s*up|open|show(?:\s*me)?|go\s*to|take\s*me\s*to|bring\s*up|view|see|let'?s\s*see|navigate\s*to|jump\s*to|display|head\s*to)\b/i.test(low);
       if (!hasNavVerb) return null;
 
@@ -16996,6 +17005,37 @@ export default function MiltonDashboard() {
           setCanvasData({});
           setCanvasMode(true);
           setChatMessages(prev => [...prev, { type: "ai", text: `Opening your ${navIntent.label}.` }]);
+        }
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
+    // ── Business intent: shared model with voice mode ──
+    // Handles billing, leads, schedule, inbox, classes, workflows, forms,
+    // retention, analytics, progress stories, etc. Navigates the screen and
+    // drops a smart reply, mirroring what voice mode does. Runs after the
+    // client-specific navIntent so "pull up Sarah's program" still wins.
+    // Skipped while a canvas expects follow-up edits (report / workout / meal).
+    const canvasExpectsEdit =
+      canvasType === "report" || canvasType === "workout" || canvasType === "mealPlan" || canvasType === "messageSequence";
+    const bizCmd = canvasExpectsEdit ? null : resolveVoiceCommand(text);
+    if (bizCmd && (bizCmd.canvas || bizCmd.home)) {
+      setTimeout(() => {
+        if (bizCmd.home) {
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(null);
+          setHomeView(bizCmd.home);
+        } else if (bizCmd.canvas) {
+          setSelectedClient(null);
+          setCanvasSelectedDay(null);
+          setCanvasType(bizCmd.canvas);
+          setCanvasData({});
+          setCanvasMode(true);
+        }
+        if (bizCmd.chat) {
+          setChatMessages(prev => [...prev, { type: "ai", text: bizCmd.chat }]);
         }
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
