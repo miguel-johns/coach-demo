@@ -15,6 +15,7 @@ import ProgramPreview from "./dashboards/ProgramPreview";
 import WeeklyRecipePicker from "./dashboards/WeeklyRecipePicker";
 import WelcomeVideoModal from "./components/WelcomeVideoModal";
 import VoiceBar from "./VoiceBar";
+import { resolveVoiceCommand } from "./voiceCommands";
 import briefBuilderHtml from "./briefBuilder.html?raw";
 import libraryProgramsHtml from "./libraryPrograms.html?raw";
 import workoutBuilderHtml from "./workoutBuilder.html?raw";
@@ -2433,7 +2434,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ═════════════════════════════════════���═════════════════�����═══════
+// ═════════════════════════════════════����═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -5023,11 +5024,12 @@ const chatSeedMessages = [
 ];
 
 const suggestedPrompts = [
-  "Pull up Sarah's program",
-  "What did Marcus do last session?",
-  "Build a workout for Emily",
-  "Who needs programming this week?",
-  "Show me Sarah's squat progression",
+  "How's revenue this month?",
+  "Who's in my lead queue today?",
+  "Reply to everything in my inbox",
+  "What's on my schedule this week?",
+  "Fill Thursday's group class",
+  "Make a progress story for Sarah",
 ];
 
 // Demo client data for Milton AI responses
@@ -16996,6 +16998,37 @@ export default function MiltonDashboard() {
           setCanvasData({});
           setCanvasMode(true);
           setChatMessages(prev => [...prev, { type: "ai", text: `Opening your ${navIntent.label}.` }]);
+        }
+        setChatTyping(false);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, delay);
+      return;
+    }
+
+    // ── Business intent: shared model with voice mode ──
+    // Handles billing, leads, schedule, inbox, classes, workflows, forms,
+    // retention, analytics, progress stories, etc. Navigates the screen and
+    // drops a smart reply, mirroring what voice mode does. Runs after the
+    // client-specific navIntent so "pull up Sarah's program" still wins.
+    // Skipped while a canvas expects follow-up edits (report / workout / meal).
+    const canvasExpectsEdit =
+      canvasType === "report" || canvasType === "workout" || canvasType === "mealPlan" || canvasType === "messageSequence";
+    const bizCmd = canvasExpectsEdit ? null : resolveVoiceCommand(text);
+    if (bizCmd && (bizCmd.canvas || bizCmd.home)) {
+      setTimeout(() => {
+        if (bizCmd.home) {
+          setCanvasMode(false); setCanvasData(null); setCanvasType(null);
+          setSelectedClient(null);
+          setHomeView(bizCmd.home);
+        } else if (bizCmd.canvas) {
+          setSelectedClient(null);
+          setCanvasSelectedDay(null);
+          setCanvasType(bizCmd.canvas);
+          setCanvasData({});
+          setCanvasMode(true);
+        }
+        if (bizCmd.chat) {
+          setChatMessages(prev => [...prev, { type: "ai", text: bizCmd.chat }]);
         }
         setChatTyping(false);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
