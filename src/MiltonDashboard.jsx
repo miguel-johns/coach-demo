@@ -2434,7 +2434,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ══════════════════���══════════════════����═════════════════�����═══════
+// ══════════════════�����══════════════════����═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -5536,6 +5536,47 @@ function ChatContent({ chatInput, setChatInput, messages, onSend, chatEndRef, is
     )}
     <div ref={chatEndRef} />
     </div>
+      {!showSuggestions && !typing && !voiceActive && canvasType !== "workflows" && (
+        <div style={{
+          display: "flex", gap: 8, overflowX: "auto", flexWrap: "nowrap",
+          padding: isMobile ? "8px 12px 0" : "8px 16px 0",
+          scrollbarWidth: "none", msOverflowStyle: "none",
+        }} className="hide-scrollbar">
+          {suggestedPrompts.map((prompt, i) => (
+            <button
+              key={i}
+              onClick={() => onSend(prompt)}
+              style={{
+                background: WHITE,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 20,
+                padding: "7px 13px",
+                fontSize: 13,
+                fontFamily: font,
+                color: TEAL,
+                fontWeight: 500,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                transition: "all 0.15s ease",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = TEAL;
+                e.currentTarget.style.color = WHITE;
+                e.currentTarget.style.borderColor = TEAL;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = WHITE;
+                e.currentTarget.style.color = TEAL;
+                e.currentTarget.style.borderColor = BORDER;
+              }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
       <div style={{ padding: isMobile ? "8px 12px 12px" : "12px 16px 16px" }}>
         {voiceActive ? (
           <VoiceBar active={voiceActive} onStop={onStopVoice} onCommand={onVoiceCommand} />
@@ -10313,7 +10354,7 @@ function WfBuilder({ workflow, flow, setFlow, entry, onEntryChange }) {
                   </div>
                 </>
               ) : (
-                /* ── Text / Email = message + attachments ── */
+                /* ─��� Text / Email = message + attachments ── */
                 <>
                   {node.type === "email" && (
                     <input
