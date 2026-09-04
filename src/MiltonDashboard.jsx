@@ -2434,7 +2434,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ══════════════════�����══════════════════����═════════════════�����═══════
+// ══════════════════�������══════════════════����═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -18332,7 +18332,7 @@ export default function MiltonDashboard() {
               {[
                 { icon: "payments", label: "Billing & Payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
-                { icon: "crm", label: "Leads", desc: "Prospects, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "crm", label: "CRM", desc: "Prospects, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
