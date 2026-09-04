@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TEAL, TEAL_LIGHT, WHITE, TEXT, TEXT_SEC, BORDER, ALERT_RED } from "./constants";
 import PagesSection from "./PagesCanvas";
 
@@ -487,8 +487,10 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [pipeExtra, setPipeExtra] = useState([]);
   const [dragCard, setDragCard] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
+  const [dragPos, setDragPos] = useState(null);
   const [addingCol, setAddingCol] = useState(null);
   const [addName, setAddName] = useState("");
+  const dragMoved = useRef(false);
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
   useEffect(() => {
@@ -543,11 +545,55 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const addCard = (stage) => {
     const name = addName.trim();
     if (!name) return;
-    setPipeExtra((prev) => prev.concat([{ name }]));
+    setPipeExtra((prev) => (prev.some((c) => c.name === name) ? prev : prev.concat([{ name }])));
     setPipeMoves((prev) => ({ ...prev, [name]: stage }));
     setPipeRemoved((prev) => { const next = { ...prev }; delete next[name]; return next; });
     setAddName("");
     setAddingCol(null);
+  };
+  // Add an existing contact (pull from the directory) into a stage.
+  const addExisting = (name, stage) => {
+    setPipeRemoved((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    setPipeMoves((prev) => ({ ...prev, [name]: stage }));
+    setAddName("");
+    setAddingCol(null);
+  };
+  // Pointer-based drag so cards move reliably inside the preview iframe (HTML5
+  // native drag is flaky there). A floating ghost follows the pointer and the
+  // column under it highlights; on release the card drops into that stage.
+  const startPipeDrag = (name, e) => {
+    if (e.button != null && e.button !== 0) return;
+    dragMoved.current = false;
+    const startX = e.clientX, startY = e.clientY;
+    let active = false;
+    const colUnder = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      const colEl = el && el.closest ? el.closest("[data-pipe-col]") : null;
+      return colEl ? colEl.getAttribute("data-pipe-col") : null;
+    };
+    const move = (ev) => {
+      if (!active) {
+        if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) < 6) return;
+        active = true;
+        dragMoved.current = true;
+        setDragCard(name);
+      }
+      setDragPos({ x: ev.clientX, y: ev.clientY });
+      setDragOverCol(colUnder(ev.clientX, ev.clientY));
+    };
+    const up = (ev) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      if (active) {
+        const target = colUnder(ev.clientX, ev.clientY);
+        if (target) moveCard(name, target);
+      }
+      setDragCard(null);
+      setDragOverCol(null);
+      setDragPos(null);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   };
   const compose = (name, action) => (e) => {
     if (e) e.stopPropagation();
@@ -749,6 +795,10 @@ export default function CrmCanvas({ onClose, isMobile }) {
       ...col,
       rows: rowsAll.filter((r) => stageFor(r) === col.key),
     }));
+    // Full contact directory for the add-card autocomplete (existing names + manual adds).
+    const directory = allRows.map((r) => r[0])
+      .concat(pipeExtra.map((c) => c.name))
+      .filter((n, i, arr) => arr.indexOf(n) === i);
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -765,10 +815,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
 
         <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, alignItems: "flex-start" }}>
           {cols.map((col) => (
-            <div key={col.key}
-              onDragOver={(e) => { if (dragCard) { e.preventDefault(); if (dragOverCol !== col.key) setDragOverCol(col.key); } }}
-              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCol((c) => (c === col.key ? null : c)); }}
-              onDrop={(e) => { e.preventDefault(); if (dragCard) moveCard(dragCard, col.key); }}
+            <div key={col.key} data-pipe-col={col.key}
               style={{ flex: "1 0 0", minWidth: isMobile ? 224 : 186, display: "flex", flexDirection: "column", gap: 10,
                 borderRadius: 14, padding: dragOverCol === col.key ? 6 : 0, margin: dragOverCol === col.key ? -6 : 0,
                 background: dragOverCol === col.key ? TEAL_LIGHT : "transparent", outline: dragOverCol === col.key ? `1px dashed ${TEAL}` : "none", transition: "background 0.12s" }}
@@ -791,28 +838,57 @@ export default function CrmCanvas({ onClose, isMobile }) {
                 <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>{col.note}</div>
               </div>
 
-              {addingCol === col.key && (
-                <div style={{ background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 12, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <input autoFocus value={addName} onChange={(e) => setAddName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) addCard(col.key);
-                      if (e.key === "Escape") { setAddingCol(null); setAddName(""); }
-                    }}
-                    placeholder="Name"
-                    style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none" }}
-                  />
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => addCard(col.key)} disabled={!addName.trim()}
-                      style={{ flex: 1, padding: "6px 8px", borderRadius: 8, border: "none", background: addName.trim() ? TEAL : INK_050, color: addName.trim() ? WHITE : TEXT_SEC, fontSize: 12, fontWeight: 700, cursor: addName.trim() ? "pointer" : "default" }}>
-                      Add to {col.key}
-                    </button>
+              {addingCol === col.key && (() => {
+                const onBoard = new Set(rowsAll.map((r) => r[0]));
+                const q = addName.trim().toLowerCase();
+                const matches = directory
+                  .filter((n) => (q ? n.toLowerCase().includes(q) : true))
+                  .slice(0, 6);
+                const exact = directory.some((n) => n.toLowerCase() === q);
+                return (
+                  <div style={{ background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 12, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <input autoFocus value={addName} onChange={(e) => setAddName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                          if (exact) addExisting(directory.find((n) => n.toLowerCase() === q), col.key);
+                          else addCard(col.key);
+                        }
+                        if (e.key === "Escape") { setAddingCol(null); setAddName(""); }
+                      }}
+                      placeholder="Search contacts or type a new name"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none" }}
+                    />
+                    {matches.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 168, overflowY: "auto" }}>
+                        {matches.map((n) => {
+                          const di = allRows.findIndex((r) => r[0] === n);
+                          return (
+                            <button key={n} onClick={() => addExisting(n, col.key)}
+                              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "6px 7px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer" }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = INK_050)}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            >
+                              <Avatar initials={initialsOf(n)} bg={AV[(di < 0 ? 6 : di) % AV.length]} size={22} />
+                              <span style={{ fontSize: 12.5, fontWeight: 700, color: TEXT, flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n}</span>
+                              {onBoard.has(n) && <span style={{ fontSize: 10.5, color: TEXT_SEC, whiteSpace: "nowrap" }}>{`in ${stageFor(allRows.find((r) => r[0] === n) || [n])}`}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {addName.trim() && !exact && (
+                      <button onClick={() => addCard(col.key)}
+                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", borderRadius: 8, border: `1px dashed ${TEAL}`, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                        {`+ Add new contact "${addName.trim()}"`}
+                      </button>
+                    )}
                     <button onClick={() => { setAddingCol(null); setAddName(""); }}
                       style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                       Cancel
                     </button>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {col.rows.map((r) => {
@@ -820,15 +896,14 @@ export default function CrmCanvas({ onClose, isMobile }) {
                   const idx = LEADS.findIndex((l) => l[0] === name);
                   const av = AV[(idx < 0 ? 6 : idx) % AV.length];
                   return (
-                    <div key={name} onClick={openContact(name, "pipeline")}
-                      draggable
-                      onDragStart={(e) => { setDragCard(name); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", name); } catch (_) {} }}
-                      onDragEnd={() => { setDragCard(null); setDragOverCol(null); }}
-                      style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, paddingRight: 30, cursor: "pointer", position: "relative", opacity: dragCard === name ? 0.4 : 1 }}
+                    <div key={name}
+                      onClick={(e) => { if (dragMoved.current) { dragMoved.current = false; return; } openContact(name, "pipeline")(e); }}
+                      onPointerDown={(e) => startPipeDrag(name, e)}
+                      style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, paddingRight: 30, cursor: "grab", position: "relative", opacity: dragCard === name ? 0.4 : 1, touchAction: "none", userSelect: "none" }}
                       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#bfe0dc")}
                       onMouseLeave={(e) => (e.currentTarget.style.borderColor = BORDER)}
                     >
-                      <button onClick={removeCard(name)} aria-label={`Remove ${name} from the board`} title="Remove from board"
+                      <button onClick={removeCard(name)} onPointerDown={(e) => e.stopPropagation()} aria-label={`Remove ${name} from the board`} title="Remove from board"
                         style={{ position: "absolute", top: 8, right: 8, width: 20, height: 20, borderRadius: 6, border: "none", background: "transparent", color: TEXT_SEC, fontSize: 14, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = INK_050; e.currentTarget.style.color = ALERT_RED; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
@@ -856,6 +931,14 @@ export default function CrmCanvas({ onClose, isMobile }) {
             </div>
           ))}
         </div>
+        {dragCard && dragPos && (
+          <div style={{ position: "fixed", left: dragPos.x + 10, top: dragPos.y + 10, zIndex: 1000, pointerEvents: "none",
+            background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 10, padding: "8px 12px",
+            boxShadow: "0 10px 28px rgba(0,0,0,0.18)", fontSize: 13, fontWeight: 700, color: TEXT, maxWidth: 200,
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {dragCard}
+          </div>
+        )}
       </div>
     );
   };
