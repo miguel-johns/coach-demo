@@ -110,6 +110,8 @@ function fmtT(t) {
 }
 const range = (t, d) => fmtT(t) + " – " + fmtT(t + d);
 const overlaps = (a1, a2, b1, b2) => a1 < b2 && b1 < a2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const snapQ = (v) => Math.round(v * 4) / 4;
 const initials = (n) => n.split(" ").map((w) => w.charAt(0)).join("").slice(0, 2);
 const trainerName = (id) => { const t = TRAINERS.find((x) => x.id === id); return t ? t.name : ""; };
 const roomName = (id) => { const r = ROOMS.find((x) => x.id === id); return r ? r.name : "No room"; };
@@ -226,6 +228,11 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
   const toastTimer = useRef(null);
+  const weekGridRef = useRef(null);
+  const facGridRef = useRef(null);
+  const dragRef = useRef(null);
+  const suppressClickRef = useRef(false);
+  const [dragId, setDragId] = useState(null);
   useEffect(() => {
     const onResize = () => setVw(window.innerWidth);
     window.addEventListener("resize", onResize);
@@ -358,6 +365,67 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const removeAppt = (id) => setAppts((l) => l.filter((a) => a.id !== id));
   const patchAppt = (id, patch) => setAppts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const weekDate = (dw) => addDays(weekStart, dw);
+
+  // Live-patch whichever list holds the event (stored appts or week drafts).
+  const moveEvent = (id, patch) => {
+    setAppts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    setDrafts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+  };
+
+  // Drag-to-move and edge-resize for calendar events. Recurring class
+  // instances have no stored record, so they are click-only (guarded here).
+  const onDragMove = (ev) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const dH = (ev.clientY - d.startY) / ROW;
+    let patch = {};
+    if (d.mode === "move") {
+      patch.start = clamp(snapQ(d.orig.start + dH), DAY_START, DAY_END - d.orig.dur);
+      if (d.view === "week") {
+        const colW = (d.rect.width - d.gutter) / d.colCount;
+        const idx = clamp(Math.floor((ev.clientX - d.rect.left - d.gutter) / colW), 0, d.colCount - 1);
+        patch.date = d.columns[idx];
+        d.lastDate = patch.date;
+      }
+    } else if (d.mode === "top") {
+      const ns = clamp(snapQ(d.orig.start + dH), DAY_START, d.orig.start + d.orig.dur - 0.25);
+      patch.start = ns;
+      patch.dur = +(d.orig.start + d.orig.dur - ns).toFixed(2);
+    } else if (d.mode === "bottom") {
+      patch.dur = clamp(snapQ(d.orig.dur + dH), 0.25, DAY_END - d.orig.start);
+    }
+    if (Math.abs(ev.clientY - d.startY) > 3 || (patch.date && patch.date !== d.orig.date)) d.moved = true;
+    moveEvent(d.id, patch);
+  };
+  const onDragEnd = () => {
+    const d = dragRef.current;
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup", onDragEnd);
+    if (d && d.moved) {
+      suppressClickRef.current = true;
+      const cur = appts.concat(drafts).find((a) => a.id === d.id);
+      if (d.mode === "move") flash(`Moved to ${fmtShort(d.lastDate || d.orig.date)} ${fmtT((cur && cur.start) ?? d.orig.start)}`);
+      else flash("Duration updated");
+    }
+    dragRef.current = null;
+    setDragId(null);
+  };
+  const beginDrag = (ev, e, mode, view) => {
+    if (ev.button !== 0 || e.instance) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const gridEl = view === "week" ? weekGridRef.current : facGridRef.current;
+    if (!gridEl) return;
+    const columns = view === "week" ? days.map((d) => d.date) : [];
+    dragRef.current = {
+      id: e.id, mode, view, columns,
+      rect: gridEl.getBoundingClientRect(), gutter: 52, colCount: columns.length,
+      orig: { start: e.start, dur: e.dur, date: e.date }, startY: ev.clientY, moved: false,
+    };
+    setDragId(e.id);
+    window.addEventListener("pointermove", onDragMove);
+    window.addEventListener("pointerup", onDragEnd);
+  };
 
   function submitCreate() {
     const f = form, t = ctype;
@@ -675,7 +743,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   /* ---------- render helpers ---------- */
   const PAD = narrow ? 16 : 28;
 
-  const EventBlock = ({ e, ghost }) => {
+  const EventBlock = ({ e, ghost, view }) => {
     const conflict = check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft;
     const short = e.dur < 0.7;
     const tight = !!e.cap && e.dur < 1;
@@ -686,8 +754,16 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     const st = evStyle(e, !!e.draft || !!ghost, conflict);
     if (tight && e.filled >= e.cap && !e.draft && !conflict) { st.background = W_BG; st.borderLeft = `3px solid ${W_MID}`; }
     const full = e.cap && e.filled >= e.cap && e.dur >= 1;
+    const draggable = !e.instance && !ghost;
+    if (draggable) st.cursor = dragId === e.id ? "grabbing" : "grab";
+    if (dragId === e.id) { st.zIndex = 20; st.boxShadow = "0 6px 18px rgba(11,20,23,.18)"; }
+    const rzStyle = (pos) => ({ position: "absolute", left: 0, right: 0, [pos]: 0, height: 8, cursor: "ns-resize", zIndex: 6 });
     return (
-      <button style={st} onClick={() => { setSel({ id: e.id, date: e.date, instance: !!e.instance }); setSheet("detail"); }}>
+      <button style={st}
+        onPointerDown={draggable ? (ev) => beginDrag(ev, e, "move", view) : undefined}
+        onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } setSel({ id: e.id, date: e.date, instance: !!e.instance }); setSheet("detail"); }}>
+        {draggable && <span style={rzStyle("top")} onPointerDown={(ev) => beginDrag(ev, e, "top", view)} />}
+        {draggable && <span style={rzStyle("bottom")} onPointerDown={(ev) => beginDrag(ev, e, "bottom", view)} />}
         <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
           {(e.status === "unconfirmed" || conflict || (tight && !!e.wait)) && <span style={{ width: 5, height: 5, borderRadius: 999, flex: "0 0 5px", background: conflict ? D_MID : W_MID }} />}
           <span style={{ fontSize: 11.5, fontWeight: 600, color: FG1, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
@@ -747,7 +823,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
               ))}
             </div>
             <div style={{ maxHeight: 520, overflowY: "auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
+              <div ref={weekGridRef} style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
                 <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
                   {HOURS.map((h, i) => (
                     <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
@@ -763,7 +839,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                     {d.events.filter((e) => e.kind === "room" && roomBuffer(e.room)).map((e) => (
                       <div key={"b" + e.id} style={{ position: "absolute", left: 3, right: 3, top: (e.start + e.dur - DAY_START) * ROW + 1, height: (roomBuffer(e.room) / 60) * ROW - 2, borderRadius: 5, border: `1px dashed ${KIND.room.bar}`, background: "repeating-linear-gradient(135deg, rgba(139,92,246,.07) 0 5px, rgba(139,92,246,.16) 5px 10px)", fontSize: 8.5, fontWeight: 700, letterSpacing: ".06em", color: KIND.room.bar, display: "flex", alignItems: "center", paddingLeft: 5, overflow: "hidden", zIndex: 3 }}>△ BUFFER</div>
                     ))}
-                    {d.events.map((e) => <EventBlock key={e.id} e={e} />)}
+                    {d.events.map((e) => <EventBlock key={e.id} e={e} view="week" />)}
                     {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                   </div>
                 ))}
@@ -822,7 +898,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                 ))}
               </div>
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
+                <div ref={facGridRef} style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
                   <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
                     {HOURS.map((h, i) => (
                       <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
@@ -834,7 +910,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                         <div key={h} onClick={() => openCreate({ date: day, start: DAY_START + h, ...(r.type === "trainer" ? { trainer: r.id } : { room: r.id }) }, "oneone")}
                           style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
                       ))}
-                      {r.events.map((e) => <EventBlock key={e.id + r.id} e={e} />)}
+                      {r.events.map((e) => <EventBlock key={e.id + r.id} e={e} view="fac" />)}
                     </div>
                   ))}
                 </div>
