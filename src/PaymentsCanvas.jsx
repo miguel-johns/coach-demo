@@ -371,7 +371,7 @@ function SetupTab({ routingActive, onActivate }) {
   );
 }
 
-// ── Empty state (Payments / Payouts tabs) ───────────────���─���─────
+// ── Empty state (Payments / Payouts tabs) ───────────────���������─────
 function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   return (
     <Card>
@@ -390,56 +390,197 @@ function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   );
 }
 
-// ── Inventory tab ───────────────────────────────────────────────
 // ── Gift cards & promos tab ─────────────────────────────────────
+const randCode = (prefix) => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return `${prefix}-${s}`;
+};
+
+const SECTION_ICONS = {
+  gift: <><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><path d="M12 5v14" /></>,
+  promo: <><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1.2" /></>,
+};
+
 function GiftPromoTab() {
-  const sections = [
-    {
-      eyebrow: "Stored value",
-      title: "Gift cards",
-      body: "Sell prepaid balances clients can redeem at checkout. Set denominations, expiration, and delivery.",
-      cta: "New gift card",
-      icon: <><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><path d="M12 5v14" /></>,
-    },
-    {
-      eyebrow: "Discounts",
-      title: "Promo codes",
-      body: "Create codes for percentage or fixed discounts, with usage caps, eligible packages, and expiry windows.",
-      cta: "New promo code",
-      icon: <><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1.2" /></>,
-    },
-  ];
+  const [giftCards, setGiftCards] = useState([
+    { id: "g1", code: "GC-7K4M", amount: 100, balance: 100, note: "Holiday gift", status: "active" },
+    { id: "g2", code: "GC-2X9B", amount: 50, balance: 20, note: "", status: "active" },
+  ]);
+  const [promos, setPromos] = useState([
+    { id: "p1", code: "WELCOME20", kind: "percent", value: 20, cap: 100, used: 34, status: "active" },
+    { id: "p2", code: "SUMMER25", kind: "amount", value: 25, cap: 0, used: 12, status: "paused" },
+  ]);
+
+  const addGift = (g) => setGiftCards((prev) => [{ ...g, id: `g${Date.now()}`, code: randCode("GC"), balance: g.amount, status: "active" }, ...prev]);
+  const removeGift = (id) => setGiftCards((prev) => prev.filter((g) => g.id !== id));
+
+  const addPromo = (p) => setPromos((prev) => [{ ...p, id: `p${Date.now()}`, used: 0, status: "active" }, ...prev]);
+  const togglePromo = (id) => setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, status: p.status === "active" ? "paused" : "active" } : p)));
+  const removePromo = (id) => setPromos((prev) => prev.filter((p) => p.id !== id));
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-      {sections.map((s) => (
-        <Card key={s.title}>
-          <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}` }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ width: 36, height: 36, borderRadius: 10, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{s.icon}</svg>
-                </span>
-                <div>
-                  <Eyebrow>{s.eyebrow}</Eyebrow>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "4px 0 0" }}>{s.title}</h3>
-                </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+      <GiftCardSection cards={giftCards} onAdd={addGift} onRemove={removeGift} />
+      <PromoSection promos={promos} onAdd={addPromo} onToggle={togglePromo} onRemove={removePromo} />
+    </div>
+  );
+}
+
+function GiftSectionHead({ icon, eyebrow, title, adding, onToggleAdd }) {
+  return (
+    <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ width: 36, height: 36, borderRadius: 10, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{SECTION_ICONS[icon]}</svg>
+        </span>
+        <div>
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "4px 0 0" }}>{title}</h3>
+        </div>
+      </div>
+      <button onClick={onToggleAdd} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: adding ? WHITE : TEAL, color: adding ? TEXT_SEC : WHITE, border: adding ? `1px solid ${BORDER}` : "none", borderRadius: 8, padding: "8px 13px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+        {adding ? "Cancel" : (
+          <>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            New
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+const fieldLabel = { fontSize: 11.5, fontWeight: 700, color: TEXT_SEC, textTransform: "uppercase", letterSpacing: 0.4, display: "block", marginBottom: 6 };
+const primaryBtn = { marginTop: 4, width: "100%", background: TEAL, color: WHITE, border: "none", borderRadius: 8, padding: "10px 15px", fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const chip = (active) => ({ flex: 1, padding: "9px 0", borderRadius: 8, border: `1px solid ${active ? TEAL : BORDER}`, background: active ? TEAL_LIGHT : WHITE, color: active ? TEAL : TEXT_SEC, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: MONO });
+
+function GiftCardSection({ cards, onAdd, onRemove }) {
+  const [adding, setAdding] = useState(false);
+  const [amount, setAmount] = useState(50);
+  const [custom, setCustom] = useState("");
+  const [note, setNote] = useState("");
+
+  const presets = [25, 50, 100, 200];
+  const finalAmount = custom !== "" ? Math.max(0, Math.round(+custom || 0)) : amount;
+
+  const submit = () => {
+    if (!finalAmount) return;
+    onAdd({ amount: finalAmount, note: note.trim() });
+    setAdding(false); setAmount(50); setCustom(""); setNote("");
+  };
+
+  const outstanding = cards.reduce((sum, c) => sum + (c.balance || 0), 0);
+
+  return (
+    <Card>
+      <SectionHead icon="gift" eyebrow="Stored value" title="Gift cards" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
+      {adding && (
+        <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, background: PAGE_BG }}>
+          <label style={fieldLabel}>Amount</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            {presets.map((p) => (
+              <button key={p} onClick={() => { setAmount(p); setCustom(""); }} style={chip(custom === "" && amount === p)}>${p}</button>
+            ))}
+          </div>
+          <input type="number" min="0" placeholder="Custom amount" value={custom} onChange={(e) => setCustom(e.target.value)} style={{ ...inputStyle, marginBottom: 12, fontFamily: MONO }} />
+          <label style={fieldLabel}>Note (optional)</label>
+          <input placeholder="e.g. Client referral reward" value={note} onChange={(e) => setNote(e.target.value)} style={{ ...inputStyle, marginBottom: 14 }} />
+          <button onClick={submit} style={primaryBtn}>Create {money(finalAmount)} gift card</button>
+        </div>
+      )}
+      <div style={{ padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", fontSize: 12.5, color: TEXT_SEC }}>
+        <span>{cards.length} active</span>
+        <span><strong style={{ color: TEXT, fontFamily: MONO }}>{money(outstanding)}</strong> outstanding balance</span>
+      </div>
+      {cards.length === 0 ? (
+        <div style={{ padding: "40px 24px", textAlign: "center", fontSize: 13, color: TEXT_SEC }}>No gift cards yet</div>
+      ) : (
+        cards.map((c, i) => (
+          <div key={c.id} style={{ padding: "14px 20px", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: TEXT }}>{c.code}</span>
+                {c.balance < c.amount && <Pill bg={AMBER_TINT} color={AMBER}>Partially used</Pill>}
+              </div>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 3 }}>
+                {money(c.balance)} of {money(c.amount)} remaining{c.note ? ` · ${c.note}` : ""}
               </div>
             </div>
-          </div>
-          <div style={{ padding: "18px 20px" }}>
-            <p style={{ fontSize: 13.5, color: TEXT_SEC, margin: 0, lineHeight: 1.55 }}>{s.body}</p>
-            <button style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: TEAL, color: WHITE, border: "none", borderRadius: 8, padding: "9px 15px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              {s.cta}
+            <button onClick={() => onRemove(c.id)} aria-label="Void gift card" style={{ background: "none", border: "none", color: TEXT_SEC, cursor: "pointer", padding: 6, borderRadius: 6, flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
             </button>
-            <div style={{ marginTop: 18, padding: "14px 16px", background: PAGE_BG, borderRadius: 10, border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 12.5, color: TEXT_SEC, textAlign: "center" }}>None created yet</div>
-            </div>
           </div>
-        </Card>
-      ))}
-    </div>
+        ))
+      )}
+    </Card>
+  );
+}
+
+function PromoSection({ promos, onAdd, onToggle, onRemove }) {
+  const [adding, setAdding] = useState(false);
+  const [code, setCode] = useState("");
+  const [kind, setKind] = useState("percent");
+  const [value, setValue] = useState("");
+  const [cap, setCap] = useState("");
+
+  const submit = () => {
+    const v = Math.max(0, +value || 0);
+    if (!code.trim() || !v) return;
+    onAdd({ code: code.trim().toUpperCase(), kind, value: v, cap: Math.max(0, Math.round(+cap || 0)) });
+    setAdding(false); setCode(""); setKind("percent"); setValue(""); setCap("");
+  };
+
+  const discountLabel = (p) => (p.kind === "percent" ? `${p.value}% off` : `${money(p.value)} off`);
+
+  return (
+    <Card>
+      <SectionHead icon="promo" eyebrow="Discounts" title="Promo codes" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
+      {adding && (
+        <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, background: PAGE_BG }}>
+          <label style={fieldLabel}>Code</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <input placeholder="SUMMER10" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} style={{ ...inputStyle, fontFamily: MONO, textTransform: "uppercase" }} />
+            <button onClick={() => setCode(randCode("SAVE"))} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "0 13px", fontSize: 12.5, fontWeight: 700, color: TEAL, cursor: "pointer", flexShrink: 0 }}>Generate</button>
+          </div>
+          <label style={fieldLabel}>Discount</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <button onClick={() => setKind("percent")} style={chip(kind === "percent")}>% off</button>
+            <button onClick={() => setKind("amount")} style={chip(kind === "amount")}>$ off</button>
+            <input type="number" min="0" placeholder={kind === "percent" ? "20" : "25"} value={value} onChange={(e) => setValue(e.target.value)} style={{ ...inputStyle, flex: 1, fontFamily: MONO }} />
+          </div>
+          <label style={fieldLabel}>Usage limit (optional)</label>
+          <input type="number" min="0" placeholder="Unlimited" value={cap} onChange={(e) => setCap(e.target.value)} style={{ ...inputStyle, marginBottom: 14, fontFamily: MONO }} />
+          <button onClick={submit} style={primaryBtn}>Create promo code</button>
+        </div>
+      )}
+      {promos.length === 0 ? (
+        <div style={{ padding: "40px 24px", textAlign: "center", fontSize: 13, color: TEXT_SEC }}>No promo codes yet</div>
+      ) : (
+        promos.map((p, i) => (
+          <div key={p.id} style={{ padding: "14px 20px", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, opacity: p.status === "paused" ? 0.6 : 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: TEXT }}>{p.code}</span>
+                {p.status === "active"
+                  ? <Pill bg={GREEN_TINT} color={GREEN}>Active</Pill>
+                  : <Pill bg={AMBER_TINT} color={AMBER}>Paused</Pill>}
+              </div>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 3 }}>
+                {discountLabel(p)} · {p.used} used{p.cap ? ` of ${p.cap}` : " · unlimited"}
+              </div>
+            </div>
+            <button onClick={() => onToggle(p.id)} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 7, padding: "7px 11px", fontSize: 12, fontWeight: 700, color: TEXT, cursor: "pointer", flexShrink: 0 }}>
+              {p.status === "active" ? "Pause" : "Resume"}
+            </button>
+            <button onClick={() => onRemove(p.id)} aria-label="Delete promo code" style={{ background: "none", border: "none", color: TEXT_SEC, cursor: "pointer", padding: 6, borderRadius: 6, flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+            </button>
+          </div>
+        ))
+      )}
+    </Card>
   );
 }
 
