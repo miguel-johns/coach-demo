@@ -371,7 +371,7 @@ function SetupTab({ routingActive, onActivate }) {
   );
 }
 
-// ── Empty state (Payments / Payouts tabs) ───────────────��───────
+// ── Empty state (Payments / Payouts tabs) ───────────────��─���─────
 function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   return (
     <Card>
@@ -391,80 +391,6 @@ function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
 }
 
 // ── Inventory tab ───────────────────────────────────────────────
-function InventoryTab({ packages }) {
-  const items = useMemo(() => packages.filter((p) => p.deliverable === "item"), [packages]);
-  const rows = items.map((p) => {
-    const cfg = p.item_config || {};
-    const tracked = !!cfg.track_inventory;
-    const stock = tracked ? Number(cfg.stock ?? 0) : null;
-    const low = tracked && stock <= (cfg.low_stock_at ?? 3);
-    const out = tracked && stock <= 0;
-    return { id: p.id, name: p.name, price: p.price, tracked, stock, low, out, sku: cfg.sku };
-  });
-
-  const trackedRows = rows.filter((r) => r.tracked);
-  const unitsOnHand = trackedRows.reduce((sum, r) => sum + (r.stock || 0), 0);
-  const lowCount = trackedRows.filter((r) => r.low && !r.out).length;
-  const outCount = trackedRows.filter((r) => r.out).length;
-
-  const tiles = [
-    { label: "Units on hand", value: unitsOnHand.toLocaleString(), sub: `across ${trackedRows.length} tracked product${trackedRows.length === 1 ? "" : "s"}` },
-    { label: "Low stock", value: String(lowCount), sub: "at or below reorder point", accent: lowCount > 0 },
-    { label: "Out of stock", value: String(outCount), sub: "unavailable to sell" },
-  ];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {tiles.map((t) => (
-          <Card key={t.label} style={{ padding: "18px 20px", borderColor: t.accent ? "#ecdcb8" : BORDER, background: t.accent ? AMBER_TINT : WHITE }}>
-            <div style={{ fontSize: 12, color: TEXT_SEC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{t.label}</div>
-            <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 600, color: t.accent ? AMBER : TEXT, margin: "10px 0 4px", letterSpacing: "-0.01em" }}>{t.value}</div>
-            <div style={{ fontSize: 12.5, color: TEXT_SEC }}>{t.sub}</div>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
-          <Eyebrow>Stock</Eyebrow>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "5px 0 0" }}>Tracked products</h3>
-        </div>
-        {rows.length === 0 ? (
-          <div style={{ padding: "56px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>No physical products yet</div>
-            <div style={{ fontSize: 13.5, color: TEXT_SEC, marginTop: 6 }}>Create a Product package in the Packages tab and enable inventory tracking to manage stock here.</div>
-          </div>
-        ) : (
-          <div>
-            {rows.map((r, i) => (
-              <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "15px 20px", borderTop: i === 0 ? "none" : `1px solid ${BORDER}` }}>
-                <span style={{ width: 34, height: 34, borderRadius: 9, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" /></svg>
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>{r.name}</div>
-                  <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{r.sku ? `SKU ${r.sku} · ` : ""}{money(r.price)}</div>
-                </div>
-                {r.tracked ? (
-                  <>
-                    <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 600, color: r.out ? ALERT_RED : r.low ? AMBER : TEXT }}>{r.stock}</div>
-                    {r.out ? <Pill bg={RED_TINT} color={ALERT_RED}>Out of stock</Pill>
-                      : r.low ? <Pill bg={AMBER_TINT} color={AMBER}>Low</Pill>
-                      : <Pill bg={GREEN_TINT} color={GREEN}>In stock</Pill>}
-                  </>
-                ) : (
-                  <Pill bg="#eef2f1" color={TEXT_SEC}>Not tracked</Pill>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-    </div>
-  );
-}
-
 // ── Gift cards & promos tab ─────────────────────────────────────
 function GiftPromoTab() {
   const sections = [
@@ -524,6 +450,18 @@ function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewP
     { label: "Monthly recurring", value: money(METRICS.mrr), sub: "billed on renewal" },
     { label: "Unused sessions owed", value: METRICS.unusedSessions.toLocaleString(), sub: `≈ ${money(METRICS.unusedValue)} in delivery owed`, accent: true },
   ];
+
+  const invRows = packages
+    .filter((p) => p.deliverable === "item")
+    .map((p) => {
+      const cfg = p.item_config || {};
+      const tracked = !!cfg.track_inventory;
+      const stock = tracked ? Number(cfg.stock ?? 0) : null;
+      const low = tracked && stock <= (cfg.low_stock_at ?? 3);
+      const out = tracked && stock <= 0;
+      return { id: p.id, name: p.name, price: p.price, tracked, stock, low, out, sku: cfg.sku };
+    });
+  const trackedRows = invRows.filter((r) => r.tracked);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -589,6 +527,57 @@ function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewP
           ))}
         </div>
       </Card>
+
+      {invRows.length > 0 && (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+            <div>
+              <Eyebrow>Inventory</Eyebrow>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "5px 0 0" }}>Stock on hand</h3>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {(() => {
+                const lowCount = trackedRows.filter((r) => r.low && !r.out).length;
+                const outCount = trackedRows.filter((r) => r.out).length;
+                return (
+                  <>
+                    {outCount > 0 && <Pill bg={RED_TINT} color={ALERT_RED}>{outCount} out</Pill>}
+                    {lowCount > 0 && <Pill bg={AMBER_TINT} color={AMBER}>{lowCount} low</Pill>}
+                    {outCount === 0 && lowCount === 0 && <Pill bg={GREEN_TINT} color={GREEN}>All stocked</Pill>}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+          <div>
+            {invRows.map((r, i) => (
+              <div key={r.id} onClick={() => onOpenPackage(r.id)}
+                style={{ display: "flex", alignItems: "center", gap: 16, padding: "15px 20px", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, cursor: "pointer" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = PAGE_BG)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <span style={{ width: 34, height: 34, borderRadius: 9, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" /></svg>
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>{r.name}</div>
+                  <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{r.sku ? `SKU ${r.sku} · ` : ""}{money(r.price)}</div>
+                </div>
+                {r.tracked ? (
+                  <>
+                    <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 600, color: r.out ? ALERT_RED : r.low ? AMBER : TEXT }}>{r.stock}</div>
+                    {r.out ? <Pill bg={RED_TINT} color={ALERT_RED}>Out of stock</Pill>
+                      : r.low ? <Pill bg={AMBER_TINT} color={AMBER}>Low</Pill>
+                      : <Pill bg={GREEN_TINT} color={GREEN}>In stock</Pill>}
+                  </>
+                ) : (
+                  <Pill bg="#eef2f1" color={TEXT_SEC}>Not tracked</Pill>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
@@ -1364,7 +1353,6 @@ function BuilderShell({ editor, routingActive, services, onCreateService, onChan
 const TABS = [
   { id: "setup", label: "Setup & routing" },
   { id: "packages", label: "Packages" },
-  { id: "inventory", label: "Inventory" },
   { id: "giftcards", label: "Gift cards & promos" },
   { id: "subscriptions", label: "Subscriptions" },
   { id: "payments", label: "Payments" },
@@ -1484,7 +1472,6 @@ export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
                   onNewPackage={openNew}
                 />
               )}
-              {tab === "inventory" && <InventoryTab packages={packages} />}
               {tab === "giftcards" && <GiftPromoTab />}
               {tab === "subscriptions" && <SubscriptionsTab onOpenClient={onOpenClient} />}
               {tab === "payments" && (
