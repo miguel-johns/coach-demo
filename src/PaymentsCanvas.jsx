@@ -371,7 +371,7 @@ function SetupTab({ routingActive, onActivate }) {
   );
 }
 
-// ── Empty state (Payments / Payouts tabs) ───────────────��─���─────
+// ── Empty state (Payments / Payouts tabs) ───────────────���─���─────
 function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   return (
     <Card>
@@ -443,8 +443,68 @@ function GiftPromoTab() {
   );
 }
 
+// ── Inventory row (inline stock editing) ────────────────────────
+function InventoryRow({ r, first, onUpdateInventory, onOpenPackage }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(String(r.stock ?? 0));
+
+  const stepBtn = { width: 30, height: 30, borderRadius: 7, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 };
+
+  const startEdit = () => { setVal(String(r.stock ?? 0)); setEditing(true); };
+  const commit = () => { onUpdateInventory(r.id, { stock: Math.max(0, Math.round(+val || 0)) }); setEditing(false); };
+  const bump = (delta) => onUpdateInventory(r.id, { stock: Math.max(0, (r.stock ?? 0) + delta) });
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderTop: first ? "none" : `1px solid ${BORDER}` }}>
+      <span style={{ width: 34, height: 34, borderRadius: 9, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" /></svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>{r.name}</div>
+        <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>
+          {r.sku ? `SKU ${r.sku} · ` : ""}{money(r.price)}
+          {" · "}
+          <button onClick={() => onOpenPackage(r.id)} style={{ background: "none", border: "none", color: TEAL, fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 12.5 }}>Edit details</button>
+        </div>
+      </div>
+
+      {r.tracked ? (
+        editing ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <input
+              autoFocus type="number" min="0" value={val}
+              onChange={(e) => setVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) commit(); if (e.key === "Escape") setEditing(false); }}
+              style={{ ...inputStyle, width: 90, fontFamily: MONO, textAlign: "right" }}
+            />
+            <button onClick={commit} style={{ background: TEAL, color: WHITE, border: "none", borderRadius: 7, padding: "8px 13px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>Save</button>
+            <button onClick={() => setEditing(false)} style={{ background: WHITE, color: TEXT_SEC, border: `1px solid ${BORDER}`, borderRadius: 7, padding: "8px 11px", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            {r.out ? <Pill bg={RED_TINT} color={ALERT_RED}>Out of stock</Pill>
+              : r.low ? <Pill bg={AMBER_TINT} color={AMBER}>Low</Pill>
+              : <Pill bg={GREEN_TINT} color={GREEN}>In stock</Pill>}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button aria-label="Decrease stock" onClick={() => bump(-1)} style={stepBtn}>−</button>
+              <button onClick={startEdit} title="Set exact count" style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: r.out ? ALERT_RED : r.low ? AMBER : TEXT, minWidth: 44, textAlign: "center", background: "none", border: "none", cursor: "pointer", padding: "0 2px" }}>{r.stock}</button>
+              <button aria-label="Increase stock" onClick={() => bump(1)} style={stepBtn}>+</button>
+            </div>
+          </div>
+        )
+      ) : (
+        <button onClick={() => onUpdateInventory(r.id, { track_inventory: true, stock: r.stock ?? 0 })}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 13px", fontSize: 12.5, fontWeight: 700, color: TEAL, cursor: "pointer", flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          Set up tracking
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Packages tab ────────────────────────────────────────────────
-function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewPackage }) {
+function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewPackage, onUpdateInventory }) {
   const tiles = [
     { label: "Active subscriptions", value: METRICS.activeSubs.toLocaleString(), sub: "across published packages" },
     { label: "Monthly recurring", value: money(METRICS.mrr), sub: "billed on renewal" },
@@ -551,29 +611,7 @@ function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewP
           </div>
           <div>
             {invRows.map((r, i) => (
-              <div key={r.id} onClick={() => onOpenPackage(r.id)}
-                style={{ display: "flex", alignItems: "center", gap: 16, padding: "15px 20px", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, cursor: "pointer" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = PAGE_BG)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                <span style={{ width: 34, height: 34, borderRadius: 9, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" /></svg>
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>{r.name}</div>
-                  <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>{r.sku ? `SKU ${r.sku} · ` : ""}{money(r.price)}</div>
-                </div>
-                {r.tracked ? (
-                  <>
-                    <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 600, color: r.out ? ALERT_RED : r.low ? AMBER : TEXT }}>{r.stock}</div>
-                    {r.out ? <Pill bg={RED_TINT} color={ALERT_RED}>Out of stock</Pill>
-                      : r.low ? <Pill bg={AMBER_TINT} color={AMBER}>Low</Pill>
-                      : <Pill bg={GREEN_TINT} color={GREEN}>In stock</Pill>}
-                  </>
-                ) : (
-                  <Pill bg="#eef2f1" color={TEXT_SEC}>Not tracked</Pill>
-                )}
-              </div>
+              <InventoryRow key={r.id} r={r} first={i === 0} onUpdateInventory={onUpdateInventory} onOpenPackage={onOpenPackage} />
             ))}
           </div>
         </Card>
@@ -1373,6 +1411,15 @@ export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
   const pickPreset = (preset) => setEditor({ stage: "build", isNew: true, draft: newPackageFrom(preset, services) });
   const openExisting = (id) => { const p = packages.find((x) => x.id === id); setEditor({ stage: "build", isNew: false, id, draft: JSON.parse(JSON.stringify(p)) }); };
 
+  // Inline inventory edits from the Packages tab (no full editor needed).
+  const updateInventory = (id, patch) => setPackages((prev) => prev.map((p) => {
+    if (p.id !== id) return p;
+    const cfg = { track_inventory: false, stock: 0, fulfillment: "pickup", variants: [], ...(p.item_config || {}) };
+    const next = { ...cfg, ...patch };
+    if (typeof next.stock === "number") next.stock = Math.max(0, Math.round(next.stock));
+    return { ...p, item_config: next };
+  }));
+
   const handleSave = (draft, status) => {
     setPackages((prev) => {
       if (editor.isNew) {
@@ -1470,6 +1517,7 @@ export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
                   onGoSetup={() => setTab("setup")}
                   onOpenPackage={openExisting}
                   onNewPackage={openNew}
+                  onUpdateInventory={updateInventory}
                 />
               )}
               {tab === "giftcards" && <GiftPromoTab />}
