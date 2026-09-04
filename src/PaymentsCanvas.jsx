@@ -371,7 +371,7 @@ function SetupTab({ routingActive, onActivate }) {
   );
 }
 
-// ── Empty state (Payments / Payouts tabs) ───────────────���������─────
+// ── Empty state (Payments / Payouts tabs) ───────────────����������─────
 function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   return (
     <Card>
@@ -475,7 +475,7 @@ function GiftCardSection({ cards, onAdd, onRemove }) {
 
   return (
     <Card>
-      <SectionHead icon="gift" eyebrow="Stored value" title="Gift cards" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
+      <GiftSectionHead icon="gift" eyebrow="Stored value" title="Gift cards" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
       {adding && (
         <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, background: PAGE_BG }}>
           <label style={fieldLabel}>Amount</label>
@@ -536,7 +536,7 @@ function PromoSection({ promos, onAdd, onToggle, onRemove }) {
 
   return (
     <Card>
-      <SectionHead icon="promo" eyebrow="Discounts" title="Promo codes" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
+      <GiftSectionHead icon="promo" eyebrow="Discounts" title="Promo codes" adding={adding} onToggleAdd={() => setAdding((v) => !v)} />
       {adding && (
         <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, background: PAGE_BG }}>
           <label style={fieldLabel}>Code</label>
