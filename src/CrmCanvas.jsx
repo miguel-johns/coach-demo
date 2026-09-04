@@ -481,6 +481,14 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [tagFor, setTagFor] = useState(null);
   const [added, setAdded] = useState({});
   const [pageFilter, setPageFilter] = useState(null);
+  // Pipeline board edits: stage overrides, removed cards, and manually added cards.
+  const [pipeMoves, setPipeMoves] = useState({});
+  const [pipeRemoved, setPipeRemoved] = useState({});
+  const [pipeExtra, setPipeExtra] = useState([]);
+  const [dragCard, setDragCard] = useState(null);
+  const [dragOverCol, setDragOverCol] = useState(null);
+  const [addingCol, setAddingCol] = useState(null);
+  const [addName, setAddName] = useState("");
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
   useEffect(() => {
@@ -521,6 +529,25 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const openContact = (name, origin) => (e) => {
     if (e) e.stopPropagation();
     setWho(name); setFrom(origin); setScreen("contact"); setDraft(null); setSent(false);
+  };
+  // ── Pipeline board mutations ──
+  const moveCard = (name, stage) => {
+    setPipeMoves((prev) => ({ ...prev, [name]: stage }));
+    setDragCard(null);
+    setDragOverCol(null);
+  };
+  const removeCard = (name) => (e) => {
+    if (e) e.stopPropagation();
+    setPipeRemoved((prev) => ({ ...prev, [name]: true }));
+  };
+  const addCard = (stage) => {
+    const name = addName.trim();
+    if (!name) return;
+    setPipeExtra((prev) => prev.concat([{ name }]));
+    setPipeMoves((prev) => ({ ...prev, [name]: stage }));
+    setPipeRemoved((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    setAddName("");
+    setAddingCol(null);
   };
   const compose = (name, action) => (e) => {
     if (e) e.stopPropagation();
@@ -714,9 +741,13 @@ export default function CrmCanvas({ onClose, isMobile }) {
   );
 
   const Pipeline = () => {
+    const stageFor = (r) => pipeMoves[r[0]] || stageOf(r[4]);
+    const rowsAll = allRows
+      .concat(pipeExtra.map((c) => [c.name, "Warm", "Added by you. Open to fill in the details.", "Manual", "New", "Just now", "Lead"]))
+      .filter((r) => !pipeRemoved[r[0]]);
     const cols = PIPE_COLS.map((col) => ({
       ...col,
-      rows: allRows.filter((r) => stageOf(r[4]) === col.key),
+      rows: rowsAll.filter((r) => stageFor(r) === col.key),
     }));
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -724,27 +755,64 @@ export default function CrmCanvas({ onClose, isMobile }) {
           <div>
             <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Pipeline</h3>
             <p style={{ margin: "6px 0 0", fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, maxWidth: 620 }}>
-              Every contact on one board. Milton moves people as billing and behaviour change, you just read across.
+              Drag a card to move someone between stages, use the plus to add a card, or the ✕ to take one off the board.
             </p>
           </div>
           <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>
-            {allRows.length} in play
+            {rowsAll.length} in play
           </span>
         </div>
 
         <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, alignItems: "flex-start" }}>
           {cols.map((col) => (
-            <div key={col.key} style={{ flex: "1 0 0", minWidth: isMobile ? 224 : 186, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div key={col.key}
+              onDragOver={(e) => { if (dragCard) { e.preventDefault(); if (dragOverCol !== col.key) setDragOverCol(col.key); } }}
+              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCol((c) => (c === col.key ? null : c)); }}
+              onDrop={(e) => { e.preventDefault(); if (dragCard) moveCard(dragCard, col.key); }}
+              style={{ flex: "1 0 0", minWidth: isMobile ? 224 : 186, display: "flex", flexDirection: "column", gap: 10,
+                borderRadius: 14, padding: dragOverCol === col.key ? 6 : 0, margin: dragOverCol === col.key ? -6 : 0,
+                background: dragOverCol === col.key ? TEAL_LIGHT : "transparent", outline: dragOverCol === col.key ? `1px dashed ${TEAL}` : "none", transition: "background 0.12s" }}
+            >
               <div style={{ background: INK_050, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "10px 12px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 999, background: col.dot, flexShrink: 0 }} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{col.key}</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, fontFamily: MONO }}>{col.rows.length}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, fontFamily: MONO }}>{col.rows.length}</span>
+                    <button onClick={() => { setAddingCol((c) => (c === col.key ? null : col.key)); setAddName(""); }}
+                      aria-label={`Add a card to ${col.key}`} title={`Add a card to ${col.key}`}
+                      style={{ width: 22, height: 22, borderRadius: 7, border: `1px solid ${BORDER}`, background: WHITE, color: TEAL, fontSize: 15, lineHeight: 1, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                      {addingCol === col.key ? "\u00d7" : "+"}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>{col.note}</div>
               </div>
+
+              {addingCol === col.key && (
+                <div style={{ background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 12, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <input autoFocus value={addName} onChange={(e) => setAddName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) addCard(col.key);
+                      if (e.key === "Escape") { setAddingCol(null); setAddName(""); }
+                    }}
+                    placeholder="Name"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none" }}
+                  />
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => addCard(col.key)} disabled={!addName.trim()}
+                      style={{ flex: 1, padding: "6px 8px", borderRadius: 8, border: "none", background: addName.trim() ? TEAL : INK_050, color: addName.trim() ? WHITE : TEXT_SEC, fontSize: 12, fontWeight: 700, cursor: addName.trim() ? "pointer" : "default" }}>
+                      Add to {col.key}
+                    </button>
+                    <button onClick={() => { setAddingCol(null); setAddName(""); }}
+                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT_SEC, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {col.rows.map((r) => {
@@ -753,10 +821,20 @@ export default function CrmCanvas({ onClose, isMobile }) {
                   const av = AV[(idx < 0 ? 6 : idx) % AV.length];
                   return (
                     <div key={name} onClick={openContact(name, "pipeline")}
-                      style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, cursor: "pointer" }}
+                      draggable
+                      onDragStart={(e) => { setDragCard(name); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", name); } catch (_) {} }}
+                      onDragEnd={() => { setDragCard(null); setDragOverCol(null); }}
+                      style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, paddingRight: 30, cursor: "pointer", position: "relative", opacity: dragCard === name ? 0.4 : 1 }}
                       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#bfe0dc")}
                       onMouseLeave={(e) => (e.currentTarget.style.borderColor = BORDER)}
                     >
+                      <button onClick={removeCard(name)} aria-label={`Remove ${name} from the board`} title="Remove from board"
+                        style={{ position: "absolute", top: 8, right: 8, width: 20, height: 20, borderRadius: 6, border: "none", background: "transparent", color: TEXT_SEC, fontSize: 14, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = INK_050; e.currentTarget.style.color = ALERT_RED; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}
+                      >
+                        {"\u00d7"}
+                      </button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                         <Avatar initials={initialsOf(name)} bg={av} size={26} />
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
