@@ -111,6 +111,34 @@ function fmtT(t) {
 const range = (t, d) => fmtT(t) + " – " + fmtT(t + d);
 const overlaps = (a1, a2, b1, b2) => a1 < b2 && b1 < a2;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// Google-Calendar-style side-by-side layout. Groups events into clusters of
+// transitively-overlapping blocks, packs each into the fewest lanes, and returns
+// { e, lane, lanes } so overlapping bookings render next to each other.
+function layoutLanes(events) {
+  const evs = [...events].sort((a, b) => a.start - b.start || a.dur - b.dur);
+  const out = [];
+  let cluster = [], clusterEnd = -1;
+  const flush = () => {
+    if (!cluster.length) return;
+    const laneEnds = [];
+    cluster.forEach((e) => {
+      let lane = laneEnds.findIndex((end) => e.start >= end);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
+      laneEnds[lane] = e.start + e.dur;
+      e._lane = lane;
+    });
+    const total = laneEnds.length;
+    cluster.forEach((e) => out.push({ e, lane: e._lane, lanes: total }));
+    cluster = [];
+  };
+  evs.forEach((e) => {
+    if (cluster.length && e.start >= clusterEnd) flush();
+    cluster.push(e);
+    clusterEnd = Math.max(clusterEnd, e.start + e.dur);
+  });
+  flush();
+  return out;
+}
 const snapQ = (v) => Math.round(v * 4) / 4;
 const initials = (n) => n.split(" ").map((w) => w.charAt(0)).join("").slice(0, 2);
 const trainerName = (id) => { const t = TRAINERS.find((x) => x.id === id); return t ? t.name : ""; };
@@ -187,6 +215,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [day, setDay] = useState(TODAY);
   const [loc, setLoc] = useState("main");
   const [trainerFilter, setTrainerFilter] = useState("alex");
+  const [facFilter, setFacFilter] = useState("all");
   const [sheet, setSheet] = useState(null);
   const [ctype, setCtype] = useState("oneone");
   const [sel, setSel] = useState(null);
@@ -381,7 +410,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     let patch = {};
     if (d.mode === "move") {
       patch.start = clamp(snapQ(d.orig.start + dH), DAY_START, DAY_END - d.orig.dur);
-      if (d.view === "week") {
+      if (d.columns.length) {
         const colW = (d.rect.width - d.gutter) / d.colCount;
         const idx = clamp(Math.floor((ev.clientX - d.rect.left - d.gutter) / colW), 0, d.colCount - 1);
         patch.date = d.columns[idx];
@@ -416,7 +445,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     ev.stopPropagation();
     const gridEl = view === "week" ? weekGridRef.current : facGridRef.current;
     if (!gridEl) return;
-    const columns = view === "week" ? days.map((d) => d.date) : [];
+    const columns = days.map((d) => d.date);
     dragRef.current = {
       id: e.id, mode, view, columns,
       rect: gridEl.getBoundingClientRect(), gutter: 52, colCount: columns.length,
@@ -743,7 +772,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   /* ---------- render helpers ---------- */
   const PAD = narrow ? 16 : 28;
 
-  const EventBlock = ({ e, ghost, view }) => {
+  const EventBlock = ({ e, ghost, view, lane = 0, lanes = 1 }) => {
     const conflict = check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft;
     const short = e.dur < 0.7;
     const tight = !!e.cap && e.dur < 1;
@@ -752,6 +781,12 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     if (e.status === "unconfirmed") meta = "Unconfirmed";
     if (e.draft) meta = "Draft";
     const st = evStyle(e, !!e.draft || !!ghost, conflict);
+    if (lanes > 1) {
+      const laneW = `((100% - 6px) / ${lanes})`;
+      st.left = `calc(3px + ${laneW} * ${lane})`;
+      st.width = `calc(${laneW} - 2px)`;
+      st.right = "auto";
+    }
     if (tight && e.filled >= e.cap && !e.draft && !conflict) { st.background = W_BG; st.borderLeft = `3px solid ${W_MID}`; }
     const full = e.cap && e.filled >= e.cap && e.dur >= 1;
     const draggable = !e.instance && !ghost;
@@ -839,7 +874,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                     {d.events.filter((e) => e.kind === "room" && roomBuffer(e.room)).map((e) => (
                       <div key={"b" + e.id} style={{ position: "absolute", left: 3, right: 3, top: (e.start + e.dur - DAY_START) * ROW + 1, height: (roomBuffer(e.room) / 60) * ROW - 2, borderRadius: 5, border: `1px dashed ${KIND.room.bar}`, background: "repeating-linear-gradient(135deg, rgba(139,92,246,.07) 0 5px, rgba(139,92,246,.16) 5px 10px)", fontSize: 8.5, fontWeight: 700, letterSpacing: ".06em", color: KIND.room.bar, display: "flex", alignItems: "center", paddingLeft: 5, overflow: "hidden", zIndex: 3 }}>△ BUFFER</div>
                     ))}
-                    {d.events.map((e) => <EventBlock key={e.id} e={e} view="week" />)}
+                    {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="week" lane={lane} lanes={lanes} />)}
                     {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                   </div>
                 ))}
@@ -852,69 +887,64 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   }
 
   function FacilityPanel() {
-    // Narrower gutter than the mockup's 130px, and columns that can shrink, so
-    // the default 5 resources fit the card without a horizontal scrollbar.
-    // Past ~7 resources the min kicks in and overflowX takes over.
-    const RES_COLS = `52px repeat(${resources.length}, minmax(84px,1fr))`;
+    // Week view (days as columns) with a resource filter. "All" shows every
+    // trainer and room stacked together, so concurrent bookings are laid out
+    // side by side via layoutLanes — same drag/move/resize as the coach week.
+    const [fType, fId] = facFilter === "all" ? ["all"] : facFilter.split(":");
+    const facOptions = [{ v: "all", label: "All resources" }]
+      .concat(TRAINERS.map((t) => ({ v: "t:" + t.id, label: t.name })))
+      .concat(ROOMS.map((r) => ({ v: "r:" + r.id, label: r.name })));
+    const prefill = fType === "t" ? { trainer: fId } : fType === "r" ? { room: fId } : {};
+    const facDays = days.map((d) => {
+      let evs = eventsOn(d.date);
+      if (fType === "t") evs = evs.filter((e) => e.trainer === fId);
+      else if (fType === "r") evs = evs.filter((e) => e.room === fId);
+      return { ...d, events: evs };
+    });
+    const weekConflicts = facDays.reduce((n, d) => n + d.events.filter((e) => check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft).length, 0);
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, -1))}>‹</button>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: FG1 }}>{fmtLong(day)}</div>
-            <div style={{ fontSize: 11, color: FG3, marginTop: 1 }}>Facility {hoursText("facility", day)} · {TRAINERS.length} trainers · {ROOMS.length} rooms · {dayEvents.length} bookings</div>
-          </div>
-          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, 1))}>›</button>
-          <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setDay(TODAY)}>Today</button>
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: dayConflicts.length ? D_BG : S_BG, color: dayConflicts.length ? D_FG : S_FG }}>
-            {dayConflicts.length ? `${dayConflicts.length} conflict${dayConflicts.length > 1 ? "s" : ""}` : "No conflicts"}
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
+          <div style={{ fontSize: 14, fontWeight: 600, color: FG1, minWidth: narrow ? 0 : 190 }}>{narrow ? `${fmtDate(weekStart)}–${fmtDate(addDays(weekStart, 6))}` : `${fmtDate(weekStart)} – ${fmtDate(addDays(weekStart, 6))}, 2026`}</div>
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
+          <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setWeekStart(WEEK0)}>This week</button>
+          <Select value={facFilter} onChange={(e) => setFacFilter(e.target.value)} options={facOptions} />
+          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: weekConflicts ? D_BG : S_BG, color: weekConflicts ? D_FG : S_FG }}>
+            {weekConflicts ? `${weekConflicts} conflict${weekConflicts > 1 ? "s" : ""}` : "No conflicts"}
           </span>
-          <button style={btn("primary")} onClick={() => openCreate({ date: day, start: 16 }, "oneone")}>+ Book</button>
+          <button style={btn("primary")} onClick={() => openCreate({ date: TODAY, start: 16, ...prefill }, "oneone")}>+ Book</button>
         </div>
 
-        {dayConflicts.map((c, i) => (
-          <div key={i} style={{ background: D_BG, border: `1px solid ${D_MID}33`, borderRadius: 12, padding: "12px 15px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: D_FG }}>{c.title}</div>
-              <div style={{ fontSize: 11.5, color: FG2, marginTop: 3, lineHeight: 1.45 }}>{c.body}</div>
-            </div>
-            <button style={{ ...btn("secondary"), fontSize: 11.5, padding: "7px 13px" }} onClick={c.fix}>{c.fixLabel}</button>
-            <button style={{ border: 0, background: "transparent", color: D_FG, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={c.open}>Open</button>
-          </div>
-        ))}
-
         <Card style={{ overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            {/* No minWidth: the columns flex to fit the card so the admin grid
-                does not get its own horizontal scrollbar at normal widths. */}
-            <div>
-              <div style={{ display: "grid", gridTemplateColumns: RES_COLS, borderBottom: `1px solid ${B_SUB}` }}>
-                <div />
-                {resources.map((r) => (
-                  <div key={r.id + r.type} style={{ padding: "9px 8px", borderLeft: `1px solid ${B_SUB}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: FG1 }}>{r.name}</div>
-                    <div style={{ fontSize: 9.5, color: FG4, marginTop: 1 }}>{r.kind}</div>
-                  </div>
+          <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, borderBottom: `1px solid ${B_SUB}` }}>
+            <div />
+            {facDays.map((d) => (
+              <div key={d.date} style={{ textAlign: "center", padding: "9px 2px 7px", borderLeft: `1px solid ${B_SUB}` }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", color: FG4 }}>{d.dow}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, fontFamily: MONO, marginTop: 2, color: d.isToday ? WHITE : FG1, ...(d.isToday ? { background: T800, borderRadius: 999, width: 28, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center" } : {}) }}>{d.dom}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".08em", marginTop: 3, height: 12, color: d.hoursLabel === "CLOSED" ? D_FG : W_FG }}>{d.hoursLabel}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ maxHeight: 520, overflowY: "auto" }}>
+            <div ref={facGridRef} style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
+              <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
+                {HOURS.map((h, i) => (
+                  <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
                 ))}
               </div>
-              <div>
-                <div ref={facGridRef} style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
-                  <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
-                    {HOURS.map((h, i) => (
-                      <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
-                    ))}
-                  </div>
-                  {resources.map((r) => (
-                    <div key={r.id + r.type} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}` }}>
-                      {HOURS.map((_, h) => (
-                        <div key={h} onClick={() => openCreate({ date: day, start: DAY_START + h, ...(r.type === "trainer" ? { trainer: r.id } : { room: r.id }) }, "oneone")}
-                          style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
-                      ))}
-                      {r.events.map((e) => <EventBlock key={e.id + r.id} e={e} view="fac" />)}
-                    </div>
+              {facDays.map((d) => (
+                <div key={d.date} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}`, background: d.closedLabel ? INK100 : "transparent" }}>
+                  {HOURS.map((_, h) => (
+                    <div key={h} onClick={() => openCreate({ date: d.date, start: DAY_START + h, ...prefill }, "oneone")}
+                      style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
                   ))}
+                  {d.closedLabel && <div style={{ position: "absolute", top: 8, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: ".08em", color: FG4 }}>{d.closedLabel}</div>}
+                  {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="fac" lane={lane} lanes={lanes} />)}
+                  {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </Card>
