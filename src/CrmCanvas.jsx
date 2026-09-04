@@ -668,7 +668,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
     : filter === "Quiet" ? allRows.filter((r) => r[4] === "Dormant" || r[4] === "Reaching out")
     : allRows.filter((r) => r[4] === filter);
 
-  const TABS = [["queue", "Queue"], ["pipeline", "Pipeline"], ["list", "Contact list"], ["pages", "Pages"]];
+  const TABS = [["queue", "Queue"], ["pipeline", "Pipeline"], ["list", "Contact list"], ["pages", "Hooks"]];
   const tabActive = (k) =>
     screen === k || (["contact", "answers", "brief"].includes(screen) && from === k);
 
