@@ -34,6 +34,18 @@ const KIND = {
   internal: { bg: "#FCEDD2", bar: "#E89C3A", label: "Internal" },
   block: { bg: "#E4E8EE", bar: "#7788A0", label: "Blocked time" },
 };
+// Per-resource palette for the admin "all resources" views. Trainer and room
+// ids are unique, so a single lookup covers both. Used to tint event blocks by
+// who/where instead of by session type.
+const RESOURCE_COLORS = {
+  alex:  { bg: "#E4F0F0", bar: "#0E7C7B" },
+  dana:  { bg: "#E2ECFD", bar: "#3F88F2" },
+  priya: { bg: "#EDE4FE", bar: "#8B5CF6" },
+  a:     { bg: "#E8F7E3", bar: "#3FA053" },
+  b:     { bg: "#FCEDD2", bar: "#E89C3A" },
+  rec:   { bg: "#FCE1EC", bar: "#D6457D" },
+  mas:   { bg: "#DEEFF2", bar: "#1F94A6" },
+};
 const HOURS = ["6 AM","7 AM","8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM","6 PM","7 PM","8 PM"];
 const DOWS = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
 const DOW_FULL = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -176,8 +188,8 @@ function avatarStyle(id, size) {
   const s = size || 24;
   return { width: s, height: s, flex: `0 0 ${s}px`, borderRadius: 999, fontSize: s > 24 ? 10 : 9.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", background: tints[id] || INK150, color: fg[id] || FG2 };
 }
-function evStyle(e, ghost, conflict) {
-  const k = KIND[e.kind] || KIND.oneone;
+function evStyle(e, ghost, conflict, color) {
+  const k = color || KIND[e.kind] || KIND.oneone;
   return {
     position: "absolute", left: 3, right: 3, top: (e.start - DAY_START) * ROW + 2, height: e.dur * ROW - 5,
     background: ghost ? "transparent" : conflict ? D_BG : k.bg,
@@ -216,6 +228,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [loc, setLoc] = useState("main");
   const [trainerFilter, setTrainerFilter] = useState("alex");
   const [facFilter, setFacFilter] = useState("all");
+  const [facView, setFacView] = useState("week");
   const [sheet, setSheet] = useState(null);
   const [ctype, setCtype] = useState("oneone");
   const [sel, setSel] = useState(null);
@@ -772,15 +785,16 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   /* ---------- render helpers ---------- */
   const PAD = narrow ? 16 : 28;
 
-  const EventBlock = ({ e, ghost, view, lane = 0, lanes = 1 }) => {
+  const EventBlock = ({ e, ghost, view, lane = 0, lanes = 1, color }) => {
     const conflict = check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft;
     const short = e.dur < 0.7;
     const tight = !!e.cap && e.dur < 1;
+    const barColor = (color || KIND[e.kind] || KIND.oneone).bar;
     let meta = e.instance ? roomName(e.room) : e.kind === "oneone" ? "1:1 · " + roomName(e.room) : e.kind === "room" ? roomName(e.room) : e.kind === "block" ? "Not bookable" : "Internal";
     if (tight) meta = `${e.filled}/${e.cap}`;
     if (e.status === "unconfirmed") meta = "Unconfirmed";
     if (e.draft) meta = "Draft";
-    const st = evStyle(e, !!e.draft || !!ghost, conflict);
+    const st = evStyle(e, !!e.draft || !!ghost, conflict, color);
     if (lanes > 1) {
       const laneW = `((100% - 6px) / ${lanes})`;
       st.left = `calc(3px + ${laneW} * ${lane})`;
@@ -808,7 +822,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
         {e.cap && e.filled < e.cap && e.dur >= 1 && (
           <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ flex: 1, height: 3, borderRadius: 999, background: "rgba(11,20,23,.08)", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${(e.filled / e.cap) * 100}%`, background: KIND[e.kind].bar }} />
+              <div style={{ height: "100%", width: `${(e.filled / e.cap) * 100}%`, background: barColor }} />
             </div>
             <span style={{ fontSize: 8.5, fontWeight: 700, color: FG3, fontFamily: MONO }}>{e.filled}/{e.cap}</span>
           </div>
@@ -816,6 +830,31 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
       </button>
     );
   };
+
+  const ResourceLegend = () => (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center" }}>
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: FG4, textTransform: "uppercase" }}>Trainers</span>
+      {TRAINERS.map((t) => (
+        <span key={t.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: FG2 }}>
+          <span style={{ width: 11, height: 11, borderRadius: 3, background: RESOURCE_COLORS[t.id].bg, borderLeft: `3px solid ${RESOURCE_COLORS[t.id].bar}` }} />{t.name}
+        </span>
+      ))}
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: FG4, textTransform: "uppercase", marginLeft: 4 }}>Rooms</span>
+      {ROOMS.map((r) => (
+        <span key={r.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: FG2 }}>
+          <span style={{ width: 11, height: 11, borderRadius: 3, background: RESOURCE_COLORS[r.id].bg, borderLeft: `3px solid ${RESOURCE_COLORS[r.id].bar}` }} />{r.name}
+        </span>
+      ))}
+    </div>
+  );
+
+  const FacViewToggle = () => (
+    <div style={{ display: "inline-flex", gap: 3, background: INK100, padding: 3, borderRadius: 999 }}>
+      {[["week", "Week"], ["day", "By resource"]].map((v) => (
+        <button key={v[0]} style={seg(facView === v[0])} onClick={() => setFacView(v[0])}>{v[1]}</button>
+      ))}
+    </div>
+  );
 
   /* ---------- panels ---------- */
   function WeekPanel() {
@@ -909,12 +948,14 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <div style={{ fontSize: 14, fontWeight: 600, color: FG1, minWidth: narrow ? 0 : 190 }}>{narrow ? `${fmtDate(weekStart)}–${fmtDate(addDays(weekStart, 6))}` : `${fmtDate(weekStart)} – ${fmtDate(addDays(weekStart, 6))}, 2026`}</div>
           <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
           <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setWeekStart(WEEK0)}>This week</button>
+          <FacViewToggle />
           <Select value={facFilter} onChange={(e) => setFacFilter(e.target.value)} options={facOptions} />
           <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: weekConflicts ? D_BG : S_BG, color: weekConflicts ? D_FG : S_FG }}>
             {weekConflicts ? `${weekConflicts} conflict${weekConflicts > 1 ? "s" : ""}` : "No conflicts"}
           </span>
           <button style={btn("primary")} onClick={() => openCreate({ date: TODAY, start: 16, ...prefill }, "oneone")}>+ Book</button>
         </div>
+        {fType === "all" && <ResourceLegend />}
 
         <Card style={{ overflow: "hidden" }}>
           <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, borderBottom: `1px solid ${B_SUB}` }}>
@@ -941,10 +982,79 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                       style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
                   ))}
                   {d.closedLabel && <div style={{ position: "absolute", top: 8, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: ".08em", color: FG4 }}>{d.closedLabel}</div>}
-                  {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="fac" lane={lane} lanes={lanes} />)}
+                  {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="fac" lane={lane} lanes={lanes} color={fType === "all" ? RESOURCE_COLORS[e.trainer || e.room] : undefined} />)}
                   {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                 </div>
               ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  function ResourceDayPanel() {
+    // Single day, one column per resource (trainers then rooms). Each column is
+    // tinted with that resource's color so who/where reads at a glance.
+    const RES_COLS = `52px repeat(${resources.length}, minmax(84px,1fr))`;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, -1))}>‹</button>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: FG1 }}>{fmtLong(day)}</div>
+            <div style={{ fontSize: 11, color: FG3, marginTop: 1 }}>Facility {hoursText("facility", day)} · {TRAINERS.length} trainers · {ROOMS.length} rooms · {dayEvents.length} bookings</div>
+          </div>
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, 1))}>›</button>
+          <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setDay(TODAY)}>Today</button>
+          <FacViewToggle />
+          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: dayConflicts.length ? D_BG : S_BG, color: dayConflicts.length ? D_FG : S_FG }}>
+            {dayConflicts.length ? `${dayConflicts.length} conflict${dayConflicts.length > 1 ? "s" : ""}` : "No conflicts"}
+          </span>
+          <button style={btn("primary")} onClick={() => openCreate({ date: day, start: 16 }, "oneone")}>+ Book</button>
+        </div>
+
+        {dayConflicts.map((c, i) => (
+          <div key={i} style={{ background: D_BG, border: `1px solid ${D_MID}33`, borderRadius: 12, padding: "12px 15px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: D_FG }}>{c.title}</div>
+              <div style={{ fontSize: 11.5, color: FG2, marginTop: 3, lineHeight: 1.45 }}>{c.body}</div>
+            </div>
+            <button style={{ ...btn("secondary"), fontSize: 11.5, padding: "7px 13px" }} onClick={c.fix}>{c.fixLabel}</button>
+            <button style={{ border: 0, background: "transparent", color: D_FG, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={c.open}>Open</button>
+          </div>
+        ))}
+
+        <Card style={{ overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: RES_COLS, borderBottom: `1px solid ${B_SUB}` }}>
+                <div />
+                {resources.map((r) => (
+                  <div key={r.id + r.type} style={{ padding: "9px 8px", borderLeft: `1px solid ${B_SUB}`, borderTop: `3px solid ${RESOURCE_COLORS[r.id].bar}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: FG1 }}>{r.name}</div>
+                    <div style={{ fontSize: 9.5, color: FG4, marginTop: 1 }}>{r.kind}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ maxHeight: 520, overflowY: "auto" }}>
+                <div ref={facGridRef} style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
+                  <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
+                    {HOURS.map((h, i) => (
+                      <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
+                    ))}
+                  </div>
+                  {resources.map((r) => (
+                    <div key={r.id + r.type} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}` }}>
+                      {HOURS.map((_, h) => (
+                        <div key={h} onClick={() => openCreate({ date: day, start: DAY_START + h, ...(r.type === "trainer" ? { trainer: r.id } : { room: r.id }) }, "oneone")}
+                          style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
+                      ))}
+                      {layoutLanes(r.events).map(({ e, lane, lanes }) => <EventBlock key={e.id + r.id} e={e} view="fac" lane={lane} lanes={lanes} color={RESOURCE_COLORS[r.id]} />)}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </Card>
@@ -1558,7 +1668,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
       {/* body */}
       <div style={{ flex: 1, overflowY: "auto", padding: `${narrow ? 14 : 20}px ${PAD}px ${narrow ? 18 : 26}px` }}>
         {persona === "coach" && activeTab === "week" && <WeekPanel />}
-        {persona === "admin" && activeTab === "week" && <FacilityPanel />}
+        {persona === "admin" && activeTab === "week" && (facView === "day" ? <ResourceDayPanel /> : <FacilityPanel />)}
         {activeTab === "sessions" && <SessionsPanel />}
         {activeTab === "classes" && <ClassesPanel />}
         {activeTab === "templates" && <TemplatesPanel />}
