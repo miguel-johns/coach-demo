@@ -314,7 +314,7 @@ function OutputsPanel({ slug, isMobile, heading, note }) {
       <div style={{ padding: 18, borderBottom: `1px solid ${BORDER}` }}>
         <Eyebrow>{heading || "Three ways to share it"}</Eyebrow>
         <div style={{ fontSize: 12.5, color: TEXT_SEC, lineHeight: 1.55, marginTop: 8 }}>
-          {note || "All three are generated for you and stay in sync. Change the page and every one of them updates."}
+          {note || "All three are generated for you and stay in sync. Change the hook and every one of them updates."}
         </div>
       </div>
 
@@ -370,7 +370,7 @@ function OutputsPanel({ slug, isMobile, heading, note }) {
             </Btn>
           </div>
           <div style={{ fontSize: 12.5, color: TEXT_SEC, lineHeight: 1.55, margin: "6px 0 10px" }}>
-            Paste this once where you want the page to appear. It keeps your site&apos;s own header and footer.
+            Paste this once where you want the hook to appear. It keeps your site&apos;s own header and footer.
           </div>
           <pre style={{
             margin: 0, fontFamily: MONO, fontSize: 11.5, lineHeight: 1.65, color: "#dfeeea",
@@ -468,7 +468,7 @@ function Preview({ mode, headline, subhead, image, questions, bonusId, picked, s
               }}>
                 <span style={{ color: "#9fb0ab", display: "inline-flex" }}><Icon d={I_PLUS} size={22} /></span>
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Your page builds itself here</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Your hook builds itself here</div>
               <p style={{ margin: "8px auto 0", fontSize: 12.5, color: TEXT_SEC, lineHeight: 1.6, maxWidth: 300 }}>
                 Add a headline on the left and it lands here straight away. Every field you fill shows up the moment you type it.
               </p>
@@ -880,14 +880,14 @@ function PagesList({ pages, isMobile, width, onNew, onOpen, onOpenContacts }) {
         <Card style={{ padding: isMobile ? 26 : 46, textAlign: "center" }}>
           <div style={{ display: "inline-flex", marginBottom: 16 }}><MiltonMark size={34} /></div>
           <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
-            No pages yet
+            No hooks yet
           </h3>
           <p style={{ margin: "10px auto 0", fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.6, maxWidth: 430 }}>
-            A page is how someone new reaches you. Fill in a few fields and Milton builds it on your brand,
+            A hook is how someone new reaches you. Fill in a few fields and Milton builds it on your brand,
             then hands you a link, a QR code for the gym floor, and a snippet for your website.
           </p>
           <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-            <Btn kind="primary" onClick={onNew}><Icon d={I_PLUS} size={14} />Create your first page</Btn>
+            <Btn kind="primary" onClick={onNew}><Icon d={I_PLUS} size={14} />Create your first hook</Btn>
           </div>
         </Card>
       </div>
@@ -900,16 +900,16 @@ function PagesList({ pages, isMobile, width, onNew, onOpen, onOpenContacts }) {
         <MiltonMark size={26} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.6 }}>
-            Your {pages.length} pages have brought in {totalLeads} leads and {totalSales} sales.
+            Your {pages.length} hooks have brought in {totalLeads} leads and {totalSales} sales.
             The front desk QR is quietly your third best source this month.
           </div>
         </div>
         {!isMobile && (
-          <Btn kind="primary" onClick={onNew}><Icon d={I_PLUS} size={14} />New page</Btn>
+          <Btn kind="primary" onClick={onNew}><Icon d={I_PLUS} size={14} />New hook</Btn>
         )}
       </Card>
 
-      {isMobile && <Btn kind="primary" block onClick={onNew}><Icon d={I_PLUS} size={14} />New page</Btn>}
+      {isMobile && <Btn kind="primary" block onClick={onNew}><Icon d={I_PLUS} size={14} />New hook</Btn>}
 
       <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
         {wide && (
@@ -917,7 +917,7 @@ function PagesList({ pages, isMobile, width, onNew, onOpen, onOpenContacts }) {
             display: "grid", gridTemplateColumns: cols,
             gap: 12, padding: "10px 16px", borderBottom: `1px solid ${BORDER}`, background: INK_050,
           }}>
-            {["Page", "What it does", "Live at", "Results", "Share it"].map((h) => (
+            {["Hook", "What it does", "Live at", "Results", "Share it"].map((h) => (
               <div key={h} style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: TEXT_SEC }}>{h}</div>
             ))}
           </div>
@@ -965,7 +965,7 @@ function PagesList({ pages, isMobile, width, onNew, onOpen, onOpenContacts }) {
       </div>
 
       <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.55 }}>
-        Tap a page name to open it. Tap its results to see the people it brought in. Every page lives on your Milton subdomain.
+        Tap a hook name to open it. Tap its results to see the people it brought in. Every hook lives on your Milton subdomain.
       </div>
     </div>
   );
@@ -984,13 +984,13 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
   if (!mode) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <BackLink onClick={onBack}>All pages</BackLink>
+        <BackLink onClick={onBack}>All hooks</BackLink>
         <div>
           <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>
-            What is this page for?
+            What is this hook for?
           </h3>
           <p style={{ margin: "8px 0 0", fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.6, maxWidth: 560 }}>
-            Pick this first. Everything after it is a handful of fields, and Milton renders the finished page on your brand.
+            Pick this first. Everything after it is a handful of fields, and Milton renders the finished hook on your brand.
           </p>
         </div>
 
@@ -1023,7 +1023,7 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
   if (saved) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <BackLink onClick={onBack}>All pages</BackLink>
+        <BackLink onClick={onBack}>All hooks</BackLink>
         <div style={{ display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
           <span style={{ width: 30, height: 30, borderRadius: 999, background: GREEN_TINT, color: GREEN, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Icon d={I_CHECK} size={16} stroke={2.6} />
@@ -1051,11 +1051,11 @@ function PageBuilder({ isMobile, width, onBack, onSave }) {
   // ── The builder, form left and preview right ──
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <BackLink onClick={onBack}>All pages</BackLink>
+      <BackLink onClick={onBack}>All hooks</BackLink>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>New page</h3>
+          <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>New hook</h3>
           <ModePill mode={mode} />
           <button
             onClick={() => setMode(null)}
@@ -1121,12 +1121,12 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <BackLink onClick={onBack}>All pages</BackLink>
+      <BackLink onClick={onBack}>All hooks</BackLink>
 
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>{form.name || "Untitled page"}</h3>
+            <h3 style={{ margin: 0, fontSize: 21, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em" }}>{form.name || "Untitled hook"}</h3>
             <ModePill mode={page.mode} />
             <StatusPill published={page.published} />
           </div>
@@ -1155,8 +1155,8 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
 
       {/* Action row, above the preview */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: 10, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12 }}>
-        <Btn kind="primary" disabled={!page.published} title={page.published ? "Open the live page in a new tab" : "Publish first to open it"} onClick={() => openLive(form.slug)}>
-          <Icon d={I_EXT} size={14} />Open live page
+        <Btn kind="primary" disabled={!page.published} title={page.published ? "Open the live hook in a new tab" : "Publish first to open it"} onClick={() => openLive(form.slug)}>
+          <Icon d={I_EXT} size={14} />Open live hook
         </Btn>
         <Btn onClick={() => onDuplicate(page)}><Icon d={I_COPY} size={14} />Duplicate</Btn>
         <Btn onClick={() => onTogglePublish(page.id)}>
@@ -1181,7 +1181,7 @@ function PageDetail({ page, isMobile, width, onBack, onUpdate, onDuplicate, onDe
               onClick={() => onDelete(page.id)}
               style={{ borderRadius: 10, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", fontSize: 13.5, padding: "10px 16px", background: QUIET_RED, color: "#fff", border: `1px solid ${QUIET_RED}`, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <Icon d={I_TRASH} size={14} />Delete page
+              <Icon d={I_TRASH} size={14} />Delete hook
             </button>
           </div>
         </div>
