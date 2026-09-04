@@ -1230,6 +1230,9 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: FG2, lineHeight: 1.5 }}>
             {who === "facility" ? "Nothing can be booked outside these hours — trainer hours nest inside them." : `Bookable hours for ${trainerName(me)}. Google busy events carve out of these automatically.`}
           </div>
+          {persona === "coach" && who === "trainer" && (
+            <button style={btn("secondary")} onClick={() => flash("Availability link copied")}>Share availability</button>
+          )}
         </div>
 
         <Card style={{ padding: 18 }}>
@@ -1471,7 +1474,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </div>
             <div style={{ fontSize: 11, color: FG3, marginTop: 2 }}>Riverside — Main · Live · synced 2 min ago</div>
           </div>
-          {!narrow && (
+          {!narrow && persona === "admin" && (
             <Select value={loc} onChange={(e) => { setLoc(e.target.value); flash("Location: " + e.target.options[e.target.selectedIndex].text); }}
               options={[{ v: "main", label: "Riverside — Main" }, { v: "north", label: "Northside" }, { v: "all", label: "All locations (3)" }]} />
           )}
@@ -1480,12 +1483,11 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
               <button key={r[0]} style={seg(persona === r[0])} onClick={() => { setPersona(r[0]); setTab("week"); setSheet(null); }}>{r[1]}</button>
             ))}
           </div>
-          {!narrow && <>
-            <button style={btn("secondary")} onClick={() => flash(persona === "admin" ? "Schedule published · clients can book it now" : "Availability link copied")}>
-              {persona === "admin" ? "Publish schedule" : "Share availability"}
+          {!narrow && persona === "admin" && (
+            <button style={btn("secondary")} onClick={() => flash("Schedule published · clients can book it now")}>
+              Publish schedule
             </button>
-            <button style={btn("secondary")} onClick={() => flash("Week exported to CSV")}>Export</button>
-          </>}
+          )}
         </div>
         {/* tabs */}
         <div className="hide-scrollbar" style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>
