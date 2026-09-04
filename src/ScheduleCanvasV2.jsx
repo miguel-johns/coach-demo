@@ -711,16 +711,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     return (
       <div style={{ display: "flex", gap: 18, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* stats */}
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${narrow ? 2 : 4}, minmax(0,1fr))`, gap: 10 }}>
-            {stats.map((s) => (
-              <Card key={s.label} style={{ padding: "12px 14px" }}>
-                <div style={{ fontSize: 21, fontWeight: 700, color: FG1, fontFamily: MONO, letterSpacing: "-.01em" }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: FG3, marginTop: 2 }}>{s.label}</div>
-              </Card>
-            ))}
-          </div>
-
           {/* week nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
@@ -742,28 +732,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                 <button style={btn("primary")} onClick={() => { setAppts((l) => l.concat(drafts.map((d) => ({ ...d, draft: false, status: "confirmed" })))); setDrafts([]); flash(`${draftsHere.length} sessions confirmed and pushed to Google Calendar`); }}>Approve all {draftsHere.length}</button>
                 <button style={btn("secondary")} onClick={() => { setDrafts([]); flash("Draft discarded"); }}>Discard</button>
               </>}
-            </div>
-          )}
-
-          {/* flags, when there is no room for the rail */}
-          {!showRail && flags.length > 0 && (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Eyebrow>Milton flagged</Eyebrow>
-                <span style={{ fontSize: 10.5, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: D_BG, color: D_FG }}>{flags.length}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${narrow ? 1 : 2}, minmax(0,1fr))`, gap: 10 }}>
-                {flags.map((f, i) => (
-                  <Card key={i} style={{ padding: 14 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: FG1, lineHeight: 1.4 }}>{f.title}</div>
-                    <div style={{ fontSize: 11.5, color: FG2, lineHeight: 1.5, marginTop: 5 }}>{f.body}</div>
-                    <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
-                      <button style={{ ...btn("primary"), fontSize: 11.5, padding: "7px 13px" }} onClick={f.act}>{f.primary}</button>
-                      <button style={{ border: 0, background: "transparent", color: FG3, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={f.dismiss}>Dismiss</button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
             </div>
           )}
 
@@ -804,31 +772,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </div>
           </Card>
         </div>
-
-        {/* flag rail */}
-        {showRail && (
-          <div style={{ width: 268, flex: "0 0 268px", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Eyebrow>Milton flagged</Eyebrow>
-              <span style={{ fontSize: 10.5, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: flags.length ? D_BG : S_BG, color: flags.length ? D_FG : S_FG }}>{flags.length}</span>
-            </div>
-            {flags.length === 0 && (
-              <Card style={{ padding: 16, fontSize: 12.5, color: FG2, lineHeight: 1.55 }}>
-                Nothing needs you. Every class is filling and no one is unconfirmed.
-              </Card>
-            )}
-            {flags.map((f, i) => (
-              <Card key={i} style={{ padding: 14 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: FG1, lineHeight: 1.4 }}>{f.title}</div>
-                <div style={{ fontSize: 11.5, color: FG2, lineHeight: 1.5, marginTop: 5 }}>{f.body}</div>
-                <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
-                  <button style={{ ...btn("primary"), fontSize: 11.5, padding: "7px 13px" }} onClick={f.act}>{f.primary}</button>
-                  <button style={{ border: 0, background: "transparent", color: FG3, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={f.dismiss}>Dismiss</button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
       </div>
     );
   }
@@ -888,7 +831,10 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                   </div>
                   {resources.map((r) => (
                     <div key={r.id + r.type} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}` }}>
-                      {HOURS.map((_, h) => <div key={h} style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}` }} />)}
+                      {HOURS.map((_, h) => (
+                        <div key={h} onClick={() => openCreate({ date: day, start: DAY_START + h, ...(r.type === "trainer" ? { trainer: r.id } : { room: r.id }) }, "oneone")}
+                          style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
+                      ))}
                       {r.events.map((e) => <EventBlock key={e.id + r.id} e={e} />)}
                     </div>
                   ))}
