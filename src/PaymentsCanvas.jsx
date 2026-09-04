@@ -371,7 +371,7 @@ function SetupTab({ routingActive, onActivate }) {
   );
 }
 
-// ── Empty state (Payments / Payouts tabs) ───────────────────────
+// ── Empty state (Payments / Payouts tabs) ───────────────���─���─────
 function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   return (
     <Card>
@@ -390,13 +390,138 @@ function EmptyTab({ eyebrow, title, emptyTitle, emptyBody }) {
   );
 }
 
+// ── Inventory tab ───────────────────────────────────────────────
+// ── Gift cards & promos tab ─────────────────────────────────────
+function GiftPromoTab() {
+  const sections = [
+    {
+      eyebrow: "Stored value",
+      title: "Gift cards",
+      body: "Sell prepaid balances clients can redeem at checkout. Set denominations, expiration, and delivery.",
+      cta: "New gift card",
+      icon: <><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><path d="M12 5v14" /></>,
+    },
+    {
+      eyebrow: "Discounts",
+      title: "Promo codes",
+      body: "Create codes for percentage or fixed discounts, with usage caps, eligible packages, and expiry windows.",
+      cta: "New promo code",
+      icon: <><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1.2" /></>,
+    },
+  ];
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      {sections.map((s) => (
+        <Card key={s.title}>
+          <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ width: 36, height: 36, borderRadius: 10, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{s.icon}</svg>
+                </span>
+                <div>
+                  <Eyebrow>{s.eyebrow}</Eyebrow>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "4px 0 0" }}>{s.title}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: "18px 20px" }}>
+            <p style={{ fontSize: 13.5, color: TEXT_SEC, margin: 0, lineHeight: 1.55 }}>{s.body}</p>
+            <button style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: TEAL, color: WHITE, border: "none", borderRadius: 8, padding: "9px 15px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              {s.cta}
+            </button>
+            <div style={{ marginTop: 18, padding: "14px 16px", background: PAGE_BG, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+              <div style={{ fontSize: 12.5, color: TEXT_SEC, textAlign: "center" }}>None created yet</div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ── Inventory row (inline stock editing) ────────────────────────
+function InventoryRow({ r, first, onUpdateInventory, onOpenPackage }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(String(r.stock ?? 0));
+
+  const stepBtn = { width: 30, height: 30, borderRadius: 7, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 };
+
+  const startEdit = () => { setVal(String(r.stock ?? 0)); setEditing(true); };
+  const commit = () => { onUpdateInventory(r.id, { stock: Math.max(0, Math.round(+val || 0)) }); setEditing(false); };
+  const bump = (delta) => onUpdateInventory(r.id, { stock: Math.max(0, (r.stock ?? 0) + delta) });
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderTop: first ? "none" : `1px solid ${BORDER}` }}>
+      <span style={{ width: 34, height: 34, borderRadius: 9, background: TEAL_LIGHT, color: TEAL, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" /></svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT }}>{r.name}</div>
+        <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 2 }}>
+          {r.sku ? `SKU ${r.sku} · ` : ""}{money(r.price)}
+          {" · "}
+          <button onClick={() => onOpenPackage(r.id)} style={{ background: "none", border: "none", color: TEAL, fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 12.5 }}>Edit details</button>
+        </div>
+      </div>
+
+      {r.tracked ? (
+        editing ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <input
+              autoFocus type="number" min="0" value={val}
+              onChange={(e) => setVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) commit(); if (e.key === "Escape") setEditing(false); }}
+              style={{ ...inputStyle, width: 90, fontFamily: MONO, textAlign: "right" }}
+            />
+            <button onClick={commit} style={{ background: TEAL, color: WHITE, border: "none", borderRadius: 7, padding: "8px 13px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>Save</button>
+            <button onClick={() => setEditing(false)} style={{ background: WHITE, color: TEXT_SEC, border: `1px solid ${BORDER}`, borderRadius: 7, padding: "8px 11px", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            {r.out ? <Pill bg={RED_TINT} color={ALERT_RED}>Out of stock</Pill>
+              : r.low ? <Pill bg={AMBER_TINT} color={AMBER}>Low</Pill>
+              : <Pill bg={GREEN_TINT} color={GREEN}>In stock</Pill>}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button aria-label="Decrease stock" onClick={() => bump(-1)} style={stepBtn}>−</button>
+              <button onClick={startEdit} title="Set exact count" style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: r.out ? ALERT_RED : r.low ? AMBER : TEXT, minWidth: 44, textAlign: "center", background: "none", border: "none", cursor: "pointer", padding: "0 2px" }}>{r.stock}</button>
+              <button aria-label="Increase stock" onClick={() => bump(1)} style={stepBtn}>+</button>
+            </div>
+          </div>
+        )
+      ) : (
+        <button onClick={() => onUpdateInventory(r.id, { track_inventory: true, stock: r.stock ?? 0 })}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 13px", fontSize: 12.5, fontWeight: 700, color: TEAL, cursor: "pointer", flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          Set up tracking
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Packages tab ────────────────────────────────────────────────
-function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewPackage }) {
+function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewPackage, onUpdateInventory }) {
   const tiles = [
     { label: "Active subscriptions", value: METRICS.activeSubs.toLocaleString(), sub: "across published packages" },
     { label: "Monthly recurring", value: money(METRICS.mrr), sub: "billed on renewal" },
     { label: "Unused sessions owed", value: METRICS.unusedSessions.toLocaleString(), sub: `≈ ${money(METRICS.unusedValue)} in delivery owed`, accent: true },
   ];
+
+  const invRows = packages
+    .filter((p) => p.deliverable === "item")
+    .map((p) => {
+      const cfg = p.item_config || {};
+      const tracked = !!cfg.track_inventory;
+      const stock = tracked ? Number(cfg.stock ?? 0) : null;
+      const low = tracked && stock <= (cfg.low_stock_at ?? 3);
+      const out = tracked && stock <= 0;
+      return { id: p.id, name: p.name, price: p.price, tracked, stock, low, out, sku: cfg.sku };
+    });
+  const trackedRows = invRows.filter((r) => r.tracked);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -462,6 +587,35 @@ function PackagesTab({ routingActive, packages, onGoSetup, onOpenPackage, onNewP
           ))}
         </div>
       </Card>
+
+      {invRows.length > 0 && (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+            <div>
+              <Eyebrow>Inventory</Eyebrow>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: "5px 0 0" }}>Stock on hand</h3>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {(() => {
+                const lowCount = trackedRows.filter((r) => r.low && !r.out).length;
+                const outCount = trackedRows.filter((r) => r.out).length;
+                return (
+                  <>
+                    {outCount > 0 && <Pill bg={RED_TINT} color={ALERT_RED}>{outCount} out</Pill>}
+                    {lowCount > 0 && <Pill bg={AMBER_TINT} color={AMBER}>{lowCount} low</Pill>}
+                    {outCount === 0 && lowCount === 0 && <Pill bg={GREEN_TINT} color={GREEN}>All stocked</Pill>}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+          <div>
+            {invRows.map((r, i) => (
+              <InventoryRow key={r.id} r={r} first={i === 0} onUpdateInventory={onUpdateInventory} onOpenPackage={onOpenPackage} />
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
@@ -1237,6 +1391,7 @@ function BuilderShell({ editor, routingActive, services, onCreateService, onChan
 const TABS = [
   { id: "setup", label: "Setup & routing" },
   { id: "packages", label: "Packages" },
+  { id: "giftcards", label: "Gift cards & promos" },
   { id: "subscriptions", label: "Subscriptions" },
   { id: "payments", label: "Payments" },
   { id: "payouts", label: "Payouts" },
@@ -1255,6 +1410,15 @@ export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
   const openNew = () => setEditor({ stage: "picker" });
   const pickPreset = (preset) => setEditor({ stage: "build", isNew: true, draft: newPackageFrom(preset, services) });
   const openExisting = (id) => { const p = packages.find((x) => x.id === id); setEditor({ stage: "build", isNew: false, id, draft: JSON.parse(JSON.stringify(p)) }); };
+
+  // Inline inventory edits from the Packages tab (no full editor needed).
+  const updateInventory = (id, patch) => setPackages((prev) => prev.map((p) => {
+    if (p.id !== id) return p;
+    const cfg = { track_inventory: false, stock: 0, fulfillment: "pickup", variants: [], ...(p.item_config || {}) };
+    const next = { ...cfg, ...patch };
+    if (typeof next.stock === "number") next.stock = Math.max(0, Math.round(next.stock));
+    return { ...p, item_config: next };
+  }));
 
   const handleSave = (draft, status) => {
     setPackages((prev) => {
@@ -1353,8 +1517,10 @@ export default function PaymentsCanvas({ onClose, isMobile, onOpenClient }) {
                   onGoSetup={() => setTab("setup")}
                   onOpenPackage={openExisting}
                   onNewPackage={openNew}
+                  onUpdateInventory={updateInventory}
                 />
               )}
+              {tab === "giftcards" && <GiftPromoTab />}
               {tab === "subscriptions" && <SubscriptionsTab onOpenClient={onOpenClient} />}
               {tab === "payments" && (
                 <EmptyTab eyebrow="Transactions" title="Payments" emptyTitle="No payments yet" emptyBody="Create a test checkout after activating a payment route." />

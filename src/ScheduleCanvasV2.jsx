@@ -110,6 +110,36 @@ function fmtT(t) {
 }
 const range = (t, d) => fmtT(t) + " – " + fmtT(t + d);
 const overlaps = (a1, a2, b1, b2) => a1 < b2 && b1 < a2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// Google-Calendar-style side-by-side layout. Groups events into clusters of
+// transitively-overlapping blocks, packs each into the fewest lanes, and returns
+// { e, lane, lanes } so overlapping bookings render next to each other.
+function layoutLanes(events) {
+  const evs = [...events].sort((a, b) => a.start - b.start || a.dur - b.dur);
+  const out = [];
+  let cluster = [], clusterEnd = -1;
+  const flush = () => {
+    if (!cluster.length) return;
+    const laneEnds = [];
+    cluster.forEach((e) => {
+      let lane = laneEnds.findIndex((end) => e.start >= end);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
+      laneEnds[lane] = e.start + e.dur;
+      e._lane = lane;
+    });
+    const total = laneEnds.length;
+    cluster.forEach((e) => out.push({ e, lane: e._lane, lanes: total }));
+    cluster = [];
+  };
+  evs.forEach((e) => {
+    if (cluster.length && e.start >= clusterEnd) flush();
+    cluster.push(e);
+    clusterEnd = Math.max(clusterEnd, e.start + e.dur);
+  });
+  flush();
+  return out;
+}
+const snapQ = (v) => Math.round(v * 4) / 4;
 const initials = (n) => n.split(" ").map((w) => w.charAt(0)).join("").slice(0, 2);
 const trainerName = (id) => { const t = TRAINERS.find((x) => x.id === id); return t ? t.name : ""; };
 const roomName = (id) => { const r = ROOMS.find((x) => x.id === id); return r ? r.name : "No room"; };
@@ -185,6 +215,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [day, setDay] = useState(TODAY);
   const [loc, setLoc] = useState("main");
   const [trainerFilter, setTrainerFilter] = useState("alex");
+  const [facFilter, setFacFilter] = useState("all");
   const [sheet, setSheet] = useState(null);
   const [ctype, setCtype] = useState("oneone");
   const [sel, setSel] = useState(null);
@@ -226,6 +257,11 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
   const toastTimer = useRef(null);
+  const weekGridRef = useRef(null);
+  const facGridRef = useRef(null);
+  const dragRef = useRef(null);
+  const suppressClickRef = useRef(false);
+  const [dragId, setDragId] = useState(null);
   useEffect(() => {
     const onResize = () => setVw(window.innerWidth);
     window.addEventListener("resize", onResize);
@@ -358,6 +394,67 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const removeAppt = (id) => setAppts((l) => l.filter((a) => a.id !== id));
   const patchAppt = (id, patch) => setAppts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const weekDate = (dw) => addDays(weekStart, dw);
+
+  // Live-patch whichever list holds the event (stored appts or week drafts).
+  const moveEvent = (id, patch) => {
+    setAppts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    setDrafts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+  };
+
+  // Drag-to-move and edge-resize for calendar events. Recurring class
+  // instances have no stored record, so they are click-only (guarded here).
+  const onDragMove = (ev) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const dH = (ev.clientY - d.startY) / ROW;
+    let patch = {};
+    if (d.mode === "move") {
+      patch.start = clamp(snapQ(d.orig.start + dH), DAY_START, DAY_END - d.orig.dur);
+      if (d.columns.length) {
+        const colW = (d.rect.width - d.gutter) / d.colCount;
+        const idx = clamp(Math.floor((ev.clientX - d.rect.left - d.gutter) / colW), 0, d.colCount - 1);
+        patch.date = d.columns[idx];
+        d.lastDate = patch.date;
+      }
+    } else if (d.mode === "top") {
+      const ns = clamp(snapQ(d.orig.start + dH), DAY_START, d.orig.start + d.orig.dur - 0.25);
+      patch.start = ns;
+      patch.dur = +(d.orig.start + d.orig.dur - ns).toFixed(2);
+    } else if (d.mode === "bottom") {
+      patch.dur = clamp(snapQ(d.orig.dur + dH), 0.25, DAY_END - d.orig.start);
+    }
+    if (Math.abs(ev.clientY - d.startY) > 3 || (patch.date && patch.date !== d.orig.date)) d.moved = true;
+    moveEvent(d.id, patch);
+  };
+  const onDragEnd = () => {
+    const d = dragRef.current;
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup", onDragEnd);
+    if (d && d.moved) {
+      suppressClickRef.current = true;
+      const cur = appts.concat(drafts).find((a) => a.id === d.id);
+      if (d.mode === "move") flash(`Moved to ${fmtShort(d.lastDate || d.orig.date)} ${fmtT((cur && cur.start) ?? d.orig.start)}`);
+      else flash("Duration updated");
+    }
+    dragRef.current = null;
+    setDragId(null);
+  };
+  const beginDrag = (ev, e, mode, view) => {
+    if (ev.button !== 0 || e.instance) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const gridEl = view === "week" ? weekGridRef.current : facGridRef.current;
+    if (!gridEl) return;
+    const columns = days.map((d) => d.date);
+    dragRef.current = {
+      id: e.id, mode, view, columns,
+      rect: gridEl.getBoundingClientRect(), gutter: 52, colCount: columns.length,
+      orig: { start: e.start, dur: e.dur, date: e.date }, startY: ev.clientY, moved: false,
+    };
+    setDragId(e.id);
+    window.addEventListener("pointermove", onDragMove);
+    window.addEventListener("pointerup", onDragEnd);
+  };
 
   function submitCreate() {
     const f = form, t = ctype;
@@ -675,7 +772,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   /* ---------- render helpers ---------- */
   const PAD = narrow ? 16 : 28;
 
-  const EventBlock = ({ e, ghost }) => {
+  const EventBlock = ({ e, ghost, view, lane = 0, lanes = 1 }) => {
     const conflict = check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft;
     const short = e.dur < 0.7;
     const tight = !!e.cap && e.dur < 1;
@@ -684,10 +781,24 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     if (e.status === "unconfirmed") meta = "Unconfirmed";
     if (e.draft) meta = "Draft";
     const st = evStyle(e, !!e.draft || !!ghost, conflict);
+    if (lanes > 1) {
+      const laneW = `((100% - 6px) / ${lanes})`;
+      st.left = `calc(3px + ${laneW} * ${lane})`;
+      st.width = `calc(${laneW} - 2px)`;
+      st.right = "auto";
+    }
     if (tight && e.filled >= e.cap && !e.draft && !conflict) { st.background = W_BG; st.borderLeft = `3px solid ${W_MID}`; }
     const full = e.cap && e.filled >= e.cap && e.dur >= 1;
+    const draggable = !e.instance && !ghost;
+    if (draggable) st.cursor = dragId === e.id ? "grabbing" : "grab";
+    if (dragId === e.id) { st.zIndex = 20; st.boxShadow = "0 6px 18px rgba(11,20,23,.18)"; }
+    const rzStyle = (pos) => ({ position: "absolute", left: 0, right: 0, [pos]: 0, height: 8, cursor: "ns-resize", zIndex: 6 });
     return (
-      <button style={st} onClick={() => { setSel({ id: e.id, date: e.date, instance: !!e.instance }); setSheet("detail"); }}>
+      <button style={st}
+        onPointerDown={draggable ? (ev) => beginDrag(ev, e, "move", view) : undefined}
+        onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } setSel({ id: e.id, date: e.date, instance: !!e.instance }); setSheet("detail"); }}>
+        {draggable && <span style={rzStyle("top")} onPointerDown={(ev) => beginDrag(ev, e, "top", view)} />}
+        {draggable && <span style={rzStyle("bottom")} onPointerDown={(ev) => beginDrag(ev, e, "bottom", view)} />}
         <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
           {(e.status === "unconfirmed" || conflict || (tight && !!e.wait)) && <span style={{ width: 5, height: 5, borderRadius: 999, flex: "0 0 5px", background: conflict ? D_MID : W_MID }} />}
           <span style={{ fontSize: 11.5, fontWeight: 600, color: FG1, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
@@ -711,16 +822,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     return (
       <div style={{ display: "flex", gap: 18, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* stats */}
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${narrow ? 2 : 4}, minmax(0,1fr))`, gap: 10 }}>
-            {stats.map((s) => (
-              <Card key={s.label} style={{ padding: "12px 14px" }}>
-                <div style={{ fontSize: 21, fontWeight: 700, color: FG1, fontFamily: MONO, letterSpacing: "-.01em" }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: FG3, marginTop: 2 }}>{s.label}</div>
-              </Card>
-            ))}
-          </div>
-
           {/* week nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
@@ -728,7 +829,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
             <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setWeekStart(WEEK0)}>This week</button>
             <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-              <Select value={trainerFilter} onChange={(e) => setTrainerFilter(e.target.value)} options={[{ v: "alex", label: "Alex Reyes (you)" }, { v: "dana", label: "Dana Kim" }, { v: "priya", label: "Priya Shah" }, { v: "all", label: "Everyone" }]} />
               <button style={btn("primary")} onClick={() => openCreate({ date: TODAY, start: 16 }, "oneone")}>+ Book</button>
             </div>
           </div>
@@ -745,28 +845,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </div>
           )}
 
-          {/* flags, when there is no room for the rail */}
-          {!showRail && flags.length > 0 && (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Eyebrow>Milton flagged</Eyebrow>
-                <span style={{ fontSize: 10.5, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: D_BG, color: D_FG }}>{flags.length}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${narrow ? 1 : 2}, minmax(0,1fr))`, gap: 10 }}>
-                {flags.map((f, i) => (
-                  <Card key={i} style={{ padding: 14 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: FG1, lineHeight: 1.4 }}>{f.title}</div>
-                    <div style={{ fontSize: 11.5, color: FG2, lineHeight: 1.5, marginTop: 5 }}>{f.body}</div>
-                    <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
-                      <button style={{ ...btn("primary"), fontSize: 11.5, padding: "7px 13px" }} onClick={f.act}>{f.primary}</button>
-                      <button style={{ border: 0, background: "transparent", color: FG3, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={f.dismiss}>Dismiss</button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* grid */}
           <Card style={{ overflow: "hidden" }}>
             <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, borderBottom: `1px solid ${B_SUB}` }}>
@@ -780,7 +858,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
               ))}
             </div>
             <div style={{ maxHeight: 520, overflowY: "auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
+              <div ref={weekGridRef} style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
                 <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
                   {HOURS.map((h, i) => (
                     <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
@@ -796,7 +874,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                     {d.events.filter((e) => e.kind === "room" && roomBuffer(e.room)).map((e) => (
                       <div key={"b" + e.id} style={{ position: "absolute", left: 3, right: 3, top: (e.start + e.dur - DAY_START) * ROW + 1, height: (roomBuffer(e.room) / 60) * ROW - 2, borderRadius: 5, border: `1px dashed ${KIND.room.bar}`, background: "repeating-linear-gradient(135deg, rgba(139,92,246,.07) 0 5px, rgba(139,92,246,.16) 5px 10px)", fontSize: 8.5, fontWeight: 700, letterSpacing: ".06em", color: KIND.room.bar, display: "flex", alignItems: "center", paddingLeft: 5, overflow: "hidden", zIndex: 3 }}>△ BUFFER</div>
                     ))}
-                    {d.events.map((e) => <EventBlock key={e.id} e={e} />)}
+                    {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="week" lane={lane} lanes={lanes} />)}
                     {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                   </div>
                 ))}
@@ -804,96 +882,69 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </div>
           </Card>
         </div>
-
-        {/* flag rail */}
-        {showRail && (
-          <div style={{ width: 268, flex: "0 0 268px", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Eyebrow>Milton flagged</Eyebrow>
-              <span style={{ fontSize: 10.5, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: flags.length ? D_BG : S_BG, color: flags.length ? D_FG : S_FG }}>{flags.length}</span>
-            </div>
-            {flags.length === 0 && (
-              <Card style={{ padding: 16, fontSize: 12.5, color: FG2, lineHeight: 1.55 }}>
-                Nothing needs you. Every class is filling and no one is unconfirmed.
-              </Card>
-            )}
-            {flags.map((f, i) => (
-              <Card key={i} style={{ padding: 14 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: FG1, lineHeight: 1.4 }}>{f.title}</div>
-                <div style={{ fontSize: 11.5, color: FG2, lineHeight: 1.5, marginTop: 5 }}>{f.body}</div>
-                <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
-                  <button style={{ ...btn("primary"), fontSize: 11.5, padding: "7px 13px" }} onClick={f.act}>{f.primary}</button>
-                  <button style={{ border: 0, background: "transparent", color: FG3, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={f.dismiss}>Dismiss</button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
       </div>
     );
   }
 
   function FacilityPanel() {
-    // Narrower gutter than the mockup's 130px, and columns that can shrink, so
-    // the default 5 resources fit the card without a horizontal scrollbar.
-    // Past ~7 resources the min kicks in and overflowX takes over.
-    const RES_COLS = `52px repeat(${resources.length}, minmax(84px,1fr))`;
+    // Week view (days as columns) with a resource filter. "All" shows every
+    // trainer and room stacked together, so concurrent bookings are laid out
+    // side by side via layoutLanes — same drag/move/resize as the coach week.
+    const [fType, fId] = facFilter === "all" ? ["all"] : facFilter.split(":");
+    const facOptions = [{ v: "all", label: "All resources" }]
+      .concat(TRAINERS.map((t) => ({ v: "t:" + t.id, label: t.name })))
+      .concat(ROOMS.map((r) => ({ v: "r:" + r.id, label: r.name })));
+    const prefill = fType === "t" ? { trainer: fId } : fType === "r" ? { room: fId } : {};
+    const facDays = days.map((d) => {
+      let evs = eventsOn(d.date);
+      if (fType === "t") evs = evs.filter((e) => e.trainer === fId);
+      else if (fType === "r") evs = evs.filter((e) => e.room === fId);
+      return { ...d, events: evs };
+    });
+    const weekConflicts = facDays.reduce((n, d) => n + d.events.filter((e) => check({ date: e.date, start: e.start, dur: e.dur, trainer: e.trainer, room: e.room, kind: e.kind }, e.id).length > 0 && !e.draft).length, 0);
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, -1))}>‹</button>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: FG1 }}>{fmtLong(day)}</div>
-            <div style={{ fontSize: 11, color: FG3, marginTop: 1 }}>Facility {hoursText("facility", day)} · {TRAINERS.length} trainers · {ROOMS.length} rooms · {dayEvents.length} bookings</div>
-          </div>
-          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setDay(addDays(day, 1))}>›</button>
-          <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setDay(TODAY)}>Today</button>
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: dayConflicts.length ? D_BG : S_BG, color: dayConflicts.length ? D_FG : S_FG }}>
-            {dayConflicts.length ? `${dayConflicts.length} conflict${dayConflicts.length > 1 ? "s" : ""}` : "No conflicts"}
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
+          <div style={{ fontSize: 14, fontWeight: 600, color: FG1, minWidth: narrow ? 0 : 190 }}>{narrow ? `${fmtDate(weekStart)}–${fmtDate(addDays(weekStart, 6))}` : `${fmtDate(weekStart)} – ${fmtDate(addDays(weekStart, 6))}, 2026`}</div>
+          <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
+          <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setWeekStart(WEEK0)}>This week</button>
+          <Select value={facFilter} onChange={(e) => setFacFilter(e.target.value)} options={facOptions} />
+          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: weekConflicts ? D_BG : S_BG, color: weekConflicts ? D_FG : S_FG }}>
+            {weekConflicts ? `${weekConflicts} conflict${weekConflicts > 1 ? "s" : ""}` : "No conflicts"}
           </span>
-          <button style={btn("primary")} onClick={() => openCreate({ date: day, start: 16 }, "oneone")}>+ Book</button>
+          <button style={btn("primary")} onClick={() => openCreate({ date: TODAY, start: 16, ...prefill }, "oneone")}>+ Book</button>
         </div>
 
-        {dayConflicts.map((c, i) => (
-          <div key={i} style={{ background: D_BG, border: `1px solid ${D_MID}33`, borderRadius: 12, padding: "12px 15px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: D_FG }}>{c.title}</div>
-              <div style={{ fontSize: 11.5, color: FG2, marginTop: 3, lineHeight: 1.45 }}>{c.body}</div>
-            </div>
-            <button style={{ ...btn("secondary"), fontSize: 11.5, padding: "7px 13px" }} onClick={c.fix}>{c.fixLabel}</button>
-            <button style={{ border: 0, background: "transparent", color: D_FG, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }} onClick={c.open}>Open</button>
-          </div>
-        ))}
-
         <Card style={{ overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            {/* No minWidth: the columns flex to fit the card so the admin grid
-                does not get its own horizontal scrollbar at normal widths. */}
-            <div>
-              <div style={{ display: "grid", gridTemplateColumns: RES_COLS, borderBottom: `1px solid ${B_SUB}` }}>
-                <div />
-                {resources.map((r) => (
-                  <div key={r.id + r.type} style={{ padding: "9px 8px", borderLeft: `1px solid ${B_SUB}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: FG1 }}>{r.name}</div>
-                    <div style={{ fontSize: 9.5, color: FG4, marginTop: 1 }}>{r.kind}</div>
-                  </div>
+          <div style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, borderBottom: `1px solid ${B_SUB}` }}>
+            <div />
+            {facDays.map((d) => (
+              <div key={d.date} style={{ textAlign: "center", padding: "9px 2px 7px", borderLeft: `1px solid ${B_SUB}` }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", color: FG4 }}>{d.dow}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, fontFamily: MONO, marginTop: 2, color: d.isToday ? WHITE : FG1, ...(d.isToday ? { background: T800, borderRadius: 999, width: 28, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center" } : {}) }}>{d.dom}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".08em", marginTop: 3, height: 12, color: d.hoursLabel === "CLOSED" ? D_FG : W_FG }}>{d.hoursLabel}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ maxHeight: 520, overflowY: "auto" }}>
+            <div ref={facGridRef} style={{ display: "grid", gridTemplateColumns: `52px repeat(7, minmax(0,1fr))`, position: "relative" }}>
+              <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
+                {HOURS.map((h, i) => (
+                  <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
                 ))}
               </div>
-              <div>
-                <div style={{ display: "grid", gridTemplateColumns: RES_COLS }}>
-                  <div style={{ position: "relative", height: (DAY_END - DAY_START) * ROW }}>
-                    {HOURS.map((h, i) => (
-                      <div key={h} style={{ position: "absolute", top: i * ROW + 3, right: 8, fontSize: 9.5, fontWeight: 600, color: FG4, fontFamily: MONO }}>{h}</div>
-                    ))}
-                  </div>
-                  {resources.map((r) => (
-                    <div key={r.id + r.type} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}` }}>
-                      {HOURS.map((_, h) => <div key={h} style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}` }} />)}
-                      {r.events.map((e) => <EventBlock key={e.id + r.id} e={e} />)}
-                    </div>
+              {facDays.map((d) => (
+                <div key={d.date} style={{ position: "relative", height: (DAY_END - DAY_START) * ROW, borderLeft: `1px solid ${B_SUB}`, background: d.closedLabel ? INK100 : "transparent" }}>
+                  {HOURS.map((_, h) => (
+                    <div key={h} onClick={() => openCreate({ date: d.date, start: DAY_START + h, ...prefill }, "oneone")}
+                      style={{ position: "absolute", left: 0, right: 0, top: h * ROW, height: ROW, borderTop: `1px solid ${B_SUB}`, cursor: "pointer", zIndex: 1 }} />
                   ))}
+                  {d.closedLabel && <div style={{ position: "absolute", top: 8, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: ".08em", color: FG4 }}>{d.closedLabel}</div>}
+                  {layoutLanes(d.events).map(({ e, lane, lanes }) => <EventBlock key={e.id} e={e} view="fac" lane={lane} lanes={lanes} />)}
+                  {d.isToday && <div style={{ position: "absolute", left: 0, right: 0, top: (NOW - DAY_START) * ROW, borderTop: `2px solid ${D_MID}`, zIndex: 5 }} />}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </Card>
@@ -1230,6 +1281,9 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: FG2, lineHeight: 1.5 }}>
             {who === "facility" ? "Nothing can be booked outside these hours — trainer hours nest inside them." : `Bookable hours for ${trainerName(me)}. Google busy events carve out of these automatically.`}
           </div>
+          {persona === "coach" && who === "trainer" && (
+            <button style={btn("secondary")} onClick={() => flash("Availability link copied")}>Share availability</button>
+          )}
         </div>
 
         <Card style={{ padding: 18 }}>
@@ -1471,7 +1525,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </div>
             <div style={{ fontSize: 11, color: FG3, marginTop: 2 }}>Riverside — Main · Live · synced 2 min ago</div>
           </div>
-          {!narrow && (
+          {!narrow && persona === "admin" && (
             <Select value={loc} onChange={(e) => { setLoc(e.target.value); flash("Location: " + e.target.options[e.target.selectedIndex].text); }}
               options={[{ v: "main", label: "Riverside — Main" }, { v: "north", label: "Northside" }, { v: "all", label: "All locations (3)" }]} />
           )}
@@ -1480,12 +1534,11 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
               <button key={r[0]} style={seg(persona === r[0])} onClick={() => { setPersona(r[0]); setTab("week"); setSheet(null); }}>{r[1]}</button>
             ))}
           </div>
-          {!narrow && <>
-            <button style={btn("secondary")} onClick={() => flash(persona === "admin" ? "Schedule published · clients can book it now" : "Availability link copied")}>
-              {persona === "admin" ? "Publish schedule" : "Share availability"}
+          {!narrow && persona === "admin" && (
+            <button style={btn("secondary")} onClick={() => flash("Schedule published · clients can book it now")}>
+              Publish schedule
             </button>
-            <button style={btn("secondary")} onClick={() => flash("Week exported to CSV")}>Export</button>
-          </>}
+          )}
         </div>
         {/* tabs */}
         <div className="hide-scrollbar" style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>

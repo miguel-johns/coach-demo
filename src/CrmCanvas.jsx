@@ -26,6 +26,24 @@ const AV = ["#e58a5b", "#5c7b9a", "#7c6bb0", "#2B7A78", "#c9922f", "#c96b8f", "#
 
 const DOT = { blue: "#5c7b9a", teal: TEAL, green: "#3aaf6a", amber: "#c9922f", red: ALERT_RED };
 
+// Pipeline board. Every contact lands in exactly one stage, keyed off the state
+// billing and behaviour already wrote, so the board never needs its own truth.
+const PIPE_COLS = [
+  { key: "New", dot: "#5c7b9a", note: "Just arrived, first touch already out" },
+  { key: "Qualified", dot: TEAL, note: "Replied and in conversation" },
+  { key: "Booked", dot: "#c9922f", note: "A call is on the calendar" },
+  { key: "Won", dot: "#3aaf6a", note: "Paying customers" },
+  { key: "Cold", dot: "#9db0ac", note: "No-showed or gone quiet" },
+];
+
+const stageOf = (state) => {
+  if (state === "New") return "New";
+  if (state === "Booked") return "Booked";
+  if (state === "Won") return "Won";
+  if (state === "No-showed" || state === "Dormant") return "Cold";
+  return "Qualified"; // Engaged, Showed, Reaching out
+};
+
 // [name, band, reason, source, action, isNew, state, last]
 const LEADS = [
   ["Danielle Reyes", "Hot", "Answered the bonus question in detail, replied within 4 minutes.", "Meta lead ad", "Call", 1, "Engaged", "41 min ago"],
@@ -623,7 +641,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
     : filter === "Quiet" ? allRows.filter((r) => r[4] === "Dormant" || r[4] === "Reaching out")
     : allRows.filter((r) => r[4] === filter);
 
-  const TABS = [["queue", "Queue"], ["list", "Contact list"], ["pages", "Pages"]];
+  const TABS = [["queue", "Queue"], ["pipeline", "Pipeline"], ["list", "Contact list"], ["pages", "Pages"]];
   const tabActive = (k) =>
     screen === k || (["contact", "answers", "brief"].includes(screen) && from === k);
 
@@ -695,6 +713,75 @@ export default function CrmCanvas({ onClose, isMobile }) {
     </div>
   );
 
+  const Pipeline = () => {
+    const cols = PIPE_COLS.map((col) => ({
+      ...col,
+      rows: allRows.filter((r) => stageOf(r[4]) === col.key),
+    }));
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Pipeline</h3>
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, maxWidth: 620 }}>
+              Every contact on one board. Milton moves people as billing and behaviour change, you just read across.
+            </p>
+          </div>
+          <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>
+            {allRows.length} in play
+          </span>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, alignItems: "flex-start" }}>
+          {cols.map((col) => (
+            <div key={col.key} style={{ flex: "1 0 0", minWidth: isMobile ? 224 : 186, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ background: INK_050, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "10px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 999, background: col.dot, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{col.key}</span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_SEC, fontFamily: MONO }}>{col.rows.length}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: TEXT_SEC, marginTop: 4, lineHeight: 1.4 }}>{col.note}</div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {col.rows.map((r) => {
+                  const [name, band, reason, source, state, last, type] = r;
+                  const idx = LEADS.findIndex((l) => l[0] === name);
+                  const av = AV[(idx < 0 ? 6 : idx) % AV.length];
+                  return (
+                    <div key={name} onClick={openContact(name, "pipeline")}
+                      style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, cursor: "pointer" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#bfe0dc")}
+                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = BORDER)}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                        <Avatar initials={initialsOf(name)} bg={av} size={26} />
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 8, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{reason}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 10 }}>
+                        {type === "Lead" ? <BandPill band={band} /> : <TypePill type={type} />}
+                        <span style={{ fontSize: 11, color: TEXT_SEC, whiteSpace: "nowrap" }}>{last}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {col.rows.length === 0 && (
+                  <div style={{ fontSize: 12, color: TEXT_SEC, textAlign: "center", padding: "16px 8px", border: `1px dashed ${BORDER}`, borderRadius: 12 }}>
+                    No one here
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const TagCell = ({ name, rowType }) => (
     <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
       {tagsFor(name, rowType).map((t) =>
@@ -736,13 +823,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
             Clear, show everyone
           </Btn>
         </div>
-      ) : (
-        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-          {["Everyone", "New", "Engaged", "Booked", "Quiet", "Won"].map((label) => (
-            <Btn key={label} sm kind={filter === label ? "primary" : "secondary"} onClick={() => setFilter(label)}>{label}</Btn>
-          ))}
-        </div>
-      )}
+      ) : null}
 
       <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
         {!isMobile && (
@@ -1072,7 +1153,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
       <div style={{ padding: isMobile ? "14px 16px" : "16px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", minWidth: 0 }}>
-            <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>Leads</h1>
+            <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>CRM</h1>
             <Pill bg={TEAL_LIGHT} color={TEAL} dot={TEAL}>{`Working ${bg} leads quietly`}</Pill>
 
             {/* Segmented toggle, matching the schedule canvas's Admin/Trainer control */}
@@ -1098,6 +1179,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : "24px 32px" }}>
         <div style={{ maxWidth: 1040, margin: "0 auto" }}>
           {screen === "queue" && <Queue />}
+          {screen === "pipeline" && <Pipeline />}
           {screen === "list" && <List />}
           {screen === "contact" && <Contact />}
           {screen === "answers" && <Answers />}

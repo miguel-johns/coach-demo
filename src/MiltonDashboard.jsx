@@ -330,21 +330,33 @@ const CLIENT_TYPE_ORDER = ["PT", "Semi", "Hybrid", "Online"];
 // ═══════════════════════════════════════════════════════════════
 // COACH ROSTER - owners of group / semi-private sessions
 // ═══════════════════════════════════════════════════════════════
+// Permission levels a team member can be granted.
+const PERMISSION_LEVELS = [
+  { id: "full", label: "Full access", short: "Full access", color: "#2B7A78", description: "Can edit everything — schedule, billing, clients, and team settings." },
+  { id: "limited", label: "Limited access", short: "Limited access", color: "#d97706", description: "Can edit select areas — schedule and their own clients, but not billing or team settings." },
+  { id: "clients", label: "Clients only", short: "Clients only", color: "#6366f1", description: "Can only manage the clients assigned to them." },
+];
+const getPermission = (id) => PERMISSION_LEVELS.find(p => p.id === id) || PERMISSION_LEVELS[0];
+
 const COACHES = [
-  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength", email: "miguel@coachhub.com", phone: "(555) 201-4480" },
-  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning", email: "jordan@coachhub.com", phone: "(555) 201-3392" },
-  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility", email: "alana@coachhub.com", phone: "(555) 201-7715" },
-  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid", email: "devon@coachhub.com", phone: "(555) 201-6628" },
+  { id: "miguel", name: "Miguel Santos", initials: "MS", color: "#2B7A78", specialty: "Strength", email: "miguel@coachhub.com", phone: "(555) 201-4480", permission: "full" },
+  { id: "jordan", name: "Jordan Lee", initials: "JL", color: "#6366f1", specialty: "Conditioning", email: "jordan@coachhub.com", phone: "(555) 201-3392", permission: "limited" },
+  { id: "alana", name: "Alana Reyes", initials: "AR", color: "#ef6c3e", specialty: "Mobility", email: "alana@coachhub.com", phone: "(555) 201-7715", permission: "clients" },
+  { id: "devon", name: "Devon Clarke", initials: "DC", color: "#9333ea", specialty: "Hybrid", email: "devon@coachhub.com", phone: "(555) 201-6628", permission: "limited" },
 ];
 const getCoach = (id) => COACHES.find(c => c.id === id) || COACHES[0];
 
 const COACH_COLORS = ["#2B7A78", "#6366f1", "#ef6c3e", "#9333ea", "#d97706", "#0891b2", "#be123c", "#15803d"];
 const makeInitials = (name) => name.trim().split(/\s+/).map(n => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 // Mutate the shared roster in place so module-level getCoach() stays in sync everywhere.
-const addCoach = ({ name, specialty, color, email, phone }) => {
+const addCoach = ({ name, specialty, color, email, phone, permission }) => {
   const id = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
-  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General", email: email?.trim() || "", phone: phone?.trim() || "" });
+  COACHES.push({ id, name: name.trim(), initials: makeInitials(name), color, specialty: specialty?.trim() || "General", email: email?.trim() || "", phone: phone?.trim() || "", permission: permission || "limited" });
   return id;
+};
+const setCoachPermission = (id, permission) => {
+  const c = COACHES.find(c => c.id === id);
+  if (c) c.permission = permission;
 };
 const removeCoach = (id) => {
   const idx = COACHES.findIndex(c => c.id === id);
@@ -2434,7 +2446,7 @@ function SemiPrivateList({
 
 // ═══════════════════════════════════════════════════════════════
 // GROUP CLASS LIST - List of group classes (mirrors SemiPrivateList)
-// ══════════════════�����══════════════════����═════════════════�����═══════
+// ══════════════════���������══════════════════����═════════════════�����═══════
 function GroupClassList({ sessions, clients, onClose, onHome, onSessionClick, onCreateSession, onViewProgramming, typeToggle, isMobile }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -2985,20 +2997,27 @@ function TagCell({ tags = [], onChange }) {
 }
 
 function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile }) {
-  const [tab, setTab] = useState("coaches");
+  const [tab, setTab] = useState("team");
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [color, setColor] = useState(COACH_COLORS[0]);
+  const [permission, setPermission] = useState("limited");
   const [confirmDelete, setConfirmDelete] = useState(null); // coach id
+  const [, forceRerender] = useState(0);
 
   const sessionCountFor = (coachId) => sessions.filter(s => s.coachId === coachId).length;
 
   const handleAdd = () => {
     if (!name.trim()) return;
-    addCoach({ name, specialty, color, email, phone });
-    setName(""); setSpecialty(""); setEmail(""); setPhone(""); setColor(COACH_COLORS[0]);
+    addCoach({ name, specialty, color, email, phone, permission });
+    setName(""); setSpecialty(""); setEmail(""); setPhone(""); setColor(COACH_COLORS[0]); setPermission("limited");
+    onCoachesChanged?.();
+  };
+  const handlePermissionChange = (id, level) => {
+    setCoachPermission(id, level);
+    forceRerender(n => n + 1);
     onCoachesChanged?.();
   };
   const handleDelete = (id) => {
@@ -3023,11 +3042,11 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
               </div>
             </div>
             <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
-              {tab === "coaches" ? "Coaches" : "Integrations"}
+              {tab === "team" ? "Team" : "Integrations"}
             </h1>
             <p style={{ fontSize: 14, color: TEXT_SEC, margin: "8px 0 0", lineHeight: 1.5 }}>
-              {tab === "coaches"
-                ? "Add or remove the coaches who can be assigned to classes and sessions."
+              {tab === "team"
+                ? "Add or remove team members and set what each one is allowed to manage."
                 : "Connect the places your leads already come from, so nothing is typed in by hand."}
             </p>
           </div>
@@ -3038,7 +3057,7 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
 
         {/* Tabs */}
         <div style={{ display: "inline-flex", gap: 4, marginTop: 18, padding: 3, background: "#eef3f2", borderRadius: 999 }}>
-          {[["coaches", "Coaches"], ["integrations", "Integrations"]].map(([k, label]) => (
+          {[["team", "Team"], ["integrations", "Integrations"]].map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -3060,10 +3079,10 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
           {tab === "integrations" && <IntegrationsPanel isMobile={isMobile} />}
-          {tab === "coaches" && <>
-          {/* Add coach */}
+          {tab === "team" && <>
+          {/* Add team member */}
           <div style={{ background: WHITE, borderRadius: 14, border: `1px solid ${BORDER}`, padding: isMobile ? 16 : 20 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: "0 0 14px" }}>Add a coach</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: "0 0 14px" }}>Add a team member</h2>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "stretch" : "flex-end" }}>
               <label style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Full name</span>
@@ -3090,17 +3109,38 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                 <button key={c} onClick={() => setColor(c)} aria-label={`Color ${c}`} style={{ width: 26, height: 26, borderRadius: "50%", background: c, border: color === c ? `3px solid ${TEXT}` : `2px solid ${WHITE}`, boxShadow: color === c ? "none" : `0 0 0 1px ${BORDER}`, cursor: "pointer", padding: 0 }} />
               ))}
             </div>
+            {/* Permission level */}
+            <div style={{ marginTop: 16 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: TEXT_SEC }}>Permissions</span>
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8, marginTop: 8 }}>
+                {PERMISSION_LEVELS.map(p => {
+                  const active = permission === p.id;
+                  return (
+                    <button key={p.id} onClick={() => setPermission(p.id)} style={{
+                      flex: 1, textAlign: "left", padding: "10px 12px", borderRadius: 10, cursor: "pointer",
+                      border: `1.5px solid ${active ? p.color : BORDER}`, background: active ? `${p.color}0e` : WHITE,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                        <span style={{ width: 12, height: 12, borderRadius: "50%", border: `2px solid ${active ? p.color : "#c3ccca"}`, background: active ? p.color : WHITE, flexShrink: 0 }} />
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: active ? p.color : TEXT }}>{p.label}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: TEXT_SEC, lineHeight: 1.4 }}>{p.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <button onClick={handleAdd} disabled={!name.trim()} style={{ marginTop: 16, padding: "10px 18px", borderRadius: 9, border: "none", background: name.trim() ? TEAL : "#cbd5d3", color: WHITE, fontSize: 13.5, fontWeight: 700, cursor: name.trim() ? "pointer" : "default", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add coach
+              Add team member
             </button>
           </div>
 
           {/* Roster */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Coach roster</h2>
-              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{COACHES.length} coaches</span>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: TEXT, margin: 0 }}>Team roster</h2>
+              <span style={{ fontSize: 12.5, color: TEXT_SEC, fontWeight: 600 }}>{COACHES.length} members</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {COACHES.map(coach => {
@@ -3130,6 +3170,22 @@ function SettingsCanvas({ sessions, onClose, onHome, onCoachesChanged, isMobile 
                           )}
                         </div>
                       )}
+                      {/* Permission selector */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 9 }}>
+                        {PERMISSION_LEVELS.map(p => {
+                          const active = (coach.permission || "limited") === p.id;
+                          return (
+                            <button key={p.id} onClick={() => handlePermissionChange(coach.id, p.id)} title={p.description} style={{
+                              display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, cursor: "pointer",
+                              border: `1px solid ${active ? p.color : BORDER}`, background: active ? `${p.color}14` : WHITE,
+                              fontSize: 11.5, fontWeight: 700, color: active ? p.color : TEXT_SEC, lineHeight: 1.3,
+                            }}>
+                              {active && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={p.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>}
+                              {p.short}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                     {isConfirming ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -18332,7 +18388,7 @@ export default function MiltonDashboard() {
               {[
                 { icon: "payments", label: "Billing & Payments", desc: "Providers, packages & payouts", color: "#45818e", onClick: () => { setCanvasType("payments"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "users", label: "Clients", desc: "View your full client list", color: "#2B7A78", badge: clients.length, badgeLabel: "active", badgeColor: "#2B7A78", onClick: () => setHomeView("clients") },
-                { icon: "crm", label: "Leads", desc: "Prospects, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
+                { icon: "crm", label: "CRM", desc: "Prospects, contacts & pre-call briefs", color: "#0E5D70", badge: 3, badgeLabel: "new", badgeColor: "#0E5D70", onClick: () => { setCanvasType("crm"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "inbox", label: "Inbox", desc: "Messages & alerts", color: "#45818e", badge: clients.filter(c => c.alertType === "blue").length, badgeLabel: "unread", onClick: () => { setCanvasType("inbox"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Schedule", desc: "Calendar, classes, rooms & hours", color: "#2B7A78", badge: 2, badgeLabel: "flagged", onClick: () => { setCanvasType("schedule"); setCanvasData({}); setCanvasMode(true); } },
                 { icon: "calendar", label: "Classes", desc: "Schedule group & semi-private classes", color: "#0E5D70", onClick: () => { setCanvasType("classes"); setCanvasData({}); setCanvasMode(true); } },
