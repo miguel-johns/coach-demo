@@ -718,7 +718,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             <button style={{ ...btn("secondary"), padding: "7px 11px" }} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
             <button style={{ ...btn("secondary"), padding: "7px 13px" }} onClick={() => setWeekStart(WEEK0)}>This week</button>
             <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-              <Select value={trainerFilter} onChange={(e) => setTrainerFilter(e.target.value)} options={[{ v: "alex", label: "Alex Reyes (you)" }, { v: "dana", label: "Dana Kim" }, { v: "priya", label: "Priya Shah" }, { v: "all", label: "Everyone" }]} />
               <button style={btn("primary")} onClick={() => openCreate({ date: TODAY, start: 16 }, "oneone")}>+ Book</button>
             </div>
           </div>
