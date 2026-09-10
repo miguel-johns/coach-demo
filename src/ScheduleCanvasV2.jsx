@@ -25,6 +25,7 @@ const SHADOW_CARD = "0 1px 0 rgba(14,93,112,.04), 0 2px 8px rgba(14,93,112,.06)"
 const SHADOW_XL = "0 28px 60px rgba(14,93,112,.20)";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const AVATAR_PALETTE = ["#E87560", "#8B5CF6", "#3F88F2", "#3FA053", "#176B7C", "#E89C3A"];
 const TIMES = ["5:00 AM", "5:30 AM", "6:00 AM", "6:30 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM"];
 const PROVIDERS = [
@@ -40,18 +41,24 @@ const BOOKING_SLOTS = [
 /* ---------- helpers ---------- */
 const initials = (n) => n.split(" ").map((w) => w[0]).join("").slice(0, 2);
 
-function hoursDaysLabel(on) {
-  if (on.every(Boolean)) return "Every day";
-  const runs = [];
+// Groups consecutive open days that share the same open/close time into rows.
+function summarizeHours(days) {
+  const rows = [];
   for (let i = 0; i < 7; i++) {
-    if (on[i]) {
-      if (runs.length && runs[runs.length - 1][1] === i - 1) runs[runs.length - 1][1] = i;
-      else runs.push([i, i]);
+    const d = days[i];
+    if (!d.on) continue;
+    const last = rows[rows.length - 1];
+    if (last && last.lastIdx === i - 1 && last.start === d.start && last.end === d.end) {
+      last.lastIdx = i;
+      last.endDay = DAYS[i];
+    } else {
+      rows.push({ startDay: DAYS[i], endDay: DAYS[i], lastIdx: i, start: d.start, end: d.end });
     }
   }
-  let label = runs.map(([a, b]) => (a === b ? DAYS[a] : `${DAYS[a]} – ${DAYS[b]}`)).join(", ");
-  if (label === "Mon – Fri") label = "Monday – Friday";
-  return label;
+  return rows.map((r) => ({
+    label: r.startDay === r.endDay ? r.startDay : `${r.startDay} – ${r.endDay}`,
+    time: `${r.start} – ${r.end}`,
+  }));
 }
 
 const serviceMeta = (x) =>
@@ -107,7 +114,15 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
     { name: "Miguel Ortega", provider: "Google Calendar" },
     { name: "Joe Fields", provider: "Outlook" },
   ]);
-  const [hours, setHours] = useState({ days: [1, 1, 1, 1, 1, 0, 0], start: "6:00 AM", end: "7:00 PM", extra: "" });
+  const [hours, setHours] = useState([
+    { on: true, start: "6:00 AM", end: "7:00 PM" },
+    { on: true, start: "6:00 AM", end: "7:00 PM" },
+    { on: true, start: "6:00 AM", end: "7:00 PM" },
+    { on: true, start: "6:00 AM", end: "7:00 PM" },
+    { on: true, start: "6:00 AM", end: "7:00 PM" },
+    { on: false, start: "8:00 AM", end: "12:00 PM" },
+    { on: false, start: "8:00 AM", end: "12:00 PM" },
+  ]);
   const [services, setServices] = useState([
     { name: "Personal Training", dur: 60, kind: "individual", cap: 1, staff: "Miguel", when: "Business hours" },
     { name: "Initial Assessment", dur: 30, kind: "individual", cap: 1, staff: "Miguel", when: "Business hours" },
@@ -126,7 +141,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const close = () => setModal(null);
   const setF = (patch) => setForm((f) => ({ ...f, ...patch }));
 
-  const hoursDays = hoursDaysLabel(hours.days);
+  const hoursRows = summarizeHours(hours);
 
   const addService = (svc) => {
     setServices((prev) => (prev.some((x) => x.name === svc.name) ? prev : [...prev, svc]));
@@ -205,21 +220,28 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           </Card>
 
           {/* Hours */}
-          <Card style={{ overflow: "visible", padding: "20px 24px 22px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
+          <Card style={{ overflow: "visible", padding: "20px 24px 22px", display: "flex", alignItems: "flex-start", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 12 }}>
               <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Hours</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-.01em", lineHeight: 1.2 }}>{hoursDays}</span>
-                <span style={{ fontSize: 22, color: FG2, lineHeight: 1.2 }}>{`${hours.start} – ${hours.end}`}</span>
-                {hours.extra && <span style={{ fontSize: 14, color: FG3, marginTop: 6 }}>{hours.extra}</span>}
-              </div>
-              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+              {hoursRows.length === 0 ? (
+                <span style={{ fontSize: 18, color: FG3 }}>Closed every day</span>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {hoursRows.map((r) => (
+                    <div key={r.label} style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+                      <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-.01em", minWidth: 92 }}>{r.label}</span>
+                      <span style={{ fontSize: 18, color: FG2 }}>{r.time}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
                 {DAYS.map((d, i) => (
-                  <span key={d} style={{ width: 28, height: 28, borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, background: hours.days[i] ? TEAL_800 : INK100, color: hours.days[i] ? WHITE : FG4 }}>{d[0]}</span>
+                  <span key={d} style={{ width: 28, height: 28, borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, background: hours[i].on ? TEAL_800 : INK100, color: hours[i].on ? WHITE : FG4 }}>{d[0]}</span>
                 ))}
               </div>
             </div>
-            <button style={btn("secondary")} onClick={() => { setHoursDraft({ ...hours, days: [...hours.days] }); setModal("hours"); }}>Edit Hours</button>
+            <button style={btn("secondary")} onClick={() => { setHoursDraft(hours.map((d) => ({ ...d }))); setModal("hours"); }}>Edit Hours</button>
           </Card>
 
           {/* Services & Classes */}
@@ -282,32 +304,42 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
       {/* ---------- Hours modal ---------- */}
       {modal === "hours" && hoursDraft && (
         <Modal onClose={close}>
-          <ModalTitle title="Hours" sub="When members can book anything." />
+          <ModalTitle title="Hours" sub="Set the times members can book, day by day." />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={fieldLabel}>Days</span>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {DAYS.map((d, i) => (
-                <button key={d} style={chip(!!hoursDraft.days[i])} onClick={() => setHoursDraft((h) => { const days = [...h.days]; days[i] = days[i] ? 0 : 1; return { ...h, days }; })}>{d}</button>
-              ))}
-            </div>
+            {DAY_NAMES.map((name, i) => {
+              const d = hoursDraft[i];
+              return (
+                <div key={name} style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 40 }}>
+                  <button
+                    onClick={() => setHoursDraft((h) => h.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))}
+                    aria-pressed={d.on}
+                    style={{ display: "flex", alignItems: "center", gap: 8, width: 116, flex: "none", background: "transparent", border: 0, cursor: "pointer", fontFamily: "inherit", padding: 0, textAlign: "left" }}
+                  >
+                    <span style={{ width: 18, height: 18, flex: "none", borderRadius: 6, border: `1.5px solid ${d.on ? TEAL_800 : INK200}`, background: d.on ? TEAL_800 : WHITE, display: "inline-flex", alignItems: "center", justifyContent: "center", color: WHITE }}>
+                      {d.on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>}
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: d.on ? FG1 : FG3 }}>{name}</span>
+                  </button>
+                  {d.on ? (
+                    <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <select style={{ ...inputStyle, padding: "8px 10px", fontSize: 14 }} value={d.start} onChange={(e) => setHoursDraft((h) => h.map((x, j) => (j === i ? { ...x, start: e.target.value } : x)))}>
+                        {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <span style={{ color: FG3, fontSize: 14 }}>–</span>
+                      <select style={{ ...inputStyle, padding: "8px 10px", fontSize: 14 }} value={d.end} onChange={(e) => setHoursDraft((h) => h.map((x, j) => (j === i ? { ...x, end: e.target.value } : x)))}>
+                        {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button title="Copy to all open days" onClick={() => setHoursDraft((h) => h.map((x) => (x.on ? { ...x, start: d.start, end: d.end } : x)))} style={{ flex: "none", width: 32, height: 32, borderRadius: 8, border: `1px solid ${INK200}`, background: WHITE, cursor: "pointer", color: FG3, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{ flex: 1, fontSize: 14, color: FG4 }}>Closed</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={fieldLabel}>Open</span>
-              <select style={inputStyle} value={hoursDraft.start} onChange={(e) => setHoursDraft((h) => ({ ...h, start: e.target.value }))}>
-                {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={fieldLabel}>Close</span>
-              <select style={inputStyle} value={hoursDraft.end} onChange={(e) => setHoursDraft((h) => ({ ...h, end: e.target.value }))}>
-                {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
-          </div>
-          <p style={{ fontSize: 13, color: FG3, margin: 0, textWrap: "pretty" }}>
-            {'Need different hours per coach or per day? Just tell Milton — "Joe only works mornings."'}
-          </p>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
             <button style={btn("ghost")} onClick={close}>Cancel</button>
             <button style={btn("primary")} onClick={saveHours}>Save Hours</button>
