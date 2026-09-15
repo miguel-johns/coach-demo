@@ -126,7 +126,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
 
   const [modal, setModal] = useState(null);
   const [connectName, setConnectName] = useState("");
-  const [hoursView, setHoursView] = useState("business");
   const [hoursTarget, setHoursTarget] = useState(null);
   const [form, setForm] = useState(() => ({ name: "", dur: 60, kind: "individual", cap: 12, staff: "miguel", hoursMode: "business", hours: copyWeek(hours) }));
   const [booking, setBooking] = useState({ step: 0, service: null, date: null, time: null });
@@ -146,7 +145,6 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
 
   const openHours = (scope, entry) => {
     setHoursTarget({ ...entry, scope });
-    setHoursView(scope === "service" ? "services" : scope);
     setModal("hours");
   };
 
@@ -236,7 +234,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           </Card>
 
           {/* Hours */}
-          <HoursCard businessHours={hours} coaches={calendars} services={services} view={hoursView} onViewChange={setHoursView} onEdit={openHours} />
+          <HoursCard businessHours={hours} onEdit={openHours} />
 
           {/* Services & Classes */}
           <Card>

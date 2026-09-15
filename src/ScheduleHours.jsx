@@ -1,10 +1,7 @@
-import React, { useId, useRef, useState } from "react";
-import { ChevronRight, Copy, DoorOpen, UserRound, Users } from "lucide-react";
+import React, { useId, useState } from "react";
+import { Copy, DoorOpen, UserRound, Users } from "lucide-react";
 import { DAYS, DAY_NAMES, TIME_OPTIONS, copyWeek, effectiveHours, hoursError, summarizeHours, timeToMinutes } from "./scheduleAvailability";
 import "./ScheduleHours.css";
-
-const VIEWS = ["business", "team", "services"];
-const VIEW_LABELS = { business: "Business", team: "Team", services: "Services" };
 
 export function ServiceMark({ kind }) {
   const Icon = kind === "space" ? DoorOpen : kind === "group" ? Users : UserRound;
@@ -35,65 +32,21 @@ function WeekDays({ hours }) {
   ))}</div>;
 }
 
-export function HoursCard({ businessHours, coaches, services, view, onViewChange, onEdit }) {
+export function HoursCard({ businessHours, onEdit }) {
   const id = useId();
-  const tabs = useRef([]);
-  const entries = view === "team" ? coaches : services;
-  const description = view === "business"
-    ? "Your default hours. Everyone follows these unless you set custom hours."
-    : view === "team"
-      ? "Your team, at a glance. Select a coach to adjust their hours."
-      : "A different schedule for a service or space? Set it here.";
-
-  function moveTab(event, index) {
-    let next;
-    if (event.key === "ArrowRight") next = (index + 1) % VIEWS.length;
-    else if (event.key === "ArrowLeft") next = (index + VIEWS.length - 1) % VIEWS.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = VIEWS.length - 1;
-    else return;
-    event.preventDefault();
-    onViewChange(VIEWS[next]);
-    tabs.current[next]?.focus();
-  }
 
   return (
     <section className="hours-card" aria-labelledby={`${id}-heading`}>
       <div className="hours-card-top">
         <div className="hours-card-heading">
           <h2 id={`${id}-heading`}>Hours</h2>
-          {view === "business" && <button type="button" className="hours-button hours-button-secondary" onClick={() => onEdit("business")}>Edit hours</button>}
-        </div>
-        <div className="hours-tabs" role="tablist" aria-label="Hours views">
-          {VIEWS.map((tab, i) => (
-            <button key={tab} ref={(node) => { tabs.current[i] = node; }} type="button" role="tab" id={`${id}-${tab}`} aria-controls={`${id}-panel-${tab}`} aria-selected={view === tab} tabIndex={view === tab ? 0 : -1} onClick={() => onViewChange(tab)} onKeyDown={(event) => moveTab(event, i)}>{VIEW_LABELS[tab]}</button>
-          ))}
+          <button type="button" className="hours-button hours-button-secondary" onClick={() => onEdit("business")}>Edit hours</button>
         </div>
       </div>
-      <div role="tabpanel" id={`${id}-panel-${view}`} aria-labelledby={`${id}-${view}`}>
-        <p className="hours-card-description">{description}</p>
-        {view === "business" ? (
-          <div className="hours-business-summary">
-            <HoursSummary hours={businessHours} />
-            <WeekDays hours={businessHours} />
-          </div>
-        ) : (
-          <ul className="hours-list">
-            {entries.map((entry) => (
-              <li key={entry.id}>
-                <button type="button" className="hours-list-row" onClick={() => onEdit(view === "team" ? "team" : "service", entry)} aria-label={`Edit ${entry.name} hours`}>
-                  {view === "team" ? <span className="hours-avatar" aria-hidden="true">{entry.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}</span> : <ServiceMark kind={entry.kind} />}
-                  <span className="hours-row-content">
-                    <span className="hours-row-heading"><span className="hours-row-name">{entry.name}</span><HoursBadge custom={entry.hours != null} /></span>
-                    <HoursSummary hours={effectiveHours(entry.hours, businessHours)} />
-                  </span>
-                  <ChevronRight size={16} className="hours-row-chevron" aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-            {!entries.length && <li className="hours-list-empty">{view === "team" ? "Connect a coach’s calendar to add them to your team." : "Add a service or space below to set its hours."}</li>}
-          </ul>
-        )}
+      <p className="hours-card-description">Your default hours. Everyone follows these unless you set custom hours.</p>
+      <div className="hours-business-summary">
+        <HoursSummary hours={businessHours} />
+        <WeekDays hours={businessHours} />
       </div>
     </section>
   );

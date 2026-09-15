@@ -38,9 +38,6 @@
 .hours-card-top { padding: 20px 24px 0; }
 .hours-card-heading { display: flex; align-items: center; justify-content: space-between; min-height: 34px; }
 .hours-card-heading h2 { font-size: 17px; font-weight: 600; }
-.hours-tabs { display: flex; gap: 4px; background: var(--schedule-surface); border-radius: 12px; padding: 4px; margin-top: 16px; }
-.hours-tabs button { flex: 1; border: 1px solid transparent; border-radius: 9px; padding: 9px 12px; font: inherit; font-size: 14px; font-weight: 600; background: transparent; color: var(--schedule-body); cursor: pointer; }
-.hours-tabs button[aria-selected="true"] { background: var(--schedule-paper); color: var(--schedule-brand); border-color: var(--schedule-border); box-shadow: 0 1px 3px color-mix(in srgb, var(--schedule-ink) 5%, transparent); }
 .hours-card-description { padding: 14px 24px 16px; font-size: 14px; line-height: 1.5; color: var(--schedule-body); text-wrap: pretty; }
 .hours-business-summary { padding: 0 24px 22px; }
 .hours-summary { display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.5; color: var(--schedule-body); }
@@ -51,19 +48,9 @@
 .hours-week-days { display: flex; gap: 6px; padding-top: 14px; }
 .hours-week-days > span { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; font-size: 14px; font-weight: 600; border-radius: 50%; background: var(--schedule-surface); color: var(--schedule-body); }
 .hours-week-days > .hours-day-open { background: var(--schedule-brand); color: var(--schedule-paper); }
-.hours-list { list-style: none; }
-.hours-list > li { border-top: 1px solid var(--schedule-border); }
-.hours-list-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 24px; background: var(--schedule-paper); color: var(--schedule-ink); border: 0; text-align: left; cursor: pointer; font: inherit; }
-.hours-list-row:hover, .schedule-service-row:hover { background: var(--schedule-tint); }
-.hours-row-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.hours-row-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.hours-row-name { font-size: 15px; font-weight: 600; }
 .hours-badge { display: inline-flex; align-items: center; border-radius: 6px; padding: 2px 8px; background: var(--schedule-surface); color: var(--schedule-body); font-size: 14px; font-weight: 500; line-height: 1.5; white-space: nowrap; }
 .hours-badge-custom { color: var(--schedule-brand); background: var(--schedule-tint); }
-.hours-row-chevron { flex: none; color: var(--schedule-body); }
-.hours-avatar, .schedule-service-mark { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--schedule-tint); color: var(--schedule-brand); font-size: 14px; font-weight: 600; }
-.hours-avatar { border-radius: 50%; }
-.hours-list-empty { padding: 20px 24px; font-size: 14px; color: var(--schedule-body); }
+.schedule-service-mark { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--schedule-tint); color: var(--schedule-brand); font-size: 14px; font-weight: 600; }
 .hours-button { padding: 9px 16px; min-height: 36px; border-radius: 999px; border: 1px solid transparent; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.2; cursor: pointer; }
 .hours-button-secondary { border-color: var(--schedule-border); background: var(--schedule-paper); color: var(--schedule-ink); }
 .hours-button-primary { background: var(--schedule-brand); color: var(--schedule-paper); }
@@ -109,9 +96,6 @@
   .hours-card-description { padding: 12px 16px 16px; }
   .hours-business-summary { padding: 0 16px 18px; }
   .hours-business-summary .hours-summary { font-size: 16px; }
-  .hours-list-row { padding: 16px; gap: 10px; }
-  .hours-row-heading { justify-content: flex-start; }
-  .hours-tabs button { padding: 9px 8px; }
   .week-hours-row { gap: 8px; }
   .week-hours-toggle { width: 64px; }
   .week-day-full { display: none; }
