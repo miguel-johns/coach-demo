@@ -33,10 +33,43 @@ const PROVIDERS = [
   { name: "Outlook", sub: "Microsoft 365", letter: "O", color: "#8B5CF6" },
   { name: "Apple Calendar", sub: "iCloud", letter: "A", color: "#3F4A4E" },
 ];
-const BOOKING_SLOTS = [
-  { label: "Tomorrow", slots: ["6:00 AM", "7:30 AM", "10:00 AM", "4:00 PM"] },
-  { label: "Thursday", slots: ["6:00 AM", "8:30 AM", "1:00 PM", "5:30 PM"] },
-];
+// Builds the next `count` open days from the coach's hours, for the member date picker.
+function buildDates(hours, count = 14) {
+  const out = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = 1; out.length < count && i < 90; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const idx = (d.getDay() + 6) % 7; // convert JS Sun=0 to Mon=0
+    if (!hours[idx].on) continue;
+    out.push({
+      key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`,
+      offset: i,
+      dow: DAY_NAMES[idx],
+      day: d.getDate(),
+      month: d.toLocaleString("en-US", { month: "short" }),
+      start: hours[idx].start,
+      end: hours[idx].end,
+    });
+  }
+  return out;
+}
+
+// Returns the bookable time slots that fall within a day's open hours.
+function slotsFor(date) {
+  if (!date) return [];
+  const si = TIMES.indexOf(date.start);
+  const ei = TIMES.indexOf(date.end);
+  if (si === -1 || ei === -1) return TIMES;
+  return TIMES.slice(si, ei + 1);
+}
+
+// Friendly label for a chosen date, e.g. "Monday, Sep 15".
+function dateLabel(date) {
+  if (!date) return "";
+  return `${date.dow}, ${date.month} ${date.day}`;
+}
 
 /* ---------- helpers ---------- */
 const initials = (n) => n.split(" ").map((w) => w[0]).join("").slice(0, 2);
@@ -134,7 +167,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [connectName, setConnectName] = useState("");
   const [hoursDraft, setHoursDraft] = useState(hours);
   const [form, setForm] = useState({ name: "", dur: 60, kind: "individual", cap: 12, staff: "Miguel", when: "Business hours" });
-  const [booking, setBooking] = useState({ step: 0, service: null, slot: null });
+  const [booking, setBooking] = useState({ step: 0, service: null, date: null, time: null });
   const [toast, setToast] = useState("");
 
   const flash = (msg) => { setToast(msg); window.clearTimeout(flash._t); flash._t = window.setTimeout(() => setToast(""), 2600); };
@@ -142,6 +175,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const setF = (patch) => setForm((f) => ({ ...f, ...patch }));
 
   const hoursRows = summarizeHours(hours);
+  const bookingDates = buildDates(hours);
 
   const addService = (svc) => {
     setServices((prev) => (prev.some((x) => x.name === svc.name) ? prev : [...prev, svc]));
@@ -170,7 +204,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
       {/* header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: `14px ${PAD}px`, position: "relative" }}>
         <div style={{ flex: 1 }} />
-        <button onClick={() => { setBooking({ step: 0, service: null, slot: null }); setModal("book"); }} style={{ ...btn("secondary"), fontSize: 12.5, padding: "8px 14px" }}>
+        <button onClick={() => { setBooking({ step: 0, service: null, date: null, time: null }); setModal("book"); }} style={{ ...btn("secondary"), fontSize: 12.5, padding: "8px 14px" }}>
           Preview member booking
         </button>
         {onClose && (
@@ -404,10 +438,32 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: FG4, textTransform: "uppercase" }}>Member view</span>
             <span style={{ flex: 1 }} />
-            {booking.step === 1 && <button style={{ ...btn("ghost"), fontSize: 12.5, padding: "6px 12px" }} onClick={() => setBooking((b) => ({ ...b, step: 0 }))}>Back</button>}
+            {booking.step > 0 && booking.step < 4 && (
+              <button style={{ ...btn("ghost"), fontSize: 12.5, padding: "6px 12px" }} onClick={() => setBooking((b) => ({ ...b, step: b.step - 1 }))}>Back</button>
+            )}
             <button style={{ ...btn("ghost"), fontSize: 12.5, padding: "6px 12px" }} onClick={close}>Close</button>
           </div>
 
+          {/* Step indicator */}
+          {booking.step < 4 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {["Service", "Date", "Time", "Confirm"].map((label, i) => {
+                const done = i < booking.step;
+                const current = i === booking.step;
+                return (
+                  <React.Fragment key={label}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 20, height: 20, flex: "none", borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: done || current ? TEAL_800 : INK100, color: done || current ? WHITE : FG4 }}>{i + 1}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: current ? FG1 : FG4 }}>{label}</span>
+                    </span>
+                    {i < 3 && <span style={{ flex: 1, height: 1, background: done ? TEAL_800 : INK200 }} />}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Step 0 — pick a service */}
           {booking.step === 0 && (
             <>
               <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>What would you like to book?</h2>
@@ -415,7 +471,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
                 {services.map((s, i) => {
                   const group = s.kind === "group";
                   return (
-                    <button key={s.name + i} onClick={() => setBooking({ step: 1, service: s, slot: null })} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, border: `1px solid ${INK200}`, background: WHITE, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}>
+                    <button key={s.name + i} onClick={() => setBooking({ step: 1, service: s, date: null, time: null })} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, border: `1px solid ${INK200}`, background: WHITE, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}>
                       <span style={{ width: 36, height: 36, flex: "none", borderRadius: 10, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, background: group ? "#8B5CF6" : TEAL_800, color: WHITE }}>{group ? "G" : "1"}</span>
                       <span style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: FG1 }}>{s.name}</span>
@@ -429,35 +485,80 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
             </>
           )}
 
+          {/* Step 1 — pick a date */}
           {booking.step === 1 && booking.service && (
             <>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>{booking.service.name}</h2>
-                <span style={{ fontSize: 14, color: FG3 }}>{booking.service.kind === "group" ? `${booking.service.dur} min · ${booking.service.cap} spots · ${booking.service.staff}` : `${booking.service.dur} min with ${booking.service.staff}`}</span>
+                <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>Pick a date</h2>
+                <span style={{ fontSize: 14, color: FG3 }}>{booking.service.name} · {booking.service.dur} min with {booking.service.staff}</span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {BOOKING_SLOTS.map((d) => (
-                  <div key={d.label} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    <span style={fieldLabel}>{d.label}</span>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(96px,1fr))", gap: 8 }}>
-                      {d.slots.map((t) => (
-                        <button key={t} onClick={() => setBooking((b) => ({ ...b, slot: `${d.label} at ${t}`, step: 2 }))} style={{ padding: "12px 8px", borderRadius: 12, border: `1px solid ${INK200}`, background: WHITE, fontSize: 14, fontWeight: 600, color: TEAL_800, cursor: "pointer", fontFamily: "inherit" }}>{t}</button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(88px,1fr))", gap: 8 }}>
+                {bookingDates.map((d) => {
+                  const active = booking.date && booking.date.key === d.key;
+                  return (
+                    <button key={d.key} onClick={() => setBooking((b) => ({ ...b, date: d, time: null, step: 2 }))} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "12px 8px", borderRadius: 12, border: `1px solid ${active ? TEAL_800 : INK200}`, background: active ? TEAL_050 : WHITE, cursor: "pointer", fontFamily: "inherit" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: FG3, textTransform: "uppercase", letterSpacing: ".04em" }}>{d.dow.slice(0, 3)}</span>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: FG1, lineHeight: 1.1 }}>{d.day}</span>
+                      <span style={{ fontSize: 12, color: FG3 }}>{d.month}</span>
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
 
-          {booking.step === 2 && booking.service && (
+          {/* Step 2 — pick a time */}
+          {booking.step === 2 && booking.service && booking.date && (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>Pick a time</h2>
+                <span style={{ fontSize: 14, color: FG3 }}>{dateLabel(booking.date)} · {booking.service.name}</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(96px,1fr))", gap: 8 }}>
+                {slotsFor(booking.date).map((t) => {
+                  const active = booking.time === t;
+                  return (
+                    <button key={t} onClick={() => setBooking((b) => ({ ...b, time: t, step: 3 }))} style={{ padding: "12px 8px", borderRadius: 12, border: `1px solid ${active ? TEAL_800 : INK200}`, background: active ? TEAL_050 : WHITE, fontSize: 14, fontWeight: 600, color: TEAL_800, cursor: "pointer", fontFamily: "inherit" }}>{t}</button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Step 3 — confirm the details */}
+          {booking.step === 3 && booking.service && booking.date && booking.time && (
+            <>
+              <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>Confirm your booking</h2>
+              <div style={{ display: "flex", flexDirection: "column", border: `1px solid ${INK200}`, borderRadius: 14, overflow: "hidden" }}>
+                {[
+                  ["Service", booking.service.name],
+                  ["Date", dateLabel(booking.date)],
+                  ["Time", booking.time],
+                  ["Duration", `${booking.service.dur} min`],
+                  ["Coach", booking.service.staff],
+                  booking.service.kind === "group" ? ["Type", `Group class · ${booking.service.cap} spots`] : ["Type", "One-on-one"],
+                ].map(([k, v], i) => (
+                  <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 16px", borderTop: i === 0 ? "none" : `1px solid ${B_SUB}` }}>
+                    <span style={{ fontSize: 13, color: FG3 }}>{k}</span>
+                    <span style={{ fontSize: 14.5, fontWeight: 600, color: FG1, textAlign: "right" }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <button style={{ ...btn("primary"), width: "100%", padding: "12px 18px", fontSize: 15 }} onClick={() => setBooking((b) => ({ ...b, step: 4 }))}>
+                {booking.service.kind === "group" ? "Reserve my spot" : "Confirm booking"}
+              </button>
+            </>
+          )}
+
+          {/* Step 4 — success */}
+          {booking.step === 4 && booking.service && (
             <>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "12px 0 4px", textAlign: "center" }}>
                 <span style={{ width: 56, height: 56, borderRadius: 999, background: S_BG, color: S_FG, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
                 </span>
                 <h2 style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.01em", margin: 0 }}>{booking.service.kind === "group" ? "Spot reserved" : "You're booked"}</h2>
-                <p style={{ fontSize: 15, color: FG2, margin: 0, textWrap: "pretty" }}>{`${booking.service.name}, ${booking.slot} with ${booking.service.staff}. It's on the calendar and a reminder goes out the day before.`}</p>
+                <p style={{ fontSize: 15, color: FG2, margin: 0, textWrap: "pretty" }}>{`${booking.service.name} on ${dateLabel(booking.date)} at ${booking.time} with ${booking.service.staff}. It's on the calendar and a reminder goes out the day before.`}</p>
               </div>
               <button style={{ ...btn("primary"), width: "100%", padding: "12px 18px", fontSize: 15 }} onClick={close}>Done</button>
             </>
