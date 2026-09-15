@@ -147,7 +147,7 @@ function BookingShareOutputs({ url, embed }) {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", border: `1px solid ${INK200}`, borderRadius: 14, overflow: "hidden" }}>
+    <div style={{ display: "flex", flexShrink: 0, flexDirection: "column", border: `1px solid ${INK200}`, borderRadius: 14, overflow: "hidden" }}>
       {/* Hosted link */}
       <div style={{ padding: 16, borderBottom: `1px solid ${B_SUB}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
