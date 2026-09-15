@@ -1,6 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { HoursBadge, HoursCard, HoursEditor, HoursSourcePicker, ServiceMark, WeekHoursEditor } from "./ScheduleHours";
 import { buildBookingDates, coachLabel, copyWeek, createWeek, dateLabel, hoursError, serviceMeta } from "./scheduleAvailability";
+
+/* ---------- sharing the booking page beyond the app ---------- */
+const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace";
+const BOOKING_SUBDOMAIN = "ridgeline.milton.site";
+const bookingUrlFor = (serviceId) =>
+  serviceId && serviceId !== "all" ? `https://${BOOKING_SUBDOMAIN}/book?service=${serviceId}` : `https://${BOOKING_SUBDOMAIN}/book`;
+const bookingEmbedFor = (serviceId) =>
+  `<div id="milton-booking"></div>
+<script
+  src="https://embed.milton.site/v1.js"
+  data-page="book"${serviceId && serviceId !== "all" ? `\n  data-service="${serviceId}"` : ""}
+  data-height="auto"
+  async
+></script>`;
+
+async function writeClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* fall through to the textarea path */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function downloadBookingQr(url, filename) {
+  try {
+    const data = await QRCode.toDataURL(url, { width: 1024, margin: 2, color: { dark: "#0E5D70ff", light: "#ffffffff" } });
+    const a = document.createElement("a");
+    a.href = data;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) { /* nothing useful to show the coach if the canvas is blocked */ }
+}
 
 /* ---------- tokens (from Milton design system) ---------- */
 const WHITE = "#FFFFFF";
@@ -53,6 +102,103 @@ const PlusIcon = () => (
 const Chevron = ({ color = FG4 }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color, flex: "none" }}><path d="m9 18 6-6-6-6" /></svg>
 );
+const Icon = ({ d, size = 14, stroke = 2.2 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+);
+const I_LINK = <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>;
+const I_QR = <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM19 19h2M19 14h2v2" /></>;
+const I_CODE = <><path d="m9 18-6-6 6-6" /><path d="m15 6 6 6-6 6" /></>;
+const I_CHECK = <path d="M20 6 9 17l-5-5" />;
+const I_EXT = <><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" /></>;
+const I_SHARE = <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-3.9" /><path d="m8.6 13.5 6.8 3.9" /></>;
+
+/* ---------- QR image, generated live from the hosted booking link ---------- */
+function BookingQrImg({ url, size = 92 }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(url, { width: size * 2, margin: 1, color: { dark: "#0E5D70ff", light: "#ffffffff" } })
+      .then((u) => { if (alive) setSrc(u); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [url, size]);
+  if (!src) return <div style={{ width: size, height: size, borderRadius: 10, background: INK050, border: `1px solid ${INK200}`, flex: "none" }} />;
+  return <img src={src} width={size} height={size} alt="QR code linking to the booking page" style={{ display: "block", borderRadius: 10, border: `1px solid ${INK200}`, flex: "none" }} />;
+}
+
+/* ---------- the three ways to share the booking page beyond the app ---------- */
+function BookingShareOutputs({ url, embed }) {
+  const [copied, setCopied] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const flash = (key) => {
+    setCopied(key);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(null), 1800);
+  };
+  const doCopy = (key, text) => async () => {
+    await writeClipboard(text);
+    flash(key);
+  };
+  const shareBtn = (key, label, iconOn, iconOff, onClick) => (
+    <button style={{ ...btn(copied === key ? "primary" : "secondary"), fontSize: 12.5, padding: "7px 12px", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onClick}>
+      <Icon d={copied === key ? iconOn : iconOff} size={13} />{copied === key ? "Copied" : label}
+    </button>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", border: `1px solid ${INK200}`, borderRadius: 14, overflow: "hidden" }}>
+      {/* Hosted link */}
+      <div style={{ padding: 16, borderBottom: `1px solid ${B_SUB}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <span style={{ color: TEAL_800, display: "inline-flex" }}><Icon d={I_LINK} size={15} /></span>
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: FG1 }}>Booking link</span>
+        </div>
+        <div style={{ fontFamily: MONO, fontSize: 12, color: FG1, background: INK050, border: `1px solid ${INK200}`, borderRadius: 9, padding: "9px 11px", wordBreak: "break-all", lineHeight: 1.5 }}>{url}</div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+          {shareBtn("link", "Copy link", I_CHECK, I_LINK, doCopy("link", url))}
+          <button style={{ ...btn("secondary"), fontSize: 12.5, padding: "7px 12px", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => window.open(url, "_blank", "noopener,noreferrer")}>
+            <Icon d={I_EXT} size={13} />Open
+          </button>
+        </div>
+      </div>
+
+      {/* QR code */}
+      <div style={{ padding: 16, borderBottom: `1px solid ${B_SUB}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <span style={{ color: TEAL_800, display: "inline-flex" }}><Icon d={I_QR} size={15} /></span>
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: FG1 }}>QR code</span>
+        </div>
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+          <BookingQrImg url={url} />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 12.5, color: FG3, lineHeight: 1.55, margin: 0, textWrap: "pretty" }}>Print it for the front desk, a window sign, or a class flyer.</p>
+            <div style={{ marginTop: 10 }}>
+              <button style={{ ...btn("secondary"), fontSize: 12.5, padding: "7px 12px", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => downloadBookingQr(url, "booking-qr.png")}>
+                <Icon d={I_QR} size={13} />Download PNG
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Embed snippet */}
+      <div style={{ padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, justifyContent: "space-between", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: TEAL_800, display: "inline-flex" }}><Icon d={I_CODE} size={15} /></span>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: FG1 }}>Embed on your website</span>
+          </div>
+          {shareBtn("embed", "Copy snippet", I_CHECK, I_CODE, doCopy("embed", embed))}
+        </div>
+        <p style={{ fontSize: 12.5, color: FG3, lineHeight: 1.55, margin: "6px 0 10px", textWrap: "pretty" }}>
+          Paste this once, anywhere on your site. It keeps your own header and footer, and it stays in sync when you change hours, coaches, or services.
+        </p>
+        <pre style={{ margin: 0, fontFamily: MONO, fontSize: 11.5, lineHeight: 1.65, color: "#DCEDEC", background: "#0B2A30", borderRadius: 10, padding: "13px 15px", overflowX: "auto", whiteSpace: "pre" }}>{embed}</pre>
+      </div>
+    </div>
+  );
+}
 
 /* ---------- card ---------- */
 function Card({ children, style }) {
@@ -129,6 +275,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const [hoursTarget, setHoursTarget] = useState(null);
   const [form, setForm] = useState(() => ({ name: "", dur: 60, kind: "individual", cap: 12, staff: "miguel", hoursMode: "business", hours: copyWeek(hours) }));
   const [booking, setBooking] = useState({ step: 0, service: null, date: null, time: null });
+  const [shareService, setShareService] = useState("all");
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
@@ -142,6 +289,8 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
   const setF = (patch) => setForm((f) => ({ ...f, ...patch }));
   const bookingDates = buildBookingDates(booking.service, hours, calendars);
   const formError = form.hoursMode === "custom" ? hoursError(form.hours) : "";
+  const shareUrl = bookingUrlFor(shareService);
+  const shareEmbed = bookingEmbedFor(shareService);
 
   const openHours = (scope, entry) => {
     setHoursTarget({ ...entry, scope });
@@ -186,6 +335,9 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
         <div style={{ flex: 1 }} />
         <button onClick={() => { setBooking({ step: 0, service: null, date: null, time: null }); setModal("book"); }} style={{ ...btn("secondary"), fontSize: 12.5, padding: "8px 14px" }}>
           Preview member booking
+        </button>
+        <button onClick={() => { setShareService("all"); setModal("share"); }} style={{ ...btn("brandGhost"), fontSize: 12.5, padding: "8px 14px" }}>
+          <Icon d={I_SHARE} size={14} />Share &amp; embed
         </button>
         {onClose && (
           <button onClick={onClose} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${B_SOFT}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: FG3 }}>
@@ -339,6 +491,28 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
             <button style={btn("ghost")} onClick={close}>Cancel</button>
             <button style={{ ...btn("primary"), ...(!form.name.trim() || formError ? { opacity: 0.45, cursor: "not-allowed" } : {}) }} disabled={!form.name.trim() || !!formError} onClick={saveService}>Publish</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ---------- Share & embed modal ---------- */}
+      {modal === "share" && (
+        <Modal width={560} label="Share your booking page" onClose={close}>
+          <ModalTitle title="Share your booking page" sub="Send the link, print the QR code, or embed it on your own website. Every booking still lands on the connected calendars above." />
+          {services.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={fieldLabel}>What should it show?</span>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button style={chip(shareService === "all")} onClick={() => setShareService("all")}>All services</button>
+                {services.map((service) => (
+                  <button key={service.id} style={chip(shareService === service.id)} onClick={() => setShareService(service.id)}>{service.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          <BookingShareOutputs url={shareUrl} embed={shareEmbed} />
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button style={btn("ghost")} onClick={close}>Done</button>
           </div>
         </Modal>
       )}
