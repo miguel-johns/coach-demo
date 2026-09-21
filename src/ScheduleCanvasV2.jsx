@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { HoursBadge, HoursCard, HoursEditor, HoursSourcePicker, ServiceMark, WeekHoursEditor } from "./ScheduleHours";
+import ScheduleWeekCalendar from "./ScheduleWeekCalendar";
 import { buildBookingDates, coachLabel, copyWeek, createWeek, dateLabel, hoursError, serviceMeta } from "./scheduleAvailability";
 
 /* ---------- sharing the booking page beyond the app ---------- */
@@ -348,7 +349,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
 
       {/* body */}
       <div style={{ flex: 1, overflowY: "auto", padding: `4px ${PAD}px 40px` }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 760, width: "100%", margin: "0 auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: narrow ? 760 : 960, width: "100%", margin: "0 auto" }}>
           {/* intro */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "8px 4px 0" }}>
             <h1 style={{ fontSize: narrow ? 26 : 30, fontWeight: 700, letterSpacing: "-.02em", lineHeight: 1.1, margin: 0 }}>Schedule</h1>
@@ -356,6 +357,9 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
               Connect calendars, set your hours, and choose what members can book. Milton handles the rest.
             </p>
           </div>
+
+          {/* Interactive scheduler */}
+          <ScheduleWeekCalendar isMobile={narrow} />
 
           {/* Connected Calendars */}
           <Card>
