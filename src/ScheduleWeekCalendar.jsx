@@ -1642,33 +1642,13 @@ export default function ScheduleWeekCalendar({ isMobile }) {
             </button>
           )}
         </div>
-        {/* tabs */}
-        <div className="hide-scrollbar" style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, overflowX: "auto" }}>
-          {tabsDef.map((t, i) =>
-            t[0] === "sep" ? (
-              <span key={"s" + i} style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".1em", color: FG4, padding: "0 10px 0 16px", whiteSpace: "nowrap" }}>{t[1]}</span>
-            ) : (
-              <button key={t[0]} onClick={() => setTab(t[0])}
-                style={{ border: 0, background: "transparent", cursor: "pointer", fontFamily: "inherit", fontSize: 13.5, fontWeight: activeTab === t[0] ? 600 : 500, color: activeTab === t[0] ? T800 : FG3, padding: "10px 14px 12px", borderBottom: `2px solid ${activeTab === t[0] ? T800 : "transparent"}`, whiteSpace: "nowrap" }}>
-                {t[1]}
-              </button>
-            )
-          )}
-        </div>
       </div>
 
       {/* body */}
       <div style={{ flex: 1, overflowY: "auto", padding: `${narrow ? 14 : 20}px ${PAD}px ${narrow ? 18 : 26}px` }}>
-        {persona === "coach" && activeTab === "week" && <WeekPanel />}
-        {persona === "admin" && activeTab === "week" && (facView === "day" ? <ResourceDayPanel /> : <FacilityPanel />)}
-        {activeTab === "sessions" && <SessionsPanel />}
-        {activeTab === "classes" && <ClassesPanel />}
-        {activeTab === "templates" && <TemplatesPanel />}
-        {activeTab === "coaches" && <CoachesPanel />}
-        {activeTab === "rooms" && <RoomsPanel />}
-        {activeTab === "providers" && <ProvidersPanel />}
-        {activeTab === "hostmap" && <HostmapPanel />}
-        {activeTab === "hours" && <HoursPanel />}
+        {persona === "coach"
+          ? <WeekPanel />
+          : (facView === "day" ? <ResourceDayPanel /> : <FacilityPanel />)}
       </div>
 
       {/* Milton strip */}
