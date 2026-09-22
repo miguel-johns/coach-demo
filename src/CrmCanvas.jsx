@@ -501,6 +501,12 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [sources, setSources] = useState({});
   const [sourceFor, setSourceFor] = useState(null);
   const [removedTags, setRemovedTags] = useState({});
+  // Tags and sources are user-managed preset lists: create new ones, delete
+  // ones you don't want, and pick from the dropdown when tagging a contact.
+  const [tagPresets, setTagPresets] = useState(TAG_SUGGESTIONS);
+  const [sourcePresets, setSourcePresets] = useState(SOURCE_SUGGESTIONS);
+  const [newTagName, setNewTagName] = useState("");
+  const [newSourceName, setNewSourceName] = useState("");
   const dragMoved = useRef(false);
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
@@ -513,19 +519,35 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const bg = 47;
   const allRows = LEADS.map((r) => [r[0], r[1], r[2], r[3], r[6], r[7], "Lead"]).concat(OFF_LIST).concat(imported);
 
-  const tagsFor = (name, rowType) => {
+  // "Lead" (and other types) are shown separately as the type pill, so they are
+  // no longer injected here as an automatic tag — the tag list is fully yours.
+  const tagsFor = (name) => {
     const removed = removedTags[name] || [];
-    return [rowType].concat(EXTRA_TAGS[name] || []).concat(added[name] || [])
+    return (EXTRA_TAGS[name] || []).concat(added[name] || [])
       .filter(Boolean).filter((t) => removed.indexOf(t) < 0);
   };
   const suggestionsFor = (name) => {
-    const have = tagsFor(name, "");
-    return TAG_SUGGESTIONS.filter((t) => have.indexOf(t) < 0).slice(0, 4);
+    const have = tagsFor(name);
+    return tagPresets.filter((t) => have.indexOf(t) < 0);
   };
   const applyTag = (name, tag) => {
     setAdded((prev) => ({ ...prev, [name]: (prev[name] || []).concat([tag]) }));
     setRemovedTags((p) => (p[name] ? { ...p, [name]: p[name].filter((t) => t !== tag) } : p));
-    setTagFor(null);
+  };
+  const createTag = (name) => {
+    const v = newTagName.trim();
+    if (!v) return;
+    setTagPresets((p) => (p.indexOf(v) < 0 ? p.concat([v]) : p));
+    if (name) applyTag(name, v);
+    setNewTagName("");
+  };
+  const deleteTagPreset = (tag) => {
+    setTagPresets((p) => p.filter((t) => t !== tag));
+    setAdded((prev) => {
+      const next = {};
+      for (const k in prev) next[k] = (prev[k] || []).filter((t) => t !== tag);
+      return next;
+    });
   };
   const removeTag = (name, tag) => {
     setRemovedTags((p) => ({ ...p, [name]: (p[name] || []).concat([tag]) }));
@@ -541,11 +563,25 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const sourcesFor = (name) => sources[name] || [];
   const sourceSuggestionsFor = (name) => {
     const have = sourcesFor(name);
-    return SOURCE_SUGGESTIONS.filter((s) => have.indexOf(s) < 0).slice(0, 4);
+    return sourcePresets.filter((s) => have.indexOf(s) < 0);
   };
   const applySource = (name, s) => {
     setSources((prev) => ({ ...prev, [name]: (prev[name] || []).concat([s]) }));
-    setSourceFor(null);
+  };
+  const createSource = (name) => {
+    const v = newSourceName.trim();
+    if (!v) return;
+    setSourcePresets((p) => (p.indexOf(v) < 0 ? p.concat([v]) : p));
+    if (name) applySource(name, v);
+    setNewSourceName("");
+  };
+  const deleteSourcePreset = (s) => {
+    setSourcePresets((p) => p.filter((x) => x !== s));
+    setSources((prev) => {
+      const next = {};
+      for (const k in prev) next[k] = (prev[k] || []).filter((x) => x !== s);
+      return next;
+    });
   };
   const removeSource = (name, s) => {
     setSources((prev) => ({ ...prev, [name]: (prev[name] || []).filter((x) => x !== s) }));
@@ -786,8 +822,6 @@ export default function CrmCanvas({ onClose, isMobile }) {
         const set = nonLead ? DRAFTS.relationship : hasReplied ? DRAFTS.engaged : DRAFTS.quiet;
         out.push({ from: "m", text: own || set[draft.action](draft.name), meta: null, isDraft: true });
       }
-    } else if (tagFor) {
-      out.push({ from: "m", text: `Tagging ${tagFor.split(" ")[0]}. Pick one below or type your own, tags are yours and never change the ranking.`, meta: null });
     }
     return out;
   };
@@ -1071,35 +1105,84 @@ export default function CrmCanvas({ onClose, isMobile }) {
     </span>
   );
 
-  const TagCell = ({ name, rowType }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-      {tagsFor(name, rowType).map((t) =>
+  // A managed-preset dropdown: pick from your presets, delete presets you no
+  // longer want, or type a new one to create it. Shared shape for tags/sources.
+  const presetMenu = ({ presets, applied, onPick, onDelete, draftVal, onDraft, onCreate, placeholder }) => (
+    <div onClick={(e) => e.stopPropagation()}
+      style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 40, width: 232, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0 16px 40px rgba(16,40,34,0.18)", padding: 8 }}>
+      <div style={{ maxHeight: 176, overflowY: "auto", display: "flex", flexDirection: "column", gap: 1 }}>
+        {presets.length === 0 && (
+          <div style={{ fontSize: 12, color: TEXT_SEC, padding: "6px 8px", lineHeight: 1.4 }}>No presets yet. Create one below.</div>
+        )}
+        {presets.map((p) => {
+          const isOn = applied.indexOf(p) >= 0;
+          return (
+            <div key={p} style={{ display: "flex", alignItems: "center", gap: 4, borderRadius: 8, paddingRight: 2 }}>
+              <button disabled={isOn} onClick={() => onPick(p)}
+                style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: isOn ? "default" : "pointer", fontSize: 12.5, fontWeight: 700, color: isOn ? TEXT_SEC : TEXT, opacity: isOn ? 0.55 : 1, padding: "6px 8px", borderRadius: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                onMouseEnter={(e) => { if (!isOn) e.currentTarget.style.background = INK_050; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>
+                {isOn ? "\u2713 " : ""}{p}
+              </button>
+              <button onClick={() => onDelete(p)} aria-label={`Delete ${p} preset`} title="Delete preset"
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, borderRadius: 6, border: "none", background: "transparent", color: TEXT_SEC, cursor: "pointer", padding: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = INK_050; e.currentTarget.style.color = ALERT_RED; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 6, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${BORDER}` }}>
+        <input value={draftVal} onChange={(e) => onDraft(e.target.value)} placeholder={placeholder}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); onCreate(); } }}
+          style={{ flex: 1, minWidth: 0, fontSize: 12.5, padding: "6px 9px", borderRadius: 8, border: `1px solid ${BORDER}`, color: TEXT, outline: "none" }} />
+        <button onClick={onCreate}
+          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+          Add
+        </button>
+      </div>
+    </div>
+  );
+
+  const tagCell = (name, rowType) => (
+    <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+      {tagsFor(name).map((t) =>
         TYPE_PILL[t]
           ? <TypePill key={t} type={t} />
           : <RemovablePill key={t} label={t} onRemove={(e) => { e.stopPropagation(); removeTag(name, t); }} />
       )}
       <AddTagBtn active={tagFor === name} onClick={toggleTag(name)} />
-      {tagFor === name && suggestionsFor(name).map((s) => (
-        <button key={s} onClick={(e) => { e.stopPropagation(); applyTag(name, s); }}
-          style={{ padding: "3px 8px", borderRadius: 999, border: `1px solid ${BORDER}`, background: WHITE, color: TEAL, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-          + {s}
-        </button>
-      ))}
+      {tagFor === name && presetMenu({
+        presets: tagPresets,
+        applied: tagsFor(name),
+        onPick: (t) => applyTag(name, t),
+        onDelete: deleteTagPreset,
+        draftVal: newTagName,
+        onDraft: setNewTagName,
+        onCreate: () => createTag(name),
+        placeholder: "New tag",
+      })}
     </div>
   );
 
-  const SourceCell = ({ name }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+  const sourceCell = (name) => (
+    <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
       {sourcesFor(name).map((s) => (
         <RemovablePill key={s} label={s} onRemove={(e) => { e.stopPropagation(); removeSource(name, s); }} />
       ))}
       <AddTagBtn label="Add a source" active={sourceFor === name} onClick={toggleSource(name)} />
-      {sourceFor === name && sourceSuggestionsFor(name).map((s) => (
-        <button key={s} onClick={(e) => { e.stopPropagation(); applySource(name, s); }}
-          style={{ padding: "3px 8px", borderRadius: 999, border: `1px solid ${BORDER}`, background: WHITE, color: TEAL, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-          + {s}
-        </button>
-      ))}
+      {sourceFor === name && presetMenu({
+        presets: sourcePresets,
+        applied: sourcesFor(name),
+        onPick: (s) => applySource(name, s),
+        onDelete: deleteSourcePreset,
+        draftVal: newSourceName,
+        onDraft: setNewSourceName,
+        onCreate: () => createSource(name),
+        placeholder: "New source",
+      })}
     </div>
   );
 
@@ -1181,8 +1264,8 @@ export default function CrmCanvas({ onClose, isMobile }) {
                       <span style={{ fontSize: 11.5, color: TEXT_SEC, fontFamily: MONO }}>{last}</span>
                     </div>
                     <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 3, lineHeight: 1.45 }}>{reason}</div>
-                    <div style={{ marginTop: 7 }}><TagCell name={name} rowType={rowType} /></div>
-                    <div style={{ marginTop: 6 }}><SourceCell name={name} /></div>
+                <div style={{ marginTop: 7 }}>{tagCell(name, rowType)}</div>
+                <div style={{ marginTop: 6 }}>{sourceCell(name)}</div>
                   </div>
                 </div>
               </div>
@@ -1200,8 +1283,8 @@ export default function CrmCanvas({ onClose, isMobile }) {
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
                 <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reason}</div>
               </div>
-              <TagCell name={name} rowType={rowType} />
-              <SourceCell name={name} />
+              {tagCell(name, rowType)}
+              {sourceCell(name)}
               {wide && <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>{last}</span>}
             </div>
           );
@@ -1240,7 +1323,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
           <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 6, lineHeight: 1.5 }}>{c.metaLine}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 10, flexWrap: "wrap" }}>
             <Eyebrow>Tags</Eyebrow>
-            <TagCell name={c.name} rowType={c.type} />
+            {tagCell(c.name, c.type)}
           </div>
         </div>
         <Btn kind="primary" onClick={compose(c.name, c.primaryAct)}>{c.primaryAction}</Btn>
@@ -1537,16 +1620,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
               </div>
             );
           })}
-          {tagFor && (
-            <div style={{ display: "flex", gap: 7, flexWrap: "wrap", paddingTop: 2 }}>
-              {suggestionsFor(tagFor).map((t) => (
-                <button key={t} onClick={() => applyTag(tagFor, t)}
-                  style={{ padding: "5px 11px", borderRadius: 999, border: `1px solid ${BORDER}`, background: WHITE, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                  + {t}
-                </button>
-              ))}
-            </div>
-          )}
+
         </div>
       </div>
       )}
