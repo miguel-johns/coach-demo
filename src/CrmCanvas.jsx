@@ -490,6 +490,11 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [dragPos, setDragPos] = useState(null);
   const [addingCol, setAddingCol] = useState(null);
   const [addName, setAddName] = useState("");
+  // Imported contacts live in memory (prototype). They merge into the directory.
+  const [imported, setImported] = useState([]);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importMsg, setImportMsg] = useState("");
   const dragMoved = useRef(false);
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
@@ -500,7 +505,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
   }, []);
 
   const bg = 47;
-  const allRows = LEADS.map((r) => [r[0], r[1], r[2], r[3], r[6], r[7], "Lead"]).concat(OFF_LIST);
+  const allRows = LEADS.map((r) => [r[0], r[1], r[2], r[3], r[6], r[7], "Lead"]).concat(OFF_LIST).concat(imported);
 
   const tagsFor = (name, rowType) => [rowType].concat(EXTRA_TAGS[name] || []).concat(added[name] || []).filter(Boolean);
   const suggestionsFor = (name) => {
@@ -601,11 +606,57 @@ export default function CrmCanvas({ onClose, isMobile }) {
     setSent(false);
   };
 
+  // ── Import a contact list ──
+  // One person per line, optional email/phone after a comma, tab or semicolon.
+  // Anyone already in the directory is skipped so a re-paste never duplicates.
+  const parseContacts = (text) => {
+    const existing = new Set(allRows.map((r) => r[0].toLowerCase()));
+    const seen = new Set();
+    const out = [];
+    text.split(/\r?\n/).forEach((line) => {
+      const parts = line.split(/[,\t;]/).map((s) => s.trim()).filter(Boolean);
+      const name = parts[0];
+      if (!name) return;
+      if (/^(name|full name|contact|contact name)$/i.test(name)) return; // header row
+      const key = name.toLowerCase();
+      if (existing.has(key) || seen.has(key)) return;
+      seen.add(key);
+      const rest = parts.slice(1);
+      const email = rest.find((p) => /@/.test(p)) || "";
+      const phone = rest.find((p) => /^[+(]?\d[\d\s()+-]{5,}$/.test(p)) || "";
+      const detail = [email, phone].filter(Boolean).join(" · ") || "Imported from your contact list.";
+      out.push([name, "Cool", detail, "Imported list", "New", "Just now", "Imported"]);
+    });
+    return out;
+  };
+
+  const importPreview = parseContacts(importText);
+
+  const doImport = () => {
+    if (importPreview.length === 0) return;
+    setImported((prev) => prev.concat(importPreview));
+    setImportMsg(`Imported ${importPreview.length} ${importPreview.length === 1 ? "contact" : "contacts"} into your list.`);
+    setImportText("");
+    setImportOpen(false);
+    setPageFilter(null);
+    setFilter("Everyone");
+    setScreen("list");
+  };
+
+  const onImportFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImportText(String(reader.result || ""));
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
   // ── Record assembly ──
   const buildRecord = (name) => {
     const row =
       LEADS.map((r) => r.concat(["Lead"]))
-        .concat(OFF_LIST.map((r) => [r[0], r[1], r[2], r[3], "Text", 0, r[4], r[5], r[6]]))
+        .concat(OFF_LIST.concat(imported).map((r) => [r[0], r[1], r[2], r[3], "Text", 0, r[4], r[5], r[6]]))
         .find((r) => r[0] === name) || LEADS[0].concat(["Lead"]);
     const base = RECORDS[name];
     const reason = row[2], source = row[3], state = row[6], last = row[7], type = row[8];
@@ -967,10 +1018,23 @@ export default function CrmCanvas({ onClose, isMobile }) {
             Everyone you have. Tags are yours to add and never feed the ranking, bands and states only apply to leads.
           </p>
         </div>
-        <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>
-          {pageFilter ? `${filtered.length} shown` : `${allRows.length + 41} contacts`}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>
+            {pageFilter ? `${filtered.length} shown` : `${allRows.length + 41} contacts`}
+          </span>
+          <Btn sm kind="primary" onClick={() => { setImportMsg(""); setImportOpen(true); }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
+            Import contacts
+          </Btn>
+        </div>
       </div>
+
+      {importMsg && !pageFilter ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: "#e6f9ec", border: "1px solid #bfe3cb", borderRadius: 12, fontSize: 13, color: "#1f7a3e", fontWeight: 600 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+          {importMsg}
+        </div>
+      ) : null}
 
       {pageFilter ? (
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 14px", background: TEAL_LIGHT, border: `1px solid #bfe0dc`, borderRadius: 12 }}>
@@ -1309,7 +1373,7 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const msgs = bubbles();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: PAGE_BG }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: PAGE_BG, position: "relative" }}>
       {/* Header */}
       <div style={{ padding: isMobile ? "14px 16px" : "16px 32px", background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -1386,6 +1450,50 @@ export default function CrmCanvas({ onClose, isMobile }) {
           )}
         </div>
       </div>
+      )}
+
+      {importOpen && (
+        <div role="dialog" aria-modal="true" aria-label="Import contacts"
+          onClick={() => setImportOpen(false)}
+          style={{ position: "absolute", inset: 0, background: "rgba(16,40,34,0.32)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, zIndex: 50 }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: WHITE, borderRadius: isMobile ? "18px 18px 0 0" : 18, border: `1px solid ${BORDER}`, width: "100%", maxWidth: 520, boxShadow: "0 24px 60px rgba(16,40,34,0.22)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90%" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "18px 20px 0" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>Import contacts</h3>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: TEXT_SEC, lineHeight: 1.5 }}>
+                  Paste your list or upload a CSV. One person per line, with an optional email or phone after a comma.
+                </p>
+              </div>
+              <button onClick={() => setImportOpen(false)} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${BORDER}`, background: WHITE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, flexShrink: 0 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <div style={{ padding: "14px 20px 0", display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" }}>
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={"Jordan Blake, jordan@email.com, (512) 555 0142\nMaria Chen, maria@email.com\nSam Rivera, (415) 555 8890"}
+                rows={7}
+                style={{ width: "100%", resize: "vertical", fontFamily: MONO, fontSize: 12.5, lineHeight: 1.6, color: TEXT, padding: "12px 14px", borderRadius: 12, border: `1px solid ${BORDER}`, background: INK_050, outline: "none", boxSizing: "border-box" }}
+              />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: TEAL, cursor: "pointer" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                  Upload a CSV file
+                  <input type="file" accept=".csv,text/csv,text/plain" onChange={onImportFile} style={{ display: "none" }} />
+                </label>
+                <span style={{ fontSize: 12, color: importPreview.length ? "#1f7a3e" : TEXT_SEC, fontWeight: 600 }}>
+                  {importText.trim() ? `${importPreview.length} new ${importPreview.length === 1 ? "contact" : "contacts"} ready` : "Nothing pasted yet"}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, padding: 20, marginTop: 4 }}>
+              <Btn kind="primary" onClick={doImport}>{importPreview.length ? `Import ${importPreview.length}` : "Import"}</Btn>
+              <Btn onClick={() => setImportOpen(false)}>Cancel</Btn>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
