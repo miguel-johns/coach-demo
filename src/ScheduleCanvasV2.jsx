@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { HoursBadge, HoursCard, HoursEditor, HoursSourcePicker, ServiceMark, WeekHoursEditor } from "./ScheduleHours";
-import ScheduleWeekCalendar from "./ScheduleWeekCalendar";
+import MiltonSchedule from "./MiltonSchedule";
 import { buildBookingDates, coachLabel, copyWeek, createWeek, dateLabel, hoursError, serviceMeta } from "./scheduleAvailability";
 
 /* ---------- sharing the booking page beyond the app ---------- */
@@ -359,7 +359,7 @@ export default function ScheduleCanvasV2({ onClose, isMobile }) {
           </div>
 
           {/* Interactive scheduler */}
-          <ScheduleWeekCalendar isMobile={narrow} />
+          <MiltonSchedule height={narrow ? "calc(100dvh - 160px)" : "calc(100dvh - 120px)"} />
 
           {/* Connected Calendars */}
           <Card>
