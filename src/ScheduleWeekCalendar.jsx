@@ -1,29 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TEAL, TEAL_LIGHT, WHITE, TEXT, TEXT_SEC, BORDER } from "./constants";
+import { WHITE } from "./constants";
 
-/* ---------- tokens ---------- */
+/* ---------- tokens (from Milton design system) ---------- */
 const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace";
-const PAGE_BG = "#fafcfb";
-const T800 = TEAL;
-const T700 = "#3aafa9";
-const T050 = TEAL_LIGHT;
-const T200 = "#c7e5e1";
-const FG1 = TEXT;
-const FG2 = TEXT_SEC;
-const FG3 = "#8ba39e";
-const FG4 = "#a8bab6";
-const INK100 = "#eef1f0";
-const INK150 = "#e4eae8";
-const INK200 = "#d5dedb";
-const INK300 = "#b9c7c3";
-const B_SOFT = BORDER;
-const B_SUB = "#edf3f1";
+const PAGE_BG = "#F3F5F6";
+const T800 = "#0E5D70";
+const T700 = "#2E8A93";
+const T050 = "#F0F7F7";
+const T200 = "#A9D3D6";
+const FG1 = "#1A2327";
+const FG2 = "#3F4A4E";
+const FG3 = "#7D8789";
+const FG4 = "#9FA8AB";
+const INK100 = "#F3F5F6";
+const INK150 = "#EBEEEF";
+const INK200 = "#DEE4E5";
+const INK300 = "#C3CDCE";
+const B_SOFT = "#DEE4E5";
+const B_SUB = "#EBEEEF";
 const D_BG = "#fbe9e7", D_FG = "#b3261e", D_MID = "#d9463c";
 const W_BG = "#f6edd9", W_FG = "#a86a1f", W_MID = "#c9922f";
-const S_BG = "#e6f9ec", S_FG = "#1f7a3e";
-const GREEN = "#3aaf6a";
-const SHADOW_XS = "0 1px 2px rgba(11,20,23,.06)";
-const SHADOW_CARD = "0 1px 3px rgba(11,20,23,.05)";
+const S_BG = "#E2F3DF", S_FG = "#2D7D3E";
+const GREEN = "#51B565";
+const SHADOW_XS = "0 1px 2px rgba(14,93,112,.06)";
+const SHADOW_CARD = "0 1px 0 rgba(14,93,112,.04), 0 2px 8px rgba(14,93,112,.06)";
 
 const ROW = 64, DAY_START = 6, DAY_END = 21, NOW = 10.5;
 const KIND = {
@@ -205,7 +205,7 @@ const Eyebrow = ({ children, style }) => (
   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: FG4, textTransform: "uppercase", ...style }}>{children}</div>
 );
 const Card = ({ children, style }) => (
-  <div style={{ background: WHITE, border: `1px solid ${B_SOFT}`, borderRadius: 14, boxShadow: SHADOW_CARD, ...style }}>{children}</div>
+  <div style={{ background: WHITE, border: `1px solid ${B_SUB}`, borderRadius: 16, boxShadow: SHADOW_CARD, ...style }}>{children}</div>
 );
 function Select({ value, onChange, options, style }) {
   return (
