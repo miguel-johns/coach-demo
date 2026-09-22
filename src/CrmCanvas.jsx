@@ -105,7 +105,8 @@ const EXTRA_TAGS = {
   "Gus Portillo": ["Bad number"],
 };
 
-const TAG_SUGGESTIONS = ["Wedding Oct", "Post rehab", "Price sensitive", "Referrer", "Walk in", "No-showed", "Morning only"];
+  const TAG_SUGGESTIONS = ["Wedding Oct", "Post rehab", "Price sensitive", "Referrer", "Walk in", "No-showed", "Morning only"];
+  const SOURCE_SUGGESTIONS = ["Referral", "Walk in", "Website form", "Instagram", "Meta lead ad", "QR code", "Google"];
 
 const DRAFTS = {
   engaged: {
@@ -495,6 +496,11 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importMsg, setImportMsg] = useState("");
+  const [sortBy, setSortBy] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  const [sources, setSources] = useState({});
+  const [sourceFor, setSourceFor] = useState(null);
+  const [removedTags, setRemovedTags] = useState({});
   const dragMoved = useRef(false);
   const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
 
@@ -507,20 +513,47 @@ export default function CrmCanvas({ onClose, isMobile }) {
   const bg = 47;
   const allRows = LEADS.map((r) => [r[0], r[1], r[2], r[3], r[6], r[7], "Lead"]).concat(OFF_LIST).concat(imported);
 
-  const tagsFor = (name, rowType) => [rowType].concat(EXTRA_TAGS[name] || []).concat(added[name] || []).filter(Boolean);
+  const tagsFor = (name, rowType) => {
+    const removed = removedTags[name] || [];
+    return [rowType].concat(EXTRA_TAGS[name] || []).concat(added[name] || [])
+      .filter(Boolean).filter((t) => removed.indexOf(t) < 0);
+  };
   const suggestionsFor = (name) => {
     const have = tagsFor(name, "");
     return TAG_SUGGESTIONS.filter((t) => have.indexOf(t) < 0).slice(0, 4);
   };
   const applyTag = (name, tag) => {
     setAdded((prev) => ({ ...prev, [name]: (prev[name] || []).concat([tag]) }));
+    setRemovedTags((p) => (p[name] ? { ...p, [name]: p[name].filter((t) => t !== tag) } : p));
     setTagFor(null);
+  };
+  const removeTag = (name, tag) => {
+    setRemovedTags((p) => ({ ...p, [name]: (p[name] || []).concat([tag]) }));
+    setAdded((p) => (p[name] ? { ...p, [name]: p[name].filter((t) => t !== tag) } : p));
   };
   const toggleTag = (name) => (e) => {
     if (e) e.stopPropagation();
+    setSourceFor(null);
     setTagFor((cur) => (cur === name ? null : name));
     setDraft(null);
     setSent(false);
+  };
+  const sourcesFor = (name) => sources[name] || [];
+  const sourceSuggestionsFor = (name) => {
+    const have = sourcesFor(name);
+    return SOURCE_SUGGESTIONS.filter((s) => have.indexOf(s) < 0).slice(0, 4);
+  };
+  const applySource = (name, s) => {
+    setSources((prev) => ({ ...prev, [name]: (prev[name] || []).concat([s]) }));
+    setSourceFor(null);
+  };
+  const removeSource = (name, s) => {
+    setSources((prev) => ({ ...prev, [name]: (prev[name] || []).filter((x) => x !== s) }));
+  };
+  const toggleSource = (name) => (e) => {
+    if (e) e.stopPropagation();
+    setTagFor(null);
+    setSourceFor((cur) => (cur === name ? null : name));
   };
   const go = (s) => () => { setScreen(s); setDraft(null); setSent(false); };
   // The tabs are a fresh start, so they drop any page filter. Back links keep
@@ -765,16 +798,48 @@ export default function CrmCanvas({ onClose, isMobile }) {
     : filter === "Quiet" ? allRows.filter((r) => r[4] === "Dormant" || r[4] === "Reaching out")
     : allRows.filter((r) => r[4] === filter);
 
+  // Date-added values are relative strings ("41 minutes ago", "6 days ago").
+  // Convert to an approximate minutes-ago number so the sort is chronological.
+  const agoMinutes = (s) => {
+    if (!s) return 1e9;
+    const t = String(s).toLowerCase();
+    const num = parseFloat(t) || 1;
+    if (t.includes("minute")) return num;
+    if (t.includes("hour")) return num * 60;
+    if (t.includes("yesterday")) return 1440;
+    if (t.includes("day")) return num * 1440;
+    if (t.includes("week")) return num * 10080;
+    if (t.includes("month")) return num * 43200;
+    return 1e9;
+  };
+  const sortVal = {
+    name: (r) => r[0].toLowerCase(),
+    tags: (r) => tagsFor(r[0], r[6]).join(" ").toLowerCase(),
+    source: (r) => sourcesFor(r[0]).join(" ").toLowerCase(),
+    added: (r) => agoMinutes(r[5]),
+  };
+  const sorted = sortBy
+    ? [...filtered].sort((a, b) => {
+        const va = sortVal[sortBy](a), vb = sortVal[sortBy](b);
+        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        return sortDir === "desc" ? -cmp : cmp;
+      })
+    : filtered;
+  const setSort = (k) => () => {
+    if (sortBy === k) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(k); setSortDir("asc"); }
+  };
+
   const TABS = [["queue", "Queue"], ["pipeline", "Pipeline"], ["list", "Contact list"], ["pages", "Hooks"]];
   const tabActive = (k) =>
     screen === k || (["contact", "answers", "brief"].includes(screen) && from === k);
 
-  // Source and last-contact are the first to go when the canvas gets narrow —
-  // name, tags, band and state are what the coach actually scans.
+  // Date added is the first column to drop when the canvas gets narrow —
+  // name, tags and source are what the coach actually scans.
   const wide = !isMobile && vw >= 1180;
   const gridCols = wide
-    ? "30px minmax(140px,1.5fr) minmax(150px,1.4fr) 72px 96px minmax(96px,1fr) 84px"
-    : "30px minmax(120px,1.5fr) minmax(130px,1.3fr) 72px 96px";
+    ? "30px minmax(150px,1.6fr) minmax(170px,1.5fr) minmax(150px,1.4fr) 120px"
+    : "30px minmax(130px,1.5fr) minmax(150px,1.4fr) minmax(140px,1.3fr)";
 
   // ── Screens ──
   const Queue = () => (
@@ -994,10 +1059,24 @@ export default function CrmCanvas({ onClose, isMobile }) {
     );
   };
 
+  const RemovablePill = ({ label, onRemove }) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 5px 3px 9px", borderRadius: 999, border: `1px solid ${BORDER}`, background: WHITE, color: TEXT_SEC, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+      {label}
+      <button onClick={onRemove} onPointerDown={(e) => e.stopPropagation()} aria-label={`Remove ${label}`} title="Remove"
+        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 14, height: 14, borderRadius: 999, border: "none", background: "transparent", color: TEXT_SEC, cursor: "pointer", padding: 0, lineHeight: 1 }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = INK_050; e.currentTarget.style.color = ALERT_RED; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SEC; }}>
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+      </button>
+    </span>
+  );
+
   const TagCell = ({ name, rowType }) => (
     <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
       {tagsFor(name, rowType).map((t) =>
-        TYPE_PILL[t] ? <TypePill key={t} type={t} /> : <Pill key={t} bg="transparent" color={TEXT_SEC} outline>{t}</Pill>
+        TYPE_PILL[t]
+          ? <TypePill key={t} type={t} />
+          : <RemovablePill key={t} label={t} onRemove={(e) => { e.stopPropagation(); removeTag(name, t); }} />
       )}
       <AddTagBtn active={tagFor === name} onClick={toggleTag(name)} />
       {tagFor === name && suggestionsFor(name).map((s) => (
@@ -1007,6 +1086,31 @@ export default function CrmCanvas({ onClose, isMobile }) {
         </button>
       ))}
     </div>
+  );
+
+  const SourceCell = ({ name }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+      {sourcesFor(name).map((s) => (
+        <RemovablePill key={s} label={s} onRemove={(e) => { e.stopPropagation(); removeSource(name, s); }} />
+      ))}
+      <AddTagBtn label="Add a source" active={sourceFor === name} onClick={toggleSource(name)} />
+      {sourceFor === name && sourceSuggestionsFor(name).map((s) => (
+        <button key={s} onClick={(e) => { e.stopPropagation(); applySource(name, s); }}
+          style={{ padding: "3px 8px", borderRadius: 999, border: `1px solid ${BORDER}`, background: WHITE, color: TEAL, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+          + {s}
+        </button>
+      ))}
+    </div>
+  );
+
+  const SortHead = ({ k, children }) => (
+    <button onClick={setSort(k)}
+      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <Eyebrow color={sortBy === k ? TEAL : undefined}>{children}</Eyebrow>
+      <span style={{ fontSize: 10, lineHeight: 1, color: sortBy === k ? TEAL : "#c2d1cd" }}>
+        {sortBy === k ? (sortDir === "asc" ? "\u2191" : "\u2193") : "\u2195"}
+      </span>
+    </button>
   );
 
   const List = () => (
@@ -1054,12 +1158,13 @@ export default function CrmCanvas({ onClose, isMobile }) {
         {!isMobile && (
           <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12, padding: "10px 18px", background: INK_050 }}>
             <span />
-            <Eyebrow>Name</Eyebrow><Eyebrow>Tags</Eyebrow><Eyebrow>Band</Eyebrow>
-            <Eyebrow>State</Eyebrow>
-            {wide && <><Eyebrow>Source</Eyebrow><Eyebrow>Last contact</Eyebrow></>}
+            <SortHead k="name">Name</SortHead>
+            <SortHead k="tags">Tags</SortHead>
+            <SortHead k="source">Source</SortHead>
+            {wide && <SortHead k="added">Date added</SortHead>}
           </div>
         )}
-        {filtered.map(([name, band, reason, source, rowState, last, rowType], n) => {
+        {sorted.map(([name, band, reason, source, rowState, last, rowType], n) => {
           const isLead = rowType === "Lead";
           const i = LEADS.findIndex((r) => r[0] === name);
           const av = AV[(i < 0 ? name.length + 3 : i) % AV.length];
@@ -1073,11 +1178,11 @@ export default function CrmCanvas({ onClose, isMobile }) {
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{name}</span>
-                      {isLead ? <BandPill band={band} /> : <span style={{ fontSize: 12, color: TEXT_SEC }}>—</span>}
-                      <span style={{ fontSize: 11.5, color: TEXT_SEC }}>{isLead ? rowState : source}</span>
+                      <span style={{ fontSize: 11.5, color: TEXT_SEC, fontFamily: MONO }}>{last}</span>
                     </div>
                     <div style={{ fontSize: 12.5, color: TEXT_SEC, marginTop: 3, lineHeight: 1.45 }}>{reason}</div>
                     <div style={{ marginTop: 7 }}><TagCell name={name} rowType={rowType} /></div>
+                    <div style={{ marginTop: 6 }}><SourceCell name={name} /></div>
                   </div>
                 </div>
               </div>
@@ -1096,14 +1201,8 @@ export default function CrmCanvas({ onClose, isMobile }) {
                 <div style={{ fontSize: 12, color: TEXT_SEC, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reason}</div>
               </div>
               <TagCell name={name} rowType={rowType} />
-              {isLead ? <BandPill band={band} /> : <span style={{ fontSize: 12, color: TEXT_SEC }}>—</span>}
-              <span style={{ fontSize: 12.5, color: TEXT }}>{isLead ? rowState : "—"}</span>
-              {wide && (
-                <>
-                  <span style={{ fontSize: 12, color: TEXT_SEC, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{source}</span>
-                  <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>{last}</span>
-                </>
-              )}
+              <SourceCell name={name} />
+              {wide && <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: MONO, whiteSpace: "nowrap" }}>{last}</span>}
             </div>
           );
         })}
