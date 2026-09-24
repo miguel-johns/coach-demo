@@ -5,6 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
+    // The sandbox preview is routed to a fixed port (5174). Pin the dev server
+    // to it with strictPort so it never silently drifts to another port (e.g.
+    // after a restart or a stale duplicate server), which would leave the
+    // preview pointing at a port nothing is listening on and appear "stuck".
+    port: 5174,
+    strictPort: true,
     allowedHosts: true,
     hmr: {
       clientPort: 443,
