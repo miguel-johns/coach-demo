@@ -1,0 +1,326 @@
+import { z } from 'zod'
+
+/*
+ * The tool registry. Shared by the chat route (which shows the model each
+ * name, description and input schema) and the browser (which runs the tool
+ * against the gym store). Names follow the platform spec: domain.verb_noun.
+ */
+
+const date = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .describe('A date as YYYY-MM-DD')
+const contactId = z.string().describe('A contact id from contacts.search, never a name')
+
+export const TOOLS = [
+  {
+    name: 'contacts.search',
+    tier: 'read',
+    label: 'Searched contacts',
+    description:
+      'Find people by name, phone or email, or list everyone with a status. Use it to turn a name into a contact_id before calling any other tool.',
+    input: z.object({
+      query: z.string().optional().describe('Part of a name, phone number or email. Leave out to list everyone.'),
+      status: z.enum(['Lead', 'Customer', 'Past customer']).optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+    }),
+  },
+  {
+    name: 'contacts.get',
+    tier: 'read',
+    label: 'Opened a contact',
+    description:
+      'Everything about one person: status, coach, plans and credits, upcoming sessions, documents, household and what Milton knows about them.',
+    input: z.object({ contact_id: contactId }),
+  },
+  {
+    name: 'packages.list',
+    tier: 'read',
+    label: 'Looked at packages',
+    description: 'What the gym sells: packs, memberships, subscriptions and bundles, with prices. Products like water are left out.',
+    input: z.object({
+      service: z.string().optional().describe('Only packages for this service, for example "Personal training"'),
+    }),
+  },
+  {
+    name: 'packages.get',
+    tier: 'read',
+    label: 'Opened a package',
+    description: 'One package or bundle by id, with who currently holds it.',
+    input: z.object({ package_id: z.string().describe('A package or bundle id from packages.list') }),
+  },
+  {
+    name: 'schedule.list_sessions',
+    tier: 'read',
+    label: 'Checked the schedule',
+    description:
+      'Sessions on a day or a range of up to 14 days, with who is booked and their status. Use for "who is booked tomorrow" or "what is on today".',
+    input: z.object({
+      from: date,
+      to: date.optional().describe('Last day, inclusive. Defaults to from.'),
+      coach_id: z.string().optional().describe('A team member id to only show their sessions'),
+    }),
+  },
+  {
+    name: 'schedule.get_availability',
+    tier: 'read',
+    label: 'Checked open times',
+    description: 'Open times for one service on one day, with how many people are already booked at each time.',
+    input: z.object({
+      service_id: z.string().describe('A service id: semi, pt, rr, mass, og, sgt or intro'),
+      date,
+    }),
+  },
+  {
+    name: 'inbox.list_threads',
+    tier: 'read',
+    label: 'Checked the Inbox',
+    description: 'Conversations in the Inbox with the last message in each. Use filter needs_reply for who is waiting on the team.',
+    input: z.object({
+      filter: z.enum(['needs_reply', 'milton_handling', 'all']).optional().describe('Defaults to all'),
+    }),
+  },
+  {
+    name: 'inbox.get_thread',
+    tier: 'read',
+    label: 'Read a conversation',
+    description: 'The recent messages, calls and notes with one person, oldest first.',
+    input: z.object({ contact_id: contactId, limit: z.number().int().min(1).max(40).optional() }),
+  },
+  {
+    name: 'payments.list_transactions',
+    tier: 'read',
+    label: 'Looked at payments',
+    description: 'Payments in a date range, newest first. Filter by person or status.',
+    input: z.object({
+      from: date,
+      to: date,
+      contact_id: contactId.optional(),
+      status: z.enum(['paid', 'failed', 'refunded', 'all']).optional().describe('Defaults to all'),
+    }),
+  },
+  {
+    name: 'payments.list_failed',
+    tier: 'read',
+    label: 'Looked at failed payments',
+    description: 'Payments that failed in a date range, with who and how much. Defaults to this month.',
+    input: z.object({ from: date.optional(), to: date.optional() }),
+  },
+  {
+    name: 'leads.list',
+    tier: 'read',
+    label: 'Looked at leads',
+    description: 'People in the CRM pipeline with their stage, source, owner and last touch.',
+    input: z.object({
+      stage: z.string().optional().describe('Only this stage, for example New, In conversation, Booked, Came in, Joined, Not now'),
+    }),
+  },
+  {
+    name: 'leads.get',
+    tier: 'read',
+    label: 'Opened a lead',
+    description: 'One lead: stage, how they came in, their form answers and the last touch.',
+    input: z.object({ contact_id: contactId }),
+  },
+  {
+    name: 'workflows.list',
+    tier: 'read',
+    label: 'Looked at workflows',
+    description: 'The gym workflows with status, trigger, audience and steps.',
+    input: z.object({ status: z.enum(['Live', 'Draft', 'Paused', 'Archived']).optional() }),
+  },
+  {
+    name: 'workflows.list_templates',
+    tier: 'read',
+    label: 'Looked at workflow templates',
+    description: 'Ready-made workflows the owner can start from.',
+    input: z.object({}),
+  },
+  {
+    name: 'reports.revenue',
+    tier: 'read',
+    label: 'Ran a revenue report',
+    description: 'Money collected in a date range, net of failures and refunds, optionally grouped.',
+    input: z.object({
+      from: date,
+      to: date,
+      group_by: z.enum(['item', 'team_member', 'source', 'day', 'none']).optional(),
+    }),
+  },
+  {
+    name: 'reports.attendance',
+    tier: 'read',
+    label: 'Ran an attendance report',
+    description: 'Check-ins, late cancels and no-shows in a date range, by service.',
+    input: z.object({ from: date, to: date }),
+  },
+  {
+    name: 'setup.get',
+    tier: 'read',
+    label: 'Checked setup',
+    description: 'The gym setup checklist. Each step is done, in_progress, not_started or skipped, worked out from real data.',
+    input: z.object({}),
+  },
+
+  /* Write tools: run straight away, show up in Activity, can be undone. */
+  {
+    name: 'contacts.create',
+    tier: 'write',
+    label: 'Added a contact',
+    description: 'Add one new person as a Lead. Search first so you never add someone twice.',
+    input: z.object({
+      name: z.string().min(1),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      source: z.string().optional().describe('How they came in, for example "Walk-in"'),
+    }),
+  },
+  {
+    name: 'contacts.update',
+    tier: 'write',
+    label: 'Updated a contact',
+    description: 'Change one person: status, coach, phone, email or tags.',
+    input: z.object({
+      contact_id: contactId,
+      status: z.enum(['Lead', 'Customer', 'Past customer']).optional(),
+      coach: z.string().optional().describe('A team member name, or "None"'),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      add_tags: z.array(z.string()).optional(),
+    }),
+  },
+  {
+    name: 'contacts.add_note',
+    tier: 'write',
+    label: 'Added a note',
+    description: 'Leave a private team note on a person. They never see it.',
+    input: z.object({ contact_id: contactId, note: z.string().min(1) }),
+  },
+  {
+    name: 'schedule.book_session',
+    tier: 'write',
+    label: 'Booked a session',
+    description: 'Book one person into a service at a time. Uses a credit when they have one, otherwise the session is due. Check availability first.',
+    input: z.object({ contact_id: contactId, service_id: z.string(), date, time: z.string().describe('Like "4:00 PM"') }),
+  },
+  {
+    name: 'schedule.cancel_session',
+    tier: 'write',
+    label: 'Canceled a session',
+    description: 'Cancel one booked session with no fee. The credit goes back.',
+    input: z.object({ contact_id: contactId, booking_id: z.string().describe('The booking id from schedule.list_sessions') }),
+  },
+  {
+    name: 'schedule.add_open_session',
+    tier: 'write',
+    label: 'Added an open session',
+    description: 'Put an open slot for a service on the calendar with nobody booked yet.',
+    input: z.object({ service_id: z.string(), date, time: z.string().describe('Like "6:00 AM"') }),
+  },
+  {
+    name: 'inbox.draft_message',
+    tier: 'write',
+    label: 'Wrote a draft',
+    description: 'Open the conversation with a person and put a message in the composer for the owner to read and send. Nothing is sent.',
+    input: z.object({ contact_id: contactId, body: z.string().min(1) }),
+  },
+  {
+    name: 'packages.create_draft',
+    tier: 'write',
+    label: 'Drafted a package',
+    description: 'Create a package as a Draft. Nobody can buy it until it is published.',
+    input: z.object({
+      service_id: z.string(),
+      name: z.string().min(1),
+      price: z.number().positive(),
+      kind: z.enum(['pack', 'membership']).describe('pack is a set number of sessions, membership renews monthly'),
+      sessions: z.number().int().positive().optional().describe('Sessions in a pack, or per week for a membership'),
+      expires_days: z.number().int().positive().optional(),
+    }),
+  },
+  {
+    name: 'workflows.create_draft',
+    tier: 'write',
+    label: 'Drafted a workflow',
+    description: 'Create a workflow as a Draft. It does nothing until it is turned on.',
+    input: z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      trigger: z.enum(['manual', 'session_booked', 'purchase_completed']),
+      steps: z
+        .array(
+          z.object({
+            kind: z.enum(['text', 'email', 'wait']),
+            body: z.string().optional(),
+            subject: z.string().optional(),
+            days: z.number().int().positive().optional(),
+          }),
+        )
+        .min(1),
+    }),
+  },
+  {
+    name: 'setup.skip_step',
+    tier: 'write',
+    label: 'Skipped a setup step',
+    description: 'Mark a setup step as skipped when the owner says it does not apply.',
+    input: z.object({ step_id: z.string(), reason: z.string() }),
+  },
+  {
+    name: 'ui.open',
+    tier: 'write',
+    label: 'Opened a screen',
+    description: 'Take the owner to a screen, a person, or a workflow.',
+    input: z.object({
+      screen: z
+        .enum(['home', 'schedule', 'inbox', 'crm', 'crm/pipeline', 'crm/workflows', 'clients', 'services', 'payments', 'team', 'settings'])
+        .optional(),
+      contact_id: contactId.optional(),
+      workflow_id: z.string().optional(),
+      date: date.optional().describe('For schedule, the day to show'),
+    }),
+  },
+
+  /* Confirm tools: the owner taps Confirm on a card before anything happens. */
+  {
+    name: 'inbox.send_message',
+    tier: 'confirm',
+    label: 'Asked to send a message',
+    description: 'Send a text or email to one person. The owner confirms first.',
+    input: z.object({ contact_id: contactId, body: z.string().min(1), channel: z.enum(['Text', 'Email']).optional() }),
+  },
+  {
+    name: 'payments.refund',
+    tier: 'confirm',
+    label: 'Asked to refund',
+    description: 'Refund part or all of one payment back to the card. The owner confirms first.',
+    input: z.object({ transaction_id: z.string(), amount: z.number().positive().optional().describe('Leave out for a full refund') }),
+  },
+  {
+    name: 'contacts.import',
+    tier: 'confirm',
+    label: 'Asked to import contacts',
+    description: 'Import the member list the owner uploaded. People already in the CRM are skipped. The owner confirms first.',
+    input: z.object({}),
+  },
+  {
+    name: 'packages.publish',
+    tier: 'confirm',
+    label: 'Asked to publish a package',
+    description: 'Make a Draft package live so people can buy it. The owner confirms first.',
+    input: z.object({ package_id: z.string() }),
+  },
+  {
+    name: 'workflows.turn_on',
+    tier: 'confirm',
+    label: 'Asked to turn on a workflow',
+    description: 'Turn a Draft or Paused workflow on so it starts sending. The owner confirms first.',
+    input: z.object({ workflow_id: z.string() }),
+  },
+]
+
+export const TOOL_BY_NAME = Object.fromEntries(TOOLS.map((t) => [t.name, t]))
+
+/* Model providers only allow [a-zA-Z0-9_-] in tool names, so the dot travels as "__". */
+export const toWire = (name) => name.replace('.', '__')
+export const fromWire = (wire) => wire.replace('__', '.')

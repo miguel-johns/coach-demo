@@ -17,7 +17,8 @@
     if(x) Object.keys(x).forEach(function(k){t[k]=x[k]});
     t.paid=r2(price-disc+tip+tax-cred); return t;
   }
-  var T=[
+  /* The ledger lives on DB so Milton's tools and this screen read the same rows. */
+  var T=DB.tx=[
     row("2026-11-20","chris","Northline tee","","Miguel Johns","Front desk",25,0,0,1.88,0,"Card"),
     row("2026-11-19","chris","Energy drink","","Riley Chen","Front desk",3,0,0,0.23,0,"Cash"),
     row("2026-11-18","leah","Nutrition Coaching","","","Renewal",39.99,0,0,0,0,"Card",{fail:true,status:"Failed"}),
@@ -43,17 +44,21 @@
     row("2026-10-03","leah","Semi-Private 2x per week","Tori Lane","","Renewal",449,0,0,0,0,"Card"),
     row("2026-10-01","dana","Semi-Private Founding Month","Tori Lane","","Renewal",399,0,0,0,0,"Card")
   ];
-  var payouts=[["2026-11-19",612.4],["2026-11-12",388.1],["2026-11-05",905.75],["2026-10-29",731.2],["2026-10-22",448.6],["2026-10-08",842.99]];
-  var BANK="Bank ending 2291";
-  var noAccess=[{id:"na1",pid:"marcus",item:"Day Pass",amt:15}];
-  var canceled=[];
+  M.txRow=row;
+  var payouts=DB.payouts=[["2026-11-19",612.4],["2026-11-12",388.1],["2026-11-05",905.75],["2026-10-29",731.2],["2026-10-22",448.6],["2026-10-08",842.99]];
+  var BANK=DB.GYM.bank="Bank ending 2291";
+  var noAccess=DB.noAccess=[{id:"na1",pid:"marcus",item:"Day Pass",amt:15}];
+  var canceled=DB.canceledPlans=[];
   var msgDefault="Hi {First name}, here is your link to pay {Amount} for {Item} at {Gym name}: {Link}";
   var G=DB.GYM; G.payMsg=G.payMsg||msgDefault; if(G.goal===undefined) G.goal=3000;
   var SV=[], ALLPK=[];
-  DB.ITEMS.forEach(function(i){ if(i.kind==="product") return; var g=SV.filter(function(v){return v.name===i.svc})[0]; if(!g){g={name:i.svc,pk:[]}; SV.push(g)} var p={id:i.id,n:i.name,p:i.price,per:i.per,svc:i.svc}; g.pk.push(p); ALLPK.push(p) });
+  /* Rebuilt from DB.ITEMS on each use, so packages Milton creates show up here too. */
+  function pkSync(){ SV.length=0; ALLPK.length=0;
+  DB.ITEMS.forEach(function(i){ if(i.kind==="product"||i.status==="Draft") return; var g=SV.filter(function(v){return v.name===i.svc})[0]; if(!g){g={name:i.svc,pk:[]}; SV.push(g)} var p={id:i.id,n:i.name,p:i.price,per:i.per,svc:i.svc}; g.pk.push(p); ALLPK.push(p) }); }
+  pkSync();
   var FREE=1;
   function blank(){return {id:null,name:"",code:"",type:"pct",value:"10",scope:"all",picked:{},renew:"first",startOn:"live",starts:"",endOn:"never",ends:"",total:"",per:"",newOnly:false,status:"Draft",used:0}}
-  var promos=[
+  var promos=DB.promos=[
     {id:"p1",name:"Front desk welcome",code:"WELCOME10",type:"pct",value:"10",scope:"all",picked:{},renew:"first",startOn:"live",starts:"",endOn:"never",ends:"",total:"",per:"",newOnly:false,status:"Live",used:14},
     {id:"p2",name:"Bring a friend",code:"FRIEND10",type:"amt",value:"10",scope:"some",picked:{pt8:true,rr4:true},renew:"first",startOn:"live",starts:"",endOn:"never",ends:"",total:"",per:"",newOnly:false,status:"Live",used:3},
     {id:"p3",name:"Summer memberships",code:"SUMMER25",type:"pct",value:"25",scope:"some",picked:{sp2:true,ogu:true},renew:"first",startOn:"date",starts:"2026-06-01",endOn:"date",ends:"2026-08-31",total:"50",per:"1",newOnly:false,status:"Ended",used:41},
@@ -187,7 +192,7 @@
   }
 
   /* promo codes */
-  function pkOf(d){return d.scope==="all"?ALLPK:ALLPK.filter(function(p){return d.picked[p.id]})}
+  function pkOf(d){pkSync(); return d.scope==="all"?ALLPK:ALLPK.filter(function(p){return d.picked[p.id]})}
   function hasRecurring(d){return pkOf(d).some(function(p){return p.per})}
   function offText(d){var v=parseFloat(d.value); if(!(v>0)) return ""; return d.type==="pct"?v+"% off":usd(v)+" off"}
   function after(d,p){var v=parseFloat(d.value)||0; return Math.max(0,d.type==="pct"?p*(1-v/100):p-v)}
@@ -225,7 +230,7 @@
   }
   function pickHTML(d){
     var q=st.pq.toLowerCase(), h="";
-    SV.forEach(function(v){
+    pkSync(); SV.forEach(function(v){
       var pk=v.pk.filter(function(p){return !q||(p.n+" "+v.name).toLowerCase().indexOf(q)>-1}); if(!pk.length) return;
       var all=v.pk.every(function(p){return d.picked[p.id]});
       h+='<div class="svc"><div class="svch"><span>'+esc(v.name)+'</span><button class="link" data-act="ypsvc" data-id="'+esc(v.name)+'">'+(all?"Clear":"Select all")+'</button></div>'+pk.map(function(p){return '<label class="pk"><input type="checkbox" class="pick" data-yp="pick" data-id="'+p.id+'"'+(d.picked[p.id]?" checked":"")+'><span>'+esc(p.n)+'</span><span class="m">'+usd(p.p)+(p.per?" a "+p.per:"")+'</span></label>'}).join("")+'</div>';
@@ -294,7 +299,7 @@
   A.yneed=function(id){
     var a=id.split("|"), k=a[0].split(":"), p;
     if(k[0]==="f"){ if(a[1]==="msg") return A.inboxp(k[1]); return M.pos.open({cust:k[1],item:"nut"}) }
-    if(k[0]==="a"){var n=noAccess.filter(function(x){return x.id===k[1]})[0]; p=M.person(n.pid); noAccess=noAccess.filter(function(x){return x!==n}); p.plans.push({id:"dp"+Date.now(),name:n.item,kind:"Pack",service:"Open gym",price:usd(n.amt),amt:n.amt,size:1,open:1,booked:0,used:0,when:"Bought Nov 12, good for 30 days"}); p.thread.push({k:"event",day:"Today",t:"just now",body:n.item+" added by "+M.you().name+". Nothing was charged."}); return re(n.item+" added to "+p.first+"'s record. Nothing was charged.")}
+    if(k[0]==="a"){var n=noAccess.filter(function(x){return x.id===k[1]})[0]; p=M.person(n.pid); noAccess.splice(noAccess.indexOf(n),1); p.plans.push({id:"dp"+Date.now(),name:n.item,kind:"Pack",service:"Open gym",price:usd(n.amt),amt:n.amt,size:1,open:1,booked:0,used:0,when:"Bought Nov 12, good for 30 days"}); p.thread.push({k:"event",day:"Today",t:"just now",body:n.item+" added by "+M.you().name+". Nothing was charged."}); return re(n.item+" added to "+p.first+"'s record. Nothing was charged.")}
     p=M.person(k[1]); var l=p.links.filter(function(x){return x.id===k[2]})[0];
     if(a[1]==="resend"){l.meta="Payment link sent again today. Not paid yet. Expires Nov 23."; p.thread.push({k:"auto",src:"Payment link",name:l.text,ch:"Text",day:"Today",t:"just now",body:G.payMsg.replace("{First name}",p.first).replace("{Amount}",(l.text.match(/\$[\d.,]+/)||[""])[0]).replace("{Item}",l.text.replace(/, \$.*/,"")).replace("{Gym name}",G.name).replace("{Link}","pay.northlinestrength.com/x7Kq")}); return re("Payment link sent again. Prototype only, nothing was sent.")}
     p.links=p.links.filter(function(x){return x!==l}); p.thread.push({k:"event",day:"Today",t:"just now",body:"Checkout canceled by "+M.you().name+": "+l.text}); re("Checkout canceled. Nothing was charged.");
@@ -366,7 +371,7 @@
     if(live&&pr.length){var td=$("ytodo"); if(td) td.scrollIntoView({block:"center"}); return M.toast("Not saved yet. "+pr[0])}
     if(!live&&!d.code.trim()) return M.toast("Add a promo code to save a draft.");
     d.status=live?"Live":"Draft";
-    if(d.id) promos=promos.map(function(x){return x.id===d.id?d:x}); else {d.id="p"+Date.now(); promos.unshift(d)}
+    if(d.id) promos.splice(promos.findIndex(function(x){return x.id===d.id}),1,d); else {d.id="p"+Date.now(); promos.unshift(d)}
     st.promo=null; re(d.code+(live?" is live. Customers can use it at checkout "+(d.startOn==="date"&&d.starts>TODAY?"from "+ld(d.starts)+".":"now."):" saved as a draft."));
   }
   A.yplive=function(){psave(true)}; A.ypdraft=function(){psave(false)};

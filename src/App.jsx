@@ -30,7 +30,18 @@ export default function App() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    loadPlatformModules().catch(setError)
+    loadPlatformModules()
+      .then(() => {
+        const M = window.M
+        // Suggestion chips: a screen can still claim a chip for its own UI; anything else goes to Milton.
+        M.acts.ask = (q) => {
+          const pg = M.pages[M.route.page]
+          if (pg?.ask?.(q)) return
+          document.getElementById('chat')?.classList.add('up')
+          window.dispatchEvent(new CustomEvent('milton:ask', { detail: q }))
+        }
+      })
+      .catch(setError)
   }, [])
 
   return (

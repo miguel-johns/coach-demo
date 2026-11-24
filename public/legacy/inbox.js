@@ -23,7 +23,7 @@
     priya.thread.push({k:"queued",day:"Today",t:"5:00 PM",body:"Milton will follow up today at 5:00 PM if Priya has not replied.",next:"Hi Priya, just checking in. Want me to hold Saturday 9:00 AM or Monday 6:00 AM for your free intro class?"});
     marcus.thread.forEach(function(i){ if(i.k==="auto") i.sid="s3" }); marcus.owner="Renee Castillo";
   })();
-  var sends=[
+  var sends=DB.sends=[
     {id:"s4",kind:"Appointment setter",name:"Free intro class",ch:"Text",when:"Running since Nov 19",aud:"New leads from the Free intro class form",setter:true,body:"Milton texts each new lead within a minute, answers basic questions and books the class. It hands off anything about injuries, pricing details or complaints."},
     {id:"s2",kind:"Workflow",name:"Session reminder",ch:"Text",when:"Last 7 days",aud:"Anyone with a session the next day",stats:[["Sent",41],["Delivered",41],["Replied",0],["Opted out",0]],body:"See you tomorrow at {Time} for {Session}.",replies:[]},
     {id:"s1",kind:"Broadcast",name:"Thanksgiving week hours",ch:"Text",when:"Sent Wed, Nov 18 · 4:00 PM",aud:"Customers and past customers",stats:[["Sent",96],["Delivered",94],["Replied",2],["Opted out",1]],body:THX,replies:[{pid:"dana",text:"Is Friday 7 AM open gym only, or classes too?",chip:"Answered by Tori Lane",cls:"ok"},{pid:"tom",text:"STOP",chip:"Opted out",cls:"warn"}]},
@@ -37,6 +37,14 @@
   function miltonOn(p){return !!(p.milton||p.miltonBooked)}
   /* Needs reply: handed off, or a missed call last, or an inbound message nobody on the team has answered.
      Automated sends never count as an answer. */
+  M.needsReply=needs;
+  M.chanOf=function(p){return chan(p)};
+  /* Opens one conversation, optionally with text waiting in the composer. */
+  M.openThread=function(pid,text){
+    if(M.route.page!=="inbox") M.go({page:"inbox"});
+    st.tab="all"; st.pid=pid; st.open=true; st.details=false; cv.note=false; M.render();
+    var e=$("msgInput"); if(e&&text) e.value=text;
+  };
   function needs(p){
     if(p.cleared) return false;
     if(p.handoff) return true;
