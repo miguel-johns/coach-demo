@@ -11,6 +11,7 @@ const date = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .describe('A date as YYYY-MM-DD')
 const contactId = z.string().describe('A contact id from contacts.search, never a name')
+const bookingId = z.string().describe('The booking id from contacts.get or schedule.list_sessions')
 
 export const TOOLS = [
   {
@@ -207,8 +208,80 @@ export const TOOLS = [
     name: 'schedule.cancel_session',
     tier: 'write',
     label: 'Canceled a session',
-    description: 'Cancel one booked session with no fee. The credit goes back.',
-    input: z.object({ contact_id: contactId, booking_id: z.string().describe('The booking id from schedule.list_sessions') }),
+    description:
+      'Cancel one booked session more than 24 hours away. No fee, the credit goes back. Inside 24 hours it fails; use schedule.late_cancel.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'schedule.reschedule',
+    tier: 'write',
+    label: 'Rescheduled a session',
+    description:
+      'Move one booked session to a new day and time, keeping the same booking and credit. Same as Reschedule on the session card. If there is no slot then, it returns no_slot and moves nothing; ask the owner before adding a slot.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId, date, time: z.string().describe('Like "8:00 AM"') }),
+  },
+  {
+    name: 'schedule.update_session',
+    tier: 'write',
+    label: 'Edited a session',
+    description:
+      'Same as Edit session on the session card: change the day, time or status of one session, with an optional reason. Does not check open slots. Prefer schedule.reschedule to move a booked session.',
+    input: z.object({
+      contact_id: contactId,
+      booking_id: bookingId,
+      date: date.optional(),
+      time: z.string().optional(),
+      status: z.enum(['booked', 'checked_in', 'checked_out', 'late_cancel', 'no_show', 'canceled']).optional(),
+      reason: z.string().optional(),
+    }),
+  },
+  {
+    name: 'schedule.check_in',
+    tier: 'write',
+    label: 'Checked someone in',
+    description: "Check a client in to one of today's booked sessions. Uses a pack credit.",
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'schedule.check_out',
+    tier: 'write',
+    label: 'Checked someone out',
+    description: 'Check a client out of a session they are checked in to. Fails if money is due; that is taken in Point of sale.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'schedule.late_cancel',
+    tier: 'confirm',
+    label: 'Late canceled a session',
+    description: 'Cancel one booked session inside 24 hours. Uses a pack credit. The owner confirms on a card.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'schedule.mark_no_show',
+    tier: 'confirm',
+    label: 'Marked a no show',
+    description: 'Mark a booked session that has already started as a no show. Uses a pack credit. The owner confirms on a card.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'schedule.remove_session',
+    tier: 'confirm',
+    label: 'Removed a session',
+    description: 'Delete a booking made by mistake, with no history. The credit goes back. The owner confirms on a card. To cancel a real session use schedule.cancel_session.',
+    input: z.object({ contact_id: contactId, booking_id: bookingId }),
+  },
+  {
+    name: 'milton.cant_do',
+    tier: 'always',
+    label: 'Could not do',
+    description:
+      'Call this whenever the owner asks for something no tool can do. It logs the request and opens the screen where the owner can do it themselves. Then say you cannot do it yet and name that screen.',
+    input: z.object({
+      request: z.string().describe("The owner's request in their words"),
+      screen: z.string().describe('Where they can do it, like "schedule", "pos", "payments", "crm/workflows", "settings"'),
+      contact_id: contactId.optional(),
+      reason: z.string().optional().describe('Why no tool fits, for the team. Not shown to the owner.'),
+    }),
   },
   {
     name: 'schedule.add_open_session',

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { getActivity, getPending, getVersion, resolvePending, subscribe, undoEntry } from './activity.js'
+import { getActivity, getGaps, getPending, getVersion, resolvePending, subscribe, undoEntry } from './activity.js'
 import { applyPending } from './tools.js'
 import { chatCoversScreen, closeChat, reveal } from './reveal.js'
 
@@ -63,6 +63,7 @@ export function ConfirmCard({ id, asked }) {
 export function ActivityList({ onClose }) {
   useActivityVersion()
   const entries = getActivity()
+  const gaps = getGaps()
   return (
     <section className="mactivity" aria-label="What Milton changed">
       <div className="mactivity-head">
@@ -94,6 +95,21 @@ export function ActivityList({ onClose }) {
             </li>
           ))}
         </ul>
+      )}
+      {gaps.length > 0 && (
+        <>
+          <h3 className="mactivity-sub">Could not do</h3>
+          <ul>
+            {gaps.map((g) => (
+              <li key={g.id}>
+                <div className="mact-main">
+                  <span className="mact-sum">{`"${g.request}"`}</span>
+                  <span className="mact-meta">{`${g.at} · Opened ${g.screen}`}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   )

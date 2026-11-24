@@ -1,5 +1,6 @@
 import { db, shell, refresh } from './store.js'
 import { setupState, SETUP_STEPS } from './setup.js'
+import { logGap } from './activity.js'
 
 /*
  * Write tools return { result, summary, show, undo }. Confirm tools return a
@@ -29,6 +30,42 @@ function workflow(id) {
   if (!w) throw new Error(`No workflow with id "${id}". Use workflows.list.`)
   return w
 }
+/* The same session functions the Session Panel buttons call (public/legacy/sched.js). */
+const ops = () => shell().sessOps
+
+const STATUS = { booked: 'booked', checked_in: 'in', checked_out: 'out', late_cancel: 'late', no_show: 'noshow', canceled: 'canceled' }
+
+function booking(contactId, bookingId) {
+  const p = person(contactId)
+  const hit = shell().sess.find(`${p.id}|${bookingId}`)
+  if (!hit) throw new Error(`No booking ${bookingId} for ${p.name}. Use contacts.get or schedule.list_sessions for booking ids.`)
+  return hit
+}
+
+const short = (a) => a.title.replace(/, \d+ min/, '')
+const sessionShow = (p, a) => ({ page: 'schedule', date: shell().dayISO(a.day), id: p.id, session: [p.id, a.id] })
+
+/* Undo for session tools: puts the person's bookings, history, credits and payments back. */
+function snapshot(p, a) {
+  const before = {
+    a: { ...a },
+    appts: [...p.appts],
+    visits: [...p.visits],
+    plans: p.plans.map((pl) => ({ ...pl })),
+    tx: [...(p.tx || [])],
+    thread: p.thread.length,
+  }
+  return () => {
+    Object.keys(a).forEach((k) => delete a[k])
+    Object.assign(a, before.a)
+    p.appts = before.appts
+    p.visits = before.visits
+    p.plans.forEach((pl, i) => before.plans[i] && Object.assign(pl, before.plans[i]))
+    if (p.tx) p.tx = before.tx
+    p.thread.length = before.thread
+  }
+}
+
 const remove = (list, item) => {
   const i = list.indexOf(item)
   if (i >= 0) list.splice(i, 1)
@@ -133,17 +170,76 @@ export const write = {
   },
 
   'schedule.cancel_session'({ contact_id, booking_id }) {
-    const p = person(contact_id)
-    const a = p.appts.find((x) => x.id === booking_id)
-    if (!a) throw new Error(`No booking ${booking_id} for ${p.name}.`)
-    if (a.status !== 'booked') throw new Error(`That session is ${a.status}, not booked.`)
-    shell().setStatus(p, a, 'canceled')
-    return {
-      result: { booking_id, status: 'canceled' },
-      summary: `Canceled ${p.name}'s ${a.title.replace(/, \d+ min/, '')} on ${a.day} at ${a.time}`,
-      show: { page: 'schedule', date: shell().dayISO(a.day), id: contact_id },
-      undo: () => shell().setStatus(p, a, 'booked'),
+    const { p, a } = booking(contact_id, booking_id)
+    if (ops().lateWindow(a)) {
+      throw new Error(
+        `${p.first}'s session on ${a.day} at ${a.time} is inside the 24 hour late cancel window, so canceling it is a late cancel. Use schedule.late_cancel.`,
+      )
     }
+    const restore = snapshot(p, a)
+    const r = ops().cancel(p, a)
+    return {
+      result: { booking_id, status: 'canceled', credit_used: false, note: r.msg },
+      summary: `Canceled ${p.name}'s ${short(a)} on ${a.day} at ${a.time}. ${r.msg}`,
+      show: sessionShow(p, a),
+      undo: restore,
+    }
+  },
+
+  'schedule.reschedule'({ contact_id, booking_id, date, time }) {
+    const { p, a } = booking(contact_id, booking_id)
+    const restore = snapshot(p, a)
+    let r
+    try {
+      r = ops().reschedule(p, a, date, time)
+    } catch (e) {
+      if (e.no_slot) {
+        return {
+          result: {
+            moved: false,
+            no_slot: true,
+            message: e.message,
+            service_id: e.service_id,
+            existing_times: e.slots,
+            next_step: `Ask the owner whether to add a ${time} slot. If they say yes, call schedule.add_open_session with service_id ${e.service_id}, date ${date} and time ${time}, then call schedule.reschedule again.`,
+          },
+        }
+      }
+      throw e
+    }
+    return {
+      result: { booking_id, moved: true, date, time, credit_used: false, note: r.msg },
+      summary: `Moved ${p.name}'s ${short(a)} to ${a.day} at ${time}. No credit used`,
+      show: sessionShow(p, a),
+      undo: restore,
+    }
+  },
+
+  'schedule.update_session'({ contact_id, booking_id, date, time, status, reason }) {
+    const { p, a } = booking(contact_id, booking_id)
+    if (!date && !time && !status) throw new Error('Nothing to change.')
+    const restore = snapshot(p, a)
+    const r = ops().update(p, a, { date, time, status: status && STATUS[status], why: reason })
+    return {
+      result: { booking_id, status: a.status, day: a.day, time: a.time, note: r.msg },
+      summary: `Updated ${p.name}'s ${short(a)} on ${a.day} at ${a.time}. ${r.msg}`,
+      show: sessionShow(p, a),
+      undo: restore,
+    }
+  },
+
+  'schedule.check_in'({ contact_id, booking_id }) {
+    const { p, a } = booking(contact_id, booking_id)
+    const restore = snapshot(p, a)
+    const msg = ops().checkIn(p, a)
+    return { result: { booking_id, status: 'checked_in', note: msg }, summary: msg, show: sessionShow(p, a), undo: restore }
+  },
+
+  'schedule.check_out'({ contact_id, booking_id }) {
+    const { p, a } = booking(contact_id, booking_id)
+    const restore = snapshot(p, a)
+    const msg = ops().checkOut(p, a)
+    return { result: { booking_id, status: 'checked_out', note: msg }, summary: `${p.name}: ${msg}`, show: sessionShow(p, a), undo: restore }
   },
 
   'schedule.add_open_session'({ service_id, date, time }) {
@@ -236,6 +332,61 @@ export const write = {
 }
 
 export const confirm = {
+  'schedule.late_cancel'({ contact_id, booking_id }) {
+    const { p, a } = booking(contact_id, booking_id)
+    if (a.status !== 'booked') throw new Error(`That session is not booked, so it cannot be canceled.`)
+    if (!ops().lateWindow(a)) throw new Error(`That session is more than 24 hours away, so it is a normal cancel with no credit used. Use schedule.cancel_session.`)
+    const pl = a.plan && p.plans.find((x) => x.id === a.plan)
+    const credit = pl && !pl.unlimited
+    return {
+      title: `Late cancel ${p.name}'s ${short(a)}?`,
+      lines: [`${a.day} at ${a.time}`, credit ? `Inside 24 hours. Uses 1 ${pl.service.toLowerCase()} credit.` : 'Inside 24 hours. Nothing is charged.'],
+      action: 'Late cancel',
+      apply() {
+        const restore = snapshot(p, a)
+        const r = ops().cancel(p, a)
+        return { result: { booking_id, status: 'late_cancel', credit_used: !!credit }, summary: `Late canceled ${p.name}'s ${short(a)}. ${r.msg}`, show: sessionShow(p, a), undo: restore }
+      },
+    }
+  },
+
+  'schedule.mark_no_show'({ contact_id, booking_id }) {
+    const { p, a } = booking(contact_id, booking_id)
+    if (a.status !== 'booked') throw new Error(`That session is not booked, so it cannot be a no show.`)
+    if (!ops().started(a)) throw new Error(`The session has not started yet (${a.day} at ${a.time}). A no show can only be marked after it starts.`)
+    const pl = a.plan && p.plans.find((x) => x.id === a.plan)
+    const credit = pl && !pl.unlimited
+    return {
+      title: `Mark ${p.name} as a no show?`,
+      lines: [`${short(a)}, ${a.day} at ${a.time}`, credit ? `Uses 1 ${pl.service.toLowerCase()} credit.` : 'Nothing is charged.'],
+      action: 'Mark no show',
+      apply() {
+        const restore = snapshot(p, a)
+        const msg = ops().noShow(p, a)
+        return { result: { booking_id, status: 'no_show', credit_used: !!credit }, summary: `Marked ${p.name} as a no show. ${msg}`, show: sessionShow(p, a), undo: restore }
+      },
+    }
+  },
+
+  'schedule.remove_session'({ contact_id, booking_id }) {
+    const { p, a } = booking(contact_id, booking_id)
+    const pl = a.plan && p.plans.find((x) => x.id === a.plan)
+    return {
+      title: `Remove ${p.name}'s ${short(a)}?`,
+      lines: [
+        `${a.day} at ${a.time}`,
+        'For a booking made by mistake. No history is kept.' + (pl && !pl.unlimited ? ' The credit goes back to left to book.' : ''),
+      ],
+      action: 'Remove',
+      apply() {
+        const restore = snapshot(p, a)
+        const day = shell().dayISO(a.day)
+        const msg = ops().remove(p, a)
+        return { result: { booking_id, removed: true }, summary: `Removed ${p.name}'s ${short(a)} on ${a.day}. ${msg}`, show: { page: 'schedule', date: day, id: p.id }, undo: restore }
+      },
+    }
+  },
+
   'inbox.send_message'({ contact_id, body, channel }) {
     const p = person(contact_id)
     const ch = channel || shell().chanOf(p)
@@ -360,6 +511,20 @@ export const confirm = {
 export const readExtra = {
   'setup.get'() {
     return { steps: setupState() }
+  },
+
+  /* Logs a request no tool can do and opens the screen where the owner can do it. */
+  'milton.cant_do'({ request, screen, contact_id, reason }, asked) {
+    const text = (asked || '').trim() || request
+    let opened = null
+    try {
+      write['ui.open']({ screen, contact_id })
+      opened = screen
+    } catch {
+      opened = null
+    }
+    logGap({ request: text, screen, reason })
+    return { logged: true, opened_screen: opened, tell_owner: `Say you can't do that yet and that it can be done on the ${screen} screen, which is now open. Do not give any other reason.` }
   },
 }
 

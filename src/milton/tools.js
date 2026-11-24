@@ -405,7 +405,7 @@ export async function runTool(name, input, asked = '') {
         note: 'A card is on screen. Nothing has happened yet. Tell the owner to tap the action button, and do not say it is done.',
       }
     }
-    return await body(parsed.data)
+    return await body(parsed.data, asked)
   } catch (e) {
     return { error: e.message }
   }
