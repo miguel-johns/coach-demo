@@ -304,8 +304,14 @@
     w._state="saved"; w._saved=snap(w); wst.chk="run"; M.render(); window.scrollTo(0,0);
     setTimeout(function(){ if(cur()!==w) return; var n=t.assign?w.assign.c.length+M.people().filter(function(p){return w.assign.t.some(function(x){return (p.tags||[]).indexOf(x)>=0})&&w.assign.c.indexOf(p.id)<0}).length:null;
       if(t.assign&&!n){wst.chk="none"; return M.render()} w.status="Live"; wst.chk={ok:t.assign?n+" of "+n+" eligible":"checked for each person as they join"}; reW(w.name+" is live.")},900)};
-  A.wfpause=function(){var w=cur(); w.status="Paused"; wst.chk=null; reW(w.name+" is paused. Nothing sends until it is live again.")};
-  A.wfarch=function(){var w=cur(); M.confirm({title:"Archive "+w.name+"?",body:(w.status==="Live"?"It stops for everyone part way through. ":"")+"It moves to Archived and stops running. You can duplicate it later to use it again.",no:"Keep it",yes:"Archive",run:function(){w.status="Archived"; w._state="saved"; reW(w.name+" is archived.")}})};
+  var wops=M.wfOps={
+    /* Stops sending. People part way through wait where they are until it is live again. No message is sent. */
+    pause:function(w){if(w.status!=="Live") throw new Error(w.name+" is not live, so there is nothing to pause."); w.status="Paused"; return w.name+" is paused. Nothing sends until it is live again."},
+    /* Stops it for good and moves it to Archived. Nobody part way through gets more steps. It can be duplicated later. */
+    archive:function(w){if(w.status==="Archived") throw new Error(w.name+" is already archived."); w.status="Archived"; w._state="saved"; return w.name+" is archived."}
+  };
+  A.wfpause=function(){var w=cur(), m; try{m=wops.pause(w)}catch(e){return M.toast(e.message)} wst.chk=null; reW(m)};
+  A.wfarch=function(){var w=cur(); M.confirm({title:"Archive "+w.name+"?",body:(w.status==="Live"?"It stops for everyone part way through. ":"")+"It moves to Archived and stops running. You can duplicate it later to use it again.",no:"Keep it",yes:"Archive",run:function(){reW(wops.archive(w))}})};
   A.wfdup=function(){grabHead(); var w=cur(), c=clone(w); delete c._hist; c.id="w"+Date.now(); c.name=w.name+" copy"; c.status="Draft"; c.runs=0; c.assign={c:[],t:[]}; c._state="saved"; c._saved=snap(c); wfs().unshift(c); wst.open=null; A.workflow(c.id); M.toast("Duplicated as a draft, without its assignments.")};
   A.wfback=function(){grabHead(); var w=cur(); if(w&&w._state!=="saved"&&w.status!=="Live"&&w.status!=="Archived") return M.confirm({title:"Discard unsaved workflow changes?",body:"Your workflow details, steps and unsaved contact or tag assignments will be lost if you leave.",no:"Stay",yes:"Discard changes",run:function(){ if(w._state==="new"||!w._saved) wfs().splice(wfs().indexOf(w),1); else {var s=JSON.parse(w._saved); w.name=s.name; w.trig=s.trig; w.stop=s.stop; w.steps=s.steps; w.assign=s.assign; w._state="saved"; sync(w)} wst.open=null; A.workflow("")}}); wst.open=null; A.workflow("")};
   /* For Milton: a draft workflow built from plain step descriptions, in the builder's own format. */

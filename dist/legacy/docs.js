@@ -177,6 +177,13 @@
       p.thread.push({k:"auto",src:"Signing request",name:pk.length===1?pk[0].name:pk.length+" documents",ch:"Text",day:"Today",t:"just now",body:sms(p,pk)+"[link] Reply STOP to opt out."}) });
     refresh(); return nd;
   }
+  M.docOps={
+    docs:function(){return live().map(function(d){return {document_id:d.id,name:d.name,required:!!d.required}})},
+    owed:function(pid,scope){refresh(); var p=M.person(pid); return p?packet(p,scope||"all").map(function(d){return d.name}):[]},
+    canText:function(pid){var p=M.person(pid); return !!p&&!noText(p)},
+    /* One text per person with one private signing link for everything in scope. Nothing is charged. */
+    send:doSend
+  };
   /* ---------- the member's signing page: a text link, a preview, or this device ---------- */
   function ov(){var e=$("signer"); if(!e){e=document.createElement("div"); e.id="signer"; e.className="takeover dsigner"; e.hidden=true; document.body.appendChild(e)} return e}
   function openSign(o){

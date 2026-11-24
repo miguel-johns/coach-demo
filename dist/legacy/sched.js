@@ -123,8 +123,24 @@
     return t.sort(function(x,y){return toMin(x)-toMin(y)});
   }
   function needBooked(a,what){if(a.status!=="booked") throw fail("That session is "+(label[a.status]||a.status)+", not booked, so it cannot be "+what+".")}
+  function klassGroup(){var k=DB.klass, s=DB.SERVICES.filter(function(x){return x.id==="sgt"})[0]; return s?group(TODAY+"|"+k.time+"|sgt|"+s.where):null}
+  function askIndex(pid){var i=DB.klass.asks.findIndex(function(r){return r[0]===pid}); if(i<0) throw fail("There is no booking request from that person for "+DB.klass.title+"."); return i}
   var ops={
     slots:slotsFor, lateWindow:lateWin, started:started,
+    requests:function(){return DB.klass.asks.map(function(r){return {client_id:r[0],name:r[1],note:r[2]}})},
+    /* Books the person into the class. Uses a credit when they have one, otherwise the session waits on payment. They are texted. */
+    approveRequest:function(pid,g){
+      var k=DB.klass, i=askIndex(pid); g=g||klassGroup();
+      if(!g) throw fail("I could not find today's "+k.title+" at "+k.time+".");
+      if(g.ms.filter(coming).length>=k.room) throw fail("The room holds "+k.room+". Nobody else fits.");
+      var r=k.asks.splice(i,1)[0], q=M.person(r[0]), a=q?addBooking(q,g.svc,g.iso,g.time,g.where):null; k.roster.push(r);
+      return {msg:r[1]+" is in. They were texted, and the booking page still shows "+k.shown+" of "+k.shown+".",person:q,appt:a,at:i,row:r};
+    },
+    /* Tells them there is no spot. Nothing is charged and no credit is touched. */
+    declineRequest:function(pid){
+      var k=DB.klass, r=k.asks.splice(askIndex(pid),1)[0]; k.declined++;
+      return {msg:r[1]+" was told there is no spot. Nothing was charged.",row:r};
+    },
     /* Moves the same booking. The credit stays booked and any amount due stays due. */
     reschedule:function(p,a,iso,time,opt){
       opt=opt||{}; needBooked(a,"moved");
@@ -466,8 +482,8 @@
     if(p.stage==="New"||p.stage==="In conversation") p.stage="Booked";
     st.date=k.date; M.panel=null; re(p.first+" is booked for "+s.title+" on "+dayLabel(k.date)+" at "+k.time+"."+(made>1?" Repeats for 4 weeks.":"")+(!p.docs.length?" The waiver goes out with this first booking.":""));
   };
-  A.kok=function(id){var k=DB.klass, g=group(st.grp); if(!g) return; if(g.ms.filter(coming).length>=k.room){M.toast("The room holds "+k.room+". Nobody else fits.");return} var r=k.asks.splice(+id,1)[0], q=M.person(r[0]); if(q) addBooking(q,g.svc,g.iso,g.time,g.where); k.roster.push(r); M.renderPanel(); M.render(); M.toast(r[1]+" is in. They were texted, and the booking page still shows "+k.shown+" of "+k.shown+".")};
-  A.kno=function(id){var k=DB.klass, r=k.asks.splice(+id,1)[0]; k.declined++; M.renderPanel(); M.render(); M.toast(r[1]+" was told there is no spot. Nothing was charged.")};
+  A.kok=function(id){var g=group(st.grp), r; if(!g) return; try{r=ops.approveRequest(DB.klass.asks[+id][0],g)}catch(e){return M.toast(e.message)} M.renderPanel(); M.render(); M.toast(r.msg)};
+  A.kno=function(id){var r=ops.declineRequest(DB.klass.asks[+id][0]); M.renderPanel(); M.render(); M.toast(r.msg)};
   M.changes.push(function(el){
     if(el.id==="scoach"){st.coach=el.value; M.render()}
     if(el.id==="bkday"){st.bk.date=el.value; st.bk.time=null; M.renderPanel()}

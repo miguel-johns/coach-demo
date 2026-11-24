@@ -32,6 +32,33 @@ function workflow(id) {
 }
 /* The same session functions the Session Panel buttons call (public/legacy/sched.js). */
 const ops = () => shell().sessOps
+const payOps = () => shell().payOps
+const crmOps = () => shell().crmOps
+const posOps = () => shell().posOps
+const docOps = () => shell().docOps
+const memberShow = (id) => ({ page: 'payments', tab: 'subs', id })
+
+function membership(contactId, planId) {
+  person(contactId)
+  const key = `${contactId}:${planId}`
+  const s = payOps().findSub(key)
+  if (!s.pl) throw new Error(`${s.p.name} has no plan ${planId}. Use contacts.get to see their plans.`)
+  return { ...s, key }
+}
+
+/* The reason list the side panel shows. Anything else the owner said goes in the note. */
+function reasonFields(kind, reason, note) {
+  const options = payOps().reasons[kind]
+  const hit = reason && options.find((o) => o.toLowerCase() === reason.toLowerCase())
+  return [
+    { name: 'reason', label: `Reason to ${kind.toLowerCase()}`, options, value: hit || (reason ? 'Other' : ''), required: true },
+    { name: 'note', label: 'Note', value: note || (reason && !hit ? reason : '') },
+  ]
+}
+
+function methodField(p, method) {
+  return { name: 'method', label: 'Payment method', options: ['card', 'cash'], value: method || (p.card ? 'card' : ''), required: true }
+}
 
 const STATUS = { booked: 'booked', checked_in: 'in', checked_out: 'out', late_cancel: 'late', no_show: 'noshow', canceled: 'canceled' }
 
@@ -309,6 +336,83 @@ export const write = {
     }
   },
 
+  'schedule.approve_request'({ contact_id }) {
+    const DB = db()
+    const p = person(contact_id)
+    const plansBefore = JSON.stringify(p.plans)
+    const r = ops().approveRequest(contact_id)
+    const a = r.appt
+    return {
+      result: { contact_id, booked: !!a, booking_id: a?.id || null, covered_by_plan: !!a?.plan, due: a?.due || 0, texted: true },
+      summary: r.msg,
+      show: a ? sessionShow(p, a) : { page: 'schedule', id: contact_id },
+      undo: () => {
+        remove(DB.klass.roster, r.row)
+        DB.klass.asks.splice(r.at, 0, r.row)
+        if (a) remove(p.appts, a)
+        p.plans.splice(0, p.plans.length, ...JSON.parse(plansBefore))
+      },
+    }
+  },
+
+  'contacts.bulk_tag'({ contact_ids, tag }) {
+    if (contact_ids.length > 25) throw new Error(`That is ${contact_ids.length} people. Over 25 needs the owner's OK: use contacts.bulk_tag_many.`)
+    contact_ids.forEach((id) => person(id))
+    const got = crmOps().bulkTag(contact_ids, tag)
+    return {
+      result: { tag, tagged: got.length, already_had: contact_ids.length - got.length },
+      summary: `Added the tag "${tag}" to ${got.length} ${got.length === 1 ? 'person' : 'people'}`,
+      show: { page: 'crm', tab: 'contacts', ids: got },
+      undo: () => crmOps().untag(got, tag),
+    }
+  },
+
+  'workflows.pause'({ workflow_id }) {
+    const w = workflow(workflow_id)
+    const before = w.status
+    const msg = shell().wfOps.pause(w)
+    return { result: { workflow_id, status: 'Paused' }, summary: msg, show: workflowShow(workflow_id), undo: () => (w.status = before) }
+  },
+
+  'workflows.archive'({ workflow_id }) {
+    const w = workflow(workflow_id)
+    const before = { status: w.status, _state: w._state }
+    const msg = shell().wfOps.archive(w)
+    return { result: { workflow_id, status: 'Archived' }, summary: msg, show: workflowShow(workflow_id), undo: () => Object.assign(w, before) }
+  },
+
+  'payments.resume_membership'({ contact_id, plan_id }) {
+    const { p, pl, key } = membership(contact_id, plan_id)
+    const before = { state: pl.state, reason: pl.reason, next: pl.next }
+    const len = p.thread.length
+    const msg = payOps().resume(key)
+    return {
+      result: { contact_id, plan_id, state: 'Active', next_charge: pl.next },
+      summary: msg,
+      show: memberShow(contact_id),
+      undo: () => {
+        Object.assign(pl, before)
+        p.thread.length = len
+      },
+    }
+  },
+
+  'payments.create_promo'({ code, name, type, value, live }) {
+    const d = Object.assign(payOps().blankPromo(), {
+      name: name || code,
+      code: code.toUpperCase().replace(/\s/g, ''),
+      type: type === 'amount' ? 'amt' : 'pct',
+      value: String(value),
+    })
+    const msg = payOps().savePromo(d, !!live)
+    return {
+      result: { promo_id: d.id, code: d.code, status: d.status },
+      summary: msg,
+      show: { page: 'payments', tab: 'setup', id: d.id },
+      undo: () => payOps().removePromo(d.id),
+    }
+  },
+
   'ui.open'({ screen, contact_id, workflow_id, date }) {
     const M = shell()
     if (contact_id) {
@@ -417,10 +521,13 @@ export const confirm = {
     if (v > left) throw new Error(`Only ${money(left)} can still be refunded.`)
     const p = shell().person(t.pid)
     return {
-      title: `Refund ${money(v)} to ${p ? p.name : 'this customer'}?`,
-      lines: [`${t.item}, paid ${money(t.paid)}`, 'The money goes back to the card. This cannot be undone.'],
+      title: `Refund ${p ? p.name : 'this customer'}?`,
+      lines: [`${t.item}, paid ${money(t.paid)}. Up to ${money(left)} can be refunded.`, 'The money goes back to the card. This cannot be undone.'],
+      fields: [{ name: 'amount', label: 'Amount to refund', type: 'number', value: String(v), required: true }],
       action: 'Refund',
-      apply() {
+      apply(vals = {}) {
+        const v = parseFloat(String(vals.amount ?? left).replace(/[$,\s]/g, ''))
+        if (!(v > 0) || v > left) throw new Error(`Enter an amount from $0.01 to ${money(left)}.`)
         t.refunded = (t.refunded || 0) + v
         t.status = t.refunded >= t.paid ? 'Refunded' : 'Partly refunded'
         return {
@@ -506,11 +613,212 @@ export const confirm = {
       },
     }
   },
+
+  'schedule.decline_request'({ contact_id }) {
+    const p = person(contact_id)
+    if (!ops().requests().some((r) => r.client_id === contact_id)) throw new Error(`${p.name} has no booking request. Use schedule.list_requests.`)
+    return {
+      title: `Decline ${p.name}'s booking request?`,
+      lines: [`${p.first} is texted that there is no spot.`, 'Nothing is charged and no credit is touched.'],
+      action: 'Decline',
+      apply() {
+        const r = ops().declineRequest(contact_id)
+        return { result: { contact_id, declined: true, texted: true }, summary: r.msg, show: { page: 'schedule', id: contact_id } }
+      },
+    }
+  },
+
+  'schedule.take_payment'({ contact_id, booking_id, method }) {
+    const { p, a } = booking(contact_id, booking_id)
+    if (!(a.due > 0)) throw new Error('Nothing is due on that session.')
+    const o = { cust: p.id, appt: a, checkout: a.status === 'in' }
+    const q = posOps().quote(o)
+    return {
+      title: `Take ${money(q.total)} from ${p.name}?`,
+      lines: [`${short(a)}, ${a.day} at ${a.time}`, `Card means the card on file${p.card ? ` (${p.card})` : ', and there is none'}. A receipt line goes on their record.`],
+      fields: [methodField(p, method)],
+      action: 'Take payment',
+      apply(v) {
+        const r = posOps().sell(o, v.method)
+        return {
+          result: { contact_id, booking_id, paid: r.total, method: r.method, checked_out: !!r.extra },
+          summary: `Took ${money(r.total)} from ${p.name}, ${r.method}. ${r.extra}`.trim(),
+          show: sessionShow(p, a),
+        }
+      },
+    }
+  },
+
+  'schedule.renew_package'({ contact_id, plan_id, method }) {
+    const p = person(contact_id)
+    const pl = p.plans.find((x) => x.id === plan_id)
+    if (!pl) throw new Error(`${p.name} has no plan ${plan_id}. Use contacts.get to see their plans.`)
+    if (!posOps().renewItem(pl)) throw new Error(`${pl.name} is no longer for sale, so it cannot be renewed.`)
+    const o = { cust: p.id, renew: pl }
+    const q = posOps().quote(o)
+    return {
+      title: `Renew ${p.name}'s ${pl.name} for ${money(q.total)}?`,
+      lines: [`Sells ${pl.name} again, same as Renew on the session card.`, `Card means the card on file${p.card ? ` (${p.card})` : ', and there is none'}.`],
+      fields: [methodField(p, method)],
+      action: 'Renew',
+      apply(v) {
+        const r = posOps().sell(o, v.method)
+        return { result: { contact_id, renewed: pl.name, paid: r.total, method: r.method }, summary: `Renewed ${p.name}'s ${pl.name}, ${money(r.total)} ${r.method}`, show: contactShow(p.id) }
+      },
+    }
+  },
+
+  'pos.take_sale'({ contact_id, items, method }) {
+    const p = person(contact_id)
+    const o = { cust: p.id, items: items.map((x) => ({ id: x.item_id, qty: x.qty || 1 })) }
+    const q = posOps().quote(o)
+    return {
+      title: `Charge ${p.name} ${money(q.total)}?`,
+      lines: [...q.lines.map((l) => `${l.qty} x ${l.name}, ${money(l.amount)}`), `Card means the card on file${p.card ? ` (${p.card})` : ', and there is none'}.`],
+      fields: [methodField(p, method)],
+      action: 'Charge',
+      apply(v) {
+        const r = posOps().sell(o, v.method)
+        return { result: { contact_id, charged: r.total, method: r.method, items: r.names }, summary: `Charged ${p.name} ${money(r.total)} for ${r.names.join(', ')}, ${r.method}`, show: contactShow(p.id) }
+      },
+    }
+  },
+
+  'contacts.merge'({ dup_id, keep_id }) {
+    const d = crmOps().dups().find((x) => x.dup_id === dup_id)
+    if (!d || !d.keep || !d.drop) throw new Error(`No duplicate pair ${dup_id}. Use contacts.list_duplicates.`)
+    const keep = keep_id && keep_id === d.drop.id ? d.drop : d.keep
+    const drop = keep === d.keep ? d.drop : d.keep
+    return {
+      title: `Merge ${drop.name} into ${keep.name}?`,
+      lines: [`Keeps ${keep.name}. A missing phone or email is filled in from the other record, then the other record is removed.`, 'No message is sent.'],
+      action: 'Merge',
+      apply() {
+        const k = crmOps().merge(dup_id, keep.id)
+        return { result: { dup_id, kept: k.id, removed: drop.id }, summary: `Merged ${drop.name} into ${k.name}`, show: contactShow(k.id), undo: () => shell().undoMerge(k) }
+      },
+    }
+  },
+
+  'contacts.bulk_tag_many'({ contact_ids, tag }) {
+    const ppl = contact_ids.map((id) => person(id))
+    return {
+      title: `Tag ${ppl.length} people "${tag}"?`,
+      lines: [`${ppl.slice(0, 5).map((p) => p.name).join(', ')}${ppl.length > 5 ? ` and ${ppl.length - 5} more` : ''}`, 'No message is sent.'],
+      action: 'Add tag',
+      apply() {
+        const got = crmOps().bulkTag(contact_ids, tag)
+        return {
+          result: { tag, tagged: got.length, already_had: contact_ids.length - got.length },
+          summary: `Added the tag "${tag}" to ${got.length} people`,
+          show: { page: 'crm', tab: 'contacts', ids: got },
+          undo: () => crmOps().untag(got, tag),
+        }
+      },
+    }
+  },
+
+  'payments.pause_membership'({ contact_id, plan_id, reason, note }) {
+    const { p, pl, key } = membership(contact_id, plan_id)
+    if (pl.state === 'Paused') throw new Error(`${pl.name} is already paused.`)
+    return {
+      title: `Pause ${p.first}'s ${pl.kind.toLowerCase()}?`,
+      lines: [`${pl.name}, ${money(Number(pl.amt))}`, `No charges while it is paused. ${p.first} keeps what is already paid for. A note goes on their record; no text is sent.`],
+      fields: reasonFields('Pause', reason, note),
+      action: 'Pause it',
+      apply(v) {
+        const before = { state: pl.state, reason: pl.reason, note: pl.note, failed: pl.failed }
+        const len = p.thread.length
+        const msg = payOps().pause(key, v.reason, (v.note || '').trim())
+        return {
+          result: { contact_id, plan_id, state: 'Paused', reason: v.reason },
+          summary: msg,
+          show: memberShow(contact_id),
+          undo: () => {
+            Object.assign(pl, before)
+            p.thread.length = len
+          },
+        }
+      },
+    }
+  },
+
+  'payments.cancel_membership'({ contact_id, plan_id, reason, note }) {
+    const { p, pl, key } = membership(contact_id, plan_id)
+    return {
+      title: `Cancel ${p.first}'s ${pl.kind.toLowerCase()}?`,
+      lines: [`${pl.name}, ${money(Number(pl.amt))}`, `Nothing more is charged. ${p.first} keeps access through what is already paid for. To bring it back it is sold again. No text is sent.`],
+      fields: reasonFields('Cancel', reason, note),
+      action: 'Cancel it',
+      apply(v) {
+        const plans = p.plans
+        const past = p.past.length
+        const len = p.thread.length
+        const msg = payOps().cancel(key, v.reason, (v.note || '').trim())
+        return {
+          result: { contact_id, plan_id, state: 'Canceled', reason: v.reason },
+          summary: msg,
+          show: memberShow(contact_id),
+          undo: () => {
+            p.plans = plans
+            p.past.splice(0, p.past.length - past)
+            payOps().unCancel(p, pl)
+            p.thread.length = len
+          },
+        }
+      },
+    }
+  },
+
+  'documents.send'({ contact_ids, scope }) {
+    const s = scope || 'all'
+    const rows = contact_ids.map((id) => {
+      const p = person(id)
+      return { p, docs: docOps().owed(p.id, s), text: docOps().canText(p.id) }
+    })
+    const go = rows.filter((r) => r.docs.length && r.text)
+    const skip = rows.filter((r) => !go.includes(r))
+    if (!go.length) throw new Error('Nobody here has anything to sign that can be texted. Check they can get texts and still owe a document.')
+    return {
+      title: `Text a signing link to ${go.length === 1 ? go[0].p.name : `${go.length} people`}?`,
+      lines: [
+        ...go.map((r) => `${r.p.name}: ${r.docs.join(', ')}`),
+        ...(skip.length ? [`Skipped: ${skip.map((r) => `${r.p.name} (${r.text ? 'nothing to sign' : 'cannot get texts'})`).join(', ')}`] : []),
+        'One text each with a private signing link. Nothing is charged.',
+      ],
+      action: 'Send',
+      apply() {
+        const n = docOps().send(go.map((r) => r.p.id), s)
+        return {
+          result: { texted: go.map((r) => r.p.id), documents: n, skipped: skip.map((r) => r.p.id) },
+          summary: `Texted a signing link to ${go.map((r) => r.p.name).join(', ')}`,
+          show: contactShow(go[0].p.id),
+        }
+      },
+    }
+  },
 }
 
 export const readExtra = {
   'setup.get'() {
     return { steps: setupState() }
+  },
+
+  'schedule.list_requests'() {
+    const k = db().klass
+    return { class: k.title, time: k.time, room: k.room, requests: ops().requests() }
+  },
+
+  'contacts.list_duplicates'() {
+    return { pairs: crmOps().dups() }
+  },
+
+  'pos.list_items'() {
+    return { items: posOps().items() }
+  },
+
+  'documents.list'() {
+    return { documents: docOps().docs() }
   },
 
   /* Logs a request no tool can do and opens the screen where the owner can do it. */
