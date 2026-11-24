@@ -17,11 +17,11 @@ Navigation, filters, tabs, copy and close buttons are not listed.
 | Edit session: day, time, status, reason | schedule.update_session |
 | Remove session | schedule.remove_session |
 | Add an open session / time | schedule.add_open_session |
-| Pay amount due and check out / Take payment | missing (Point of sale) |
-| Renew plan | missing |
+| Pay amount due and check out / Take payment | `schedule.take_payment` (confirm) |
+| Renew plan | `schedule.renew_package` (confirm) |
 | Check in all / Check out all (group roster) | missing (one at a time works) |
 | Add a person to a group, Add over the limit | schedule.book_session |
-| Approve / Decline booking request | missing |
+| Approve / Decline booking request | `schedule.list_requests`, `schedule.approve_request` (run now), `schedule.decline_request` (confirm) |
 | Add / remove hours override | missing |
 | Share booking page | missing |
 
@@ -32,8 +32,8 @@ Navigation, filters, tabs, copy and close buttons are not listed.
 | Edit / Save status / Move to stage | contacts.update |
 | Note / Add a note for the next coach | contacts.add_note |
 | Import contacts | contacts.import |
-| Merge duplicates / Not the same person | missing |
-| Add tag (bulk) | missing |
+| Merge duplicates / Not the same person | `contacts.list_duplicates`, `contacts.merge` (confirm); Not the same person missing |
+| Add tag (bulk) | `contacts.bulk_tag` (run now, up to 25), `contacts.bulk_tag_many` (confirm) |
 | Message (bulk) | missing |
 | Call / Call them one by one | missing |
 | Add / remove pipeline stage | missing |
@@ -67,16 +67,16 @@ Navigation, filters, tabs, copy and close buttons are not listed.
 |---|---|
 | Refund | payments.refund |
 | Take payment (failed payment) | missing |
-| Pause / Cancel / Resume membership | missing |
+| Pause / Cancel / Resume membership | `payments.pause_membership`, `payments.cancel_membership` (confirm, reason on card), `payments.resume_membership` (run now) |
 | Set / edit / remove monthly goal | missing |
-| New / edit / end promo code | missing |
+| New / edit / end promo code | `payments.create_promo` (run now); edit and end missing |
 | Edit failed-payment message | missing |
 | Download / print | missing |
 
 ## Point of sale
 | Action | Tool |
 |---|---|
-| Take a sale / Save card | missing |
+| Take a sale / Save card | `pos.list_items`, `pos.take_sale` (confirm); Save card missing |
 
 ## Services and Packages
 | Action | Tool |
@@ -92,7 +92,7 @@ Navigation, filters, tabs, copy and close buttons are not listed.
 |---|---|
 | Use template / new workflow (draft) | workflows.create_draft |
 | Make it live | workflows.turn_on |
-| Pause / Archive / Duplicate / Delete workflow | missing |
+| Pause / Archive / Duplicate / Delete workflow | `workflows.pause`, `workflows.archive` (run now); Duplicate missing; Delete has no button (Archive is the way to end one) |
 | Create / duplicate / delete funnel, edit form | missing |
 | Send a test lead | missing |
 
@@ -100,7 +100,7 @@ Navigation, filters, tabs, copy and close buttons are not listed.
 | Action | Tool |
 |---|---|
 | New document / Publish | missing |
-| Send / Resend to people | missing |
+| Send / Resend to people | `documents.list`, `documents.send` (confirm) |
 | Add a signed copy | missing |
 
 ## Setup
