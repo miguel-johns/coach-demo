@@ -366,11 +366,11 @@ const run = {
 Object.assign(run, readExtra)
 
 /* Runs a confirmed plan, records it in Activity and redraws the screens. */
-export function applyPending(id, asked) {
+export function applyPending(id, asked, values = {}) {
   const p = getPending(id)
   if (!p || p.state !== 'waiting') return null
   try {
-    const out = p.apply()
+    const out = p.apply(values)
     record({ asked, tool: p.tool, summary: out.summary, undo: out.undo ? () => (out.undo(), refresh()) : null })
     resolvePending(id, 'done', out.summary, { show: out.show })
     refresh()
@@ -402,7 +402,12 @@ export async function runTool(name, input, asked = '') {
         confirmation_id: id,
         shown_to_owner: plan.title,
         action_button: plan.action || 'Confirm',
-        note: 'A card is on screen. Nothing has happened yet. Tell the owner to tap the action button, and do not say it is done.',
+        ...(plan.fields?.length && {
+          fields_on_card: plan.fields.map((f) => ({ field: f.label, filled_in: f.value || null, required: !!f.required })),
+        }),
+        note:
+          'A card is on screen. Nothing has happened yet. Tell the owner to tap the action button, and do not say it is done.' +
+          (plan.fields?.some((f) => f.required && !f.value) ? ' Some required fields are empty: ask the owner for them, they can fill them in on the card.' : ''),
       }
     }
     return await body(parsed.data, asked)

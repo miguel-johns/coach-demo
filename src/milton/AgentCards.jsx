@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { getActivity, getGaps, getPending, getVersion, resolvePending, subscribe, undoEntry } from './activity.js'
 import { applyPending } from './tools.js'
 import { chatCoversScreen, closeChat, reveal } from './reveal.js'
@@ -22,10 +22,50 @@ export function ViewLink({ show, children = 'View', className = 'mview' }) {
   )
 }
 
+/* The same fields the side panel asks for, filled in from what the owner said. */
+function ConfirmFields({ id, fields, values, setValues }) {
+  return (
+    <div className="mconfirm-fields">
+      {fields.map((f) => {
+        const fid = `mc-${id}-${f.name}`
+        const set = (v) => setValues({ ...values, [f.name]: v })
+        return (
+          <div key={f.name} className="mconfirm-field">
+            <label htmlFor={fid}>
+              {f.label}
+              {f.required ? '' : ' (optional)'}
+            </label>
+            {f.options ? (
+              <select id={fid} value={values[f.name] ?? ''} onChange={(e) => set(e.target.value)}>
+                {!values[f.name] && <option value="">Choose one</option>}
+                {f.options.map((o) => (
+                  <option key={o}>{o}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id={fid}
+                type={f.type === 'number' ? 'number' : 'text'}
+                inputMode={f.type === 'number' ? 'decimal' : undefined}
+                value={values[f.name] ?? ''}
+                onChange={(e) => set(e.target.value)}
+              />
+            )}
+            {f.required && !String(values[f.name] ?? '').trim() && <span className="mconfirm-need">Milton needs this from you.</span>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function ConfirmCard({ id, asked }) {
   useActivityVersion()
   const p = getPending(id)
+  const [values, setValues] = useState(() => Object.fromEntries((p?.fields || []).map((f) => [f.name, f.value ?? ''])))
   if (!p) return null
+  const fields = p.fields || []
+  const missing = fields.some((f) => f.required && !String(values[f.name] ?? '').trim())
   return (
     <div className={`mconfirm ${p.state}`} role="group" aria-label={p.title}>
       <p className="mconfirm-title">{p.title}</p>
@@ -34,13 +74,15 @@ export function ConfirmCard({ id, asked }) {
           {l}
         </p>
       ))}
+      {p.state === 'waiting' && fields.length > 0 && <ConfirmFields id={id} fields={fields} values={values} setValues={setValues} />}
       {p.state === 'waiting' ? (
         <div className="mconfirm-acts">
           <button
             type="button"
             className="btn sm primary"
+            disabled={missing}
             onClick={() => {
-              const out = applyPending(id, asked)
+              const out = applyPending(id, asked, values)
               if (out?.show && !chatCoversScreen()) reveal(out.show)
             }}
           >
