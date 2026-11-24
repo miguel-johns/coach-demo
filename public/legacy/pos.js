@@ -161,23 +161,52 @@
     if(c.stage&&method!=="link") c.stage=cartIds().some(function(id){return item(id).kind==="membership"})?"Joined":(c.stage==="Joined"?"Joined":"Came in");
     return names;
   }
-  function finish(method,detail,change){
+  /* The part of a sale that changes records: charges, credits, history. The Charge button and Milton both run this. */
+  function settle(method,detail){
     var t=totals(), c=cust(), mlabel=method==="card"?((c.card&&!S.newCard)?c.card:"Visa ending 4242"):(method==="cash"?"Cash":(method==="check"?detail:(method==="free"?"No payment required":"link")));
     if(method==="card"&&(!c.card||S.newCard)){var sv=q("#saveCard"); if(!sv||sv.checked) c.card="Visa ending 4242"}
     var names=grant(c,method==="link"?"link":mlabel,t,t.later), extra="";
     if(method==="link") c.links.push({id:"l"+Date.now(),text:names.join(", ")+", "+money(t.total),meta:"Payment link sent today. Not paid yet. Expires Mon, Nov 23."});
     c.thread.push({k:"event",day:"Today",t:"just now",body:method==="link"?"Payment link sent: "+names.join(", ")+", "+money(t.total):M.you().name+" took payment: "+names.join(", ")+", "+money(t.total)+(t.tip>0?" including a "+money(t.tip)+" tip":"")+". "+mlabel+"."});
     if(O.appt&&O.checkout&&method!=="link"&&O.appt.status==="in"){M.sess.set(c,O.appt,"out"); extra="Checked out."}
-    S.paid={method:method,total:t.total,detail:detail,change:change||0,first:c.first,phone:c.phone,laterLine:t.later?startedMsg():"",extra:extra};
-    if(t.later){c.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" started a package. First charge set for "+fd(S.laterDate)+"."}); M.toast(S.paid.laterLine)}
+    if(t.later) c.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" started a package. First charge set for "+fd(S.laterDate)+"."});
+    return {names:names,total:t.total,tip:t.tip,method:mlabel,extra:extra,later:t.later,renew:t.renew};
+  }
+  function finish(method,detail,change){
+    var c=cust(), r=settle(method,detail);
+    S.paid={method:method,total:r.total,detail:detail,change:change||0,first:c.first,phone:c.phone,laterLine:r.later?startedMsg():"",extra:r.extra};
+    if(r.later) M.toast(S.paid.laterLine);
     S.view="done"; S.busy=false; renderAll();
   }
-  function open(o){
+  function load(o){
     O=o||{}; S=fresh();
     if(O.cust) S.cust=O.cust;
     if(O.appt){S.extra={id:"appt",svc:O.appt.day+" · "+O.appt.time,name:O.appt.title,price:O.appt.due,kind:"session",tip:/Massage|Personal/.test(O.appt.title)}; S.cart.appt=1}
     if(O.item) S.cart[O.item]=1;
+    (O.items||[]).forEach(function(x){S.cart[x.id]=(S.cart[x.id]||0)+(x.qty||1)});
     if(O.renew){var it=ITEMS.filter(function(i){return label(i).toLowerCase()===O.renew.name.toLowerCase()})[0]; if(it) S.cart[it.id]=1}
+  }
+  /* Runs a sale without the POS screen, then puts any open POS ticket back as it was. */
+  function aside(o,fn){var keepS=S, keepO=O; try{load(o); return fn()} finally{S=keepS; O=keepO}}
+  function sellable(it){return !it.hidden&&it.status!=="Draft"&&it.status!=="Archived"}
+  M.posOps={
+    items:function(){return ITEMS.filter(sellable).map(function(it){return {item_id:it.id,name:label(it),price:it.price,kind:it.kind,stock:it.stock==null?null:it.stock,renews_every:it.per||null}})},
+    renewItem:function(pl){var it=ITEMS.filter(function(i){return label(i).toLowerCase()===pl.name.toLowerCase()})[0]; return it&&sellable(it)?it:null},
+    quote:function(o){return aside(o,function(){
+      var c=cust(); if(!c) throw new Error("Pick who the sale is for.");
+      var ids=cartIds(); if(!ids.length) throw new Error("There is nothing in the sale.");
+      ids.forEach(function(id){var it=item(id); if(!it) throw new Error("No item "+id+". Use pos.list_items."); if(id!=="appt"&&!sellable(it)) throw new Error(it.name+" is not for sale."); if(it.stock!=null&&it.stock<S.cart[id]) throw new Error("Only "+it.stock+" "+it.name+" left.")});
+      var t=totals();
+      return {customer:c.name,card:c.card||null,lines:ids.map(function(id){var it=item(id); return {name:label(it),qty:S.cart[id],amount:it.price*S.cart[id]}}),total:t.total,renew:t.renew}
+    })},
+    /* method is "card" (the card on file) or "cash". Same records as pressing Charge. */
+    sell:function(o,method){return aside(o,function(){
+      var c=cust(); if(method==="card"&&!c.card) throw new Error(c.name+" has no card on file. Take it in the point of sale, or use cash.");
+      return settle(method)
+    })}
+  };
+  function open(o){
+    load(o);
     root.innerHTML='<div class="pos"><header class="ptop"><button class="ico" data-pa="close" aria-label="Close the POS and go back to where you were">&#10005;</button><h1>Point of sale</h1></header><div class="pmain"><section class="catalog" aria-label="Catalog"><input class="isearch" id="itemSearch" type="search" placeholder="Search services, packages or products" autocomplete="off"><div class="tabs" id="ptabs" role="tablist"></div><div class="pgrid" id="pgrid"></div></section><aside class="rail" id="rail" aria-label="Current sale"></aside></div></div>';
     root.hidden=false; renderAll(S.cust?null:"custSearch");
   }

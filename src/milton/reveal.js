@@ -35,6 +35,7 @@ function navigate(M, show) {
   }
   if (show.date && M.schedDay) M.schedDay(show.date)
   M.go({ page: show.page, tab: show.tab })
+  if (show.session && M.sess?.open && M.sess.find(show.session.join('|'))) M.sess.open(...show.session)
 }
 
 const ROW = 'tr,.row,li,.msg,.card'

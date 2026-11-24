@@ -347,13 +347,39 @@
     var s2=findSub(st.reason.key), p=s2.p, pl=s2.pl, why=$("yWhy").value, note=$("yNote").value.trim(), kind=pl.kind.toLowerCase(), k=st.reason.kind;
     M.confirm({title:k+" "+p.first+"'s "+kind+"?",body:k==="Pause"?pl.name+" stops charging until you resume it. Reason: "+why.toLowerCase()+".":pl.name+" ends and nothing more is charged. To bring it back you would sell it again. Reason: "+why.toLowerCase()+".",no:"Keep it",yes:k==="Pause"?"Pause it":"Cancel it",run:function(){
       st.reason=null; st.manage=null; M.closePanel();
-      if(k==="Pause"){pl.state="Paused"; pl.reason=why; pl.note=note; pl.failed=null; p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" paused "+pl.name+". Reason: "+why.toLowerCase()+(note?". "+note:"")}); return re(p.name+"'s "+kind+" is paused. No charges until it resumes.")}
+      re(k==="Pause"?ops.pause(s2key(p,pl),why,note):ops.cancel(s2key(p,pl),why,note))}});
+  };
+  A.yresume=function(id){M.closePanel(); st.manage=null; st.reason=null; re(ops.resume(id))};
+  function s2key(p,pl){return p.id+":"+pl.id}
+  function subFail(m){return new Error(m)}
+  function needSub(key){var s=findSub(key); if(!s.p||!s.pl) throw subFail("That membership was not found."); return s}
+  var ops=M.payOps={
+    reasons:WHY, findSub:findSub,
+    /* Stops charges until resumed. Credits already paid for stay usable. A note goes on their record; no text is sent. */
+    pause:function(key,why,note){var s=needSub(key), p=s.p, pl=s.pl; if(pl.state==="Paused") throw subFail(pl.name+" is already paused.");
+      pl.state="Paused"; pl.reason=why; pl.note=note||""; pl.failed=null;
+      p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" paused "+pl.name+". Reason: "+String(why).toLowerCase()+(note?". "+note:"")});
+      return p.name+"'s "+pl.kind.toLowerCase()+" is paused. No charges until it resumes."},
+    /* Ends it. Nothing more is charged; they keep what is already paid for. It moves to past plans. */
+    cancel:function(key,why,note){var s=needSub(key), p=s.p, pl=s.pl;
       p.plans=p.plans.filter(function(x){return x!==pl}); p.past.unshift([pl.name,sd(pl.start)+" to "+sd(TODAY),"Canceled"]);
       canceled.push({key:"x"+Date.now(),p:p,pl:pl,state:"Canceled",reason:why});
-      p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" canceled "+pl.name+". Reason: "+why.toLowerCase()+(note?". "+note:"")});
-      re(p.name+"'s "+kind+" is canceled. Nothing more will be charged.")}});
+      p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" canceled "+pl.name+". Reason: "+String(why).toLowerCase()+(note?". "+note:"")});
+      return p.name+"'s "+pl.kind.toLowerCase()+" is canceled. Nothing more will be charged."},
+    /* Charging restarts. The next charge is Dec 20. */
+    resume:function(key){var s=needSub(key); if(s.pl.state!=="Paused") throw subFail(s.pl.name+" is not paused.");
+      s.pl.state=null; s.pl.reason=null; s.pl.next="2026-12-20";
+      s.p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" resumed "+s.pl.name+". Next charge Dec 20."});
+      return s.p.name+"'s "+s.pl.kind.toLowerCase()+" is active again. Next charge Dec 20."},
+    unCancel:function(p,pl){var i=canceled.findIndex(function(c){return c.pl===pl}); if(i>-1) canceled.splice(i,1)},
+    promos:function(){return promos}, blankPromo:blank, problems:function(d){return problems(d)},
+    /* Saves a promo code exactly as the editor does. Live codes work at checkout; drafts do nothing until made live. */
+    savePromo:function(d,live){var pr=problems(d); if(live&&pr.length) throw subFail(pr[0]); if(!d.code.trim()) throw subFail("A promo code needs a code.");
+      if(promos.some(function(x){return x.id!==d.id&&x.code===d.code&&x.status!=="Ended"})) throw subFail(d.code+" is already in use.");
+      d.status=live?"Live":"Draft"; if(d.id) promos.splice(promos.findIndex(function(x){return x.id===d.id}),1,d); else {d.id="p"+Date.now(); promos.unshift(d)}
+      return d.code+(live?" is live. Customers can use it at checkout "+(d.startOn==="date"&&d.starts>TODAY?"from "+ld(d.starts)+".":"now."):" saved as a draft.")},
+    removePromo:function(id){var i=promos.findIndex(function(x){return x.id===id}); if(i>-1) promos.splice(i,1)}
   };
-  A.yresume=function(id){M.closePanel(); st.manage=null; st.reason=null; var s=findSub(id); s.pl.state=null; s.pl.reason=null; s.pl.next="2026-12-20"; s.p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" resumed "+s.pl.name+". Next charge Dec 20."}); re(s.p.name+"'s "+s.pl.kind.toLowerCase()+" is active again. Next charge Dec 20.")};
   A.yrefresh=function(){st.checked="just now"; re("Status checked just now. Payments are live.")};
   A.ysavegoal=function(){var v=parseFloat($("yGoal").value.replace(/[$,\s]/g,"")); if(!(v>0)) return M.toast("Enter an amount above zero, like 25,000."); G.goal=v; re("Monthly goal saved: "+usd(v)+".")};
   A.ycleargoal=function(){G.goal=0; re("Monthly goal removed.")};
@@ -370,9 +396,8 @@
     var d=st.promo, pr=problems(d);
     if(live&&pr.length){var td=$("ytodo"); if(td) td.scrollIntoView({block:"center"}); return M.toast("Not saved yet. "+pr[0])}
     if(!live&&!d.code.trim()) return M.toast("Add a promo code to save a draft.");
-    d.status=live?"Live":"Draft";
-    if(d.id) promos.splice(promos.findIndex(function(x){return x.id===d.id}),1,d); else {d.id="p"+Date.now(); promos.unshift(d)}
-    st.promo=null; re(d.code+(live?" is live. Customers can use it at checkout "+(d.startOn==="date"&&d.starts>TODAY?"from "+ld(d.starts)+".":"now."):" saved as a draft."));
+    var m; try{m=ops.savePromo(d,live)}catch(e){return M.toast(e.message)}
+    st.promo=null; re(m);
   }
   A.yplive=function(){psave(true)}; A.ypdraft=function(){psave(false)};
   A.ypend2=function(id){var p=promos.filter(function(x){return x.id===id})[0]; M.confirm({title:"End "+p.code+"?",body:"It stops working at new checkouts. Anyone already getting it on every renewal keeps their discount for as long as their membership runs.",no:"Keep it live",yes:"End code",run:function(){st.promo=null; A.ypendgo(id)}})};

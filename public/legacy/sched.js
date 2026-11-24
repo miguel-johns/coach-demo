@@ -111,6 +111,91 @@
     open:function(pid,aid){st.sel=pid+"|"+aid; st.mode="view"; st.confirm=null; M.openPanel("session")},
     book:function(pid){var d0=st.date<TODAY?TODAY:st.date; st.bk={pid:pid||null,q:"",svc:null,date:d0,from:d0,time:null,repeat:false,extra:false,off:false}; M.openPanel("book")}};
 
+  /*
+   * Session actions. The Session Panel buttons and Milton's schedule tools both
+   * call these, so a button and its tool can never behave differently.
+   * Each one throws an Error with a plain reason when the action is not allowed.
+   */
+  function fail(msg,extra){var e=new Error(msg); if(extra) Object.assign(e,extra); return e}
+  function slotsFor(s,iso){
+    var t=(s.times||[]).slice();
+    DB.openSessions.forEach(function(o){if(o.svc===s.id&&o.iso===iso&&t.indexOf(o.time)<0) t.push(o.time)});
+    return t.sort(function(x,y){return toMin(x)-toMin(y)});
+  }
+  function needBooked(a,what){if(a.status!=="booked") throw fail("That session is "+(label[a.status]||a.status)+", not booked, so it cannot be "+what+".")}
+  function klassGroup(){var k=DB.klass, s=DB.SERVICES.filter(function(x){return x.id==="sgt"})[0]; return s?group(TODAY+"|"+k.time+"|sgt|"+s.where):null}
+  function askIndex(pid){var i=DB.klass.asks.findIndex(function(r){return r[0]===pid}); if(i<0) throw fail("There is no booking request from that person for "+DB.klass.title+"."); return i}
+  var ops={
+    slots:slotsFor, lateWindow:lateWin, started:started,
+    requests:function(){return DB.klass.asks.map(function(r){return {client_id:r[0],name:r[1],note:r[2]}})},
+    /* Books the person into the class. Uses a credit when they have one, otherwise the session waits on payment. They are texted. */
+    approveRequest:function(pid,g){
+      var k=DB.klass, i=askIndex(pid); g=g||klassGroup();
+      if(!g) throw fail("I could not find today's "+k.title+" at "+k.time+".");
+      if(g.ms.filter(coming).length>=k.room) throw fail("The room holds "+k.room+". Nobody else fits.");
+      var r=k.asks.splice(i,1)[0], q=M.person(r[0]), a=q?addBooking(q,g.svc,g.iso,g.time,g.where):null; k.roster.push(r);
+      return {msg:r[1]+" is in. They were texted, and the booking page still shows "+k.shown+" of "+k.shown+".",person:q,appt:a,at:i,row:r};
+    },
+    /* Tells them there is no spot. Nothing is charged and no credit is touched. */
+    declineRequest:function(pid){
+      var k=DB.klass, r=k.asks.splice(askIndex(pid),1)[0]; k.declined++;
+      return {msg:r[1]+" was told there is no spot. Nothing was charged.",row:r};
+    },
+    /* Moves the same booking. The credit stays booked and any amount due stays due. */
+    reschedule:function(p,a,iso,time,opt){
+      opt=opt||{}; needBooked(a,"moved");
+      var s=svcOf(a);
+      if(iso<TODAY||(iso===TODAY&&toMin(time)<=DB.NOW-240)) throw fail(dayLabel(iso)+" at "+time+" has already passed.");
+      if(iso===dayISO(a.day)&&time===a.time) throw fail(p.first+" is already booked then.");
+      if(!opt.anyTime){
+        if(!bkHours(iso)) throw fail(bkWhy(iso)+" on "+dayLabel(iso)+".",{closed:true});
+        if(slotsFor(s,iso).indexOf(time)<0) throw fail("There is no "+time+" "+(s.name||a.title)+" slot on "+dayLabel(iso)+".",{no_slot:true,service_id:s.id||null,slots:slotsFor(s,iso)});
+      }
+      var was=[a.day,a.time,a.today];
+      a.day=dayLabel(iso); a.time=time; a.today=iso===TODAY; sortAppts(p);
+      return {msg:p.first+" moved to "+dayLabel(iso)+" at "+time+". Same credit booked, none used.",
+        undo:function(){a.day=was[0]; a.time=was[1]; a.today=was[2]; sortAppts(p)}};
+    },
+    /* Inside the late window this is a late cancel (pack credit used); outside it the credit goes back. */
+    cancel:function(p,a){
+      needBooked(a,"canceled");
+      var l=lateWin(a), pl=planOf(p,a);
+      setStatus(p,a,l?"late":"canceled");
+      return {late:l,msg:l?"Late cancel recorded."+(counted(pl)?" 1 credit used.":" Nothing charged."):"Session canceled."+(counted(pl)?" "+pl.open+" left to book.":"")};
+    },
+    noShow:function(p,a){
+      needBooked(a,"marked a no show");
+      if(!started(a)) throw fail("The session has not started yet. A no show can only be marked after "+a.time+" on "+dayLabel(dayISO(a.day))+".");
+      var pl=planOf(p,a); setStatus(p,a,"noshow");
+      return "No show recorded."+(counted(pl)?" 1 credit used.":" Nothing charged.");
+    },
+    checkIn:function(p,a){
+      needBooked(a,"checked in");
+      if(dayISO(a.day)!==TODAY) throw fail("Check in is only for today's sessions. This one is "+dayLabel(dayISO(a.day))+".");
+      return checkIn(p,a);
+    },
+    checkOut:function(p,a){
+      if(a.status!=="in") throw fail(p.first+" is not checked in.");
+      if(a.due&&!a.paid) throw fail(fm(a.due)+" is due. Take payment in Point of sale to check out.",{due:a.due});
+      return checkOut(p,a);
+    },
+    /* The Edit session panel: day, time and status, with an optional reason. No slot check, same as the panel. */
+    update:function(p,a,f){
+      var d=f.date||dayISO(a.day), t=f.time||a.time, s=f.status||a.status, why=(f.why||"").trim(), moved=(d!==dayISO(a.day)||t!==a.time);
+      a.day=dayLabel(d); a.time=t; a.today=d===TODAY;
+      if(s!==a.status){setStatus(p,a,s); p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" changed "+a.title+" to "+label[s]+"."+(why?" Reason: "+why:"")})} else setStatus(p,a,s);
+      return {moved:moved,msg:moved?"Moved to "+dayLabel(d)+" at "+t+". No credit used.":"Changes saved."};
+    },
+    /* For a booking made by mistake. No history is kept and a pack credit goes back. */
+    remove:function(p,a){
+      var pl=planOf(p,a);
+      if(counted(pl)){pl[bucket[a.status]]--; pl.open++}
+      p.appts=p.appts.filter(function(q){return q!==a}); p.visits=p.visits.filter(function(v){return v[4]!==a});
+      return "Session removed from the schedule.";
+    }
+  };
+  M.sessOps=ops;
+
   function creditLine(p,a){
     var pl=planOf(p,a);
     if(counted(pl)) return '<div class="m">'+pl.open+" left to book · "+pl.booked+" booked · "+pl.used+' used</div>';
@@ -261,7 +346,7 @@
       var days=[], i; for(i=0;i<7;i++) days.push(M.addDays(b.from,i));
       var MONL=["January","February","March","April","May","June","July","August","September","October","November","December"], hr=bkHours(b.date), has=function(d){return p.appts.some(function(a){return dayISO(a.day)===d})};
       h+='<div class="bk-cal"><div class="crow"><b>'+MONL[+b.date.slice(5,7)-1]+" "+b.date.slice(0,4)+'</b><span class="acts"><button class="btn sm bk-arr" data-act="bkweek" data-id="-1" aria-label="Earlier days"'+(b.from<=TODAY?" disabled":"")+'>&#8249;</button><button class="btn sm bk-arr" data-act="bkweek" data-id="1" aria-label="Later days">&#8250;</button><label class="btn sm quiet" style="cursor:pointer">Pick a date<input type="date" class="vh" data-bkdate="1" min="'+TODAY+'" value="'+b.date+'"></label></span></div><div class="bk-days">'+days.map(function(d){var c=!bkHours(d); return '<button data-act="bkday" data-id="'+d+'" aria-pressed="'+(b.date===d)+'" class="'+(c?"closed":"")+'" aria-label="'+DOW[dow(d)]+", "+M.fd(d)+(c?", closed":"")+(has(d)?", already has a session":"")+'"><span>'+(d===TODAY?"Today":DOW[dow(d)])+'</span><b>'+(+d.slice(8))+'</b><i>'+(c?"Closed":(has(d)?"&bull;":"&nbsp;"))+'</i></button>'}).join("")+'</div></div>';
-      var all=s.times.filter(function(t){return (b.date!==TODAY||toMin(t)>DB.NOW-240)&&!(mv&&b.date===dayISO(mv.a.day)&&t===mv.a.time)}), inH=all.filter(function(t){return hr&&toMin(t)>=hr[0]&&toMin(t)+s.len<=hr[1]}), out=all.filter(function(t){return inH.indexOf(t)<0});
+      var all=slotsFor(s,b.date).filter(function(t){return (b.date!==TODAY||toMin(t)>DB.NOW-240)&&!(mv&&b.date===dayISO(mv.a.day)&&t===mv.a.time)}), inH=all.filter(function(t){return hr&&toMin(t)>=hr[0]&&toMin(t)+s.len<=hr[1]}), out=all.filter(function(t){return inH.indexOf(t)<0});
       ["5:00 AM","8:30 PM"].forEach(function(t){ if(out.indexOf(t)<0&&inH.indexOf(t)<0&&(b.date!==TODAY||toMin(t)>DB.NOW)&&!(hr&&toMin(t)>=hr[0]&&toMin(t)+s.len<=hr[1])) out.push(t) }); out.sort(function(x,y){return toMin(x)-toMin(y)});
       var tbtn=function(t,off){return '<button data-act="bktime" data-id="'+t+(off?"|off":"")+'" aria-pressed="'+(b.time===t)+'"'+(off?' class="off"':"")+'>'+t+'</button>'};
       h+='<div class="crow"><b>'+(b.date===TODAY?"Today, ":"")+DOW[dow(b.date)]+", "+M.fd(b.date)+'</b><span class="m">'+(hr?M.plural(inH.length,"open time"):bkWhy(b.date))+'</span></div>';
@@ -346,23 +431,23 @@
     if(n==="session"&&st.grp&&group(st.grp)){stop(); if(st.mode==="edit"||st.confirm){st.mode="view"; st.confirm=null; M.renderPanel()} else A.gback()}
     else if(n==="book"&&st.bk&&st.bk.back){stop(); A.bkback()}
   },true);
-  A.rowin=function(id,b,e){ if(e) e.stopPropagation(); var x=find(id); re(checkIn(x.p,x.a))};
+  A.rowin=function(id,b,e){ if(e) e.stopPropagation(); var x=find(id), m=tryOp(function(){return ops.checkIn(x.p,x.a)}); if(m) re(m)};
   A.smode=function(id){st.mode=id; st.confirm=null; M.renderPanel()};
   A.sconfirm=function(id){st.confirm=id||null; M.renderPanel()};
-  A.sin=function(){var x=cur(); re(checkIn(x.p,x.a))};
-  A.sout=function(){var x=cur(); re(checkOut(x.p,x.a))};
+  A.sin=function(){var x=cur(), m=tryOp(function(){return ops.checkIn(x.p,x.a)}); if(m) re(m)};
+  A.sout=function(){var x=cur(), m=tryOp(function(){return ops.checkOut(x.p,x.a)}); if(m) re(m)};
   A.spayout=function(){var x=cur(); M.closePanel(); M.pos.open({cust:x.p.id,appt:x.a,checkout:true})};
   A.stake=function(){var x=cur(); M.closePanel(); M.pos.open({cust:x.p.id,appt:(x.a.due&&!x.a.paid)?x.a:null})};
   A.srenew=function(){var x=cur(), pl=planOf(x.p,x.a); M.closePanel(); M.pos.open({cust:x.p.id,renew:pl})};
   A.sbooknext=function(){var x=cur(); M.sess.book(x.p.id); st.bk.svc=(DB.SERVICES.filter(function(s){return x.a.title.indexOf(s.title.split(",")[0])===0})[0]||{}).id||null; M.renderPanel()};
-  A.scancel=function(){var x=cur(), l=lateWin(x.a), pl=planOf(x.p,x.a); setStatus(x.p,x.a,l?"late":"canceled"); st.confirm=null; re(l?"Late cancel recorded."+(counted(pl)?" 1 credit used.":""):"Session canceled."+(counted(pl)?" "+pl.open+" left to book.":""))};
-  A.snoshow=function(){var x=cur(); setStatus(x.p,x.a,"noshow"); st.confirm=null; re("No show recorded.")};
-  A.sremove=function(){var x=cur(), pl=planOf(x.p,x.a); if(counted(pl)){pl[bucket[x.a.status]]--; pl.open++} x.p.appts=x.p.appts.filter(function(q){return q!==x.a}); x.p.visits=x.p.visits.filter(function(v){return v[4]!==x.a}); st.sel=null; st.confirm=null; M.panel=null; re("Session removed from the schedule.")};
+  function tryOp(fn){try{return fn()}catch(e){st.confirm=null; M.renderPanel(); M.toast(e.message); return null}}
+  A.scancel=function(){var x=cur(), r=tryOp(function(){return ops.cancel(x.p,x.a)}); if(!r) return; st.confirm=null; re(r.msg)};
+  A.snoshow=function(){var x=cur(), m=tryOp(function(){return ops.noShow(x.p,x.a)}); if(!m) return; st.confirm=null; re(m)};
+  A.sremove=function(){var x=cur(), m=ops.remove(x.p,x.a); st.sel=null; st.confirm=null; M.panel=null; re(m)};
   A.ssave=function(){
-    var x=cur(), a=x.a, s=$("eStatus").value, d=$("eDay")?$("eDay").value:dayISO(a.day), t=$("eTime")?$("eTime").value:a.time, why=$("eWhy").value.trim(), moved=(d!==dayISO(a.day)||t!==a.time);
-    a.day=dayLabel(d); a.time=t; a.today=d===TODAY;
-    if(s!==a.status){setStatus(x.p,a,s); x.p.thread.push({k:"event",day:"Today",t:"just now",body:M.you().name+" changed "+a.title+" to "+label[s]+"."+(why?" Reason: "+why:"")})} else setStatus(x.p,a,s);
-    st.mode="view"; if(moved) st.date=d; re(moved?"Moved to "+dayLabel(d)+" at "+t+". No credit used.":"Changes saved.");
+    var x=cur(), a=x.a, d=$("eDay")?$("eDay").value:dayISO(a.day), t=$("eTime")?$("eTime").value:a.time;
+    var r=ops.update(x.p,a,{date:d,time:t,status:$("eStatus").value,why:$("eWhy").value});
+    st.mode="view"; if(r.moved) st.date=d; re(r.msg);
   };
   A.bkpick=function(id){st.bk.pid=id||null; st.bk.q=""; M.renderPanel()};
   A.bksvc=function(id){st.bk.svc=id; st.bk.time=null; st.bk.off=false; M.renderPanel()};
@@ -382,10 +467,10 @@
       return M.toast(q.first+" is on "+g.name+" at "+g.time+"."+(na.due?" "+fm(na.due)+" due at check-in.":(na.plan&&counted(planOf(q,na))?" 1 credit booked, none used.":"")),function(){var pl=planOf(q,na); if(counted(pl)){pl.booked--; pl.open++} q.appts=q.appts.filter(function(z){return z!==na}); rr()});
     }
     if(st.bk.move){
-      var mb=st.bk, x=find(mb.move), was=[x.a.day,x.a.time,x.a.today];
-      x.a.day=dayLabel(mb.date); x.a.time=mb.time; x.a.today=mb.date===TODAY; sortAppts(x.p);
+      var mb=st.bk, x=find(mb.move), r;
+      try{r=ops.reschedule(x.p,x.a,mb.date,mb.time,{anyTime:mb.off})}catch(e){return M.toast(e.message)}
       st.date=mb.date; st.sel=null; M.panel=null; st.grp=null; M.render();
-      return M.toast(x.p.first+" moved to "+dayLabel(mb.date)+" at "+mb.time+". Same credit booked, none used.",function(){x.a.day=was[0]; x.a.time=was[1]; x.a.today=was[2]; sortAppts(x.p); st.date=dayISO(was[0]); M.render()});
+      return M.toast(r.msg,function(){r.undo(); st.date=dayISO(x.a.day); M.render()});
     }
     var k=st.bk, p=bkPerson(), s=DB.SERVICES.filter(function(x){return x.id===k.svc})[0], pl=p.plans.filter(function(x){return x.service===s.name})[0], n=k.repeat?4:1, made=0;
     for(var i=0;i<n;i++){
@@ -397,8 +482,8 @@
     if(p.stage==="New"||p.stage==="In conversation") p.stage="Booked";
     st.date=k.date; M.panel=null; re(p.first+" is booked for "+s.title+" on "+dayLabel(k.date)+" at "+k.time+"."+(made>1?" Repeats for 4 weeks.":"")+(!p.docs.length?" The waiver goes out with this first booking.":""));
   };
-  A.kok=function(id){var k=DB.klass, g=group(st.grp); if(!g) return; if(g.ms.filter(coming).length>=k.room){M.toast("The room holds "+k.room+". Nobody else fits.");return} var r=k.asks.splice(+id,1)[0], q=M.person(r[0]); if(q) addBooking(q,g.svc,g.iso,g.time,g.where); k.roster.push(r); M.renderPanel(); M.render(); M.toast(r[1]+" is in. They were texted, and the booking page still shows "+k.shown+" of "+k.shown+".")};
-  A.kno=function(id){var k=DB.klass, r=k.asks.splice(+id,1)[0]; k.declined++; M.renderPanel(); M.render(); M.toast(r[1]+" was told there is no spot. Nothing was charged.")};
+  A.kok=function(id){var g=group(st.grp), r; if(!g) return; try{r=ops.approveRequest(DB.klass.asks[+id][0],g)}catch(e){return M.toast(e.message)} M.renderPanel(); M.render(); M.toast(r.msg)};
+  A.kno=function(id){var r=ops.declineRequest(DB.klass.asks[+id][0]); M.renderPanel(); M.render(); M.toast(r.msg)};
   M.changes.push(function(el){
     if(el.id==="scoach"){st.coach=el.value; M.render()}
     if(el.id==="bkday"){st.bk.date=el.value; st.bk.time=null; M.renderPanel()}

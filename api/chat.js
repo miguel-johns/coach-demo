@@ -48,7 +48,7 @@ function buildTools(skills, loaded) {
     },
   }
   /* Read tools are always on. Write and confirm tools only after a skill that lists them is loaded. */
-  TOOLS.filter((t) => t.tier === 'read' || unlocked.has(t.name)).forEach((t) => {
+  TOOLS.filter((t) => t.tier === 'read' || t.tier === 'always' || unlocked.has(t.name)).forEach((t) => {
     tools[toWire(t.name)] = { description: t.description, inputSchema: t.input }
   })
   return tools

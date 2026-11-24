@@ -224,7 +224,25 @@
   M.acts.nocoach=function(){st.nocoach=!st.nocoach; st.sel={}; if(st.filter==="dup") st.filter="All"; M.render()};
   M.acts.cmenu=function(){st.menu=!st.menu; M.render()};
   M.acts.clearsel=function(){st.sel={}; M.render()};
-  M.acts.bulktag=function(){var n=selIds().length; selIds().forEach(function(id){var p=M.person(id); if(p.tags.indexOf("Follow up")<0) p.tags.push("Follow up")}); st.sel={}; M.render(); M.toast('Added the tag "Follow up" to '+M.plural(n,"person","people")+". The live app asks which tag.")};
+  M.crmOps={
+    /* Adds one tag to each person. Nothing is sent and nothing is charged. Returns who actually got it. */
+    bulkTag:function(ids,tag){var got=[]; ids.forEach(function(id){var p=M.person(id); if(!p) return; p.tags=p.tags||[]; if(p.tags.indexOf(tag)<0){p.tags.push(tag); got.push(p.id)}}); return got},
+    untag:function(ids,tag){ids.forEach(function(id){var p=M.person(id); if(p&&p.tags){var i=p.tags.indexOf(tag); if(i>-1) p.tags.splice(i,1)}})},
+    dups:function(){return DB.dups.map(function(d){var k=M.person(d.keep), x=M.person(d.drop); return {dup_id:d.id,keep:k&&{id:k.id,name:k.name,phone:k.phone,email:k.email},drop:x&&{id:x.id,name:x.name,phone:x.phone,email:x.email}}})},
+    /* Folds the second record into the first: missing phone or email is copied over, the second record goes away. Nothing is sent or charged. */
+    merge:function(id,keepId){
+      var d=DB.dups.filter(function(x){return x.id===id})[0]; if(!d) throw new Error("There is no duplicate pair "+id+".");
+      if(keepId&&keepId===d.drop){d.drop=d.keep; d.keep=keepId}
+      var k=M.person(d.keep), x=M.person(d.drop);
+      var snap={people:DB.people.slice(),dups:DB.dups.slice(),phone:k.phone,email:k.email,len:k.thread.length};
+      if(!k.phone) k.phone=x.phone; if(!k.email) k.email=x.email;
+      k.thread.push({k:"event",merge:d.id,day:"Today",t:"just now",body:M.you().name+" merged "+x.name+" into this record. Its details and imported row were folded in."});
+      k.merged={dup:d,other:x,snap:snap};
+      DB.people=DB.people.filter(function(c){return c.id!==d.drop}); DB.dups=DB.dups.filter(function(q){return q.id!==id});
+      return k;
+    }
+  };
+  M.acts.bulktag=function(){var n=selIds().length; M.crmOps.bulkTag(selIds(),"Follow up"); st.sel={}; M.render(); M.toast('Added the tag "Follow up" to '+M.plural(n,"person","people")+". The live app asks which tag.")};
   M.acts.bulkmsg=function(){M.toast("Opens a broadcast to the "+selIds().length+" selected. Milton shows the audience and the message before it sends.")};
   M.acts.msgrow=function(id){M.go({page:"crm",tab:"contacts",id:id}); setTimeout(function(){M.acts.focusmsg()},0)};
   M.acts.callleads=function(){
@@ -233,12 +251,7 @@
     M.callQueue(ids);
   };
   M.acts.merge=function(id){
-    var d=DB.dups.filter(function(x){return x.id===id})[0], k=M.person(d.keep), x=M.person(d.drop);
-    var snap={people:DB.people.slice(),dups:DB.dups.slice(),phone:k.phone,email:k.email,len:k.thread.length};
-    if(!k.phone) k.phone=x.phone; if(!k.email) k.email=x.email;
-    k.thread.push({k:"event",merge:d.id,day:"Today",t:"just now",body:M.you().name+" merged "+x.name+" into this record. Its details and imported row were folded in."});
-    k.merged={dup:d,other:x,snap:snap};
-    DB.people=DB.people.filter(function(c){return c.id!==d.drop}); DB.dups=DB.dups.filter(function(q){return q.id!==id});
+    var k=M.crmOps.merge(id);
     M.render(); M.toast("Merged into "+k.name+".",function(){M.undoMerge(k)});
   };
   M.undoMerge=function(k){

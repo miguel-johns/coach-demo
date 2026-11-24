@@ -32,6 +32,15 @@ export function record({ asked, tool, summary, undo }) {
   return entry
 }
 
+/* Requests Milton could not do, shown at the bottom of Activity. */
+let gaps = []
+export const getGaps = () => gaps
+
+export function logGap({ request, screen, reason }) {
+  gaps = [{ id: `gap${Date.now()}${Math.floor(Math.random() * 1000)}`, at: clock(), request, screen, reason }, ...gaps]
+  emit()
+}
+
 export function undoEntry(id) {
   const e = entries.find((x) => x.id === id)
   if (!e || !e.undo || e.undone) return false
