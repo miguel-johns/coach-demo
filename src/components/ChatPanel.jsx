@@ -5,6 +5,7 @@ import { TOOL_BY_NAME, fromWire } from '../milton/catalog.js'
 import Markdown from '../milton/Markdown.jsx'
 import { currentContext } from '../milton/store.js'
 import { runTool } from '../milton/tools.js'
+import { ActivityList, ConfirmCard, useActivityCount } from '../milton/AgentCards.jsx'
 
 const transport = new DefaultChatTransport({
   api: '/api/chat',
@@ -27,16 +28,19 @@ function ToolStep({ part }) {
   )
 }
 
-function Message({ message }) {
-  if (message.role === 'user') {
-    const text = message.parts.filter((p) => p.type === 'text').map((p) => p.text).join('')
-    return <div className="ubub">{text}</div>
-  }
+const textOf = (m) => m.parts.filter((p) => p.type === 'text').map((p) => p.text).join('')
+
+function Message({ message, asked }) {
+  if (message.role === 'user') return <div className="ubub">{textOf(message)}</div>
   const steps = message.parts.filter((p) => p.type.startsWith('tool-'))
+  const confirms = steps.filter((p) => p.state === 'output-available' && p.output?.confirmation_id)
   const text = message.parts.filter((p) => p.type === 'text').map((p) => p.text).join('\n\n')
   return (
     <div className="mcard plain mreply">
       {steps.length > 0 && <ul className="msteps">{steps.map((p) => <ToolStep key={p.toolCallId} part={p} />)}</ul>}
+      {confirms.map((p) => (
+        <ConfirmCard key={p.toolCallId} id={p.output.confirmation_id} asked={asked} />
+      ))}
       {text && <Markdown text={text} />}
     </div>
   )
@@ -44,7 +48,10 @@ function Message({ message }) {
 
 export default function ChatPanel() {
   const [input, setInput] = useState('')
+  const [showActivity, setShowActivity] = useState(false)
+  const activityCount = useActivityCount()
   const scrollRef = useRef(null)
+  const askedRef = useRef('')
 
   const { messages, sendMessage, addToolOutput, status, error, regenerate } = useChat({
     transport,
@@ -53,12 +60,14 @@ export default function ChatPanel() {
       if (toolCall.dynamic) return
       const name = fromWire(toolCall.toolName)
       if (!TOOL_BY_NAME[name]) return
-      const output = await runTool(name, toolCall.input)
+      const output = await runTool(name, toolCall.input, askedRef.current)
       addToolOutput({ tool: toolCall.toolName, toolCallId: toolCall.toolCallId, output })
     },
   })
 
   const busy = status === 'submitted' || status === 'streaming'
+  const lastUser = [...messages].reverse().find((m) => m.role === 'user')
+  askedRef.current = lastUser ? textOf(lastUser) : ''
 
   useEffect(() => {
     const ask = (e) => sendMessage({ text: e.detail })
@@ -87,16 +96,25 @@ export default function ChatPanel() {
           <img className="mav" src="/assets/milton.png" alt="" />
           Milton
         </span>
+        <button
+          className="btn sm quiet chead-act"
+          type="button"
+          aria-expanded={showActivity}
+          onClick={() => setShowActivity((v) => !v)}
+        >
+          Activity{activityCount ? ` ${activityCount}` : ''}
+        </button>
         <button className="btn sm quiet" data-act="chatup" id="chatTog" type="button">
           Open
         </button>
       </div>
-      <div className="cbody" ref={scrollRef}>
+      {showActivity && <ActivityList onClose={() => setShowActivity(false)} />}
+      <div className="cbody" ref={scrollRef} hidden={showActivity}>
         {/* The screen brief. Platform modules write into this element directly. */}
         <div className="cstack" id="chatBody" />
         <div className="cstack" aria-live="polite">
           {messages.map((m) => (
-            <Message key={m.id} message={m} />
+            <Message key={m.id} message={m} asked={askedRef.current} />
           ))}
           {status === 'submitted' && <div className="mthink">Milton is looking</div>}
           {error && (

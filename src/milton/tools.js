@@ -1,5 +1,7 @@
 import { TOOL_BY_NAME } from './catalog.js'
-import { db, shell } from './store.js'
+import { db, shell, refresh } from './store.js'
+import { write, confirm, readExtra } from './actions.js'
+import { record, addPending, getPending, resolvePending } from './activity.js'
 
 /* Tool bodies. Each one reads the shared gym store and returns short JSON with ids. */
 
@@ -361,13 +363,48 @@ const run = {
   },
 }
 
-export async function runTool(name, input) {
+Object.assign(run, readExtra)
+
+/* Runs a confirmed plan, records it in Activity and redraws the screens. */
+export function applyPending(id, asked) {
+  const p = getPending(id)
+  if (!p || p.state !== 'waiting') return null
+  try {
+    const out = p.apply()
+    record({ asked, tool: p.tool, summary: out.summary, undo: out.undo ? () => (out.undo(), refresh()) : null })
+    resolvePending(id, 'done', out.summary)
+    refresh()
+    return out
+  } catch (e) {
+    resolvePending(id, 'failed', e.message)
+    return null
+  }
+}
+
+export async function runTool(name, input, asked = '') {
   const def = TOOL_BY_NAME[name]
-  const body = run[name]
+  const body = run[name] || write[name] || confirm[name]
   if (!def || !body) return { error: `Unknown tool ${name}` }
   const parsed = def.input.safeParse(input ?? {})
   if (!parsed.success) return { error: `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}` }
   try {
+    if (def.tier === 'write') {
+      const out = body(parsed.data)
+      if (out.summary) record({ asked, tool: name, summary: out.summary, undo: out.undo ? () => (out.undo(), refresh()) : null })
+      refresh()
+      return out.summary ? { ...out.result, done: out.summary, can_undo: !!out.undo } : out.result
+    }
+    if (def.tier === 'confirm') {
+      const plan = body(parsed.data)
+      const id = addPending({ ...plan, tool: name })
+      return {
+        status: 'waiting_for_owner',
+        confirmation_id: id,
+        shown_to_owner: plan.title,
+        action_button: plan.action || 'Confirm',
+        note: 'A card is on screen. Nothing has happened yet. Tell the owner to tap the action button, and do not say it is done.',
+      }
+    }
     return await body(parsed.data)
   } catch (e) {
     return { error: e.message }

@@ -308,6 +308,17 @@
   A.wfarch=function(){var w=cur(); M.confirm({title:"Archive "+w.name+"?",body:(w.status==="Live"?"It stops for everyone part way through. ":"")+"It moves to Archived and stops running. You can duplicate it later to use it again.",no:"Keep it",yes:"Archive",run:function(){w.status="Archived"; w._state="saved"; reW(w.name+" is archived.")}})};
   A.wfdup=function(){grabHead(); var w=cur(), c=clone(w); delete c._hist; c.id="w"+Date.now(); c.name=w.name+" copy"; c.status="Draft"; c.runs=0; c.assign={c:[],t:[]}; c._state="saved"; c._saved=snap(c); wfs().unshift(c); wst.open=null; A.workflow(c.id); M.toast("Duplicated as a draft, without its assignments.")};
   A.wfback=function(){grabHead(); var w=cur(); if(w&&w._state!=="saved"&&w.status!=="Live"&&w.status!=="Archived") return M.confirm({title:"Discard unsaved workflow changes?",body:"Your workflow details, steps and unsaved contact or tag assignments will be lost if you leave.",no:"Stay",yes:"Discard changes",run:function(){ if(w._state==="new"||!w._saved) wfs().splice(wfs().indexOf(w),1); else {var s=JSON.parse(w._saved); w.name=s.name; w.trig=s.trig; w.stop=s.stop; w.steps=s.steps; w.assign=s.assign; w._state="saved"; sync(w)} wst.open=null; A.workflow("")}}); wst.open=null; A.workflow("")};
+  /* For Milton: a draft workflow built from plain step descriptions, in the builder's own format. */
+  var TRIG={manual:MAN,session_booked:SB,purchase_completed:{k:"Purchase completed",o:{}}};
+  M.workflowSummary=function(w){return {trigger:w.trig?w.trig.k:null,starts:w.starts,people:w.people,steps:(w.steps||[]).map(function(s){return {kind:s.t,name:s.name,detail:sum(s)}})}};
+  M.newWorkflow=function(name,desc,trigger,steps){
+    var list=steps.map(function(s){
+      if(s.kind==="wait") return W(s.days||1,"Days");
+      if(s.kind==="email") return Object.assign(blank("email"),{name:s.name||"Email",subject:s.subject||"A note from "+G.name,body:s.body||""});
+      return T(s.body||"",{name:s.name||"Text"});
+    });
+    var w=newWf(name,desc,TRIG[trigger]||MAN,list,"saved"); w._saved=snap(w); return w;
+  };
   function newWf(name,desc,trig,steps,state){var w={id:"w"+Date.now(),name:name,desc:desc||"",status:"Draft",runs:0,trig:clone(trig||MAN),stop:{reply:false,book:false},assign:{c:[],t:[]},steps:steps||[],_state:state||"new"}; sync(w); wfs().unshift(w); return w}
   function openWf(w){wst.open=null; M.go({page:"crm",tab:"workflows"}); A.workflow(w.id)}
   A.wfnew=function(){openWf(newWf("Untitled workflow",""))};

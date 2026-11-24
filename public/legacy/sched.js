@@ -10,6 +10,14 @@
   var tone={booked:"","in":"mist",out:"ok",late:"warn",noshow:"warn",canceled:""};
   /* Milton's tools use the same session logic as this screen. */
   M.sessionsOn=sessions; M.dayISO=dayISO; M.toMin=toMin; M.apptLabel=label;
+  M.addBooking=function(p,s,d,t,w){return addBooking(p,s,d,t,w)}; M.setStatus=function(p,a,s){return setStatus(p,a,s)};
+  M.schedDay=function(iso){st.date=iso; st.view="Day"; st.sel=null};
+  DB.openSessions=DB.openSessions||[];
+  /* Sessions put on the calendar with nobody booked yet. */
+  function openRows(iso){
+    return DB.openSessions.filter(function(o){return o.iso===iso&&!sessions(iso).some(function(x){return x.a.time===o.time&&x.a.title===o.title&&x.a.status!=="canceled"})}).map(function(o){
+      return [toMin(o.time),'<div class="row srow"><div class="when"><b>'+o.time+'</b><span>'+o.len+' min</span></div><span class="av">+</span><div class="what"><div class="t">Open, nobody booked yet</div><div class="m">'+esc(o.title.replace(/, \d+ min/,""))+", "+esc(o.where)+'</div></div></div>']});
+  }
 
   function dow(iso){var a=iso.split("-");return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])).getUTCDay()}
   function dayLabel(iso){return iso===TODAY?"Today":DOW[dow(iso)]+", "+M.fd(iso)}
@@ -123,7 +131,7 @@
   function dayHTML(){
     var d=dayParts(st.date,st.coach), list=d.list, isToday=st.date===TODAY;
     var h='<div class="m" style="margin:10px 0 2px"><b>'+d.count+"</b> "+(d.count===1?"session":"sessions")+" · <b>"+list.filter(function(x){return x.a.status==="booked"}).length+"</b> to arrive · <b>"+list.filter(function(x){return x.a.status==="in"}).length+"</b> checked in"+(st.auto&&isToday?' · <span class="chip ok">Automatic check-out is on</span>':"")+'</div>';
-    var rows=d.singles.map(function(x){return [toMin(x.a.time),rowHTML(x)]}).concat(d.groups.map(function(g){return [toMin(g.time),groupRow(g)]}));
+    var rows=d.singles.map(function(x){return [toMin(x.a.time),rowHTML(x)]}).concat(d.groups.map(function(g){return [toMin(g.time),groupRow(g)]})).concat(openRows(st.date));
     rows.sort(function(a,b){return a[0]-b[0]});
     h+=rows.map(function(r){return r[1]}).join("");
     if(!rows.length) h+='<div class="empty" style="border-top:1px solid var(--line);margin-top:8px;padding-top:16px"><span>Nothing booked this day.</span><button class="btn sm" data-act="booknow">Book a session</button></div>';

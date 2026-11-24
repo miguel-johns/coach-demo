@@ -1,7 +1,7 @@
 ---
 name: inbox
 description: Who is waiting on a reply, reading conversations, drafting and sending messages.
-tools: inbox.list_threads, inbox.get_thread, contacts.search, contacts.get, inbox.draft_reply, inbox.send_message
+tools: inbox.list_threads, inbox.get_thread, contacts.search, contacts.get, contacts.add_note, inbox.draft_message, inbox.send_message, ui.open
 ---
 # Inbox
 

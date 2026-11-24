@@ -1,7 +1,7 @@
 ---
 name: payments
 description: Payments, failed charges, refunds, revenue reports, payment links and money due.
-tools: payments.list_transactions, payments.list_failed, reports.revenue, contacts.search, contacts.get, payments.send_link, payments.refund
+tools: payments.list_transactions, payments.list_failed, reports.revenue, contacts.search, contacts.get, payments.refund, ui.open
 ---
 # Payments
 

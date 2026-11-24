@@ -1,7 +1,7 @@
 ---
 name: crm
 description: Contacts, leads and the pipeline, duplicates, workflows and automations.
-tools: contacts.search, contacts.get, leads.list, leads.get, workflows.list, workflows.list_templates, contacts.update, leads.move_stage, workflows.create
+tools: contacts.search, contacts.get, leads.list, leads.get, workflows.list, workflows.list_templates, contacts.create, contacts.update, contacts.add_note, contacts.import, workflows.create_draft, workflows.turn_on, ui.open
 ---
 # CRM
 

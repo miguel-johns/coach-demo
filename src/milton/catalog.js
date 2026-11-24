@@ -154,6 +154,169 @@ export const TOOLS = [
     description: 'Check-ins, late cancels and no-shows in a date range, by service.',
     input: z.object({ from: date, to: date }),
   },
+  {
+    name: 'setup.get',
+    tier: 'read',
+    label: 'Checked setup',
+    description: 'The gym setup checklist. Each step is done, in_progress, not_started or skipped, worked out from real data.',
+    input: z.object({}),
+  },
+
+  /* Write tools: run straight away, show up in Activity, can be undone. */
+  {
+    name: 'contacts.create',
+    tier: 'write',
+    label: 'Added a contact',
+    description: 'Add one new person as a Lead. Search first so you never add someone twice.',
+    input: z.object({
+      name: z.string().min(1),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      source: z.string().optional().describe('How they came in, for example "Walk-in"'),
+    }),
+  },
+  {
+    name: 'contacts.update',
+    tier: 'write',
+    label: 'Updated a contact',
+    description: 'Change one person: status, coach, phone, email or tags.',
+    input: z.object({
+      contact_id: contactId,
+      status: z.enum(['Lead', 'Customer', 'Past customer']).optional(),
+      coach: z.string().optional().describe('A team member name, or "None"'),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      add_tags: z.array(z.string()).optional(),
+    }),
+  },
+  {
+    name: 'contacts.add_note',
+    tier: 'write',
+    label: 'Added a note',
+    description: 'Leave a private team note on a person. They never see it.',
+    input: z.object({ contact_id: contactId, note: z.string().min(1) }),
+  },
+  {
+    name: 'schedule.book_session',
+    tier: 'write',
+    label: 'Booked a session',
+    description: 'Book one person into a service at a time. Uses a credit when they have one, otherwise the session is due. Check availability first.',
+    input: z.object({ contact_id: contactId, service_id: z.string(), date, time: z.string().describe('Like "4:00 PM"') }),
+  },
+  {
+    name: 'schedule.cancel_session',
+    tier: 'write',
+    label: 'Canceled a session',
+    description: 'Cancel one booked session with no fee. The credit goes back.',
+    input: z.object({ contact_id: contactId, booking_id: z.string().describe('The booking id from schedule.list_sessions') }),
+  },
+  {
+    name: 'schedule.add_open_session',
+    tier: 'write',
+    label: 'Added an open session',
+    description: 'Put an open slot for a service on the calendar with nobody booked yet.',
+    input: z.object({ service_id: z.string(), date, time: z.string().describe('Like "6:00 AM"') }),
+  },
+  {
+    name: 'inbox.draft_message',
+    tier: 'write',
+    label: 'Wrote a draft',
+    description: 'Open the conversation with a person and put a message in the composer for the owner to read and send. Nothing is sent.',
+    input: z.object({ contact_id: contactId, body: z.string().min(1) }),
+  },
+  {
+    name: 'packages.create_draft',
+    tier: 'write',
+    label: 'Drafted a package',
+    description: 'Create a package as a Draft. Nobody can buy it until it is published.',
+    input: z.object({
+      service_id: z.string(),
+      name: z.string().min(1),
+      price: z.number().positive(),
+      kind: z.enum(['pack', 'membership']).describe('pack is a set number of sessions, membership renews monthly'),
+      sessions: z.number().int().positive().optional().describe('Sessions in a pack, or per week for a membership'),
+      expires_days: z.number().int().positive().optional(),
+    }),
+  },
+  {
+    name: 'workflows.create_draft',
+    tier: 'write',
+    label: 'Drafted a workflow',
+    description: 'Create a workflow as a Draft. It does nothing until it is turned on.',
+    input: z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      trigger: z.enum(['manual', 'session_booked', 'purchase_completed']),
+      steps: z
+        .array(
+          z.object({
+            kind: z.enum(['text', 'email', 'wait']),
+            body: z.string().optional(),
+            subject: z.string().optional(),
+            days: z.number().int().positive().optional(),
+          }),
+        )
+        .min(1),
+    }),
+  },
+  {
+    name: 'setup.skip_step',
+    tier: 'write',
+    label: 'Skipped a setup step',
+    description: 'Mark a setup step as skipped when the owner says it does not apply.',
+    input: z.object({ step_id: z.string(), reason: z.string() }),
+  },
+  {
+    name: 'ui.open',
+    tier: 'write',
+    label: 'Opened a screen',
+    description: 'Take the owner to a screen, a person, or a workflow.',
+    input: z.object({
+      screen: z
+        .enum(['home', 'schedule', 'inbox', 'crm', 'crm/pipeline', 'crm/workflows', 'clients', 'services', 'payments', 'team', 'settings'])
+        .optional(),
+      contact_id: contactId.optional(),
+      workflow_id: z.string().optional(),
+      date: date.optional().describe('For schedule, the day to show'),
+    }),
+  },
+
+  /* Confirm tools: the owner taps Confirm on a card before anything happens. */
+  {
+    name: 'inbox.send_message',
+    tier: 'confirm',
+    label: 'Asked to send a message',
+    description: 'Send a text or email to one person. The owner confirms first.',
+    input: z.object({ contact_id: contactId, body: z.string().min(1), channel: z.enum(['Text', 'Email']).optional() }),
+  },
+  {
+    name: 'payments.refund',
+    tier: 'confirm',
+    label: 'Asked to refund',
+    description: 'Refund part or all of one payment back to the card. The owner confirms first.',
+    input: z.object({ transaction_id: z.string(), amount: z.number().positive().optional().describe('Leave out for a full refund') }),
+  },
+  {
+    name: 'contacts.import',
+    tier: 'confirm',
+    label: 'Asked to import contacts',
+    description: 'Import the member list the owner uploaded. People already in the CRM are skipped. The owner confirms first.',
+    input: z.object({}),
+  },
+  {
+    name: 'packages.publish',
+    tier: 'confirm',
+    label: 'Asked to publish a package',
+    description: 'Make a Draft package live so people can buy it. The owner confirms first.',
+    input: z.object({ package_id: z.string() }),
+  },
+  {
+    name: 'workflows.turn_on',
+    tier: 'confirm',
+    label: 'Asked to turn on a workflow',
+    description: 'Turn a Draft or Paused workflow on so it starts sending. The owner confirms first.',
+    input: z.object({ workflow_id: z.string() }),
+  },
 ]
 
 export const TOOL_BY_NAME = Object.fromEntries(TOOLS.map((t) => [t.name, t]))

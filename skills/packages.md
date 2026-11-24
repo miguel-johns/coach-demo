@@ -1,7 +1,7 @@
 ---
 name: packages
 description: What the gym sells, prices, packs, memberships and bundles, and who holds them.
-tools: packages.list, packages.get, contacts.search, contacts.get, packages.create, packages.update
+tools: packages.list, packages.get, contacts.search, contacts.get, packages.create_draft, packages.publish, ui.open
 ---
 # Packages
 

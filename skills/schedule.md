@@ -1,7 +1,7 @@
 ---
 name: schedule
 description: Who is booked when, open times, booking, moving and canceling sessions, check-ins.
-tools: schedule.list_sessions, schedule.get_availability, contacts.search, contacts.get, schedule.book_session, schedule.reschedule_session, schedule.cancel_session, schedule.check_in
+tools: schedule.list_sessions, schedule.get_availability, contacts.search, contacts.get, schedule.book_session, schedule.cancel_session, schedule.add_open_session, ui.open
 ---
 # Schedule
 

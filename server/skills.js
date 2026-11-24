@@ -8,11 +8,13 @@ let cache = null
 export function loadSkills() {
   if (cache) return cache
   const dir = join(process.cwd(), 'skills')
-  cache = readdirSync(dir)
+  const skills = readdirSync(dir)
     .filter((f) => f.endsWith('.md'))
     .map((f) => parse(readFileSync(join(dir, f), 'utf8')))
     .filter((s) => s.name)
-  return cache
+  // In dev, re-read every request so skill edits apply without a server restart.
+  if (process.env.NODE_ENV === 'production') cache = skills
+  return skills
 }
 
 function parse(text) {
