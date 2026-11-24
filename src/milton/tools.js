@@ -372,7 +372,7 @@ export function applyPending(id, asked) {
   try {
     const out = p.apply()
     record({ asked, tool: p.tool, summary: out.summary, undo: out.undo ? () => (out.undo(), refresh()) : null })
-    resolvePending(id, 'done', out.summary)
+    resolvePending(id, 'done', out.summary, { show: out.show })
     refresh()
     return out
   } catch (e) {
@@ -392,7 +392,7 @@ export async function runTool(name, input, asked = '') {
       const out = body(parsed.data)
       if (out.summary) record({ asked, tool: name, summary: out.summary, undo: out.undo ? () => (out.undo(), refresh()) : null })
       refresh()
-      return out.summary ? { ...out.result, done: out.summary, can_undo: !!out.undo } : out.result
+      return out.summary ? { ...out.result, done: out.summary, can_undo: !!out.undo, show: out.show } : out.result
     }
     if (def.tier === 'confirm') {
       const plan = body(parsed.data)
