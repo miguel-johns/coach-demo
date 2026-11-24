@@ -1,8 +1,26 @@
 import { useSyncExternalStore } from 'react'
 import { getActivity, getPending, getVersion, resolvePending, subscribe, undoEntry } from './activity.js'
 import { applyPending } from './tools.js'
+import { chatCoversScreen, closeChat, reveal } from './reveal.js'
 
 const useActivityVersion = () => useSyncExternalStore(subscribe, getVersion)
+
+/* Opens a changed record. On a narrow screen it first closes the chat that covers it. */
+export function ViewLink({ show, children = 'View', className = 'mview' }) {
+  return (
+    <button
+      type="button"
+      className={`mlink ${className}`}
+      onClick={() => {
+        const covered = chatCoversScreen()
+        if (covered) closeChat()
+        reveal(show)
+      }}
+    >
+      {children}
+    </button>
+  )
+}
 
 export function ConfirmCard({ id, asked }) {
   useActivityVersion()
@@ -18,7 +36,14 @@ export function ConfirmCard({ id, asked }) {
       ))}
       {p.state === 'waiting' ? (
         <div className="mconfirm-acts">
-          <button type="button" className="btn sm primary" onClick={() => applyPending(id, asked)}>
+          <button
+            type="button"
+            className="btn sm primary"
+            onClick={() => {
+              const out = applyPending(id, asked)
+              if (out?.show && !chatCoversScreen()) reveal(out.show)
+            }}
+          >
             {p.action || 'Confirm'}
           </button>
           <button type="button" className="btn sm quiet" onClick={() => resolvePending(id, 'canceled', 'Canceled')}>
@@ -26,7 +51,10 @@ export function ConfirmCard({ id, asked }) {
           </button>
         </div>
       ) : (
-        <p className="mconfirm-result">{p.state === 'done' ? `Done. ${p.result}.` : p.state === 'canceled' ? 'Canceled. Nothing changed.' : `Could not do it. ${p.result}`}</p>
+        <p className="mconfirm-result">
+          {p.state === 'done' ? `Done. ${p.result}.` : p.state === 'canceled' ? 'Canceled. Nothing changed.' : `Could not do it. ${p.result}`}
+          {p.state === 'done' && p.show && <ViewLink show={p.show} />}
+        </p>
       )}
     </div>
   )

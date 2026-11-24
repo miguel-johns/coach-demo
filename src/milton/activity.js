@@ -52,9 +52,9 @@ export function addPending(plan) {
 export const getPending = (id) => pending.get(id)
 export const waitingPending = () => [...pending.values()].filter((p) => p.state === 'waiting')
 
-export function resolvePending(id, state, result) {
+export function resolvePending(id, state, result, extra) {
   const p = pending.get(id)
   if (!p) return
-  pending.set(id, { ...p, state, result })
+  pending.set(id, { ...p, ...extra, state, result })
   emit()
 }

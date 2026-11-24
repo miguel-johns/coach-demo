@@ -5,7 +5,8 @@ import { TOOL_BY_NAME, fromWire } from '../milton/catalog.js'
 import Markdown from '../milton/Markdown.jsx'
 import { currentContext } from '../milton/store.js'
 import { runTool } from '../milton/tools.js'
-import { ActivityList, ConfirmCard, useActivityCount } from '../milton/AgentCards.jsx'
+import { ActivityList, ConfirmCard, ViewLink, useActivityCount } from '../milton/AgentCards.jsx'
+import { chatCoversScreen, reveal } from '../milton/reveal.js'
 
 const transport = new DefaultChatTransport({
   api: '/api/chat',
@@ -34,6 +35,7 @@ function Message({ message, asked }) {
   if (message.role === 'user') return <div className="ubub">{textOf(message)}</div>
   const steps = message.parts.filter((p) => p.type.startsWith('tool-'))
   const confirms = steps.filter((p) => p.state === 'output-available' && p.output?.confirmation_id)
+  const changes = steps.filter((p) => p.state === 'output-available' && p.output?.show && p.output?.done)
   const text = message.parts.filter((p) => p.type === 'text').map((p) => p.text).join('\n\n')
   return (
     <div className="mcard plain mreply">
@@ -42,6 +44,15 @@ function Message({ message, asked }) {
         <ConfirmCard key={p.toolCallId} id={p.output.confirmation_id} asked={asked} />
       ))}
       {text && <Markdown text={text} />}
+      {changes.length > 0 && (
+        <ul className="mviews">
+          {changes.map((p) => (
+            <li key={p.toolCallId}>
+              <ViewLink show={p.output.show}>{`View: ${p.output.done}`}</ViewLink>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -52,6 +63,7 @@ export default function ChatPanel() {
   const activityCount = useActivityCount()
   const scrollRef = useRef(null)
   const askedRef = useRef('')
+  const revealedRef = useRef(false)
 
   const { messages, sendMessage, addToolOutput, status, error, regenerate } = useChat({
     transport,
@@ -62,6 +74,10 @@ export default function ChatPanel() {
       if (!TOOL_BY_NAME[name]) return
       const output = await runTool(name, toolCall.input, askedRef.current)
       addToolOutput({ tool: toolCall.toolName, toolCallId: toolCall.toolCallId, output })
+      if (output?.show && !chatCoversScreen()) {
+        reveal(output.show, { replace: revealedRef.current })
+        revealedRef.current = true
+      }
     },
   })
 
@@ -85,6 +101,7 @@ export default function ChatPanel() {
     const text = input.trim()
     if (!text || busy) return
     setInput('')
+    revealedRef.current = false
     document.getElementById('chat')?.classList.add('up')
     sendMessage({ text })
   }

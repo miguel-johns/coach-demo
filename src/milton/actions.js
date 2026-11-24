@@ -2,9 +2,14 @@ import { db, shell, refresh } from './store.js'
 import { setupState, SETUP_STEPS } from './setup.js'
 
 /*
- * Write tools return { result, summary, undo }. Confirm tools return a plan,
- * { title, lines, apply }, that only runs after the owner taps Confirm.
+ * Write tools return { result, summary, show, undo }. Confirm tools return a
+ * plan, { title, lines, apply }, that only runs after the owner taps Confirm.
+ * show is the screen and record the change landed on (see reveal.js).
  */
+
+const contactShow = (id) => ({ page: 'crm', tab: 'contacts', id })
+const workflowShow = (id) => ({ page: 'crm', tab: 'workflows', id })
+const packageShow = (item) => ({ page: 'services', tab: item.kind === 'membership' ? 'subs' : 'passes', id: item.id })
 
 const money = (n) => `$${n.toFixed(2)}`
 const nowLabel = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -74,6 +79,7 @@ export const write = {
     return {
       result: { contact_id: p.id, name: p.name, status: 'Lead' },
       summary: `Added ${p.name} as a Lead`,
+      show: contactShow(p.id),
       undo: () => remove(db().people, p),
     }
   },
@@ -91,6 +97,7 @@ export const write = {
     return {
       result: { contact_id, changed },
       summary: `Changed ${p.name}'s ${changed.join(', ')}`,
+      show: contactShow(contact_id),
       undo: () => Object.assign(p, before),
     }
   },
@@ -99,7 +106,12 @@ export const write = {
     const p = person(contact_id)
     const entry = { k: 'note', day: 'Today', t: nowLabel(), body: note, by: 'Milton' }
     p.thread.push(entry)
-    return { result: { contact_id }, summary: `Left a note on ${p.name}`, undo: () => remove(p.thread, entry) }
+    return {
+      result: { contact_id },
+      summary: `Left a note on ${p.name}`,
+      show: contactShow(contact_id),
+      undo: () => remove(p.thread, entry),
+    }
   },
 
   'schedule.book_session'({ contact_id, service_id, date, time }) {
@@ -112,6 +124,7 @@ export const write = {
     return {
       result: { booking_id: a.id, contact_id, date, time, covered_by_plan: !!a.plan, due: a.due || 0 },
       summary: `Booked ${p.name} for ${s.name}, ${a.day} at ${time}`,
+      show: { page: 'schedule', date, id: contact_id },
       undo: () => {
         remove(p.appts, a)
         p.plans.splice(0, p.plans.length, ...JSON.parse(plansBefore))
@@ -128,6 +141,7 @@ export const write = {
     return {
       result: { booking_id, status: 'canceled' },
       summary: `Canceled ${p.name}'s ${a.title.replace(/, \d+ min/, '')} on ${a.day} at ${a.time}`,
+      show: { page: 'schedule', date: shell().dayISO(a.day), id: contact_id },
       undo: () => shell().setStatus(p, a, 'booked'),
     }
   },
@@ -140,14 +154,18 @@ export const write = {
     return {
       result: { open_session_id: o.id, date, time },
       summary: `Added an open ${s.name} on ${shell().fd(date)} at ${time}`,
+      show: { page: 'schedule', date, id: o.id },
       undo: () => remove(db().openSessions, o),
     }
   },
 
   'inbox.draft_message'({ contact_id, body }) {
     const p = person(contact_id)
-    shell().openThread(p.id, body)
-    return { result: { contact_id, sent: false }, summary: `Wrote a draft to ${p.name}. Not sent.` }
+    return {
+      result: { contact_id, sent: false },
+      summary: `Wrote a draft to ${p.name}. Not sent.`,
+      show: { page: 'inbox', id: p.id, text: body, select: '#msgInput' },
+    }
   },
 
   'packages.create_draft'({ service_id, name, price, kind, sessions, expires_days }) {
@@ -168,6 +186,7 @@ export const write = {
     return {
       result: { package_id: item.id, status: 'Draft' },
       summary: `Drafted ${name} for ${money(price)}${item.per ? '/month' : ''}`,
+      show: packageShow(item),
       undo: () => remove(db().ITEMS, item),
     }
   },
@@ -177,6 +196,7 @@ export const write = {
     return {
       result: { workflow_id: w.id, status: w.status },
       summary: `Drafted the workflow "${name}"`,
+      show: workflowShow(w.id),
       undo: () => remove(db().workflows, w),
     }
   },
@@ -228,7 +248,11 @@ export const confirm = {
       apply() {
         const m = { k: 'out', ch, day: 'Today', t: nowLabel(), body, by: 'Milton' }
         p.thread.push(m)
-        return { result: { contact_id, sent: true, channel: ch }, summary: `Sent a ${ch.toLowerCase()} to ${p.name}` }
+        return {
+          result: { contact_id, sent: true, channel: ch },
+          summary: `Sent a ${ch.toLowerCase()} to ${p.name}`,
+          show: { page: 'inbox', id: p.id, select: '.ithread .msg.r' },
+        }
       },
     }
   },
@@ -248,7 +272,11 @@ export const confirm = {
       apply() {
         t.refunded = (t.refunded || 0) + v
         t.status = t.refunded >= t.paid ? 'Refunded' : 'Partly refunded'
-        return { result: { transaction_id, refunded: v }, summary: `Refunded ${money(v)} to ${p ? p.name : 'a customer'}` }
+        return {
+          result: { transaction_id, refunded: v },
+          summary: `Refunded ${money(v)} to ${p ? p.name : 'a customer'}`,
+          show: p ? contactShow(p.id) : { page: 'payments', tab: 'overview', id: transaction_id },
+        }
       },
     }
   },
@@ -272,6 +300,7 @@ export const confirm = {
         return {
           result: { added: added.map((p) => ({ contact_id: p.id, name: p.name })), skipped: skip },
           summary: `Imported ${added.length} people from members.csv`,
+          show: { page: 'crm', tab: 'contacts', ids: added.map((p) => p.id) },
           undo: () => {
             added.forEach((p) => remove(DB.people, p))
             remove(DB.imports, run)
@@ -295,6 +324,7 @@ export const confirm = {
         return {
           result: { package_id, status: 'Live' },
           summary: `Published ${item.name}`,
+          show: packageShow(item),
           undo: () => Object.assign(item, { status: 'Draft', online: false }),
         }
       },
@@ -316,7 +346,12 @@ export const confirm = {
       action: 'Turn on',
       apply() {
         w.status = 'Live'
-        return { result: { workflow_id, status: 'Live' }, summary: `Turned on "${w.name}"`, undo: () => (w.status = before) }
+        return {
+          result: { workflow_id, status: 'Live' },
+          summary: `Turned on "${w.name}"`,
+          show: workflowShow(workflow_id),
+          undo: () => (w.status = before),
+        }
       },
     }
   },
