@@ -6,17 +6,19 @@ import { Readable } from 'node:stream'
  * Serves api/*.js in development the same way Vercel does in production:
  * each file exports POST(request) and returns a web Response.
  */
+const API_ROUTES = ['/api/chat', '/api/voice']
+
 function devApi() {
   return {
     name: 'milton-dev-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const route = req.url?.split('?')[0]
-        if (route !== '/api/chat' || req.method !== 'POST') return next()
+        if (!API_ROUTES.includes(route) || req.method !== 'POST') return next()
         try {
           // Re-read env each request: the workspace refreshes the gateway token in this file.
           Object.assign(process.env, loadEnv('development', process.cwd(), ''))
-          const mod = await server.ssrLoadModule('/api/chat.js')
+          const mod = await server.ssrLoadModule(`${route}.js`)
           const chunks = []
           for await (const c of req) chunks.push(c)
           const request = new Request(`http://localhost${req.url}`, {
@@ -30,7 +32,7 @@ function devApi() {
           if (response.body) Readable.fromWeb(response.body).pipe(res)
           else res.end()
         } catch (e) {
-          server.config.logger.error(`[api/chat] ${e.stack || e.message}`)
+          server.config.logger.error(`[${route}] ${e.stack || e.message}`)
           res.statusCode = 500
           res.end('Milton could not answer.')
         }

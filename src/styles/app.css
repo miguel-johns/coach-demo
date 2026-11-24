@@ -116,6 +116,25 @@ h1{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.15;ma
 .cform input::placeholder{color:var(--ph)}
 .cform input:focus-visible{outline:0;border-color:var(--glow);box-shadow:0 0 0 3px var(--glow-soft)}
 .cform button{width:38px;height:38px;border-radius:50%;border:0;background:var(--ocean);color:#fff;font-weight:700;flex:none}
+.cform .vmic{display:inline-flex;align-items:center;justify-content:center;background:var(--mist);color:var(--ocean);border:1px solid var(--mist-line)}
+.cform .vmic:hover{background:var(--mist-line)}
+.cform .vmic.on{background:var(--glow);border-color:var(--glow);color:var(--navy)}
+.cform .vmic:focus-visible{outline:0;box-shadow:0 0 0 3px var(--glow-soft)}
+.vbar{display:flex;align-items:center;gap:10px;margin:0 12px 8px;padding:8px 8px 8px 12px;border:1px solid var(--glow-line);background:var(--glow-soft);color:var(--glow-ink);border-radius:999px;font-size:13.5px;font-weight:600}
+.vbar .vlabel{flex:1;min-width:0}
+.vbar .btn{flex:none}
+.vmeter{--lvl:0;display:inline-flex;align-items:center;gap:3px;height:18px;flex:none}
+.vmeter i{display:block;width:3px;border-radius:2px;background:var(--glow-ink);height:calc(4px + var(--lvl) * 14px);transition:height 80ms linear}
+.vmeter i:nth-child(2),.vmeter i:nth-child(4){height:calc(4px + var(--lvl) * 10px)}
+.vmeter i:nth-child(1),.vmeter i:nth-child(5){height:calc(4px + var(--lvl) * 6px)}
+.vbar.thinking .vmeter i{animation:vthink 1s ease-in-out infinite}
+.vbar.thinking .vmeter i:nth-child(2){animation-delay:.1s}
+.vbar.thinking .vmeter i:nth-child(3){animation-delay:.2s}
+.vbar.thinking .vmeter i:nth-child(4){animation-delay:.3s}
+.vbar.thinking .vmeter i:nth-child(5){animation-delay:.4s}
+@keyframes vthink{0%,100%{height:4px}50%{height:12px}}
+@media (prefers-reduced-motion:reduce){.vbar.thinking .vmeter i{animation:none}.vmeter i{transition:none}}
+.vnote{margin:0 12px 8px;font-size:13px;color:var(--err)}
 
 /* buttons, chips, links */
 .btn{border:1px solid var(--mist-line);background:var(--panel);color:var(--ocean);border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
