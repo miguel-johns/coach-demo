@@ -8,6 +8,8 @@
   var bucket={booked:"booked","in":"booked",out:"used",late:"used",noshow:"used",canceled:"open"};
   var label={booked:"Booked","in":"Checked in",out:"Checked out",late:"Late cancel",noshow:"No show",canceled:"Canceled"};
   var tone={booked:"","in":"mist",out:"ok",late:"warn",noshow:"warn",canceled:""};
+  /* Milton's tools use the same session logic as this screen. */
+  M.sessionsOn=sessions; M.dayISO=dayISO; M.toMin=toMin; M.apptLabel=label;
 
   function dow(iso){var a=iso.split("-");return new Date(Date.UTC(+a[0],+a[1]-1,+a[2])).getUTCDay()}
   function dayLabel(iso){return iso===TODAY?"Today":DOW[dow(iso)]+", "+M.fd(iso)}

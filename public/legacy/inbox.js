@@ -37,6 +37,7 @@
   function miltonOn(p){return !!(p.milton||p.miltonBooked)}
   /* Needs reply: handed off, or a missed call last, or an inbound message nobody on the team has answered.
      Automated sends never count as an answer. */
+  M.needsReply=needs;
   function needs(p){
     if(p.cleared) return false;
     if(p.handoff) return true;

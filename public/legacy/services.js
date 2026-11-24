@@ -13,7 +13,7 @@
   SV.filter(function(s){return s.id==="mass"})[0].rules={own:true,late:24,lateUses:true,noShowUses:true,notice:12,setup:10,cleanup:15,order:"book"};
   ITEMS.forEach(function(i){i.status="Live"; i.online=i.kind!=="product"||i.id==="tee"; if(i.id==="day"||i.id==="camp"){i.pass=true; i.good=30; i.works=i.id==="day"?["Open gym"]:["Semi-private"]} if(i.id==="nut"){i.sub1=true; i.billed="Monthly"; i.one=true; i.desc="A plan and weekly check-ins from your coach, in the app."} if(i.id==="rr4"){i.also=["Open gym"]; i.auto=true} if(i.kind==="pack"&&!i.pass) i.within=i.size===1?"30 days":"90 days"; if(i.kind==="product"){i.low=5; i.sku=""} });
   ITEMS.push({id:"introfree",svc:"Free intro class",name:"Drop-in",sub:"1 session, 45 min",price:0,free:true,kind:"pack",size:1,status:"Live",online:true,limit:"once",within:"30 days",hidden:true});
-  var bundles=[{id:"b1",name:"Train and recover",items:{pt8:1,rr4:1},price:650,status:"Live",online:true},{id:"b2",name:"New member starter",items:{pt1:2,ms1:1},price:199,status:"Draft",online:false}];
+  var bundles=DB.bundles=[{id:"b1",name:"Train and recover",items:{pt8:1,rr4:1},price:650,status:"Live",online:true},{id:"b2",name:"New member starter",items:{pt1:2,ms1:1},price:199,status:"Draft",online:false}];
   var links=[{id:"shop",t:"shop",name:"Online shop",url:"northlinestrength.com/shop",on:true},{id:"l_sp2",t:"item",ref:"sp2",name:"Semi-Private 2x per week",url:"northlinestrength.com/join/semi-private",on:true},{id:"l_intro",t:"item",ref:"introfree",name:"Free intro class",url:"northlinestrength.com/intro",on:true},{id:"l_tee",t:"item",ref:"tee",name:"Northline tee",url:"northlinestrength.com/shop/tee",on:false}];
   var st={filt:"live",edit:null,w:null,pk:null,neu:null,item:null,err:[]};
 
@@ -349,7 +349,7 @@
       if(err){$("viErr").textContent=err; return}
     }
     w.status=id; w.price=w.free?0:(price>0?price:0);
-    if(tab==="bundles"){ if(it.id) bundles=bundles.map(function(b){return b.id===it.id?w:b}); else {w.id="b"+Date.now(); bundles.push(w)} }
+    if(tab==="bundles"){ if(it.id){ var bi=bundles.findIndex(function(b){return b.id===it.id}); if(bi>=0) bundles[bi]=w } else {w.id="b"+Date.now(); bundles.push(w)} }
     else {
       if(tab==="subs"){w.per=w.billed==="Weekly"?"week":"month"; w.sub="Subscription, nothing to book"}
       if(tab==="passes") w.sub="1 session, good for "+M.plural(w.good,"day");

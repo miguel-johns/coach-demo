@@ -70,6 +70,7 @@
   }
 
   /* Pipeline */
+  M.stageOf=stageOf;
   function stageOf(p){
     if(p.stage) return p.stage;
     var s=M.status(p); return s==="Customer"?"Joined":(s==="Past customer"?null:"New");

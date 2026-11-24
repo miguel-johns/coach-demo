@@ -17,7 +17,8 @@
     if(x) Object.keys(x).forEach(function(k){t[k]=x[k]});
     t.paid=r2(price-disc+tip+tax-cred); return t;
   }
-  var T=[
+  /* The ledger lives on DB so Milton's tools and this screen read the same rows. */
+  var T=DB.tx=[
     row("2026-11-20","chris","Northline tee","","Miguel Johns","Front desk",25,0,0,1.88,0,"Card"),
     row("2026-11-19","chris","Energy drink","","Riley Chen","Front desk",3,0,0,0.23,0,"Cash"),
     row("2026-11-18","leah","Nutrition Coaching","","","Renewal",39.99,0,0,0,0,"Card",{fail:true,status:"Failed"}),
