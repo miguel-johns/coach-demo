@@ -562,14 +562,77 @@ dd{margin:1px 0 0;font-weight:500;overflow-wrap:anywhere}
 .keys button{height:52px;border:1px solid var(--line);background:var(--panel);border-radius:12px;font-family:var(--display);font-size:19px;font-weight:600}
 .keys button:hover{background:var(--sunken)}
 @media (max-width:1100px){.ishell,.ishell.idet{grid-template-columns:280px minmax(0,1fr)}.ishell.idet .ithread{display:none}.ishell.idet .ictx{border-left:0}}
+/* Inbox: header and reply bar sit as white bands over a tinted message area */
+.ithead{background:var(--panel);border-bottom:0;box-shadow:0 1px 0 var(--line),0 6px 12px -8px rgba(13,43,64,.22);position:relative;z-index:2}
+.ithead .acts{align-items:center}
+.ifilt{height:32px;border:1px solid var(--line);border-radius:999px;background:var(--panel);padding:0 10px;font:inherit;font-size:13px;font-weight:600;color:var(--ink2)}
+.ihid{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;justify-content:space-between;padding:7px 18px;font-size:13px;color:var(--mist-ink);background:var(--mist);border-bottom:1px solid var(--mist-line);position:relative;z-index:1}
+.ithread .scroll{background:var(--page)}
+.ithread .day{align-self:center;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:11.5px;box-shadow:0 1px 2px rgba(13,43,64,.06)}
+.ithread .comp{background:var(--panel);border-top:0;box-shadow:0 -1px 0 var(--line),0 -6px 12px -8px rgba(13,43,64,.22);position:relative;z-index:1}
+.ithread .banner{position:relative;z-index:1}
+.irow[aria-current="true"]{box-shadow:inset 3px 0 0 var(--ocean)}
+.ictx{box-shadow:inset 8px 0 10px -8px rgba(13,43,64,.18)}
+.ithead .menu .mph{display:none}
+.menu .mgrp{flex-direction:column;border-top:1px solid var(--line);margin-top:4px;padding-top:6px}
+.menu .mgrp .k{padding:2px 10px 4px}
+.menu .mgrp button{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.menu .ck{color:var(--ocean);font-weight:700}
+/* New message panel */
+.nmres{display:flex;flex-direction:column;gap:2px}
+.nmres .k{margin:8px 2px 4px}
+.nmrow,.nmto{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:10px;padding:8px 10px;min-height:52px;color:inherit}
+.nmrow:hover{background:var(--panel);border-color:var(--line)}
+.nmrow .rb,.nmto .rb{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nmrow .nm,.nmto .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmrow .m,.nmto .m{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmnew{border:1px dashed var(--mist-line);background:var(--mist);margin-bottom:4px}
+.nmnew .m{white-space:normal}
+.nmto{background:var(--panel);border-color:var(--line)}
+.field .flab{display:block;font-size:13.5px;font-weight:600;color:var(--ink2);margin-bottom:6px}
+.nmvia{margin-top:6px}
+#nmBody{width:100%;font:inherit;font-size:16px;resize:vertical;min-height:120px}
+#nmQ{font-size:16px}
 @media (max-width:760px){
-  .ishell,.ishell.idet{grid-template-columns:minmax(0,1fr);height:calc(100vh - 300px);min-height:440px}
+  .isub{display:none}
+  .ishell,.ishell.idet{grid-template-columns:minmax(0,1fr);height:auto;min-height:0;overflow:visible}
+  .ilist{border-right:0}
+  .irows{overflow:visible;flex:none}
+  .itabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .itabs::-webkit-scrollbar{display:none}
+  .itabs button{flex:none;min-height:36px}
   .ishell .ithread,.ishell .ictx{display:none}
+  .ishell.iopen{border:0;background:none}
   .ishell.iopen .ilist{display:none}
-  .ishell.iopen .ithread{display:flex}
+  .ishell.iopen .ithread,.ishell.iopen.idet .ictx{display:flex;position:fixed;inset:0;height:100vh;height:100dvh;z-index:7;background:var(--panel);border:0;border-radius:0}
   .ishell.iopen.idet .ithread{display:none}
-  .ishell.iopen.idet .ictx{display:grid}
-  .iback{display:inline-flex}
+  .ishell.iopen.idet .ictx{flex-direction:column;overflow-y:auto;background:var(--soft);box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom))}
+  body:has(.ishell.iopen){overflow:hidden}
+  .iback{display:grid;width:40px;height:40px;font-size:26px;line-height:1;padding-bottom:3px}
+  .ithead{flex-wrap:nowrap;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px}
+  .ithead .nmc{flex:1;gap:8px}
+  .ithead .av{width:32px;height:32px}
+  .inmw{display:flex;align-items:center;gap:6px;min-width:0}
+  .inm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px!important}
+  .ithead .chips{flex-wrap:nowrap;margin-top:0;flex:none}
+  .ithead .chips .chip:not(:first-child){display:none}
+  .ithead .acts{flex-wrap:nowrap;flex:none;gap:6px}
+  .ifilt,.itake{display:none}
+  .ithead .menu .mph{display:grid}
+  .ithead .menu .mgrp.mph{display:flex}
+  .ithead .menu{max-width:calc(100vw - 16px);max-height:calc(100dvh - 90px);overflow-y:auto}
+  .ihid{padding:7px 12px}
+  .ithread .scroll{padding:12px}
+  .ithread .comp{padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+  .ithread .comp .crow{flex-wrap:nowrap}
+  .ithread .comp .crow>.m{display:none}
+  .ithread .pills{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .ithread .pills::-webkit-scrollbar{display:none}
+  .ithread .pills button{flex:none;min-height:36px}
+  .ithread .send input{font-size:16px;min-height:44px}
+  .ithread .send .btn{min-height:44px}
+  .ictx .crow{justify-content:flex-start;flex-wrap:nowrap;gap:8px;align-items:center}
+  .ictx .detb{display:none}
 }
 
 /* Payments */

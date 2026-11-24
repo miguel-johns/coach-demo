@@ -93,9 +93,12 @@
     if(it.k==="milton") return '<div class="msg r milton"><div class="bub">'+esc(it.body)+'</div><div class="meta">Milton, appointment setter · '+it.ch+" · "+it.t+'</div></div>';
     return '<div class="msg r auto"><div class="src">'+it.src+": "+(it.sid?'<button class="link" style="font-size:12px" data-act="isend" data-id="'+it.sid+'">'+esc(it.name)+'</button>':esc(it.name))+'</div><div class="bub">'+esc(it.body)+'</div><div class="meta">Automated · '+it.ch+" · "+it.t+'</div></div>';
   }
-  function bodyHTML(p){
+  var FILTS=[["all","Everything"],["people","Conversation only"],["calls","Calls"]];
+  function isPhone(){return !!(window.matchMedia&&window.matchMedia("(max-width:760px)").matches)}
+  function hiddenLine(){return cv.filt==="all"?"":'<div class="ihid"><span>'+(cv.filt==="calls"?"Showing calls and voicemails only":"Hiding automated sends and activity")+'</span><button class="link" data-act="rfilt" data-id="all">Show everything</button></div>'}
+  function bodyHTML(p,inbox){
     cv.pid=p.id;
-    var h='<div class="fbar"><div class="seg"><button data-act="rfilt" data-id="all" aria-pressed="'+(cv.filt==="all")+'">Everything</button><button data-act="rfilt" data-id="people" aria-pressed="'+(cv.filt==="people")+'">Conversation only</button><button data-act="rfilt" data-id="calls" aria-pressed="'+(cv.filt==="calls")+'">Calls</button></div><span class="m">'+(cv.filt==="all"?"Showing automated sends and activity too":(cv.filt==="calls"?"Calls and voicemails only":"Hiding automated sends and activity"))+'</span></div><div class="scroll" id="scroll">';
+    var h=inbox?hiddenLine()+'<div class="scroll" id="scroll">':'<div class="fbar"><div class="seg"><button data-act="rfilt" data-id="all" aria-pressed="'+(cv.filt==="all")+'">Everything</button><button data-act="rfilt" data-id="people" aria-pressed="'+(cv.filt==="people")+'">Conversation only</button><button data-act="rfilt" data-id="calls" aria-pressed="'+(cv.filt==="calls")+'">Calls</button></div><span class="m">'+(cv.filt==="all"?"Showing automated sends and activity too":(cv.filt==="calls"?"Calls and voicemails only":"Hiding automated sends and activity"))+'</span></div><div class="scroll" id="scroll">';
     var day=null, shown=0;
     p.thread.forEach(function(it,i){var s=itemHTML(p,it,i); if(!s) return; if(it.day!==day){day=it.day; h+='<div class="day">'+day+'</div>'} h+=s; shown++});
     if(!shown) h+='<div class="ev">'+(cv.filt==="calls"?"No calls with "+esc(who(p))+" yet.":"Nothing here yet. Messages, calls and activity with "+esc(who(p))+" show in this one conversation.")+'</div>';
@@ -104,7 +107,7 @@
     else if(p.handoff) h+='<div class="banner" style="background:var(--warn-soft);border-color:var(--warn-line);color:#5E3A00">Milton stopped and told '+esc(p.first)+' a team member will be in touch. '+esc(p.handoff.reason)+'.</div>';
     var c=chan(p), note=cv.note;
     h+='<div class="comp"><div class="crow"><div class="pills">'+["Text","App","Email"].map(function(x){var off=(x==="Text"&&(!p.textOk||!p.phone))||(x==="Email"&&!p.email); return '<button data-act="chan" data-id="'+x+'" aria-pressed="'+(!note&&c===x)+'"'+(off?" disabled":"")+'>'+x+(x==="Text"&&!p.textOk?", opted out":"")+'</button>'}).join("")+'<button class="notep" data-act="notemode" aria-pressed="'+note+'">Team note</button></div><span class="m">'+(note?"Only your team sees notes":(c==="Text"?"Sends from the gym number, "+GYM_NUM:(c==="App"?"Sends in the member app":"Sends to "+esc(p.email))))+'</span></div>';
-    var ph=note?"Add a note for the team":"Message "+who(p);
+    var ph=note?"Add a note for the team":(inbox&&isPhone()?(c==="Text"?"Text "+who(p):(c==="Email"?"Email "+who(p):"Message "+who(p)+" in the app")):"Message "+who(p));
     return h+'<form class="send'+(note?" notem":"")+'" id="sendForm"><input id="msgInput" type="text" autocomplete="off" placeholder="'+esc(ph)+'" aria-label="'+esc(ph)+'"><button class="btn sm'+(note?"":" pri")+'" type="submit">'+(note?"Add note":"Send")+'</button></form></div>';
   }
   M.conv={
@@ -116,7 +119,7 @@
     return [["Next session",nx?nx.day+", "+nx.time:"Nothing booked",""],["Credits",cr.length?cr.reduce(function(a,c){return a+c.open},0)+" left to book":(p.plans.length?"Unlimited":"No active package"),""],["Money",due?M.fm(due)+" due":(p.tx.length||p.plans.length?"Nothing due":"No purchases"),due?"warn":""],["Documents",miss?miss+" missing":(p.docs.length?"All signed":"Not yet"),miss?"warn":""]];
   }
   function ctxHTML(p){
-    return '<aside class="ictx"><div class="crow"><span class="k">From the contact record</span><button class="link detb" data-act="idetails">Back to messages</button></div><div class="isnap">'+snap(p).map(function(s){return '<div class="'+s[2]+'"><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div></div>'}).join("")+'</div><dl><div><dt>Phone</dt><dd>'+(p.phone||"None yet")+'</dd></div><div><dt>Email</dt><dd>'+(p.email||"None yet")+'</dd></div><div><dt>Texts</dt><dd>'+(p.textOk?'<span class="chip ok">Allowed</span>':'<span class="chip warn">Opted out</span>')+'</dd></div><div><dt>Calls</dt><dd>From the gym number. Recorded with a notice.</dd></div><div><dt>Usually replies by</dt><dd>'+p.replies+'</dd></div><div><dt>Owner</dt><dd>'+(miltonOn(p)?"Milton, appointment setter":(p.owner||"Unassigned"))+'</dd></div></dl><button class="btn" data-act="record" data-id="'+p.id+'">Open contact record</button></aside>';
+    return '<aside class="ictx"><div class="crow"><button class="ico iback" data-act="idetails" aria-label="Back to messages">&#8249;</button><span class="k">From the contact record</span><button class="link detb" data-act="idetails">Back to messages</button></div><div class="isnap">'+snap(p).map(function(s){return '<div class="'+s[2]+'"><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div></div>'}).join("")+'</div><dl><div><dt>Phone</dt><dd>'+(p.phone||"None yet")+'</dd></div><div><dt>Email</dt><dd>'+(p.email||"None yet")+'</dd></div><div><dt>Texts</dt><dd>'+(p.textOk?'<span class="chip ok">Allowed</span>':'<span class="chip warn">Opted out</span>')+'</dd></div><div><dt>Calls</dt><dd>From the gym number. Recorded with a notice.</dd></div><div><dt>Usually replies by</dt><dd>'+p.replies+'</dd></div><div><dt>Owner</dt><dd>'+(miltonOn(p)?"Milton, appointment setter":(p.owner||"Unassigned"))+'</dd></div></dl><button class="btn" data-act="record" data-id="'+p.id+'">Open contact record</button></aside>';
   }
   function listHTML(){
     var h="";
@@ -138,7 +141,10 @@
     }
     if(p.unnamed) items+='<button data-act="panel" data-id="inname:'+p.id+'"><b>Add name</b><span class="m">Save this number as a contact</span></button>';
     items+='<button class="detb" data-act="idetails"><b>Details</b><span class="m">Sessions, credits, money, documents</span></button><button data-act="record" data-id="'+p.id+'"><b>Open contact record</b></button>';
-    return '<div class="ithread"><div class="ithead"><div class="nmc"><button class="btn sm quiet iback" data-act="iback" aria-label="Back to the list">Back</button><span class="av">'+p.initials+'</span><div><div class="h3" style="font-size:17px">'+esc(p.name)+'</div><div class="chips">'+M.statusChip(M.status(p))+handlerChip(p)+'</div></div></div><div class="acts">'+(miltonOn(p)?'<button class="btn sm" data-act="take">Take over</button>':"")+(p.phone?'<button class="btn sm" data-act="callp" data-id="'+p.id+'">Call</button>':"")+'<span class="pswrap"><button class="btn sm quiet" data-act="imore" aria-expanded="'+st.more+'">More</button>'+(st.more?'<span class="menu">'+items+'</span>':"")+'</span></div></div>'+bodyHTML(p)+'</div>';
+    if(miltonOn(p)) items='<button class="mph" data-act="take"><b>Take over</b><span class="m">Milton stops and you reply</span></button>'+items;
+    items+='<span class="mgrp mph" role="group" aria-label="Show"><span class="k">Show</span>'+FILTS.map(function(o){var on=cv.filt===o[0]; return '<button data-act="rfiltm" data-id="'+o[0]+'" aria-pressed="'+on+'"><b>'+o[1]+'</b>'+(on?'<span class="ck" aria-hidden="true">&#10003;</span>':"")+'</button>'}).join("")+'</span>';
+    var filt='<select class="ifilt" id="iFilt" aria-label="Show in this conversation">'+FILTS.map(function(o){return '<option value="'+o[0]+'"'+(cv.filt===o[0]?" selected":"")+'>'+o[1]+'</option>'}).join("")+'</select>';
+    return '<div class="ithread"><div class="ithead"><div class="nmc"><button class="ico iback" data-act="iback" aria-label="Back to the list">&#8249;</button><span class="av">'+p.initials+'</span><div class="inmw"><div class="h3 inm" style="font-size:17px">'+esc(p.name)+'</div><div class="chips">'+M.statusChip(M.status(p))+handlerChip(p)+'</div></div></div><div class="acts">'+(miltonOn(p)?'<button class="btn sm itake" data-act="take">Take over</button>':"")+filt+(p.phone?'<button class="btn sm" data-act="callp" data-id="'+p.id+'">Call</button>':"")+'<span class="pswrap"><button class="btn sm quiet" data-act="imore" aria-expanded="'+st.more+'">More</button>'+(st.more?'<span class="menu">'+items+'</span>':"")+'</span></div></div>'+bodyHTML(p,true)+'</div>';
   }
   function setterLeads(){return M.people().filter(function(p){return p.milton||p.miltonBooked||p.handoff||p.setterPaused})}
   function sendHTML(s){
@@ -148,18 +154,19 @@
       stats=[["Leads contacted",L.length],["Replied",L.filter(function(p){return p.thread.some(function(x){return x.k==="in"})}).length],["Booked",L.filter(function(p){return p.miltonBooked}).length],["Handed to the team",L.filter(function(p){return p.handoff}).length]];
       replies=L.map(function(p){var l=lastMsg(p); return {pid:p.id,text:(l.k==="milton"?"Milton: ":"")+l.body,chip:p.miltonBooked?"Booked":(p.handoff?"Needs a person":(p.setterPaused?"Team took over":"In progress")),cls:p.miltonBooked?"ok":(p.handoff?"warn":(p.setterPaused?"":"glow"))}});
     }
-    var h='<div class="ithread"><div class="ithead"><div class="nmc"><button class="btn sm quiet iback" data-act="iback">Back</button><div><div class="h3">'+esc(s.name)+'</div><div class="chips"><span class="chip '+(s.setter?"glow":(s.kind==="Broadcast"?"mist":""))+'">'+s.kind+'</span><span class="chip">'+s.ch+'</span><span class="chip">'+esc(s.when)+'</span></div></div></div><div class="acts">'+(s.kind==="Workflow"?'<button class="btn sm" data-act="iwf">Open workflow</button>':'<button class="btn sm" data-act="later" data-id="'+(s.setter?"The setter settings":"The broadcast view")+'">'+(s.setter?"Setter settings":"View broadcast")+'</button>')+'</div></div><div class="isbody"><div><div class="k">Goes to</div><div style="margin-top:3px">'+esc(s.aud)+'</div></div><div><div class="k">'+(s.setter?"How it works":"Message")+'</div><div class="box" style="margin-top:6px">'+esc(s.body)+'</div></div><div class="statgrid">'+stats.map(function(x){return '<div><span class="k">'+x[0]+'</span><b>'+x[1]+'</b></div>'}).join("")+'</div><div><div class="k">'+(s.setter?"Conversations":"Replies")+'</div>';
+    var h='<div class="ithread"><div class="ithead"><div class="nmc"><button class="ico iback" data-act="iback" aria-label="Back to the list">&#8249;</button><div class="inmw"><div class="h3 inm">'+esc(s.name)+'</div><div class="chips"><span class="chip '+(s.setter?"glow":(s.kind==="Broadcast"?"mist":""))+'">'+s.kind+'</span><span class="chip">'+s.ch+'</span><span class="chip">'+esc(s.when)+'</span></div></div></div><div class="acts">'+(s.kind==="Workflow"?'<button class="btn sm" data-act="iwf">Open workflow</button>':'<button class="btn sm" data-act="later" data-id="'+(s.setter?"The setter settings":"The broadcast view")+'">'+(s.setter?"Setter settings":"View broadcast")+'</button>')+'</div></div><div class="isbody"><div><div class="k">Goes to</div><div style="margin-top:3px">'+esc(s.aud)+'</div></div><div><div class="k">'+(s.setter?"How it works":"Message")+'</div><div class="box" style="margin-top:6px">'+esc(s.body)+'</div></div><div class="statgrid">'+stats.map(function(x){return '<div><span class="k">'+x[0]+'</span><b>'+x[1]+'</b></div>'}).join("")+'</div><div><div class="k">'+(s.setter?"Conversations":"Replies")+'</div>';
     if(!replies.length) h+='<div class="m" style="margin-top:6px">No replies yet. Any reply shows here and in that person\'s conversation. A reply within 72 hours counts against the send before it.</div>';
     replies.forEach(function(r){var p=M.person(r.pid); h+='<div class="row"><span class="av">'+p.initials+'</span><div class="what"><div class="t">'+esc(p.name)+'</div><div class="m">'+esc(r.text)+'</div></div><span class="chip '+r.cls+'">'+r.chip+'</span><button class="link" data-act="inboxp" data-id="'+r.pid+'">Open conversation</button></div>'});
     return h+'</div></div></div>';
   }
   M.pages.inbox={
     title:"Inbox",
+    top:function(){return ["inew","+ New message"]},
     render:function(){
       var all=order(), nN=all.filter(needs).length, nM=all.filter(miltonOn).length;
       if(!st.pid||!M.person(st.pid)){var f=all.filter(needs)[0]||all[0]; st.pid=f.id}
       var p=M.person(st.pid), tabs=[["needs","Needs reply",nN,true],["milton","Milton",nM],["all","All",all.length],["sent","Sent"]];
-      return '<p class="sub">Everyone your gym is talking to, and everything that was sent to them.</p><div class="ishell'+(st.tab==="sent"?" sent":"")+(st.open?" iopen":"")+(st.details&&st.tab!=="sent"?" idet":"")+'"><div class="ilist"><div class="iltop"><div class="itabs">'+tabs.map(function(t){return '<button data-act="itab" data-id="'+t[0]+'" aria-pressed="'+(st.tab===t[0])+'">'+t[1]+(t[2]!==undefined?'<span class="n'+(t[3]&&t[2]?" hot":"")+'">'+t[2]+'</span>':"")+'</button>'}).join("")+'</div>'+(st.tab==="sent"?'<div class="m">Broadcasts, workflows and the setter. Each send is also logged in every recipient\'s conversation.</div>':'<div class="acts" style="flex-wrap:nowrap"><input class="search" id="q" type="search" placeholder="Search people" aria-label="Search people"><button class="btn sm" data-act="panel" data-id="dial">New call</button></div>')+'</div><div class="irows" id="irows">'+listHTML()+'</div></div>'+(st.tab==="sent"?sendHTML(sends.filter(function(s){return s.id===st.sid})[0]):threadHTML(p)+ctxHTML(p))+'</div>';
+      return '<p class="sub isub">Everyone your gym is talking to, and everything that was sent to them.</p><div class="ishell'+(st.tab==="sent"?" sent":"")+(st.open?" iopen":"")+(st.details&&st.tab!=="sent"?" idet":"")+'"><div class="ilist"><div class="iltop"><div class="itabs">'+tabs.map(function(t){return '<button data-act="itab" data-id="'+t[0]+'" aria-pressed="'+(st.tab===t[0])+'">'+t[1]+(t[2]!==undefined?'<span class="n'+(t[3]&&t[2]?" hot":"")+'">'+t[2]+'</span>':"")+'</button>'}).join("")+'</div>'+(st.tab==="sent"?'<div class="m">Broadcasts, workflows and the setter. Each send is also logged in every recipient\'s conversation.</div>':'<div class="acts" style="flex-wrap:nowrap"><input class="search" id="q" type="search" placeholder="Search people" aria-label="Search people"><button class="btn sm" data-act="panel" data-id="dial">New call</button></div>')+'</div><div class="irows" id="irows">'+listHTML()+'</div></div>'+(st.tab==="sent"?sendHTML(sends.filter(function(s){return s.id===st.sid})[0]):threadHTML(p)+ctxHTML(p))+'</div>';
     },
     after:function(){var sc=$("scroll"); if(sc) sc.scrollTop=sc.scrollHeight},
     brief:function(){
@@ -192,11 +199,66 @@
   M.panels.dial=function(){
     return '<div class="sph"><div><h3>New call</h3><div class="m">They see the gym number, '+GYM_NUM+'</div></div>'+M.px+'</div><div class="spb"><div class="field"><label for="dialInput">Phone number</label><input id="dialInput" type="tel" inputmode="tel" autocomplete="off" placeholder="(316) 555-0100" value="'+esc(st.dial)+'" autofocus></div><div class="m" id="dialMatch">'+matchHTML()+'</div><div class="keys">'+["1","2","3","4","5","6","7","8","9","Clear","0","Del"].map(function(k){return '<button data-act="dkey" data-id="'+k+'"'+(k.length>1?' style="font-size:13px"':"")+'>'+k+'</button>'}).join("")+'</div></div><div class="spf"><button class="btn pri" data-act="dialgo" data-id="browser">Call from this computer</button><button class="btn" data-act="dialgo" data-id="phone">Ring the gym phone first</button></div>';
   };
+  /* New message: pick anyone in Milton, or a new number or email, then a channel and the message */
+  var nm={};
+  function nmReset(){nm={q:"",pid:null,fresh:null,ch:"Text",body:"",err:false}}
+  function isEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)}
+  function matchEmail(v){v=v.toLowerCase(); return M.people().filter(function(p){return (p.email||"").toLowerCase()===v})[0]||null}
+  function contacts(){return M.people().filter(function(p){var d=M.dupOf(p.id); return !(d&&d.drop===p.id)})}
+  function canCh(t,x){ if(x==="Text") return !!(t.phone&&t.textOk); if(x==="Email") return !!t.email; return !t.fresh }
+  function nmTarget(){return nm.fresh||(nm.pid?M.person(nm.pid):null)}
+  function nmRow(p){return '<button class="nmrow" data-act="nmpick" data-id="'+p.id+'"><span class="av">'+p.initials+'</span><span class="rb"><span class="nm">'+esc(p.name)+'</span><span class="m">'+esc(p.phone||p.email||"No phone yet")+'</span></span>'+M.statusChip(M.status(p))+'</button>'}
+  function nmNew(kind,label,note){return '<button class="nmrow nmnew" data-act="nmnew" data-id="'+kind+'"><span class="av">+</span><span class="rb"><span class="nm">'+esc(label)+'</span><span class="m">'+note+'</span></span></button>'}
+  function nmResHTML(){
+    var q=nm.q.trim(), ql=q.toLowerCase(), d=digits(q), h="";
+    if(!q) return '<div class="k">Recent</div>'+order().slice(0,5).map(nmRow).join("");
+    var hits=contacts().filter(function(p){return p.name.toLowerCase().indexOf(ql)>=0||(p.email||"").toLowerCase().indexOf(ql)>=0||(d.length>=3&&digits(p.phone||"").indexOf(d)>=0)}).slice(0,8);
+    if(d.length===10&&/^[\d\s().+-]+$/.test(q)&&!matchNum(q)) h+=nmNew("phone","Text "+pretty(d),"Not in your contacts. Milton saves the number as a Lead when you send.");
+    if(isEmail(q)&&!matchEmail(q)) h+=nmNew("email","Email "+q.toLowerCase(),"Not in your contacts. Milton saves the address as a Lead when you send.");
+    if(hits.length) h+='<div class="k">People</div>'+hits.map(nmRow).join("");
+    return h||'<div class="m">No one matches that search. Type a full phone number or email to message someone new.</div>';
+  }
+  M.panels.inew=function(){
+    var t=nmTarget(), h='<div class="sph"><div><h3>New message</h3><div class="m">To anyone in Milton, or a new number or email</div></div>'+M.px+'</div>';
+    if(!t) return h+'<div class="spb"><div class="field"><label for="nmQ">To</label><input id="nmQ" type="search" autocomplete="off" placeholder="Name, phone or email" value="'+esc(nm.q)+'" autofocus></div><div class="nmres" id="nmRes">'+nmResHTML()+'</div></div>';
+    var c=nm.ch, via=c==="Text"?"Sends from the gym number, "+GYM_NUM:(c==="App"?"Sends in the member app":"Sends to "+esc(t.email));
+    return h+'<div class="spb"><div class="field"><span class="flab">To</span><div class="nmto"><span class="av">'+t.initials+'</span><span class="rb"><span class="nm">'+esc(t.name)+'</span><span class="m">'+(t.fresh?"New contact":esc(M.status(t)+(t.phone?", "+t.phone:"")))+'</span></span><button class="link" data-act="nmchange">Change</button></div></div><div class="field"><span class="flab" id="nmByL">Send by</span><div class="pills" role="group" aria-labelledby="nmByL">'+["Text","App","Email"].map(function(x){return '<button data-act="nmch" data-id="'+x+'" aria-pressed="'+(c===x)+'"'+(canCh(t,x)?"":" disabled")+'>'+x+'</button>'}).join("")+'</div><div class="m nmvia">'+via+'</div></div><div class="field"><label for="nmBody">Message</label><textarea id="nmBody" rows="5" autofocus>'+esc(nm.body)+'</textarea><div class="errmsg" id="nmErr"'+(nm.err?"":" hidden")+'>Write a message first.</div></div></div><div class="spf"><button class="btn pri" data-act="nmsend">Send</button><button class="btn" data-act="pclose">Cancel</button></div>';
+  };
   M.panels.inname=function(pn){var p=M.person(pn.arg); return '<div class="sph"><div><h3>Who was that?</h3><div class="m">'+p.phone+'</div></div>'+M.px+'</div><form class="spb" id="innameForm"><div class="m">Save them so the call, and anything after it, has a home.</div><div class="field"><label for="saveName">First and last name</label><input id="saveName" type="text" autocomplete="off" autofocus><div class="errmsg" id="saveErr" hidden>Add a name, or choose Not now.</div></div></form><div class="spf"><button class="btn pri" data-act="innamesave">Save as a Lead</button><button class="btn" data-act="pclose">Not now</button></div>'};
 
   var A=M.acts;
   function cur(){return M.person(cv.pid)}
   A.rfilt=function(id){cv.filt=id; M.render()};
+  A.rfiltm=function(id){cv.filt=id; st.more=false; M.render()};
+  A.inew=function(){nmReset(); M.openPanel("inew")};
+  A.nmpick=function(id){nm.pid=id; nm.fresh=null; var p=M.person(id); nm.ch=chan(p); if(!canCh(p,nm.ch)) nm.ch=["Text","Email","App"].filter(function(x){return canCh(p,x)})[0]||"App"; M.renderPanel()};
+  A.nmnew=function(kind){
+    var q=nm.q.trim(), d=digits(q);
+    nm.pid=null;
+    nm.fresh=kind==="phone"?{fresh:true,name:pretty(d),phone:pretty(d),email:"",textOk:true,initials:"#"}:{fresh:true,name:q.toLowerCase(),phone:"",email:q.toLowerCase(),textOk:true,initials:"@"};
+    nm.ch=kind==="phone"?"Text":"Email"; M.renderPanel();
+  };
+  A.nmchange=function(){nm.pid=null; nm.fresh=null; M.renderPanel()};
+  A.nmch=function(id){nm.ch=id; M.renderPanel()};
+  A.nmsend=function(){
+    var t=nmTarget(), v=nm.body.trim(); if(!t) return;
+    if(!v){nm.err=true; $("nmErr").hidden=false; $("nmBody").focus(); return}
+    if(!canCh(t,nm.ch)) return;
+    var p=t;
+    if(t.fresh){
+      var nid="n"+Date.now();
+      DB.people.unshift({id:nid,name:t.name,unnamed:!!t.phone,added:DB.TODAY,source:"Messaged from Milton",tags:t.phone?["Unsaved number"]:[],stage:"In conversation",phone:t.phone,email:t.email,owner:M.you().name,thread:[{k:"event",day:"Today",t:"just now",body:"Saved as a Lead by "+M.you().name}]});
+      p=M.person(nid);
+    }
+    if(miltonOn(p)||p.handoff) takeOver(p); else if(!p.owner) p.owner=M.you().name;
+    p.cleared=false; cv.ch[p.id]=nm.ch;
+    p.thread.push({k:"out",day:"Today",t:"just now",ch:nm.ch,by:M.you().name,body:v});
+    var to=p.unnamed?p.phone:(t.fresh?p.email:p.first), how={Text:"by text",App:"in the app",Email:"by email"}[nm.ch];
+    M.closePanel(); st.tab="all"; st.q=""; st.pid=p.id; st.open=true; st.details=false; st.more=false; cv.note=false; cv.filt="all";
+    if(M.route.page!=="inbox") M.go({page:"inbox"}); else M.render();
+    if($("q")) $("q").value="";
+    M.toast("Sent to "+to+" "+how+".");
+  };
   A.chan=function(id){cv.ch[cv.pid]=id; cv.note=false; M.render()};
   A.notemode=function(){cv.note=!cv.note; M.render()};
   A.focusmsg=function(){cv.note=false; M.render(); var c=$("conv"); if(c&&c.scrollIntoView) c.scrollIntoView({block:"center"}); if($("msgInput")) $("msgInput").focus()};
@@ -209,9 +271,9 @@
   A.msgrow=A.inboxp;
   A.unmerge=function(){M.undoMerge(cur())};
   A.itab=function(id){st.tab=id; st.details=false; st.open=false; st.more=false; if(id!=="sent"){var ids=order().filter(function(p){return id==="needs"?needs(p):(id==="milton"?miltonOn(p):true)}); if(ids.length&&!ids.some(function(p){return p.id===st.pid})) st.pid=ids[0].id} M.render()};
-  A.ipick=function(id){st.pid=id; st.open=true; st.details=false; st.more=false; cv.note=false; if($("msgInput")) $("msgInput").value=""; M.render()};
-  A.isend=function(id){st.tab="sent"; st.sid=id; st.open=true; if(M.route.page!=="inbox") M.go("inbox"); else M.render()};
-  A.iback=function(){st.open=false; st.details=false; M.render()};
+  A.ipick=function(id){if(isPhone()) st.ly=window.scrollY||0; st.pid=id; st.open=true; st.details=false; st.more=false; cv.note=false; if($("msgInput")) $("msgInput").value=""; M.render()};
+  A.isend=function(id){if(M.route.page==="inbox"&&isPhone()) st.ly=window.scrollY||0; st.tab="sent"; st.sid=id; st.open=true; if(M.route.page!=="inbox") M.go("inbox"); else M.render()};
+  A.iback=function(){st.open=false; st.details=false; st.more=false; M.render(); if(isPhone()) window.scrollTo(0,st.ly||0)};
   A.idetails=function(){st.details=!st.details; st.open=true; st.more=false; M.render()};
   A.imore=function(){st.more=!st.more; M.render()};
   A.iassign=function(){var p=cur(); p.owner=M.you().name; st.more=false; M.render(); M.toast(p.first+" is assigned to you.")};
@@ -245,6 +307,9 @@
   M.inputs.push(function(el){
     if(el.id==="dialInput"){st.dial=el.value; $("dialMatch").innerHTML=matchHTML()}
     if(el.id==="q"&&M.route.page==="inbox"){st.q=el.value; $("irows").innerHTML=listHTML()}
+    if(el.id==="iFilt"){cv.filt=el.value; M.render()}
+    if(el.id==="nmQ"){nm.q=el.value; $("nmRes").innerHTML=nmResHTML()}
+    if(el.id==="nmBody"){nm.body=el.value; if(nm.err){nm.err=false; $("nmErr").hidden=true}}
   });
   var ob=M.onBlank; M.onBlank=function(){ if(st.more){st.more=false; if(M.route.page==="inbox") M.render()} if(ob) ob() };
 })();
